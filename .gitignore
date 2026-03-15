@@ -1,0 +1,16 @@
+# Sistema e IDEs
+.DS_Store
+.vscode/
+.idea/
+*.log
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+
+# Backend
+backend/target/
+backend/.project
+backend/.classpath
+backend/.settings/
