@@ -8,7 +8,8 @@ Node.js 18 ou superior
 Navegue até a pasta do backend:
 cd backend
 Execute o projeto usando o Maven Wrapper:
-./mvnw spring-boot:run
+MAC e Linux: ./mvnw spring-boot:run
+Windows: mvnw spring-boot:run
 Nota: O projeto iniciará com um erro de DataSource até que o banco de dados seja configurado. Isso é esperado.
 
 ⚛️ Frontend (React + Vite)
