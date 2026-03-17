@@ -14,3 +14,7 @@ backend/target/
 backend/.project
 backend/.classpath
 backend/.settings/
+
+# Env files
+.env
+.env.*
