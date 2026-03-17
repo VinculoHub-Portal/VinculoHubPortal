@@ -7,7 +7,7 @@ on:
       - closed
     branches:
       - main
-      - dev
+      - development
 
 jobs:
   sync:
