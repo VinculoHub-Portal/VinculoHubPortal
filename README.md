@@ -10,6 +10,15 @@ Para rodar a aplicação completa de forma simples, você precisará ter instala
 
 ---
 
+### ⚙️ Configuração de Variáveis de Ambiente
+Antes de rodar o projeto, copie o arquivo de exemplo de variáveis de ambiente:
+```bash
+cp .env.example .env
+```
+Edite o arquivo `.env` com as credenciais desejadas. Os valores padrão já funcionam para desenvolvimento local.
+
+---
+
 ## 🐳 Rodando com Docker Compose (Recomendado)
 
 A maneira mais fácil e rápida de subir toda a aplicação (Banco de Dados + Backend + Frontend) é utilizando o Docker Compose na raiz do projeto.
@@ -34,12 +43,11 @@ Para parar todos os serviços, execute: `docker compose down`.
 Se preferir rodar os serviços individualmente para desenvolvimento mais focado:
 
 ### ☕ Backend (Spring Boot)
-1. Navegue até a pasta do backend: `cd backend`
-2. Execute o projeto usando o Maven Wrapper:
+1. Certifique-se de ter um banco PostgreSQL rodando localmente (ou use `docker compose up db -d` para subir apenas o banco).
+2. Navegue até a pasta do backend: `cd backend`
+3. Execute o projeto usando o Maven Wrapper:
    - **Mac/Linux:** `./mvnw spring-boot:run`
    - **Windows:** `mvnw spring-boot:run`
-   
-   *Nota: O projeto iniciará com um erro de DataSource até que um banco de dados local seja configurado. Isso é esperado.*
 
 ### ⚛️ Frontend (React + Vite)
 1. Navegue até a pasta do frontend: `cd frontend`
