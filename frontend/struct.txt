@@ -1,0 +1,12 @@
+src
+├── components # Reusable and generic components
+├ general
+├ ong
+── services                    # API calls and backend integration
+├   hooks  
+├ types
+  ├ dtos                        # Define structure of API requests and responses
+├── utils                       # Helper functions 
+├── pages                       # Main pages content
+├── router                      # Application route definitions
+├── main.tsx                     # Root component of 
