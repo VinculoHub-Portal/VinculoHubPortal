@@ -15,17 +15,20 @@ export function Header() {
         </div>
 
         <div className="hidden md:flex gap-4">
-          <BaseButton
-            variant="outline"
-            className="border-white text-white hover:bg-white/10"
-          >
-            Cadastro
-          </BaseButton>
-          <BaseButton className="bg-white text-vinculo-dark hover:bg-gray-100">
-            Entrar
-          </BaseButton>
-        </div>
-
+  <BaseButton
+    variant="outline"
+    className="border-white text-white hover:bg-white/10"
+  >
+    Cadastro
+  </BaseButton>
+  
+  <BaseButton 
+    
+    className="bg-white !text-vinculo-dark hover:bg-gray-100"
+  >
+    Entrar
+  </BaseButton>
+</div>
         <button
           className="md:hidden text-white font-bold text-2xl w-8 h-8 flex items-center justify-center border border-white/20 rounded"
           onClick={toggleMenu}
