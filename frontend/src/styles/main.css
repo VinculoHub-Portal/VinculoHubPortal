@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+@theme {
+  --color-vinculo-main: #1D4ED8; /* Azul específico */
+  --color-vinculo-bg: #F0F4F8;   /* Fundo cinza azulado */
+}
