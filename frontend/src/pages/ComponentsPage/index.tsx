@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Header } from "../../components/general/Header";
-import { BaseButton } from "../../components/general//BaseButton";
+import { BaseButton } from "../../components/general/BaseButton";
 import { Input } from "../../components/general/SimpleTextInput";
 import { WizardSteps } from "../../components/auth/WizardSteps";
 
@@ -49,7 +49,7 @@ export default function LandingPage() {
             <Input
               id="email"
               label="E-mail"
-              isRequired // Ativa o asterisco vermelho e o atributo required
+              isRequired 
               placeholder="seu@email.com"
               type="email"
             />
@@ -64,7 +64,7 @@ export default function LandingPage() {
               id="valor"
               label="Investimento Desejado"
               placeholder="15000"
-              type="number" // Teclado numérico no mobile
+              type="number" 
             />
             <Input
               id="fantasia"
