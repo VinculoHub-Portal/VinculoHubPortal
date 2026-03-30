@@ -4,8 +4,9 @@ set -euo pipefail
 echo "Starting pre-push hook..."
 
 ROOT_DIR=$(git rev-parse --show-toplevel)
+REMOTE_REF=$(git rev-parse --abbrev-ref @{upstream} 2>/dev/null || echo "origin/main")
 
-CHANGED_FILES=$(git diff --name-only origin/main...HEAD 2>/dev/null || true)
+CHANGED_FILES=$(git diff --name-only "$REMOTE_REF"...HEAD 2>/dev/null || git diff --name-only HEAD~1 HEAD 2>/dev/null || true)
 
 BACKEND_CHANGED=$(echo "$CHANGED_FILES" | grep -c "^backend/" || true)
 
