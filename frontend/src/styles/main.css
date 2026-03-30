@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  /* --- Brand Colors --- */
+  --color-vinculo-dark: #004481; /* Azul Royal do Portal */
+  --color-vinculo-green: #6db17c; /* Verde de Destaque */
+  --color-vinculo-gray: #e5e7eb; /* Bordas de Inputs */
+  --color-vinculo-light-gray: #e9ecef; /* Background de Botões Ghost */
+
+  /* --- Semantic Colors --- */
+  --color-surface: #f8fafc; /* Fundo das páginas */
+  --color-error: #ef4444; /* Para validações de formulário */
+
+  /* --- Layout Tokens --- */
+  --radius-vinculo: 12px; /* Arredondamento padrão dos inputs */
+  --shadow-vinculo: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+
+  /* --- Typography --- */
+  --font-sans: "Inter", ui-sans-serif, system-ui;
+  --text-title-xl: 2.25rem; /* Para o "Conectando trajetórias" */
+}
+
+/* --- Base Overrides --- */
+@layer base {
+  body {
+    @apply bg-surface text-slate-900 antialiased;
+  }
+}
