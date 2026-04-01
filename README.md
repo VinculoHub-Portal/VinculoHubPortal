@@ -10,6 +10,15 @@ Para rodar a aplicação completa de forma simples, você precisará ter instala
 
 ---
 
+### 🪝Configuração do Git Hooks
+
+Os git hooks são scripts executados automaticamente em eventos do git. O `pre-push` roda antes de cada push e garante que o código do backend passe pelo Spotless (formatação) e PMD (análise estática) antes de ser enviado ao repositório.
+
+Para configurar, rode o comando abaixo na raiz do projeto:
+```bash
+bash githooks/setup
+```
+
 ### ⚙️ Configuração de Variáveis de Ambiente
 Antes de rodar o projeto, copie o arquivo de exemplo de variáveis de ambiente:
 ```bash
