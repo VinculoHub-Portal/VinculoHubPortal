@@ -1,10 +1,10 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Home } from '../pages/Home';
+import ComponentsPage from '../pages/ComponentsPage/index';
 
 export const AppRouter = () => (
   <BrowserRouter>
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<ComponentsPage />} />
     </Routes>
   </BrowserRouter>
 );
