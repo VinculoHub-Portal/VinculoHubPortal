@@ -1,0 +1,177 @@
+// Vinculo Hub
+// Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
+
+Enum npo_size {
+  large
+  medium
+  small
+}
+
+Enum user_type {
+  admin
+  npo
+  company
+}
+
+Enum project_status {
+  active
+  completed
+  cancelled
+}
+
+Enum relationship_status {
+  pending
+  active
+  inactive
+  negotiation
+}
+
+Enum project_type {
+  social_investment_law
+  tax_incentive_law
+}
+
+Table user {
+  id integer [primary key, increment]
+  name varchar(255)
+  email varchar(255) [unique]
+  user_type user_type
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table address {
+  id integer [primary key, increment]
+  state varchar(50)
+  state_code char(2)
+  city varchar(50)
+  street varchar(100)
+  number varchar(20)
+  complement varchar(100)
+  zip_code varchar(10)
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table sdg {
+  id integer [primary key, increment]
+  name varchar(50)
+}
+
+Table npo {
+  id integer [primary key, increment]
+  name varchar(255)
+  user_id integer [unique, ref: > user.id]
+  description varchar(3000)
+  logo_url varchar(500)
+  npo_size npo_size
+  cnpj varchar(18) [unique]
+  cpf varchar(14) [unique]
+  phone varchar(30)
+  address_id integer [ref: > address.id]
+  environmental boolean
+  social boolean
+  governance boolean
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+
+  indexes {
+    address_id
+    user_id
+  }
+}
+
+Table company {
+  id integer [primary key, increment]
+  name varchar(255)
+  user_id integer [unique, ref: > user.id]
+  description varchar(1000)
+  logo_url varchar(500)
+  cnpj varchar(18) [unique]
+  phone varchar(30)
+  address_id integer [ref: > address.id]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+
+  indexes {
+    address_id
+    user_id
+  }
+}
+
+Table project {
+  id integer [primary key, increment]
+  npo_id integer [ref: > npo.id]
+  title varchar(255)
+  description varchar(3000)
+  status project_status [default: 'active']
+  budget_needed decimal(15,2)
+  invested_amount decimal(15,2)
+  start_date date
+  end_date date
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+
+  indexes {
+    npo_id
+  }
+}
+
+Table document {
+  id integer [primary key, increment]
+  npo_id integer [ref: > npo.id]
+  project_id integer [ref: > project.id]
+  title varchar(255)
+  description varchar(500)
+  file_url varchar(500)
+  file_name varchar(255)
+  file_size integer
+  mime_type varchar(100)
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+
+  indexes {
+    npo_id
+    project_id
+  }
+}
+
+Table edital {
+  id integer [primary key, increment]
+  title varchar(255)
+  description varchar(500)
+  file_url varchar(500)
+  file_name varchar(255)
+  file_size integer
+  mime_type varchar(100)
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table project_sdg {
+  project_id integer [ref: > project.id]
+  sdg_id integer [ref: > sdg.id]
+  indexes {
+    (project_id, sdg_id) [pk]
+  }
+}
+
+Table company_project {
+  company_id integer [ref: > company.id]
+  project_id integer [ref: > project.id]
+  status relationship_status [default: 'pending']
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+  indexes {
+    (company_id, project_id) [pk]
+  }
+}
