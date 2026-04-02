@@ -1,15 +1,15 @@
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label: string;
   isRequired?: boolean;
 }
 
-export function Input({
+export function TextArea({
   label,
   id,
   isRequired,
   className = "",
   ...props
-}: InputProps) {
+}: TextAreaProps) {
   return (
     <div className="flex flex-col gap-1 w-full text-left">
       <label
@@ -20,12 +20,13 @@ export function Input({
         {isRequired && <span className="text-red-500">*</span>}
       </label>
 
-      <input
+      <textarea
         id={id}
         required={isRequired}
-        className={`border border-vinculo-gray rounded-xl px-4 py-3 outline-none 
-        focus:border-vinculo-dark focus:ring-1 focus:ring-vinculo-dark 
-        transition-all placeholder:text-slate-400 ${className}`}
+        rows={4}
+        className={`border border-vinculo-gray rounded-xl px-4 py-3 outline-none
+        focus:border-vinculo-dark focus:ring-1 focus:ring-vinculo-dark
+        transition-all placeholder:text-slate-400 resize-none ${className}`}
         {...props}
       />
     </div>
