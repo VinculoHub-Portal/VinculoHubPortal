@@ -17,8 +17,7 @@ public class NpoEsgService {
      * @param governance se o pilar Governança foi selecionado
      * @throws EsgSelectionException se nenhum pilar for selecionado
      */
-    public void validateEsgSelection(
-            Boolean environmental, Boolean social, Boolean governance) {
+    public void validateEsgSelection(Boolean environmental, Boolean social, Boolean governance) {
 
         boolean hasEnvironmental = Boolean.TRUE.equals(environmental);
         boolean hasSocial = Boolean.TRUE.equals(social);
