@@ -104,8 +104,7 @@ class NpoDocumentServiceTest {
             when(npoRepository.existsByCpf(VALID_CPF)).thenReturn(false);
             when(npoRepository.existsByCnpj(VALID_CNPJ)).thenReturn(false);
 
-            assertDoesNotThrow(
-                    () -> npoDocumentService.validateDocuments(VALID_CPF, VALID_CNPJ));
+            assertDoesNotThrow(() -> npoDocumentService.validateDocuments(VALID_CPF, VALID_CNPJ));
         }
     }
 
