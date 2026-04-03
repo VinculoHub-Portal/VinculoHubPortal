@@ -10,7 +10,12 @@ import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
-@Table(name = "npo")
+@Table(
+        name = "npo",
+        uniqueConstraints = {
+            @UniqueConstraint(name = "uk_npo_cnpj", columnNames = "cnpj"),
+            @UniqueConstraint(name = "uk_npo_cpf", columnNames = "cpf")
+        })
 @SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter
