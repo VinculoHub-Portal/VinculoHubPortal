@@ -5,6 +5,7 @@ export const AppRouter = () => (
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<ComponentsPage />} />
+      <Route path="/cadastro" element={<div />}/>
     </Routes>
   </BrowserRouter>
 );
