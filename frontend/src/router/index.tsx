@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ComponentsPage from "../pages/ComponentsPage/index";
-import CadastroInstituicaoPage from "../pages/CadastroInstituicaoPage/index";
+import WizardSelect from "../components/auth/WizardSelect";
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -8,7 +8,7 @@ export const AppRouter = () => (
       <Route path="/" element={<ComponentsPage />} />
       <Route
         path="/cadastro/instituicao"
-        element={<CadastroInstituicaoPage />}
+        element={<WizardSelect />}
       />
     </Routes>
   </BrowserRouter>

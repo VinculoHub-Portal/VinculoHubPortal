@@ -1,8 +1,11 @@
 type OrganizationType = "npo" | "enterprise";
 
+import { BaseButton } from "../general/BaseButton";
+
 type WizardSingUpProps = {
   organizationType: OrganizationType;
   onSelectOrganizationType: (type: OrganizationType) => void;
+  onNext: () => void;
 };
 
 type TypeCardProps = {
@@ -44,6 +47,7 @@ function TypeCard({ title, selected, onClick }: TypeCardProps) {
 export function WizardSingUp({
   organizationType,
   onSelectOrganizationType,
+  onNext,
 }: WizardSingUpProps) {
   return (
     <div>
@@ -65,6 +69,15 @@ export function WizardSingUp({
           selected={organizationType === "enterprise"}
           onClick={() => onSelectOrganizationType("enterprise")}
         />
+      </div>
+
+      <div className="flex justify-center gap-4 mt-8">
+        <BaseButton variant="ghost" className="w-32" disabled>
+          Voltar
+        </BaseButton>
+        <BaseButton variant="secondary" className="w-32" onClick={onNext}>
+          Próximo
+        </BaseButton>
       </div>
 
       <div className="flex items-center w-full justify-center py-8 mx-auto max-w-xl">
