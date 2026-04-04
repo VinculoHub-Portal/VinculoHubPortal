@@ -4,6 +4,6 @@ package com.vinculohub.backend.exception;
 public class CnpjInactiveException extends UnprocessableEntityException {
 
     public CnpjInactiveException(String cnpj, String situacao) {
-        super("CNPJ Inactive, status: " + situacao);
+        super("CNPJ " + cnpj + " is inactive (situacao: " + situacao + ")");
     }
 }
