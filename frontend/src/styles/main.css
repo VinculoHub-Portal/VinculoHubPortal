@@ -25,4 +25,21 @@
   body {
     @apply bg-surface text-slate-900 antialiased;
   }
+  .cadastro-body{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #F6F3EC;
+  }
+  .cadastro-container{
+    background-color: white;
+    width: 672px;
+    height: 648px;
+    padding-top: 48px;
+    padding-right: 48px;
+    padding-left: 48px;
+    gap: 32px;
+    border-radius: 10px;
+    color: #00467F;
+  }
 }
