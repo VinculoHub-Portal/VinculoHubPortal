@@ -11,7 +11,11 @@ public record CepResponseDto(
 
     public static CepResponseDto from(CepRawResponseDto raw) {
         return new CepResponseDto(
-                raw.zipCode(), raw.street(), raw.complement(), raw.city(), raw.stateCode(),
+                raw.zipCode(),
+                raw.street(),
+                raw.complement(),
+                raw.city(),
+                raw.stateCode(),
                 raw.state());
     }
 }

@@ -1,8 +1,8 @@
 /* (C)2026 */
 package com.vinculohub.backend.service;
 
-import com.vinculohub.backend.dto.CepResponseDto;
 import com.vinculohub.backend.dto.CepRawResponseDto;
+import com.vinculohub.backend.dto.CepResponseDto;
 import com.vinculohub.backend.exception.CepNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
