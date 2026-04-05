@@ -53,8 +53,9 @@ public class Npo {
     @Column(length = 30)
     private String phone;
 
-    @Column(name = "address_id")
-    private Long addressId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "address_id")
+    private Address address;
 
     @Column(nullable = false)
     @Builder.Default
