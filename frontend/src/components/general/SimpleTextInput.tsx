@@ -13,6 +13,7 @@ export function Input({
   isRequired,
   icon,
   error,
+  disabled,
   className = "",
   ...props
 }: InputProps) {
@@ -35,8 +36,10 @@ export function Input({
         <input
           id={id}
           required={isRequired}
+          disabled={disabled}
           className={`border rounded-xl px-4 py-3 outline-none w-full
           focus:ring-1 transition-all placeholder:text-slate-400
+          ${disabled ? "bg-slate-100 text-slate-500 cursor-not-allowed" : ""}
           ${error ? "border-red-400 focus:border-red-400 focus:ring-red-400" : "border-vinculo-gray focus:border-vinculo-dark focus:ring-vinculo-dark"}
           ${icon ? "pl-9" : ""}
           ${className}`}

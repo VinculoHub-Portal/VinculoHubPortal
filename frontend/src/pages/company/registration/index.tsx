@@ -126,38 +126,6 @@ export default function CompanyRegistrationPage() {
 
         {currentStep === 2 && (
           <form className="flex flex-col gap-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Razão Social"
-                id="name"
-                placeholder="Digite a razão social"
-                maxLength={255}
-                value={basicInfo.name}
-                onChange={handleBasicChange}
-                icon={<CompanyIcon />}
-                isRequired
-              />
-              <Input
-                label="Nome Fantasia"
-                id="tradeName"
-                placeholder="Nome fantasia"
-                maxLength={255}
-                value={basicInfo.tradeName}
-                onChange={handleBasicChange}
-                icon={<CompanyIcon />}
-              />
-            </div>
-
-            <TextArea
-              label="Descrição da Empresa"
-              id="description"
-              placeholder="Descreva brevemente a empresa..."
-              maxLength={1000}
-              value={basicInfo.description}
-              onChange={handleBasicChange}
-              icon={<DescriptionIcon />}
-            />
-
             <div className="flex flex-col gap-1">
               <Input
                 label="CNPJ"
@@ -177,6 +145,40 @@ export default function CompanyRegistrationPage() {
                 </span>
               )}
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="Razão Social"
+                id="name"
+                placeholder="Digite a razão social"
+                maxLength={255}
+                value={basicInfo.name}
+                onChange={handleBasicChange}
+                icon={<CompanyIcon />}
+                disabled
+                isRequired
+              />
+              <Input
+                label="Nome Fantasia"
+                id="tradeName"
+                placeholder="Nome fantasia"
+                maxLength={255}
+                value={basicInfo.tradeName}
+                onChange={handleBasicChange}
+                icon={<CompanyIcon />}
+                disabled
+              />
+            </div>
+
+            <TextArea
+              label="Descrição da Empresa"
+              id="description"
+              placeholder="Descreva brevemente a empresa..."
+              maxLength={1000}
+              value={basicInfo.description}
+              onChange={handleBasicChange}
+              icon={<DescriptionIcon />}
+            />
 
             <div className="flex justify-end gap-3 mt-2 pt-4 border-t border-slate-100">
               <BaseButton variant="ghost" className="w-28">
@@ -204,6 +206,7 @@ export default function CompanyRegistrationPage() {
                 value={contactInfo.zip_code}
                 onChange={handleContactChange}
                 icon={<AddressIcon />}
+                isRequired
               />
               {loadingZipCode && (
                 <span className="text-sm text-slate-400">
@@ -227,6 +230,7 @@ export default function CompanyRegistrationPage() {
                   value={contactInfo.street}
                   onChange={handleContactChange}
                   icon={<AddressIcon />}
+                  disabled
                 />
               </div>
               <Input
@@ -258,6 +262,7 @@ export default function CompanyRegistrationPage() {
                 value={contactInfo.city}
                 onChange={handleContactChange}
                 icon={<StateIcon />}
+                disabled
               />
             </div>
 
@@ -270,6 +275,7 @@ export default function CompanyRegistrationPage() {
                 value={contactInfo.state}
                 onChange={handleContactChange}
                 icon={<StateIcon />}
+                disabled
               />
               <Input
                 label="UF"
@@ -279,6 +285,7 @@ export default function CompanyRegistrationPage() {
                 value={contactInfo.state_code}
                 onChange={handleContactChange}
                 icon={<StateIcon />}
+                disabled
               />
             </div>
 
