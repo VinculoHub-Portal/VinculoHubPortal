@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { BaseButton } from "./BaseButton";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
@@ -15,20 +17,21 @@ export function Header() {
         </div>
 
         <div className="hidden md:flex gap-4">
-  <BaseButton
-    variant="outline"
-    className="border-white text-white hover:bg-white/10"
-  >
-    Cadastro
-  </BaseButton>
-  
-  <BaseButton 
-    
-    className="bg-white !text-vinculo-dark hover:bg-gray-100"
-  >
-    Entrar
-  </BaseButton>
-</div>
+          <BaseButton
+            variant="outline"
+            className="border-white text-white hover:bg-white/10"
+            onClick={() => navigate("/cadastro")}
+          >
+            Cadastro
+          </BaseButton>
+
+          <BaseButton
+            className="bg-white !text-vinculo-dark hover:bg-gray-100"
+            onClick={() => navigate("/login")}
+          >
+            Entrar
+          </BaseButton>
+        </div>
         <button
           className="md:hidden text-white font-bold text-2xl w-8 h-8 flex items-center justify-center border border-white/20 rounded"
           onClick={toggleMenu}
@@ -44,6 +47,7 @@ export function Header() {
             variant="outline"
             fullWidth
             className="border-white text-white rounded-full py-3"
+            onClick={() => navigate("/cadastro")}
           >
             Cadastro
           </BaseButton>
@@ -51,6 +55,7 @@ export function Header() {
           <BaseButton
             fullWidth
             className="!bg-white !text-vinculo-dark rounded-full py-3"
+            onClick={() => navigate("/login")}
           >
             Entrar
           </BaseButton>

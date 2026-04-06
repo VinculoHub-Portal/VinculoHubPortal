@@ -1,12 +1,11 @@
-import { Header } from "../../components/general/Header"
+import { Header } from "../../components/general/Header";
+import { Hero } from "../../pages/LandingPage/Hero";
 
-const LandingPage = () => {
+export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
+    <div>
       <Header />
-      <h1>Landing Page</h1>
+      <Hero />
     </div>
   )
 }
-
-export default LandingPage
