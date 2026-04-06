@@ -26,7 +26,7 @@ public class CnpjValidationService {
         }
         if (result == null || !STATUS_ATIVA.equals(result.situacaoCadastral())) {
             throw new CnpjInactiveException(
-                    digits, result != null ? result.situacaoCadastral() : "desconhecida");
+                    digits, result != null ? result.situacaoCadastral() : "null");
         }
         return result;
     }
