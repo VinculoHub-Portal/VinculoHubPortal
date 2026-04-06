@@ -1,6 +1,6 @@
-import { UsersIcon } from "../../components/general/UsersIcon"
-import { ClipboardIcon } from "../../components/general/ClipboardIcon"
-import { FeatureCard } from "../../components/general/FeatureCard"
+import { FeatureCard } from "../../components/landingPage/FeatureCard"
+import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
+import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 
 export default function LandingPage() {
   return (
@@ -20,7 +20,7 @@ export default function LandingPage() {
           <FeatureCard
             title="Para ONGs e OSCs"
             description="Simplifique a gestão da sua organização com ferramentas integradas para:"
-            icon={<UsersIcon className="size-7 text-white" />}
+            icon={<GroupsOutlinedIcon className="text-white" style={{ fontSize: 30 }} />}
             theme="ong"
             items={[
               "Gestão de projetos e atividades diárias",
@@ -33,7 +33,7 @@ export default function LandingPage() {
           <FeatureCard
             title="Para Empresas"
             description="Gerencie suas iniciativas de responsabilidade social com eficiência:"
-            icon={<ClipboardIcon className="size-7 text-white" />}
+            icon={<AssignmentOutlinedIcon className="text-white" style={{ fontSize: 25   }} />}
             theme="empresa"
             items={[
               "Gestão de programas de investimento social",

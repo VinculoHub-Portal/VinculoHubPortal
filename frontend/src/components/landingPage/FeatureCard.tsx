@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Check } from "./Check";
+import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined';
 
 interface FeatureCardProps {
   title: string;
@@ -33,7 +33,7 @@ export function FeatureCard({
       </div>
       {items.map((item, index) => (
         <div key={index} className="flex flex-row items-start">
-          <Check className={`size-6 font-bold mr-2 flex-shrink-0 mt-1 ${checkColor}`} />
+          <CheckOutlinedIcon className={`size-6 font-bold mr-2 flex-shrink-0 mt-1 ${checkColor}`} />
           <span className="text-slate-600 text-lg mb-2">{item}</span>
         </div>
       ))}
