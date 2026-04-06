@@ -7,6 +7,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record CnpjResponseDto(
         String cnpj,
-        @JsonProperty("razao_social") String razaoSocial,
-        @JsonProperty("nome_fantasia") String nomeFantasia,
-        @JsonProperty("situacao_cadastral") String situacaoCadastral) {}
+        @JsonProperty("razao_social") String legalName,
+        @JsonProperty("nome_fantasia") String tradeName,
+        @JsonProperty("situacao_cadastral") String situation) {}
