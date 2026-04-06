@@ -1,10 +1,12 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import LandingPageIndex from '../pages/LandingPage/index';
+import { BrowserRouter, Routes, Route } from "react-router-dom"
+import LandingPage from "../pages/LandingPage"
+import ComponentsPage from "../pages/ComponentsPage"
 
 export const AppRouter = () => (
   <BrowserRouter>
     <Routes>
-      <Route path="/" element={<LandingPageIndex />} />
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/components" element={<ComponentsPage />} />
     </Routes>
   </BrowserRouter>
-);
+)
