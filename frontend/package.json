@@ -9,9 +9,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
-    "prepare": "husky",
-    "lock:update": "npm install",
-    "lock:update:docker": "docker run --rm -v \"${PWD}:/app\" -w /app node:22-alpine npm install"
+    "prepare": "husky"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
