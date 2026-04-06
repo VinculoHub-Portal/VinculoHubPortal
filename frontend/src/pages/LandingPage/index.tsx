@@ -1,4 +1,5 @@
-import { Header } from "../../components/general/Header";
+import { Header } from "../../components/general/Header"
+import InfoTab from "./info_tab"
 import { Hero } from "../../pages/LandingPage/Hero";
 
 export default function LandingPage() {
@@ -6,6 +7,7 @@ export default function LandingPage() {
     <div>
       <Header />
       <Hero />
+      <InfoTab />
     </div>
   )
 }
