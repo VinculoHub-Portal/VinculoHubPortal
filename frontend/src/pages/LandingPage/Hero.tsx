@@ -1,9 +1,9 @@
-import { BaseButton } from "../../../components/general/BaseButton";
-import imagemGestCap from "../../../assets/ImagemSubPage1.png";
+import { BaseButton } from "../../components/general/BaseButton";
+import imagemGestCap from "../../assets/ImagemSubPage1.png";
 
-export function Presentation() {
+export function Hero() {
   return (
-    <section className="min-h-[calc(100vh-72px)] bg-surface flex items-center px-8 md:px-16 py-12">
+    <section className="bg-surface flex items-center h-screen">
       <div className="max-w-7xl mx-auto w-full flex flex-col md:flex-row items-center gap-12">
 
         <div className="flex-1 flex flex-col gap-8">
