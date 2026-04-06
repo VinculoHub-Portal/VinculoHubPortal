@@ -32,7 +32,7 @@ Enum project_type {
   tax_incentive_law
 }
 
-Table user {
+Table users {
   id integer [primary key, increment]
   name varchar(255)
   email varchar(255) [unique]
@@ -64,7 +64,7 @@ Table sdg {
 Table npo {
   id integer [primary key, increment]
   name varchar(255)
-  user_id integer [unique, ref: > user.id]
+  user_id integer [unique, ref: > users.id]
   description varchar(3000)
   logo_url varchar(500)
   npo_size npo_size
@@ -87,8 +87,9 @@ Table npo {
 
 Table company {
   id integer [primary key, increment]
-  name varchar(255)
-  user_id integer [unique, ref: > user.id]
+  legal_name varchar(255)
+  social_name varchar(255)
+  user_id integer [unique, ref: > users.id]
   description varchar(1000)
   logo_url varchar(500)
   cnpj varchar(18) [unique]
