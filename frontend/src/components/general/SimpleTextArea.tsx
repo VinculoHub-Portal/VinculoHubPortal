@@ -29,7 +29,7 @@ export function TextArea({
 
       <div className="relative">
         {icon && (
-          <span className="absolute left-3 top-4.5 text-vinculo-green">
+          <span className="absolute left-3 top-3 text-vinculo-green">
             {icon}
           </span>
         )}
