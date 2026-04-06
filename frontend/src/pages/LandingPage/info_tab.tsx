@@ -1,8 +1,8 @@
-import { FeatureCard } from "../../components/landingPage/FeatureCard"
+import { FeatureCard } from "./FeatureCard"
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 
-export default function LandingPage() {
+export default function InfoTab() {
   return (
     <div className="min-h-screen bg-[#F6F3EC] flex flex-col pb-20">
       <main className="flex flex-col items-center text-center px-6 mt-16 md:mt-24">
