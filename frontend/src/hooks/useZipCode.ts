@@ -1,6 +1,5 @@
 import { useState } from "react";
 import axios from "axios";
-import { STATE_NAMES } from "../constants/states";
 
 interface ZipCodeResult {
   street: string;
@@ -48,7 +47,7 @@ export function useZipCode(): UseZipCodeReturn {
         neighborhood: data.bairro || "",
         city: data.localidade || "",
         state_code: data.uf || "",
-        state: STATE_NAMES[data.uf] || "",
+        state: data.uf || "",
         region: data.regiao || "",
         ibge: data.ibge || "",
         ddd: data.ddd || "",
