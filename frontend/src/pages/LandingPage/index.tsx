@@ -21,7 +21,7 @@ export default function LandingPage() {
             title="Para ONGs e OSCs"
             description="Simplifique a gestão da sua organização com ferramentas integradas para:"
             icon={<UsersIcon className="size-7 text-white" />}
-            theme="green"
+            theme="ong"
             items={[
               "Gestão de projetos e atividades diárias",
               "Controle financeiro e prestação de contas",
@@ -34,7 +34,7 @@ export default function LandingPage() {
             title="Para Empresas"
             description="Gerencie suas iniciativas de responsabilidade social com eficiência:"
             icon={<ClipboardIcon className="size-7 text-white" />}
-            theme="dark"
+            theme="empresa"
             items={[
               "Gestão de programas de investimento social",
               "Monitoramento de projetos apoiados",

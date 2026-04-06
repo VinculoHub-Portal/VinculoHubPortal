@@ -6,7 +6,7 @@ interface FeatureCardProps {
   description: string;
   icon: ReactNode;
   items: string[];
-  theme?: "green" | "dark";
+  theme?: "ong" | "empresa";
 }
 
 export function FeatureCard({
@@ -14,9 +14,9 @@ export function FeatureCard({
   description,
   icon,
   items,
-  theme = "green",
+  theme = "ong",
 }: FeatureCardProps) {
-  const isGreen = theme === "green";
+  const isGreen = theme === "ong";
   const iconBgColor = isGreen ? "bg-vinculo-green" : "bg-vinculo-dark";
   const checkColor = isGreen ? "text-vinculo-green" : "text-vinculo-dark";
 
