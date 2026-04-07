@@ -18,6 +18,18 @@ services:
       dockerfile: Dockerfile
     ports:
       - 80:80
+  flyway:
+    image: flyway/flyway:9
+    container_name: flyway
+    depends_on:
+      - db
+    volumes:
+      - ./db/migration:/flyway/sql
+    command: >
+      -url=jdbc:postgresql://db:5432/${POSTGRES_DB:-vinculohub_db}
+      -user=${POSTGRES_USER:-vinculohub}
+      -password=${POSTGRES_PASSWORD:-vinculohub}
+      migrate
   db:
     image: postgres:16-alpine
     environment:
