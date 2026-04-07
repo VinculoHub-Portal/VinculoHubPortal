@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import { Header } from "../../components/general/Header";
 import { BaseButton } from "../../components/general/BaseButton";
 import { WizardSteps } from "../../components/auth/WizardSteps";
-import { WizardSingUp } from "../../components/auth/WizardSignUp";
-import { NpoStepTwo } from "../../components/auth/NpoStepTwo";
+import { WizardSingUp } from "../../components/wizard/WizardSignUp";
+import { NpoStepTwo } from "../../components/ong/NpoStepTwo";
 import { stepValidators } from "../../config/wizard.config";
 import type {
   FieldErrors,
