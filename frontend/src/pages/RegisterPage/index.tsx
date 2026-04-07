@@ -124,7 +124,7 @@ export default function LandingPage() {
   const steps = useMemo(
     () =>
       getSteps({
-        organizationType,
+        organizationType: organizationType ?? "npo",
         onSelectOrganizationType: setOrganizationType,
         formData,
         setFormData,
