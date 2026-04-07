@@ -1,11 +1,17 @@
-type OrganizationType = "npo" | "enterprise";
-
-import { BaseButton } from "../general/BaseButton";
+import { Link } from "react-router-dom";
+import type { Dispatch, SetStateAction } from "react";
+import type {
+  OrganizationType,
+  FieldErrors,
+  WizardFormData,
+} from "../../types/wizard.types";
 
 type WizardSingUpProps = {
-  organizationType: OrganizationType;
+  organizationType: OrganizationType | null;
   onSelectOrganizationType: (type: OrganizationType) => void;
-  onNext: () => void;
+  formData: WizardFormData;
+  setFormData: Dispatch<SetStateAction<WizardFormData>>;
+  errors: FieldErrors;
 };
 
 type TypeCardProps = {
@@ -33,7 +39,9 @@ function TypeCard({ title, selected, onClick }: TypeCardProps) {
             selected ? "border-green-600" : "border-blue-200",
           ].join(" ")}
         >
-          {selected && <div className="h-2.5 w-2.5 rounded-full bg-green-600" />}
+          {selected && (
+            <div className="h-2.5 w-2.5 rounded-full bg-green-600" />
+          )}
         </div>
 
         <div>
@@ -47,7 +55,7 @@ function TypeCard({ title, selected, onClick }: TypeCardProps) {
 export function WizardSingUp({
   organizationType,
   onSelectOrganizationType,
-  onNext,
+  errors,
 }: WizardSingUpProps) {
   return (
     <div>
@@ -69,21 +77,20 @@ export function WizardSingUp({
           selected={organizationType === "enterprise"}
           onClick={() => onSelectOrganizationType("enterprise")}
         />
-      </div>
 
-      <div className="flex justify-center gap-4 mt-8">
-        <BaseButton variant="ghost" className="w-32" disabled>
-          Voltar
-        </BaseButton>
-        <BaseButton variant="secondary" className="w-32" onClick={onNext}>
-          Próximo
-        </BaseButton>
+        {errors.organizationType && (
+          <p className="flex items-center w-full justify-center mx-auto max-w-xl mt-4 text-sm text-red-500">
+            {errors.organizationType}
+          </p>
+        )}
       </div>
 
       <div className="flex items-center w-full justify-center py-8 mx-auto max-w-xl">
-        <a href="#" className="text-vinculo-dark text-x -webkit-font-smoothing hover:underline">
-          Já tenho login
-        </a>
+        <Link to="/Login">
+          <a className="text-vinculo-dark text-x -webkit-font-smoothing hover:underline">
+            Já tenho login
+          </a>
+        </Link>
       </div>
     </div>
   );
