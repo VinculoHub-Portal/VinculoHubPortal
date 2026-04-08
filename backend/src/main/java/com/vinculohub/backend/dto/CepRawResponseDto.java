@@ -12,4 +12,4 @@ public record CepRawResponseDto(
         @JsonProperty("localidade") String city,
         @JsonProperty("uf") String stateCode,
         @JsonProperty("estado") String state,
-        Boolean erro) {}
+        @JsonProperty("erro") Boolean hasError) {}
