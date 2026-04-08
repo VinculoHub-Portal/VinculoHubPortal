@@ -25,8 +25,7 @@ public class CnpjValidationService {
             throw new CnpjNotFoundException(digits);
         }
         if (result == null || !STATUS_ATIVA.equals(result.situation())) {
-            throw new CnpjInactiveException(
-                    digits, result != null ? result.situation() : "null");
+            throw new CnpjInactiveException(digits, result != null ? result.situation() : "null");
         }
         return result;
     }
