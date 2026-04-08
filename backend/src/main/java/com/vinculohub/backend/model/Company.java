@@ -1,7 +1,8 @@
+/* (C)2026 */
 package com.vinculohub.backend.model;
 
-import java.time.LocalDateTime;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 public class Company {
