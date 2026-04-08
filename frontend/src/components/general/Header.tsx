@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { BaseButton } from "./BaseButton";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
@@ -18,6 +20,7 @@ export function Header() {
   <BaseButton
     variant="outline"
     className="border-white text-white hover:bg-white/10"
+    onClick={() => navigate("/company/register")}  // TODO: mandar para a rota que seleciona se é cadastro de empresa ou ong 
   >
     Cadastro
   </BaseButton>
@@ -44,6 +47,7 @@ export function Header() {
             variant="outline"
             fullWidth
             className="border-white text-white rounded-full py-3"
+            onClick={() => navigate("/company/register")} // TODO: mandar para a rota que seleciona se é cadastro de empresa ou ong 
           >
             Cadastro
           </BaseButton>
