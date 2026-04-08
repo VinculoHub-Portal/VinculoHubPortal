@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>com.vinculohub</groupId>
 	<artifactId>backend</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.2-DB Implementation</version>
 	<name>backend</name>
 	<description>API do VinculoHubPortal</description>
 	<url />
@@ -29,6 +29,7 @@
 	</scm>
 	<properties>
 		<java.version>17</java.version>
+		<testcontainers.version>2.0.2</testcontainers.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -66,16 +67,33 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- Testcontainers para teste com integração do PostgreSQL -->
 		<dependency>
-			<groupId>com.h2database</groupId> <!-- vou remover isso no futuro, é so para teste -->
-			<artifactId>h2</artifactId>
-			<scope>test</scope>
-		</dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
 
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-core</artifactId>
 		</dependency>
+
+		<dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
 	</dependencies>
 	<build>
 		<plugins>
@@ -142,7 +160,7 @@
                           optionally, Spotless can set copyright years by digging
                           through git history (see "license" section below) -->
                         <licenseHeader>
-                            <content>/* (C)$YEAR */</content>  <!-- or <file>${project.basedir}/license-header</file> -->
+                            <content>/* (C)$YEAR */</content>
                         </licenseHeader>
                     </java>
                 </configuration>
@@ -194,5 +212,4 @@
             </plugin>
 		</plugins>
 	</build>
-
 </project>
