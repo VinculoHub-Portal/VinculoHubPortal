@@ -40,6 +40,3 @@ export default function CadastroInstituicao() {
   );
 }
 
-function useState(arg0: number): [any, any] {
-  throw new Error("Function not implemented.");
-}
