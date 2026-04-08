@@ -24,7 +24,7 @@ services:
     depends_on:
       - db
     volumes:
-      - backend/src/main/resources/db/migration:/flyway/sql
+      - ./db/migration:/flyway/sql
     command: >
       -url=jdbc:postgresql://db:5432/${POSTGRES_DB:-vinculohub_db}
       -user=${POSTGRES_USER:-vinculohub}
@@ -41,10 +41,13 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vinculohub} -d ${POSTGRES_DB:-vinculohub_db}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-vinculohub} -d ${POSTGRES_DB:-vinculohub_db}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 5
 volumes:
   db_data:
-
