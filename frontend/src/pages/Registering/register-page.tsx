@@ -1,13 +1,13 @@
-import React, { useState } from "react";
-import { WizardSteps } from "../../components/auth/WizardSteps";
-import { BaseButton } from "../../components/general/BaseButton";
-import { NPO_Registering_Step_4 } from "./Steps/Step4";
+import React, { useState } from "react"
+import { WizardSteps } from "../../components/auth/WizardSteps"
+import { BaseButton } from "../../components/general/BaseButton"
+import { NPO_Registering_Step_4 } from "./Steps/Step4"
 
 export default function CadastroInstituicao() {
-  const [currentStep, setCurrentStep] = useState(4);
+  const [currentStep, setCurrentStep] = useState(4)
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[#F6F3EC]">
+    <div className="flex items-center justify-center min-h-screen bg-surface">
       <div className="bg-white p-8 rounded-xl shadow-md w-600 max-w-md space-y-6">
         <div className="text-center">
           <h1 className="text-2xl font-semibold text-[#00467F]">
@@ -16,7 +16,7 @@ export default function CadastroInstituicao() {
         </div>
 
         <WizardSteps currentStep={currentStep} />
-        <NPO_Registering_Step_4/>
+        <NPO_Registering_Step_4 />
         <div className="flex gap-2">
           <BaseButton
             variant="outline"
@@ -37,5 +37,5 @@ export default function CadastroInstituicao() {
         </div>
       </div>
     </div>
-  );
+  )
 }

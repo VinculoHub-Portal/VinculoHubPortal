@@ -1,18 +1,21 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { BaseButton } from "./BaseButton";
+import { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { BaseButton } from "./BaseButton"
+import LanguageIcon from "@mui/icons-material/Language"
 
 export function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const navigate = useNavigate()
 
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
 
   return (
     <header className="bg-vinculo-dark w-full shadow-md relative z-50">
       <div className="px-6 md:px-8 py-4 flex justify-between items-center">
         <div className="flex items-center gap-2 text-white text-xl font-bold">
-          <span className="text-sm">🌐</span>
+          <span className="text-sm">
+            <LanguageIcon />
+          </span>
           VinculoHub<span className="text-vinculo-green">Portal</span>
         </div>
 
@@ -26,7 +29,7 @@ export function Header() {
           </BaseButton>
 
           <BaseButton
-            className="bg-white !text-vinculo-dark hover:bg-gray-100"
+            className="bg-white text-vinculo-dark! hover:bg-gray-100"
             onClick={() => navigate("/login")}
           >
             Entrar
@@ -54,7 +57,7 @@ export function Header() {
 
           <BaseButton
             fullWidth
-            className="!bg-white !text-vinculo-dark rounded-full py-3"
+            className="bg-white! text-vinculo-dark! rounded-full py-3"
             onClick={() => navigate("/login")}
           >
             Entrar
@@ -62,5 +65,5 @@ export function Header() {
         </div>
       )}
     </header>
-  );
+  )
 }

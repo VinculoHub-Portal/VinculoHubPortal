@@ -1,5 +1,5 @@
 import { BaseButton } from "../../components/general/BaseButton"
-import HeroIcon from "../../assets/landingPage/HeroIcon"
+import HeroIcon from "../../assets/landingPage/HeroIcon.tsx"
 
 export function Hero() {
   return (
@@ -34,10 +34,10 @@ export function Hero() {
           <div className="absolute -top-6 -right-4 bg-[#FDC700] text-[#00467F] font-bold text-lg px-7 py-3.5 rounded-[10px] rotate-6 shadow-lg">
             Gestão + Capacitação!
           </div>
-          <div className="w-full aspect-586/400">
+          <div className="w-full aspect-586/400 rounded-2xl overflow-hidden">
             <HeroIcon />
           </div>
-          <p className="text-lg text-[#4A5565] text-center">
+          <p className="text-2xl text-[#4A5565] text-center">
             Conectando pessoas e organizações
           </p>
         </div>
