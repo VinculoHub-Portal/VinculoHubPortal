@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8" ?>
+<project
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"
+>
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -11,7 +13,7 @@
 	</parent>
 	<groupId>com.vinculohub</groupId>
 	<artifactId>backend</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.2-DB Implementation</version>
 	<name>backend</name>
 	<description>API do VinculoHubPortal</description>
 	<url />
@@ -29,6 +31,7 @@
 	</scm>
 	<properties>
 		<java.version>17</java.version>
+		<testcontainers.version>2.0.2</testcontainers.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -66,17 +69,38 @@
 			<scope>test</scope>
 		</dependency>
 
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.8.6</version>
+        </dependency>
+		<!-- Testcontainers para teste com integração do PostgreSQL -->
 		<dependency>
-			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-			<version>2.8.6</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
 		</dependency>
 
 		<dependency>
-			<groupId>com.h2database</groupId> <!-- vou remover isso no futuro, é so para teste -->
-			<artifactId>h2</artifactId>
-			<scope>test</scope>
-		</dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
 	</dependencies>
 	<build>
 		<plugins>
@@ -115,6 +139,7 @@
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
                 <artifactId>spotless-maven-plugin</artifactId>
+                <version>3.4.0</version>
                 <configuration>
                     <ratchetFrom>origin/main</ratchetFrom>
                     <formats>
@@ -123,8 +148,8 @@
                                 <include>.gitattributes</include>
                                 <include>.gitignore</include>
                             </includes>
-                            <trimTrailingWhitespace/>
-                            <endWithNewline/>
+                            <trimTrailingWhitespace />
+                            <endWithNewline />
                             <indent>
                                 <tabs>true</tabs>
                                 <spacesPerTab>4</spacesPerTab>
@@ -133,7 +158,7 @@
                     </formats>
                     <java>
                         <googleJavaFormat>
-                            <version>1.19.2</version>
+                            <version>1.35.0</version>
                             <style>AOSP</style>
                             <reflowLongStrings>true</reflowLongStrings>
                             <formatJavadoc>false</formatJavadoc>
@@ -143,7 +168,7 @@
                           optionally, Spotless can set copyright years by digging
                           through git history (see "license" section below) -->
                         <licenseHeader>
-                            <content>/* (C)$YEAR */</content>  <!-- or <file>${project.basedir}/license-header</file> -->
+                            <content>/* (C)$YEAR */</content>
                         </licenseHeader>
                     </java>
                 </configuration>
@@ -195,5 +220,4 @@
             </plugin>
 		</plugins>
 	</build>
-
 </project>
