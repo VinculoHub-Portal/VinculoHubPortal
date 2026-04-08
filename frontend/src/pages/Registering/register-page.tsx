@@ -1,4 +1,4 @@
-import * as React from "react";
+import { useState } from "react";
 import { WizardSteps } from "../../components/auth/WizardSteps";
 import { BaseButton } from "../../components/general/BaseButton";
 import { NPO_Registering_Step_4 } from "./Steps/Step4";
@@ -38,4 +38,8 @@ export default function CadastroInstituicao() {
       </div>
     </div>
   );
+}
+
+function useState(arg0: number): [any, any] {
+  throw new Error("Function not implemented.");
 }
