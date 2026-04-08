@@ -1,4 +1,8 @@
-import javax.persistence.*;
+package com.vinculohub.backend.model;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
 @Entity
 public class Address {
     @Id
@@ -11,11 +15,8 @@ public class Address {
     private String stateCode;
 
     private String city;
-
     private String street;
-
     private String number;
-
     private String complement;
 
     @Column(name = "zip_code")
