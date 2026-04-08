@@ -9,7 +9,7 @@ export const AppRouter = () => (
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/components" element={<ComponentsPage />} />
-      <Route path="/cadastro-instituicao" element={<RegisterPage />} />
+      <Route path="/cadastro" element={<RegisterPage />} />
     </Routes>
   </BrowserRouter>
 )
