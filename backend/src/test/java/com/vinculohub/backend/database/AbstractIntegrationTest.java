@@ -12,10 +12,10 @@ import org.testcontainers.containers.PostgreSQLContainer;
 public abstract class AbstractIntegrationTest {
 
     private static final PostgreSQLContainer<?> POSTGRES =
-        new PostgreSQLContainer<>("postgres:16-alpine")
-            .withDatabaseName("vinculohub_db")
-            .withUsername("vinculohub")
-            .withPassword("vinculohub");
+            new PostgreSQLContainer<>("postgres:16-alpine")
+                    .withDatabaseName("vinculohub_db")
+                    .withUsername("vinculohub")
+                    .withPassword("vinculohub");
 
     static {
         POSTGRES.start();
@@ -26,9 +26,7 @@ public abstract class AbstractIntegrationTest {
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
-        registry.add("spring.datasource.driver-class-name", () ->
-            "org.postgresql.Driver"
-        );
+        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
 
         registry.add("spring.flyway.url", POSTGRES::getJdbcUrl);
         registry.add("spring.flyway.user", POSTGRES::getUsername);
