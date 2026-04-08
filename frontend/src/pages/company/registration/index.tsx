@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { WizardSteps } from "../../../components/auth/WizardSteps";
 import { BackLink } from "../../../components/general/BackLink";
 import { Input } from "../../../components/general/SimpleTextInput";
@@ -6,6 +6,7 @@ import { TextArea } from "../../../components/general/SimpleTextArea";
 import { BaseButton } from "../../../components/general/BaseButton";
 import { InfoBox } from "../../../components/general/InfoBox";
 import { useZipCode } from "../../../hooks/useZipCode";
+import { useCnpj } from "../../../hooks/useCnpj";
 import { CompanyIcon, DescriptionIcon, CnpjIcon, AddressIcon, StateIcon, PhoneIcon } from "../../../components/icons";
 import { validateCnpj } from "../../../utils/validateCnpj";
 import { formatCnpj } from "../../../utils/formatCnpj";
@@ -13,7 +14,6 @@ import { formatZipCode } from "../../../utils/formatZipCode";
 
 export default function CompanyRegistrationPage() {
   const [currentStep, setCurrentStep] = useState(2);
-  const { loading: loadingZipCode, error: zipCodeError, fetchZipCode } = useZipCode();
 
   const [basicInfo, setBasicInfo] = useState({
     name: "",
@@ -35,8 +35,44 @@ export default function CompanyRegistrationPage() {
     phone: "",
   });
 
+  const {
+    data: cnpjData,
+    isFetching: loadingCnpj,
+    error: cnpjQueryError,
+  } = useCnpj(basicInfo.cnpj);
+
+  const {
+    data: zipCodeData,
+    isFetching: loadingZipCode,
+    error: zipCodeQueryError,
+  } = useZipCode(contactInfo.zip_code);
+
+  useEffect(() => {
+    if (cnpjData) {
+      setBasicInfo((prev) => ({
+        ...prev,
+        name: cnpjData.legalName || prev.name,
+        tradeName: cnpjData.tradeName || prev.tradeName,
+      }));
+    }
+  }, [cnpjData]);
+
+  useEffect(() => {
+    if (zipCodeData) {
+      setContactInfo((prev) => ({
+        ...prev,
+        street: zipCodeData.street || prev.street,
+        complement: zipCodeData.complement || prev.complement,
+        city: zipCodeData.city || prev.city,
+        state: zipCodeData.state || prev.state,
+        state_code: zipCodeData.stateCode || prev.state_code,
+      }));
+    }
+  }, [zipCodeData]);
+
   const handleCnpjBlur = () => {
-    if (basicInfo.cnpj && !validateCnpj(basicInfo.cnpj)) {
+    if (!basicInfo.cnpj) return;
+    if (!validateCnpj(basicInfo.cnpj)) {
       setCnpjError("CNPJ inválido");
     } else {
       setCnpjError("");
@@ -55,13 +91,6 @@ export default function CompanyRegistrationPage() {
     const { id, value } = e.target;
     const formatted = id === "zip_code" ? formatZipCode(value) : value;
     setContactInfo((prev) => ({ ...prev, [id]: formatted }));
-  };
-
-  const handleZipCodeBlur = async () => {
-    const result = await fetchZipCode(contactInfo.zip_code);
-    if (result) {
-      setContactInfo((prev) => ({ ...prev, ...result }));
-    }
   };
 
   const stepTitles: Record<number, { heading: string; subtitle: string }> = {
@@ -97,16 +126,47 @@ export default function CompanyRegistrationPage() {
 
         {currentStep === 2 && (
           <form className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <Input
+                label="CNPJ"
+                id="cnpj"
+                placeholder="00.000.000/0000-00"
+                maxLength={18}
+                value={basicInfo.cnpj}
+                onChange={handleBasicChange}
+                onBlur={handleCnpjBlur}
+                error={cnpjError || (cnpjQueryError ? "Erro ao consultar o CNPJ. Tente novamente." : "")}
+                icon={<CnpjIcon />}
+                isRequired
+              />
+              {loadingCnpj && (
+                <span className="text-sm text-slate-400">
+                  Consultando CNPJ...
+                </span>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Nome da Empresa"
+                label="Razão Social"
                 id="name"
                 placeholder="Digite a razão social"
                 maxLength={255}
                 value={basicInfo.name}
                 onChange={handleBasicChange}
                 icon={<CompanyIcon />}
+                disabled
                 isRequired
+              />
+              <Input
+                label="Nome Fantasia"
+                id="tradeName"
+                placeholder="Nome fantasia"
+                maxLength={255}
+                value={basicInfo.tradeName}
+                onChange={handleBasicChange}
+                icon={<CompanyIcon />}
+                disabled
               />
             </div>
 
@@ -118,19 +178,6 @@ export default function CompanyRegistrationPage() {
               value={basicInfo.description}
               onChange={handleBasicChange}
               icon={<DescriptionIcon />}
-            />
-
-            <Input
-              label="CNPJ"
-              id="cnpj"
-              placeholder="00.000.000/0000-00"
-              maxLength={18}
-              value={basicInfo.cnpj}
-              onChange={handleBasicChange}
-              onBlur={handleCnpjBlur}
-              error={cnpjError}
-              icon={<CnpjIcon />}
-              isRequired
             />
 
             <div className="flex justify-end gap-3 mt-2 pt-4 border-t border-slate-100">
@@ -158,16 +205,18 @@ export default function CompanyRegistrationPage() {
                 maxLength={9}
                 value={contactInfo.zip_code}
                 onChange={handleContactChange}
-                onBlur={handleZipCodeBlur}
                 icon={<AddressIcon />}
+                isRequired
               />
               {loadingZipCode && (
                 <span className="text-sm text-slate-400">
                   Consultando CEP...
                 </span>
               )}
-              {zipCodeError && (
-                <span className="text-sm text-error">{zipCodeError}</span>
+              {zipCodeQueryError && (
+                <span className="text-sm text-error">
+                  {(zipCodeQueryError as Error).message || "Erro ao consultar o CEP. Tente novamente."}
+                </span>
               )}
             </div>
 
@@ -181,6 +230,7 @@ export default function CompanyRegistrationPage() {
                   value={contactInfo.street}
                   onChange={handleContactChange}
                   icon={<AddressIcon />}
+                  disabled
                 />
               </div>
               <Input
@@ -212,6 +262,7 @@ export default function CompanyRegistrationPage() {
                 value={contactInfo.city}
                 onChange={handleContactChange}
                 icon={<StateIcon />}
+                disabled
               />
             </div>
 
@@ -224,6 +275,7 @@ export default function CompanyRegistrationPage() {
                 value={contactInfo.state}
                 onChange={handleContactChange}
                 icon={<StateIcon />}
+                disabled
               />
               <Input
                 label="UF"
@@ -233,6 +285,7 @@ export default function CompanyRegistrationPage() {
                 value={contactInfo.state_code}
                 onChange={handleContactChange}
                 icon={<StateIcon />}
+                disabled
               />
             </div>
 
