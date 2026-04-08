@@ -23,6 +23,18 @@ services:
       dockerfile: Dockerfile
     ports:
       - 80:80
+  flyway:
+    image: flyway/flyway:9
+    container_name: flyway
+    depends_on:
+      - db
+    volumes:
+      - ./db/migration:/flyway/sql
+    command: >
+      -url=jdbc:postgresql://db:5432/${POSTGRES_DB:-vinculohub_db}
+      -user=${POSTGRES_USER:-vinculohub}
+      -password=${POSTGRES_PASSWORD:-vinculohub}
+      migrate
   db:
     image: postgres:16-alpine
     environment:
@@ -34,10 +46,13 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vinculohub} -d ${POSTGRES_DB:-vinculohub_db}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-vinculohub} -d ${POSTGRES_DB:-vinculohub_db}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 5
 volumes:
   db_data:
-
