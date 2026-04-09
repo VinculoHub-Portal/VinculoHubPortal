@@ -159,7 +159,7 @@
                     </formats>
                     <java>
                         <googleJavaFormat>
-                            <version>1.35.0</version>
+                            <version>1.15.0</version>
                             <style>AOSP</style>
                             <reflowLongStrings>true</reflowLongStrings>
                             <formatJavadoc>false</formatJavadoc>
