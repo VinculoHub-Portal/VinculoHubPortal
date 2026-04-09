@@ -1,9 +1,9 @@
+/* (C)2026 */
 package com.vinculohub.backend.controller;
-
-import java.time.LocalDateTime;
 
 import com.vinculohub.backend.exception.NotFoundException;
 import com.vinculohub.backend.exception.UnprocessableEntityException;
+import java.time.LocalDateTime;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

@@ -1,3 +1,4 @@
+/* (C)2026 */
 package com.vinculohub.backend.controller;
 
 import com.vinculohub.backend.dto.CnpjResponseDTO;
