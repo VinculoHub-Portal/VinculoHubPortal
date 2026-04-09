@@ -109,10 +109,32 @@ export const validateSignupStep: StepValidator = (_data, context) => {
 };
 
 export const validateNpoStepTwo = composeValidators(
-  validateInstitutionName,
   validateEmailField,
   validatePasswordField,
   validateConfirmPasswordField,
+);
+
+export const validateCpfField: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+  const digits = data.cpf.replace(/\D/g, "");
+  if (digits.length !== 11) {
+    errors.cpf = "Informe um CPF válido (11 dígitos).";
+  }
+  return errors;
+};
+
+export const validatePorteOngField: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+  if (!data.porteOng) {
+    errors.porteOng = "Selecione o porte da ONG.";
+  }
+  return errors;
+};
+
+export const validateNpoStepThree = composeValidators(
+  validateInstitutionName,
+  validateCpfField,
+  validatePorteOngField,
 );
 
 export const validateEnterpriseStepTwo = composeValidators(
