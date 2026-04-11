@@ -23,6 +23,7 @@ createRoot(document.getElementById("root")!).render(
         audience: auth0Audience,
       }}
       onRedirectCallback={(appState) => {
+        sessionStorage.setItem("auth0-login-completed", "true")
         window.history.replaceState(
           {},
           document.title,
