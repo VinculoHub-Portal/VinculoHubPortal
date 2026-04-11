@@ -1,7 +1,6 @@
-import { Route, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useState } from "react";
 import { BaseButton } from "./BaseButton";
-import Wizard from "../../pages/RegisterPage";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

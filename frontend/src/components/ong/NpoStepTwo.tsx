@@ -6,6 +6,7 @@ type NpoStepTwoProps = {
   formData: WizardFormData;
   setFormData: Dispatch<SetStateAction<WizardFormData>>;
   errors: FieldErrors;
+  error?: string;
 };
 
 export function NpoStepTwo({ formData, setFormData, errors }: NpoStepTwoProps) {
