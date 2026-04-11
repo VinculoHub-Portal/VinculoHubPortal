@@ -8,14 +8,14 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-  - name: Send Discord Message
+      - name: Send Discord Message
         uses: appleboy/discord-action@master
         with:
           webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
           color: "#4834d4"
           username: "GitHub PR Bot"
           message: |
-            **PR ${{ github.event.pull_request.title }} created -New Review Needed!**
+            **PR ${{ github.event.pull_request.title }} created - New Review Needed!**
             **Título:** ${{ github.event.pull_request.title }}
             **Autor:** ${{ github.event.pull_request.user.login }}
             **Link:** ${{ github.event.pull_request.html_url }}
