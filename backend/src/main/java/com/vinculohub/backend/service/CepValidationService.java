@@ -23,7 +23,7 @@ public class CepValidationService {
                         .retrieve()
                         .body(CepRawResponseDto.class);
 
-        if (raw == null || Boolean.TRUE.equals(raw.erro())) {
+        if (raw == null || Boolean.TRUE.equals(raw.hasError())) {
             throw new CepNotFoundException(digits);
         }
         return CepResponseDto.from(raw);

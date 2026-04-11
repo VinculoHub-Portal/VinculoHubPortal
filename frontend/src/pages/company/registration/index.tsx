@@ -223,6 +223,16 @@ export default function CompanyRegistrationPage() {
                 icon={<CompanyIcon />}
                 disabled
               />
+              <Input
+                label="Nome Fantasia"
+                id="tradeName"
+                placeholder="Nome fantasia"
+                maxLength={255}
+                value={basicInfo.tradeName}
+                onChange={handleBasicChange}
+                icon={<CompanyIcon />}
+                disabled
+              />
             </div>
 
             <TextArea
