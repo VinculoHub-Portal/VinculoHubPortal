@@ -1,13 +1,10 @@
 /* (C)2026 */
 package com.vinculohub.backend;
 
+import com.vinculohub.backend.database.AbstractIntegrationTest;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
-@SpringBootTest
-@ActiveProfiles("test")
-class BackendApplicationTests {
+class BackendApplicationTests extends AbstractIntegrationTest {
 
     @Test
     void contextLoads() {}
