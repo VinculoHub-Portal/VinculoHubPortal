@@ -16,10 +16,7 @@ export function Input({
 
   return (
     <div className="flex flex-col gap-1 w-full text-left">
-      <label
-        htmlFor={id}
-        className="text-slate-700 font-medium text-sm flex gap-1"
-      >
+      <label htmlFor={id} className="...">
         {label}
         {isRequired && <span className="text-red-500">*</span>}
       </label>

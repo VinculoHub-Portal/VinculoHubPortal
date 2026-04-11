@@ -4,7 +4,7 @@ import { BaseButton } from "../../components/general/BaseButton";
 import { Input } from "../../components/general/SimpleTextInput";
 import { WizardSteps } from "../../components/auth/WizardSteps";
 
-export default function LandingPage() {
+export default function ComponentsPage() {
   const [currentStep, setCurrentStep] = useState(1);
 
   return (
