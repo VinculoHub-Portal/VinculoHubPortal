@@ -1,0 +1,9 @@
+/* (C)2026 */
+package com.vinculohub.backend.exception;
+
+public class UnprocessableEntityException extends RuntimeException {
+
+    public UnprocessableEntityException(String message) {
+        super(message);
+    }
+}
