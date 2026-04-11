@@ -4,6 +4,7 @@ import { BaseButton } from "../../components/general/BaseButton";
 import { WizardSteps } from "../../components/auth/WizardSteps";
 import { WizardSingUp } from "../../components/wizard/WizardSignUp";
 import { NpoStepTwo } from "../../components/ong/NpoStepTwo";
+import { NpoStepThree } from "../../components/ong/NpoStepThree";
 import { stepValidators } from "../../config/wizard.config";
 import type {
   FieldErrors,
@@ -24,9 +25,6 @@ function NpoStepTwoDisplay() { ERRADO!
 */
 }
 
-function NpoStepThree() {
-  return <div>Passo 3 - ONG - Informações Básicas 2</div>;
-}
 function NpoStepFour() {
   return <div>Passo 4 - ONG - Informações Básicas 3</div>;
 }
@@ -89,7 +87,12 @@ function getSteps({
         setFormData={setFormData}
         errors={errors}
       />,
-      <NpoStepThree key="npo-step-3" />,
+      <NpoStepThree
+        key="npo-step-3"
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+      />,
       <NpoStepFour key="npo-step-4" />,
       <NpoStepFive key="npo-step-5" />,
     ];
@@ -117,6 +120,10 @@ export default function LandingPage() {
     confirmarSenha: "",
     cnpj: "",
     razaoSocial: "",
+    cpf: "",
+    porteOng: "",
+    resumoInstitucional: "",
+    esg: [],
   });
 
   const [errors, setErrors] = useState<FieldErrors>({});
