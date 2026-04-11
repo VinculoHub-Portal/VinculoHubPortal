@@ -34,7 +34,7 @@ services:
     depends_on:
       - db
     volumes:
-      - ./db/migration:/flyway/sql
+      - ./backend/src/main/resources/db/migration:/flyway/sql:ro
     command: >
       -url=jdbc:postgresql://db:5432/${POSTGRES_DB:-vinculohub_db}
       -user=${POSTGRES_USER:-vinculohub}
