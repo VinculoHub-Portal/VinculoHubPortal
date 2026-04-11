@@ -1,11 +1,42 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
 import { BaseButton } from "./BaseButton";
+
+const auth0Audience = import.meta.env.VITE_AUTH0_AUDIENCE;
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isAuthenticated, loginWithRedirect, logout } = useAuth0();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+  const handleLogin = async () => {
+    try {
+      console.info("Redirecionando para login Auth0...");
+      await loginWithRedirect({
+        appState: {
+          returnTo: window.location.pathname,
+        },
+        authorizationParams: {
+          redirect_uri: window.location.origin,
+          audience: auth0Audience,
+        },
+      });
+    } catch (error) {
+      console.error("Erro ao iniciar login com Auth0:", error);
+    }
+  };
+
+  const handleLogout = () => {
+    logout({
+      logoutParams: {
+        returnTo: window.location.origin,
+      },
+    });
+  };
+
+  const handleAuthClick = isAuthenticated ? handleLogout : handleLogin;
+  const authButtonLabel = isAuthenticated ? "Sair" : "Entrar";
 
   return (
     <header className="bg-vinculo-dark w-full shadow-md relative z-50">
@@ -25,8 +56,11 @@ export function Header() {
             </BaseButton>
           </Link>
 
-          <BaseButton className="bg-white !text-vinculo-dark hover:bg-gray-100">
-            Entrar
+          <BaseButton
+            className="bg-white !text-vinculo-dark hover:bg-gray-100"
+            onClick={handleAuthClick}
+          >
+            {authButtonLabel}
           </BaseButton>
         </div>
         <button
@@ -51,8 +85,9 @@ export function Header() {
           <BaseButton
             fullWidth
             className="!bg-white !text-vinculo-dark rounded-full py-3"
+            onClick={handleAuthClick}
           >
-            Entrar
+            {authButtonLabel}
           </BaseButton>
         </div>
       )}
