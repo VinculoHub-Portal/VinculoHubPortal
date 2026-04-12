@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write
 
     steps:
       - name: Checkout PR branch
@@ -27,51 +27,76 @@ jobs:
 
           echo "Checking migrations against base branch: $BASE_BRANCH"
 
-          # Get migration files added/modified in this PR (compared to base branch)
           PR_MIGRATIONS=$(git diff --name-only --diff-filter=A origin/$BASE_BRANCH...HEAD -- "$MIGRATION_DIR" | xargs -I{} basename {} 2>/dev/null || true)
 
           if [ -z "$PR_MIGRATIONS" ]; then
             echo "No new migration files detected in this PR."
+            echo "status=ok" >> $GITHUB_OUTPUT
+            echo "message=Nenhum arquivo de migration novo detectado neste PR." >> $GITHUB_OUTPUT
             exit 0
           fi
 
-          echo "New migrations in PR:"
-          echo "$PR_MIGRATIONS"
-
-          # Extract version prefixes from PR migrations (e.g., "V2" from "V2__description.sql", "V1.1" from "V1.1__desc.sql")
           PR_VERSIONS=$(echo "$PR_MIGRATIONS" | grep -oP '^V[\d.]+(?=__)' || true)
 
           if [ -z "$PR_VERSIONS" ]; then
-            echo "Could not parse version prefixes from migration filenames. Skipping check."
+            echo "Could not parse version prefixes. Skipping check."
+            echo "status=ok" >> $GITHUB_OUTPUT
+            echo "message=Não foi possível extrair prefixos de versão dos arquivos. Verificação ignorada." >> $GITHUB_OUTPUT
             exit 0
           fi
 
-          echo "Version prefixes in PR: $PR_VERSIONS"
-
-          # Get all existing migrations on the base branch
           BASE_MIGRATIONS=$(git ls-tree -r --name-only origin/$BASE_BRANCH -- "$MIGRATION_DIR" | xargs -I{} basename {} 2>/dev/null || true)
 
-          echo "Existing migrations on $BASE_BRANCH:"
-          echo "$BASE_MIGRATIONS"
-
-          # Check for conflicts
           CONFLICTS=""
           while IFS= read -r pr_version; do
-            # Match any file in base that starts with this version prefix followed by __ or .
             MATCH=$(echo "$BASE_MIGRATIONS" | grep -P "^${pr_version}(__|\\.)" || true)
             if [ -n "$MATCH" ]; then
-              CONFLICTS="$CONFLICTS\n  PR version '$pr_version' conflicts with existing: $MATCH"
+              CONFLICTS="$CONFLICTS\n- Versão \`$pr_version\` conflita com: \`$MATCH\`"
             fi
           done <<< "$PR_VERSIONS"
 
           if [ -n "$CONFLICTS" ]; then
-            echo ""
+            echo "status=conflict" >> $GITHUB_OUTPUT
+            {
+              echo "message<<EOF"
+              echo -e "$CONFLICTS"
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
             echo "::error::Migration version conflict detected!"
-            echo -e "The following migration versions already exist on '$BASE_BRANCH':$CONFLICTS"
-            echo ""
-            echo "Rename your migration file(s) to use a unique version prefix."
             exit 1
           fi
 
-          echo ""
+          NEW_FILES=$(echo "$PR_MIGRATIONS" | sed 's/^/- `/' | sed 's/$/`/')
+          echo "status=ok" >> $GITHUB_OUTPUT
+          {
+            echo "message<<EOF"
+            echo -e "$NEW_FILES"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
           echo "No migration version conflicts found."
+
+      - name: Comment on PR (conflict)
+        if: failure() && steps.migration-check.outputs.status == 'conflict'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const conflicts = `${{ steps.migration-check.outputs.message }}`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `## ❌ Conflito de versão em migrations\n\nAs seguintes migrations adicionadas neste PR possuem prefixos de versão que já existem na branch \`${{ github.base_ref }}\`:\n\n${conflicts}\n\nRenomeie o(s) arquivo(s) para usar um prefixo de versão único antes de mergear.`
+            });
+
+      - name: Comment on PR (success)
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const files = `${{ steps.migration-check.outputs.message }}`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `## ✅ Migrations validadas\n\nNenhum conflito de versão encontrado na branch \`${{ github.base_ref }}\`.\n\n**Arquivos verificados:**\n${files}`
+            });
