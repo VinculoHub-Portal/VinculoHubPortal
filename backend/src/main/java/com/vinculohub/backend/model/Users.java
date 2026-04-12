@@ -4,25 +4,21 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "address")
-public class Address {
+@Table(name = "users")
+public class Users {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private String state;
+    private String name;
 
-    @Column(name = "state_code")
-    private String stateCode;
+    @Column(unique = true)
+    private String email;
 
-    private String city;
-    private String street;
-    private String number;
-    private String complement;
-
-    @Column(name = "zip_code")
-    private String zipCode;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "user_type")
+    private UserType userType;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
