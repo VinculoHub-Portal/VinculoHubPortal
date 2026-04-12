@@ -3,8 +3,6 @@ name: Validate Migration Versions
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-    paths:
-      - 'backend/src/main/resources/db/migration/**'
 
 jobs:
   check-migration-conflicts:
