@@ -20,22 +20,6 @@ export function NpoStepTwo({ formData, setFormData, errors }: NpoStepTwoProps) {
 
       <div className="flex flex-col gap-5">
         <Input
-          id="cnpj"
-          label="CNPJ"
-          isRequired
-          value={formData.cnpj}
-          onChange={(e) =>
-            setFormData((prev) => ({
-              ...prev,
-              cnpj: e.target.value,
-            }))
-          }
-          error={errors.cnpj}
-          className={inputFilledClass}
-          placeholder="00.000.000/0000-00"
-        />
-
-        <Input
           id="email-cadastro"
           label="E-mail"
           isRequired
