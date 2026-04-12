@@ -78,25 +78,33 @@ jobs:
       - name: Comment on PR (conflict)
         if: failure() && steps.migration-check.outputs.status == 'conflict'
         uses: actions/github-script@v7
+        env:
+          CONFLICTS_MSG: ${{ steps.migration-check.outputs.message }}
+          BASE_BRANCH: ${{ github.base_ref }}
         with:
           script: |
-            const conflicts = `${{ steps.migration-check.outputs.message }}`;
+            const conflicts = process.env.CONFLICTS_MSG;
+            const baseBranch = process.env.BASE_BRANCH;
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `## ❌ Conflito de versão em migrations\n\nAs seguintes migrations adicionadas neste PR possuem prefixos de versão que já existem na branch \`${{ github.base_ref }}\`:\n\n${conflicts}\n\nRenomeie o(s) arquivo(s) para usar um prefixo de versão único antes de mergear.`
+              body: `## ❌ Conflito de versão em migrations\n\nAs seguintes migrations adicionadas neste PR possuem prefixos de versão que já existem na branch \`${baseBranch}\`:\n\n${conflicts}\n\nRenomeie o(s) arquivo(s) para usar um prefixo de versão único antes de mergear.`
             });
 
       - name: Comment on PR (success)
         if: success()
         uses: actions/github-script@v7
+        env:
+          FILES_MSG: ${{ steps.migration-check.outputs.message }}
+          BASE_BRANCH: ${{ github.base_ref }}
         with:
           script: |
-            const files = `${{ steps.migration-check.outputs.message }}`;
+            const files = process.env.FILES_MSG;
+            const baseBranch = process.env.BASE_BRANCH;
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `## ✅ Migrations validadas\n\nNenhum conflito de versão encontrado na branch \`${{ github.base_ref }}\`.\n\n**Arquivos verificados:**\n${files}`
+              body: `## ✅ Migrations validadas\n\nNenhum conflito de versão encontrado na branch \`${baseBranch}\`.\n\n**Arquivos verificados:**\n${files}`
             });
