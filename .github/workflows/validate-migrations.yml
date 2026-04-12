@@ -1,0 +1,77 @@
+name: Validate Migration Versions
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'backend/src/main/resources/db/migration/**'
+
+jobs:
+  check-migration-conflicts:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for migration version conflicts
+        id: migration-check
+        run: |
+          BASE_BRANCH="${{ github.base_ref }}"
+          MIGRATION_DIR="backend/src/main/resources/db/migration"
+
+          echo "Checking migrations against base branch: $BASE_BRANCH"
+
+          # Get migration files added/modified in this PR (compared to base branch)
+          PR_MIGRATIONS=$(git diff --name-only --diff-filter=A origin/$BASE_BRANCH...HEAD -- "$MIGRATION_DIR" | xargs -I{} basename {} 2>/dev/null || true)
+
+          if [ -z "$PR_MIGRATIONS" ]; then
+            echo "No new migration files detected in this PR."
+            exit 0
+          fi
+
+          echo "New migrations in PR:"
+          echo "$PR_MIGRATIONS"
+
+          # Extract version prefixes from PR migrations (e.g., "V2" from "V2__description.sql", "V1.1" from "V1.1__desc.sql")
+          PR_VERSIONS=$(echo "$PR_MIGRATIONS" | grep -oP '^V[\d.]+(?=__)' || true)
+
+          if [ -z "$PR_VERSIONS" ]; then
+            echo "Could not parse version prefixes from migration filenames. Skipping check."
+            exit 0
+          fi
+
+          echo "Version prefixes in PR: $PR_VERSIONS"
+
+          # Get all existing migrations on the base branch
+          BASE_MIGRATIONS=$(git ls-tree -r --name-only origin/$BASE_BRANCH -- "$MIGRATION_DIR" | xargs -I{} basename {} 2>/dev/null || true)
+
+          echo "Existing migrations on $BASE_BRANCH:"
+          echo "$BASE_MIGRATIONS"
+
+          # Check for conflicts
+          CONFLICTS=""
+          while IFS= read -r pr_version; do
+            # Match any file in base that starts with this version prefix followed by __ or .
+            MATCH=$(echo "$BASE_MIGRATIONS" | grep -P "^${pr_version}(__|\\.)" || true)
+            if [ -n "$MATCH" ]; then
+              CONFLICTS="$CONFLICTS\n  PR version '$pr_version' conflicts with existing: $MATCH"
+            fi
+          done <<< "$PR_VERSIONS"
+
+          if [ -n "$CONFLICTS" ]; then
+            echo ""
+            echo "::error::Migration version conflict detected!"
+            echo -e "The following migration versions already exist on '$BASE_BRANCH':$CONFLICTS"
+            echo ""
+            echo "Rename your migration file(s) to use a unique version prefix."
+            exit 1
+          fi
+
+          echo ""
+          echo "No migration version conflicts found."
