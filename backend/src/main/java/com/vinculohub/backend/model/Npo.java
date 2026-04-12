@@ -6,8 +6,10 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
 @Entity
 @Table(
@@ -26,28 +28,29 @@ public class Npo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @Column(nullable = false, length = 255)
     private String name;
 
     @Column(name = "user_id")
-    private Long userId;
+    private Integer userId;
 
-    @Column(length = 1000)
+    @Column(length = 3000)
     private String description;
 
     @Column(name = "logo_url", length = 500)
     private String logoUrl;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "npo_size", nullable = false)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(name = "npo_size", nullable = false, columnDefinition = "npo_size")
     private NpoSize npoSize;
 
-    @Column(length = 14)
+    @Column(length = 18)
     private String cnpj;
 
-    @Column(length = 11)
+    @Column(length = 14)
     private String cpf;
 
     @Column(length = 30)

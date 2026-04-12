@@ -7,15 +7,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface NpoRepository extends JpaRepository<Npo, Long> {
+public interface NpoRepository extends JpaRepository<Npo, Integer> {
 
-    Optional<Npo> findByUserId(Long userId);
+    Optional<Npo> findByUserId(Integer userId);
 
     Optional<Npo> findByCnpj(String cnpj);
 
     Optional<Npo> findByCpf(String cpf);
 
-    boolean existsByUserId(Long userId);
+    boolean existsByUserId(Integer userId);
 
     boolean existsByCnpj(String cnpj);
 
