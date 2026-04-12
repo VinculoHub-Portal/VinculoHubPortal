@@ -1,0 +1,1 @@
+-- test: intentional conflict to validate migration version check workflow
