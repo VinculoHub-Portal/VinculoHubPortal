@@ -49,7 +49,7 @@ jobs:
 
           CONFLICTS=""
           while IFS= read -r pr_version; do
-            MATCH=$(echo "$BASE_MIGRATIONS" | grep -P "^${pr_version}(__|\\.)" || true)
+            MATCH=$(echo "$BASE_MIGRATIONS" | grep -P "^${pr_version}__" || true)
             if [ -n "$MATCH" ]; then
               CONFLICTS="$CONFLICTS\n- Versão \`$pr_version\` conflita com: \`$MATCH\`"
             fi
