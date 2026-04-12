@@ -1,50 +1,42 @@
 /* (C)2026 */
 package com.vinculohub.backend.model;
 
+import com.vinculohub.backend.model.enums.UserType;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.type.SqlTypes;
+import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
 @Entity
-@Table(name = "address")
+@Table(
+        name = "users",
+        uniqueConstraints = {@UniqueConstraint(name = "uk_users_email", columnNames = "email")})
 @SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Address {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(length = 50)
-    private String state;
+    @Column(nullable = false, length = 255)
+    private String name;
 
-    @JdbcTypeCode(SqlTypes.CHAR)
-    @Column(name = "state_code", length = 2, columnDefinition = "char(2)")
-    private String stateCode;
+    @Column(nullable = false, unique = true, length = 255)
+    private String email;
 
-    @Column(length = 50)
-    private String city;
-
-    @Column(length = 100)
-    private String street;
-
-    @Column(length = 20)
-    private String number;
-
-    @Column(length = 100)
-    private String complement;
-
-    @Column(name = "zip_code", length = 10)
-    private String zipCode;
+    @Enumerated(EnumType.STRING)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(name = "user_type", nullable = false, columnDefinition = "user_type")
+    private UserType userType;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

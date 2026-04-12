@@ -1,5 +1,7 @@
 export type OrganizationType = "npo" | "enterprise";
 
+export type WizardEsgOption = "ambiental" | "social" | "governanca";
+
 /* Se precisar de campos opcionais utilize "pick". EXs:
 type SignupFields = Pick<
   WizardFormData,
@@ -16,7 +18,10 @@ export type WizardFormData = {
   confirmarSenha: string;
   cnpj: string;
   razaoSocial: string;
-  // ...campos dos próximos steps
+  cpf: string;
+  porteOng: "" | "pequena" | "media" | "grande";
+  resumoInstitucional: string;
+  esg: WizardEsgOption[];
 };
 
 export type FieldErrors = Partial<

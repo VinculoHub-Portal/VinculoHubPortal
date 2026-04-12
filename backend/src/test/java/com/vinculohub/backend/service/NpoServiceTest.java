@@ -30,11 +30,11 @@ class NpoServiceTest {
     @DisplayName("Deve salvar endereço primeiro e depois a ONG com o vínculo configurado")
     void shouldSaveAddressBeforeNpo() {
         Address address = Address.builder().street("Rua A").city("São Paulo").build();
-        Address savedAddress = Address.builder().id(10L).street("Rua A").city("São Paulo").build();
+        Address savedAddress = Address.builder().id(10).street("Rua A").city("São Paulo").build();
         Npo npo =
                 Npo.builder()
                         .name("ONG Exemplo")
-                        .npoSize(NpoSize.SMALL)
+                        .npoSize(NpoSize.small)
                         .environmental(true)
                         .build();
 
@@ -56,7 +56,7 @@ class NpoServiceTest {
     @DisplayName("Deve salvar ONG sem endereço quando o endereço não for informado")
     void shouldSaveNpoWithoutAddress() {
         Npo npo =
-                Npo.builder().name("ONG Sem Endereço").npoSize(NpoSize.MEDIUM).social(true).build();
+                Npo.builder().name("ONG Sem Endereço").npoSize(NpoSize.medium).social(true).build();
 
         when(npoRepository.save(npo)).thenReturn(npo);
 
