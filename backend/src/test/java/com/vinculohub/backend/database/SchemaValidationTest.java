@@ -21,7 +21,7 @@ class SchemaValidationTest extends AbstractIntegrationTest {
                         select column_name
                         from information_schema.columns
                         where table_schema = 'public'
-                          and table_name = 'user'
+                          and table_name = 'users'
                         """,
                         String.class);
 
@@ -41,7 +41,7 @@ class SchemaValidationTest extends AbstractIntegrationTest {
                         select data_type
                         from information_schema.columns
                         where table_schema = 'public'
-                          and table_name = 'user'
+                          and table_name = 'users'
                           and column_name = 'email'
                         """,
                         String.class);
@@ -159,7 +159,7 @@ class SchemaValidationTest extends AbstractIntegrationTest {
                             return result;
                         });
 
-        assertThat(uniqueConstraints.get("user")).isNotNull().isNotEmpty();
+        assertThat(uniqueConstraints.get("users")).isNotNull().isNotEmpty();
         assertThat(uniqueConstraints.get("npo")).isNotNull().isNotEmpty();
         assertThat(uniqueConstraints.get("company")).isNotNull().isNotEmpty();
     }
