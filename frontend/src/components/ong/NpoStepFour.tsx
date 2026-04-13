@@ -1,7 +1,7 @@
 export function Enterprise_Registering_Step_4(){
 
 }
-export function NPO_Registering_Step_4(){
+export function NPOStepFour(){
     return <div className="space-y-4">
           <h6 className="font-semibold text-[#00467F]">Informações básicas</h6>
           <div>
