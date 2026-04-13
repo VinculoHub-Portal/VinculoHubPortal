@@ -5,7 +5,7 @@ import { Input } from "../../../components/general/SimpleTextInput";
 import { TextArea } from "../../../components/general/SimpleTextArea";
 import { BaseButton } from "../../../components/general/BaseButton";
 import { InfoBox } from "../../../components/general/InfoBox";
-import { LogoUpload } from "../../../components/general/LogoUpload";
+// import { LogoUpload } from "../../../components/general/LogoUpload";
 import { useZipCode } from "../../../hooks/useZipCode";
 import { useCnpj } from "../../../hooks/useCnpj";
 import { CompanyIcon, DescriptionIcon, CnpjIcon, AddressIcon, StateIcon, PhoneIcon, EmailIcon, LockIcon } from "../../../components/icons";
@@ -24,8 +24,8 @@ export default function CompanyRegistrationPage() {
     cnpj: "",
   });
 
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  // const [logoFile, setLogoFile] = useState<File | null>(null);
+  // const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   const [cnpjError, setCnpjError] = useState("");
 
@@ -193,6 +193,7 @@ export default function CompanyRegistrationPage() {
                 onBlur={handleCnpjBlur}
                 error={cnpjError || (cnpjQueryError ? "Erro ao consultar o CNPJ. Tente novamente." : "")}
                 icon={<CnpjIcon />}
+                iconPosition="left"
                 isRequired
               />
               {loadingCnpj && (
@@ -211,6 +212,7 @@ export default function CompanyRegistrationPage() {
                 value={basicInfo.name}
                 onChange={handleBasicChange}
                 icon={<CompanyIcon />}
+                iconPosition="left"
                 disabled
               />
               <Input
@@ -221,6 +223,7 @@ export default function CompanyRegistrationPage() {
                 value={basicInfo.tradeName}
                 onChange={handleBasicChange}
                 icon={<CompanyIcon />}
+                iconPosition="left"
                 disabled
               />
               <Input
@@ -231,6 +234,7 @@ export default function CompanyRegistrationPage() {
                 value={basicInfo.tradeName}
                 onChange={handleBasicChange}
                 icon={<CompanyIcon />}
+                iconPosition="left"
                 disabled
               />
             </div>
@@ -271,6 +275,7 @@ export default function CompanyRegistrationPage() {
                 value={contactInfo.zip_code}
                 onChange={handleContactChange}
                 icon={<AddressIcon />}
+                iconPosition="left"
                 isRequired
               />
               {loadingZipCode && (
@@ -295,6 +300,7 @@ export default function CompanyRegistrationPage() {
                   value={contactInfo.street}
                   onChange={handleContactChange}
                   icon={<AddressIcon />}
+                  iconPosition="left"
                   disabled
                 />
               </div>
@@ -306,6 +312,7 @@ export default function CompanyRegistrationPage() {
                 value={contactInfo.number}
                 onChange={handleContactChange}
                 icon={<AddressIcon />}
+                iconPosition="left"
               />
             </div>
 
@@ -318,6 +325,7 @@ export default function CompanyRegistrationPage() {
                 value={contactInfo.complement}
                 onChange={handleContactChange}
                 icon={<AddressIcon />}
+                iconPosition="left"
               />
               <Input
                 label="Cidade"
@@ -327,6 +335,7 @@ export default function CompanyRegistrationPage() {
                 value={contactInfo.city}
                 onChange={handleContactChange}
                 icon={<StateIcon />}
+                iconPosition="left"
                 disabled
               />
             </div>
@@ -340,6 +349,7 @@ export default function CompanyRegistrationPage() {
                 value={contactInfo.state}
                 onChange={handleContactChange}
                 icon={<StateIcon />}
+                iconPosition="left"
                 disabled
               />
               <Input
@@ -350,6 +360,7 @@ export default function CompanyRegistrationPage() {
                 value={contactInfo.state_code}
                 onChange={handleContactChange}
                 icon={<StateIcon />}
+                iconPosition="left"
                 disabled
               />
             </div>
@@ -362,6 +373,7 @@ export default function CompanyRegistrationPage() {
               value={contactInfo.phone}
               onChange={handleContactChange}
               icon={<PhoneIcon />}
+              iconPosition="left"
             />
 
             <InfoBox
@@ -401,6 +413,7 @@ export default function CompanyRegistrationPage() {
               onBlur={handleCredentialsBlur}
               error={credentialsErrors.email}
               icon={<EmailIcon />}
+              iconPosition="left"
               isRequired
             />
 
@@ -413,6 +426,7 @@ export default function CompanyRegistrationPage() {
               value={credentials.password}
               onChange={handleCredentialsChange}
               icon={<LockIcon />}
+              iconPosition="left"
               isRequired
             />
 
@@ -427,6 +441,7 @@ export default function CompanyRegistrationPage() {
               onBlur={handleCredentialsBlur}
               error={credentialsErrors.confirmPassword}
               icon={<LockIcon />}
+              iconPosition="left"
               isRequired
             />
 
