@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record CepRawResponseDto(
+public record CepRawResponseDTO(
         @JsonProperty("cep") String zipCode,
         @JsonProperty("logradouro") String street,
         @JsonProperty("complemento") String complement,
