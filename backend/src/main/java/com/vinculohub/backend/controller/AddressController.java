@@ -16,7 +16,8 @@ public class AddressController {
 
     @GetMapping("/{addressId}")
     public ResponseEntity<AddressDTO> getAddressById(@PathVariable Integer addressId) {
-        return addressService.findById(addressId)
+        return addressService
+                .findById(addressId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
