@@ -15,7 +15,8 @@ public class Users {
 
     @Column(unique = true)
     private String email;
-
+    @Column(name = "auth0_id", unique = true)
+    private String auth0Id;
     @Enumerated(EnumType.STRING)
     @Column(name = "user_type")
     private UserType userType;
