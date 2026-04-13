@@ -1,7 +1,7 @@
 /* (C)2026 */
 package com.vinculohub.backend.controller;
 
-import com.vinculohub.backend.dto.CepResponseDto;
+import com.vinculohub.backend.dto.CepResponseDTO;
 import com.vinculohub.backend.service.CepValidationService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,7 +19,7 @@ public class CepController {
     }
 
     @GetMapping("/{cep}")
-    public CepResponseDto validate(@PathVariable String cep) {
+    public CepResponseDTO validate(@PathVariable String cep) {
         return cepValidationService.validate(cep);
     }
 }

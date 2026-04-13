@@ -21,13 +21,14 @@ class SchemaValidationTest extends AbstractIntegrationTest {
                         select column_name
                         from information_schema.columns
                         where table_schema = 'public'
-                          and table_name = 'user'
+                          and table_name = 'users'
                         """,
                         String.class);
 
         assertThat(columns)
                 .contains(
                         "id",
+                        "auth0_id",
                         "name",
                         "email",
                         "user_type",
@@ -41,12 +42,25 @@ class SchemaValidationTest extends AbstractIntegrationTest {
                         select data_type
                         from information_schema.columns
                         where table_schema = 'public'
-                          and table_name = 'user'
+                          and table_name = 'users'
                           and column_name = 'email'
                         """,
                         String.class);
 
         assertThat(emailType).isEqualTo("character varying");
+
+        String auth0IdType =
+                jdbcTemplate.queryForObject(
+                        """
+                        select data_type
+                        from information_schema.columns
+                        where table_schema = 'public'
+                          and table_name = 'users'
+                          and column_name = 'auth0_id'
+                        """,
+                        String.class);
+
+        assertThat(auth0IdType).isEqualTo("character varying");
     }
 
     @Test
@@ -159,7 +173,8 @@ class SchemaValidationTest extends AbstractIntegrationTest {
                             return result;
                         });
 
-        assertThat(uniqueConstraints.get("user")).isNotNull().isNotEmpty();
+        assertThat(uniqueConstraints.get("users")).isNotNull().isNotEmpty();
+        assertThat(uniqueConstraints.get("users")).contains("users_auth0_id_key");
         assertThat(uniqueConstraints.get("npo")).isNotNull().isNotEmpty();
         assertThat(uniqueConstraints.get("company")).isNotNull().isNotEmpty();
     }

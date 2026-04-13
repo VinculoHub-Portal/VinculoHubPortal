@@ -1,7 +1,7 @@
 /* (C)2026 */
 package com.vinculohub.backend.service;
 
-import com.vinculohub.backend.dto.CnpjResponseDto;
+import com.vinculohub.backend.dto.CnpjResponseDTO;
 import com.vinculohub.backend.exception.CnpjInactiveException;
 import com.vinculohub.backend.exception.CnpjNotFoundException;
 import org.springframework.stereotype.Service;
@@ -16,11 +16,11 @@ public class CnpjValidationService {
 
     private final RestClient restClient = RestClient.create();
 
-    public CnpjResponseDto validate(String cnpj) {
+    public CnpjResponseDTO validate(String cnpj) {
         String digits = cnpj.replaceAll("\\D", "");
-        CnpjResponseDto result;
+        CnpjResponseDTO result;
         try {
-            result = restClient.get().uri(BASE_URL + digits).retrieve().body(CnpjResponseDto.class);
+            result = restClient.get().uri(BASE_URL + digits).retrieve().body(CnpjResponseDTO.class);
         } catch (HttpClientErrorException.NotFound e) {
             throw new CnpjNotFoundException(digits);
         }
