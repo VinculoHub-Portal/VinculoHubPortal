@@ -1,35 +1,25 @@
 /* (C)2026 */
 package com.vinculohub.backend.dto;
 
-import com.vinculohub.backend.model.Company;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Builder;
 
 @Builder
 public record CompanyDTO(
         Integer id,
+        @NotEmpty
         String legalName,
+        @NotEmpty
         String socialName,
         String description,
+        @NotEmpty
         String logoUrl,
+        @NotEmpty
         String cnpj,
+        @NotEmpty
         String phone,
-        UsersDTO user,
+        @NotEmpty
+        String userId,
+        @NotEmpty
         AddressDTO address) {
-
-    public static CompanyDTO from(Company company) {
-        return CompanyDTO.builder()
-                .id(company.getId())
-                .legalName(company.getLegalName())
-                .socialName(company.getSocialName())
-                .description(company.getDescription())
-                .logoUrl(company.getLogoUrl())
-                .cnpj(company.getCnpj())
-                .phone(company.getPhone())
-                .user(company.getUser() != null ? UsersDTO.from(company.getUser()) : null)
-                .address(
-                        company.getAddress() != null
-                                ? AddressDTO.from(company.getAddress())
-                                : null)
-                .build();
-    }
 }
