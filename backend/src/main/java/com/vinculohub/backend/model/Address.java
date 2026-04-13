@@ -2,7 +2,8 @@ package com.vinculohub.backend.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-
+@Getter
+@Setter
 @Entity
 @Table(name = "address")
 public class Address {
