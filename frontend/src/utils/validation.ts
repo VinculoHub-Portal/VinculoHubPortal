@@ -74,6 +74,16 @@ export const validateConfirmPasswordField: StepValidator = (data) => {
   return errors;
 };
 
+export const validateCpfField: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+
+  if (!data.cpf.trim()) {
+    errors.cpf = "Informe o CPF.";
+  }
+
+  return errors;
+};
+
 export const validateCnpjField: StepValidator = (data) => {
   const errors: FieldErrors = {};
 
@@ -94,6 +104,16 @@ export const validateRazaoSocialField: StepValidator = (data) => {
   return errors;
 };
 
+export const validateSizeField: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+
+  if (!data.size.trim()) {
+    errors.size = "Informe o tamanho da empresa.";
+  }
+
+  return errors;
+};
+
 {
   /* Validadores por step */
 }
@@ -109,14 +129,17 @@ export const validateSignupStep: StepValidator = (_data, context) => {
 };
 
 export const validateNpoStepTwo = composeValidators(
-  validateInstitutionName,
   validateEmailField,
   validatePasswordField,
   validateConfirmPasswordField,
 );
 
-export const validateEnterpriseStepTwo = composeValidators(
-  // Trava sem mostrar os campos, pois não foi implementado.
-  // Colocar os campos corretos ou remover para teste.
-  validateRazaoSocialField,
+export const validateNpoStepThree = composeValidators(
+  validateInstitutionName,
+  validateCpfField,
+  validateSizeField,
 );
+
+export const validateEnterpriseStepTwo = composeValidators();
+// Trava sem mostrar os campos, pois não foi implementado.
+// Colocar os campos corretos ou remover para teste.

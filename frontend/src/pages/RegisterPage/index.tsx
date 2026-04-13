@@ -3,35 +3,88 @@ import { Header } from "../../components/general/Header";
 import { BaseButton } from "../../components/general/BaseButton";
 import { WizardSteps } from "../../components/auth/WizardSteps";
 import { WizardSingUp } from "../../components/wizard/WizardSignUp";
-import { NpoStepTwo } from "../../components/ong/NpoStepTwo";
 import { stepValidators } from "../../config/wizard.config";
 import type {
   FieldErrors,
   WizardFormData,
   OrganizationType,
 } from "../../types/wizard.types";
+import { NPORegisteringStep2 } from "./Steps/Step2";
+import { NPORegisteringStep3 } from "./Steps/Step3";
+import { NPORegisteringStep4 } from "./Steps/Step4";
+import { NPORegisteringStep5 } from "./Steps/Step5";
 
 {
   /* NPO Steps
   Agora são chamados diretamente no return!
   Só tem a func salva, para não quebrar o código.
+  */
+}
 
-function NpoStepTwoDisplay() { ERRADO!
+function NpoStepTwo({
+  formData,
+  setFormData,
+  errors,
+}: {
+  formData: WizardFormData;
+  setFormData: React.Dispatch<React.SetStateAction<WizardFormData>>;
+  errors: FieldErrors;
+}) {
   return (
-    <div><NpoStepTwo /></div>
+    <div>
+      <NPORegisteringStep2
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+      />
+    </div>
   );
 }
-*/
-}
 
-function NpoStepThree() {
-  return <div>Passo 3 - ONG - Informações Básicas 2</div>;
+function NpoStepThree({
+  formData,
+  setFormData,
+  errors,
+}: {
+  formData: WizardFormData;
+  setFormData: React.Dispatch<React.SetStateAction<WizardFormData>>;
+  errors: FieldErrors;
+}) {
+  return (
+    <div>
+      <NPORegisteringStep3
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+      />
+    </div>
+  );
 }
 function NpoStepFour() {
-  return <div>Passo 4 - ONG - Informações Básicas 3</div>;
+  return (
+    <div>
+      <NPORegisteringStep4 />
+    </div>
+  );
 }
-function NpoStepFive() {
-  return <div>Passo 5 - ONG - Cadastro de Projeto</div>;
+function NpoStepFive({
+  formData,
+  setFormData,
+  errors,
+}: {
+  formData: WizardFormData;
+  setFormData: React.Dispatch<React.SetStateAction<WizardFormData>>;
+  errors: FieldErrors;
+}) {
+  return (
+    <div>
+      <NPORegisteringStep5
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+      />
+    </div>
+  );
 }
 
 {
@@ -89,9 +142,19 @@ function getSteps({
         setFormData={setFormData}
         errors={errors}
       />,
-      <NpoStepThree key="npo-step-3" />,
+      <NpoStepThree
+        key="npo-step-3"
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+      />,
       <NpoStepFour key="npo-step-4" />,
-      <NpoStepFive key="npo-step-5" />,
+      <NpoStepFive
+        key="npo-step-5"
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+      />,
     ];
   }
 
@@ -112,11 +175,17 @@ export default function LandingPage() {
   //
   const [formData, setFormData] = useState<WizardFormData>({
     nomeInstituicao: "",
+    nomeProjeto: "",
     email: "",
     senha: "",
     confirmarSenha: "",
+    cpf: "",
     cnpj: "",
     razaoSocial: "",
+    size: "",
+    description: "",
+    ods: [],
+    capital: 0,
   });
 
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -124,7 +193,7 @@ export default function LandingPage() {
   const steps = useMemo(
     () =>
       getSteps({
-        organizationType: organizationType ?? "npo",
+        organizationType: organizationType ?? null,
         onSelectOrganizationType: setOrganizationType,
         formData,
         setFormData,

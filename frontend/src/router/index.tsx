@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LandingPage from "../pages/LandingPage";
 import ComponentsPage from "../pages/ComponentsPage";
-import RegisterPage from "../pages/RegisterPage/index.tsx";
+import RegisterPage from "../pages/RegisterPage";
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -9,7 +9,6 @@ export const AppRouter = () => (
       <Route path="/" element={<LandingPage />} />
       <Route path="/components" element={<ComponentsPage />} />
       <Route path="/cadastro" element={<RegisterPage />} />
-      <Route path="/cadastro/instituicao" element={<RegisterPage />} />
     </Routes>
   </BrowserRouter>
 );

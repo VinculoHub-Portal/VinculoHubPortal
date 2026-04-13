@@ -1,21 +1,22 @@
 export type OrganizationType = "npo" | "enterprise";
 
-/* Se precisar de campos opcionais utilize "pick". EXs:
-type SignupFields = Pick<
-  WizardFormData,
-  "nomeInstituicao" | "email" | "senha" | "confirmarSenha"
->;
-type NpoFields = Pick<WizardFormData, "cnpj">;
-type EnterpriseFields = Pick<WizardFormData, "razaoSocial">;
-*/
+export type OrganizationSize = "" | "small" | "medium" | "large";
+
+export type ODSOptions = "" | "1" | "2" | "3";
 
 export type WizardFormData = {
   nomeInstituicao: string;
+  nomeProjeto: string;
   email: string;
   senha: string;
   confirmarSenha: string;
+  cpf: string;
   cnpj: string;
   razaoSocial: string;
+  size: OrganizationSize;
+  description: string;
+  ods: ODSOptions[];
+  capital: number;
   // ...campos dos próximos steps
 };
 
