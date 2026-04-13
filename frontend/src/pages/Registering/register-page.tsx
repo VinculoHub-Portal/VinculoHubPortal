@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { WizardSteps } from "../../components/auth/WizardSteps";
 import { BaseButton } from "../../components/general/BaseButton";
 import { NPO_Registering_Step_4 } from "./Steps/Step4";
@@ -39,3 +39,4 @@ export default function CadastroInstituicao() {
     </div>
   );
 }
+
