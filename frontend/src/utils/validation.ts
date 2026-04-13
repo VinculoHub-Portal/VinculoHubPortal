@@ -74,6 +74,15 @@ export const validateConfirmPasswordField: StepValidator = (data) => {
   return errors;
 };
 
+export const validateCpfField: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+  const digits = data.cpf.replace(/\D/g, "");
+  if (!data.cpf.trim() && digits.length !== 11) {
+    errors.cpf = "Informe um CPF válido (11 dígitos).";
+  }
+  return errors;
+};
+
 export const validateCnpjField: StepValidator = (data) => {
   const errors: FieldErrors = {};
 
@@ -91,6 +100,24 @@ export const validateRazaoSocialField: StepValidator = (data) => {
     errors.razaoSocial = "Informe a razão social.";
   }
 
+  return errors;
+};
+
+export const validateSizeField: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+
+  if (!data.size.trim()) {
+    errors.size = "Informe o tamanho da empresa.";
+  }
+
+  return errors;
+};
+
+export const validateNpoSizeField: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+  if (!data.porteOng) {
+    errors.porteOng = "Selecione o porte da ONG.";
+  }
   return errors;
 };
 
@@ -114,31 +141,13 @@ export const validateNpoStepTwo = composeValidators(
   validateConfirmPasswordField,
 );
 
-export const validateCpfField: StepValidator = (data) => {
-  const errors: FieldErrors = {};
-  const digits = data.cpf.replace(/\D/g, "");
-  if (digits.length !== 11) {
-    errors.cpf = "Informe um CPF válido (11 dígitos).";
-  }
-  return errors;
-};
-
-export const validatePorteOngField: StepValidator = (data) => {
-  const errors: FieldErrors = {};
-  if (!data.porteOng) {
-    errors.porteOng = "Selecione o porte da ONG.";
-  }
-  return errors;
-};
-
 export const validateNpoStepThree = composeValidators(
   validateInstitutionName,
   validateCpfField,
-  validatePorteOngField,
+  validateNpoSizeField,
 );
 
-export const validateEnterpriseStepTwo = composeValidators(
-  // Trava sem mostrar os campos, pois não foi implementado.
-  // Colocar os campos corretos ou remover para teste.
-  validateRazaoSocialField,
-);
+export const validateEnterpriseStepTwo = composeValidators();
+
+// Trava sem mostrar os campos, pois não foi implementado.
+// Colocar os campos corretos ou remover para teste.

@@ -1,24 +1,30 @@
 import type { Dispatch, SetStateAction } from "react";
-import { Input } from "../general/SimpleTextInput";
-import type { FieldErrors, WizardFormData } from "../../types/wizard.types";
+import { Input } from "../../../components/general/SimpleTextInput";
+import type { FieldErrors, WizardFormData } from "../../../types/wizard.types";
 
-type NpoStepTwoProps = {
+export function EnterpriseRegisteringStep2() {}
+
+type NPORegisteringStep2Props = {
   formData: WizardFormData;
   setFormData: Dispatch<SetStateAction<WizardFormData>>;
   errors: FieldErrors;
 };
 
-export function NpoStepTwo({ formData, setFormData, errors }: NpoStepTwoProps) {
+export function NPORegisteringStep2({
+  formData,
+  setFormData,
+  errors,
+}: NPORegisteringStep2Props) {
   const inputFilledClass =
     "!bg-vinculo-light-gray !border-0 focus:!ring-1 focus:!ring-vinculo-dark";
 
   return (
     <>
-      <h2 className="text-vinculo-dark font-semibold text-lg mb-6">
-        Informações Básicas
-      </h2>
+      <div>
+        <h2 className="text-vinculo-dark font-semibold text-lg mb-6">
+          Informações Básicas
+        </h2>
 
-      <div className="flex flex-col gap-5">
         <Input
           id="email-cadastro"
           label="E-mail"
