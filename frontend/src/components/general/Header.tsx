@@ -62,7 +62,7 @@ export function Header() {
           </Link>
 
           <BaseButton
-            className="bg-white !text-vinculo-dark hover:bg-gray-100"
+            className="bg-white! text-vinculo-dark! hover:bg-gray-100"
             onClick={handleAuthClick}
           >
             {authButtonLabel}
@@ -90,9 +90,8 @@ export function Header() {
 
           <BaseButton
             fullWidth
-            className="bg-white! text-vinculo-dark! rounded-full py-3"
+            className=" bg-white! text-vinculo-dark! rounded-full py-3"
             onClick={handleAuthClick}
-            onClick={() => navigate("/login")}
           >
             {authButtonLabel}
           </BaseButton>

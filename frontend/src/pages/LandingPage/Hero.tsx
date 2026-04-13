@@ -24,7 +24,13 @@ export function Hero() {
             <BaseButton
               variant="secondary"
               fullWidth
-              className="rounded-full! text-base md:w-fit md:px-20 md:py-4"
+              className="rounded-full! text-base md:w-fit md:px-20 md:py-4 cursor-pointer"
+              onClick={() => {
+                document.getElementById("sobre-nos")?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                })
+              }}
             >
               Sobre Nós
             </BaseButton>

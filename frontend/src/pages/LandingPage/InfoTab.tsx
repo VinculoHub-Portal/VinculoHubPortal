@@ -6,7 +6,10 @@ export default function InfoTab() {
   return (
     <div className="h-screen bg-surface flex flex-col">
       <main className="flex flex-col items-center text-center px-6">
-        <h1 className="text-5xl font-bold text-vinculo-dark mb-6">
+        <h1
+          id="sobre-nos"
+          className="text-5xl font-bold text-vinculo-dark mb-6"
+        >
           Plataforma Completa de Gestão
         </h1>
         <div className="w-32 h-1 bg-vinculo-green ml-3 mb-8"></div>
