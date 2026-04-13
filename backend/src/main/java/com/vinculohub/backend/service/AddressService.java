@@ -1,13 +1,13 @@
+/* (C)2026 */
 package com.vinculohub.backend.service;
 
 import com.vinculohub.backend.dto.AddressDTO;
 import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.repository.AddressRepository;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,8 +33,10 @@ public class AddressService {
     }
 
     public AddressDTO updateAddress(Integer id, AddressDTO dto) {
-        Address address = addressRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Address not found"));
+        Address address =
+                addressRepository
+                        .findById(id)
+                        .orElseThrow(() -> new EntityNotFoundException("Address not found"));
 
         address.setState(dto.state());
         address.setStateCode(dto.stateCode());
@@ -48,7 +50,8 @@ public class AddressService {
     }
 
     public void deleteAddress(Integer id) {
-        addressRepository.findById(id)
+        addressRepository
+                .findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Address not found"));
         addressRepository.deleteById(id);
     }

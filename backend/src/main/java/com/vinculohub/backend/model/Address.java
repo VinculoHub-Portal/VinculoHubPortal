@@ -1,7 +1,11 @@
+/* (C)2026 */
 package com.vinculohub.backend.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import lombok.Getter;
+import lombok.Setter;
+
 @Getter
 @Setter
 @Entity
@@ -14,7 +18,7 @@ public class Address {
 
     private String state;
 
-    @Column(name = "state_code")
+    @Column(name = "state_code", columnDefinition = "bpchar")
     private String stateCode;
 
     private String city;

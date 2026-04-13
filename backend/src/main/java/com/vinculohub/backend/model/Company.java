@@ -1,7 +1,11 @@
+/* (C)2026 */
 package com.vinculohub.backend.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import lombok.Getter;
+import lombok.Setter;
+
 @Getter
 @Setter
 @Entity
