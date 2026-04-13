@@ -5,7 +5,7 @@ import { Input } from "../../../components/general/SimpleTextInput";
 import { TextArea } from "../../../components/general/SimpleTextArea";
 import { BaseButton } from "../../../components/general/BaseButton";
 import { InfoBox } from "../../../components/general/InfoBox";
-import { LogoUpload } from "../../../components/general/LogoUpload";
+// import { LogoUpload } from "../../../components/general/LogoUpload";
 import { useZipCode } from "../../../hooks/useZipCode";
 import { useCnpj } from "../../../hooks/useCnpj";
 import { CompanyIcon, DescriptionIcon, CnpjIcon, AddressIcon, StateIcon, PhoneIcon, EmailIcon, LockIcon } from "../../../components/icons";
@@ -24,8 +24,8 @@ export default function CompanyRegistrationPage() {
     cnpj: "",
   });
 
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  // const [logoFile, setLogoFile] = useState<File | null>(null);
+  // const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   const [cnpjError, setCnpjError] = useState("");
 
