@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
-import LandingPage from "../pages/LandingPage"
+import LandingPage from "../pages/LandingPage/"
 import ComponentsPage from "../pages/ComponentsPage"
 import RegisterPage from "../pages/RegisterPage"
 import { AuthRoleRedirect } from "../components/auth/AuthRoleRedirect"
