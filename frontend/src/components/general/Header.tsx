@@ -78,7 +78,6 @@ export function Header() {
             variant="outline"
             fullWidth
             className="border-white text-white rounded-full py-3"
-            onClick={() => navigate("/company/register")} // TODO: mandar para a rota que seleciona se é cadastro de empresa ou ong 
           >
             Cadastro
           </BaseButton>
