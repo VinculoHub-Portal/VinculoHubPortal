@@ -29,7 +29,7 @@ function NpoStepThree() {
   return <div>Passo 3 - ONG - Informações Básicas 2</div>;
 }
 function NpoStepFour() {
-  return <div>Passo 4 - ONG - Informações Básicas 3<NPOStepFour /></div>;
+  return <NPOStepFour/>;
 }
 function NpoStepFive() {
   return <div>Passo 5 - ONG - Cadastro de Projeto</div>;
