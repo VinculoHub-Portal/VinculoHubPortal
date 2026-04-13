@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
 import { WizardSteps } from "../../../components/auth/WizardSteps";
 import { BackLink } from "../../../components/general/BackLink";
 import { Input } from "../../../components/general/SimpleTextInput";
@@ -13,9 +15,24 @@ import { RegistrationSummary } from "../../../components/register/RegistrationSu
 import { validateCnpj } from "../../../utils/validateCnpj";
 import { formatCnpj } from "../../../utils/formatCnpj";
 import { formatZipCode } from "../../../utils/formatZipCode";
+import { registerCompany } from "../../../api/company";
+import { useCompany } from "../../../hooks/useCompany";
 
 export default function CompanyRegistrationPage() {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(2);
+  const [registeredCompanyId, setRegisteredCompanyId] = useState<number | undefined>();
+
+  const registerMutation = useMutation({
+    mutationFn: registerCompany,
+    onSuccess: (data) => {
+      setRegisteredCompanyId(data.id);
+      setCurrentStep(6);
+    },
+  });
+
+  const { data: registeredCompany, isLoading: loadingCompany } =
+    useCompany(registeredCompanyId);
 
   const [basicInfo, setBasicInfo] = useState({
     name: "",
@@ -505,8 +522,56 @@ export default function CompanyRegistrationPage() {
               },
             ]}
             onBack={() => setCurrentStep(4)}
-            onSubmit={() => {}}
+            onSubmit={() =>
+              registerMutation.mutate({
+                cnpj: basicInfo.cnpj,
+                legalName: basicInfo.name,
+                socialName: basicInfo.tradeName,
+                description: basicInfo.description,
+                zipCode: contactInfo.zip_code,
+                street: contactInfo.street,
+                number: contactInfo.number,
+                complement: contactInfo.complement,
+                city: contactInfo.city,
+                state: contactInfo.state,
+                stateCode: contactInfo.state_code,
+                phone: contactInfo.phone,
+                email: credentials.email,
+              })
+            }
+            isLoading={registerMutation.isPending}
+            errorMessage={
+              registerMutation.isError
+                ? "Erro ao realizar o cadastro. Tente novamente."
+                : undefined
+            }
           />
+        )}
+
+        {currentStep === 6 && (
+          <div className="flex flex-col items-center gap-6 py-4">
+            <div className="w-16 h-16 rounded-full bg-vinculo-green/10 flex items-center justify-center">
+              <CompanyIcon className="text-vinculo-green" fontSize="large" />
+            </div>
+            <div className="text-center">
+              <h2 className="text-xl font-bold text-vinculo-dark">
+                {loadingCompany
+                  ? "Confirmando cadastro..."
+                  : (registeredCompany?.socialName || registeredCompany?.legalName || "Empresa cadastrada!")}
+              </h2>
+              {registeredCompany && (
+                <p className="text-sm text-slate-500 mt-1">{registeredCompany.cnpj}</p>
+              )}
+            </div>
+            <BaseButton
+              variant="secondary"
+              className="w-48"
+              onClick={() => navigate("/empresa/dashboard")}
+              disabled={loadingCompany}
+            >
+              Ir para o Dashboard
+            </BaseButton>
+          </div>
         )}
       </div>
     </div>

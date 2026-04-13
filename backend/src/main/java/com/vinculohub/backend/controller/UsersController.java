@@ -1,3 +1,4 @@
+/* (C)2026 */
 package com.vinculohub.backend.controller;
 
 import com.vinculohub.backend.dto.UsersDTO;
@@ -16,7 +17,8 @@ public class UsersController {
 
     @GetMapping("/{userId}")
     public ResponseEntity<UsersDTO> getUserById(@PathVariable Integer userId) {
-        return usersService.findById(userId)
+        return usersService
+                .findById(userId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -27,8 +29,8 @@ public class UsersController {
     }
 
     @PutMapping("/{userId}")
-    public ResponseEntity<UsersDTO> updateUser(@PathVariable Integer userId,
-                                               @RequestBody UsersDTO usersDTO) {
+    public ResponseEntity<UsersDTO> updateUser(
+            @PathVariable Integer userId, @RequestBody UsersDTO usersDTO) {
         return ResponseEntity.ok(usersService.updateUser(userId, usersDTO));
     }
 
