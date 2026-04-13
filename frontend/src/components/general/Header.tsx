@@ -1,13 +1,45 @@
+import { Link } from "react-router-dom"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { useAuth0 } from "@auth0/auth0-react"
 import { BaseButton } from "./BaseButton"
 import LanguageIcon from "@mui/icons-material/Language"
+
+const auth0Audience = import.meta.env.VITE_AUTH0_AUDIENCE
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const navigate = useNavigate()
+  const { isAuthenticated, loginWithRedirect, logout } = useAuth0()
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
+  const handleLogin = async () => {
+    try {
+      console.info("Redirecionando para login Auth0...")
+      await loginWithRedirect({
+        appState: {
+          returnTo: window.location.pathname,
+        },
+        authorizationParams: {
+          redirect_uri: window.location.origin,
+          audience: auth0Audience,
+        },
+      })
+    } catch (error) {
+      console.error("Erro ao iniciar login com Auth0:", error)
+    }
+  }
+
+  const handleLogout = () => {
+    logout({
+      logoutParams: {
+        returnTo: window.location.origin,
+      },
+    })
+  }
+
+  const handleAuthClick = isAuthenticated ? handleLogout : handleLogin
+  const authButtonLabel = isAuthenticated ? "Sair" : "Entrar"
 
   return (
     <header className="bg-vinculo-dark w-full shadow-md relative z-50">
@@ -20,19 +52,20 @@ export function Header() {
         </div>
 
         <div className="hidden md:flex gap-4">
-          <BaseButton
-            variant="outline"
-            className="border-white text-white hover:bg-white/10"
-            onClick={() => navigate("/cadastro")}
-          >
-            Cadastro
-          </BaseButton>
+          <Link to="/cadastro/instituicao">
+            <BaseButton
+              variant="outline"
+              className="border-white text-white hover:bg-white/10"
+            >
+              Cadastro
+            </BaseButton>
+          </Link>
 
           <BaseButton
-            className="bg-white text-vinculo-dark! hover:bg-gray-100"
-            onClick={() => navigate("/login")}
+            className="bg-white !text-vinculo-dark hover:bg-gray-100"
+            onClick={handleAuthClick}
           >
-            Entrar
+            {authButtonLabel}
           </BaseButton>
         </div>
         <button
@@ -58,9 +91,10 @@ export function Header() {
           <BaseButton
             fullWidth
             className="bg-white! text-vinculo-dark! rounded-full py-3"
+            onClick={handleAuthClick}
             onClick={() => navigate("/login")}
           >
-            Entrar
+            {authButtonLabel}
           </BaseButton>
         </div>
       )}
