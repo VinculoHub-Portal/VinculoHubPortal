@@ -1,6 +1,6 @@
 interface BaseButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "outline" | "ghost";
-  fullWidth?: boolean;
+  variant?: "primary" | "secondary" | "outline" | "ghost"
+  fullWidth?: boolean
 }
 
 export function BaseButton({
@@ -15,7 +15,7 @@ export function BaseButton({
     secondary: "bg-vinculo-green text-white",
     outline: "border-2 border-vinculo-dark text-vinculo-dark",
     ghost: "bg-vinculo-light-gray text-slate-700",
-  };
+  }
 
   return (
     <button
@@ -31,5 +31,5 @@ export function BaseButton({
     >
       {children}
     </button>
-  );
+  )
 }
