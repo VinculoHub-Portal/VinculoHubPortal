@@ -1,7 +1,11 @@
+/* (C)2026 */
 package com.vinculohub.backend.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import lombok.Getter;
+import lombok.Setter;
+
 @Getter
 @Setter
 @Entity
@@ -16,8 +20,10 @@ public class Users {
 
     @Column(unique = true)
     private String email;
+
     @Column(name = "auth0_id", unique = true)
     private String auth0Id;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "user_type")
     private UserType userType;

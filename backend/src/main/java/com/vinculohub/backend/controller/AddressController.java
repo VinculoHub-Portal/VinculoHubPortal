@@ -1,3 +1,4 @@
+/* (C)2026 */
 package com.vinculohub.backend.controller;
 
 import com.vinculohub.backend.dto.AddressDTO;
@@ -28,8 +29,8 @@ public class AddressController {
     }
 
     @PutMapping("/{addressId}")
-    public ResponseEntity<AddressDTO> updateAddress(@PathVariable Integer addressId,
-                                                    @RequestBody AddressDTO addressDTO) {
+    public ResponseEntity<AddressDTO> updateAddress(
+            @PathVariable Integer addressId, @RequestBody AddressDTO addressDTO) {
         return ResponseEntity.ok(addressService.updateAddress(addressId, addressDTO));
     }
 

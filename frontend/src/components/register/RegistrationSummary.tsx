@@ -22,6 +22,8 @@ interface RegistrationSummaryProps {
   totalSteps: number;
   onBack: () => void;
   onSubmit: () => void;
+  isLoading?: boolean;
+  errorMessage?: string;
 }
 
 function computeProgress(sections: SummarySection[]): {
@@ -85,6 +87,8 @@ export function RegistrationSummary({
   totalSteps,
   onBack,
   onSubmit,
+  isLoading = false,
+  errorMessage,
 }: RegistrationSummaryProps) {
   const { progress, profileCompletion } = computeProgress(sections);
   const isReady = progress === 100;
@@ -137,18 +141,30 @@ export function RegistrationSummary({
         </p>
       )}
 
+      {/* Erro de envio */}
+      {errorMessage && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          {errorMessage}
+        </p>
+      )}
+
       {/* Botões */}
       <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-        <BaseButton variant="ghost" className="w-28" onClick={onBack}>
+        <BaseButton
+          variant="ghost"
+          className="w-28"
+          onClick={onBack}
+          disabled={isLoading}
+        >
           Voltar
         </BaseButton>
         <BaseButton
           variant="secondary"
           className="w-44"
           onClick={onSubmit}
-          disabled={!isReady}
+          disabled={!isReady || isLoading}
         >
-          Finalizar Cadastro
+          {isLoading ? "Enviando..." : "Finalizar Cadastro"}
         </BaseButton>
       </div>
     </div>
