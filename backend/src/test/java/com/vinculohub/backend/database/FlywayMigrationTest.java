@@ -41,7 +41,7 @@ class FlywayMigrationTest extends AbstractIntegrationTest {
         assertThat(tableNames)
                 .contains(
                         "flyway_schema_history",
-                        "user",
+                        "users",
                         "address",
                         "sdg",
                         "npo",

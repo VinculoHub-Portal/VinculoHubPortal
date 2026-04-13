@@ -1,53 +1,37 @@
-import type { ReactNode } from "react";
-
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
   isRequired?: boolean;
-  icon?: ReactNode;
-  error?: string;
+  error?: string; 
 }
 
 export function Input({
   label,
   id,
   isRequired,
-  icon,
-  error,
-  disabled,
+  error, 
   className = "",
   ...props
 }: InputProps) {
   return (
     <div className="flex flex-col gap-1 w-full text-left">
-      <label
-        htmlFor={id}
-        className="text-slate-700 font-semibold text-sm flex gap-1"
-      >
+      <label htmlFor={id} className="...">
         {label}
         {isRequired && <span className="text-red-500">*</span>}
       </label>
 
-      <div className="relative">
-        {icon && (
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-vinculo-green">
-            {icon}
-          </span>
-        )}
-        <input
-          id={id}
-          required={isRequired}
-          disabled={disabled}
-          className={`border rounded-xl px-4 py-3 outline-none w-full
-          focus:ring-1 transition-all placeholder:text-slate-400
-          ${disabled ? "bg-slate-100 text-slate-500 cursor-not-allowed" : ""}
-          ${error ? "border-red-400 focus:border-red-400 focus:ring-red-400" : "border-vinculo-gray focus:border-vinculo-dark focus:ring-vinculo-dark"}
-          ${icon ? "pl-9" : ""}
-          ${className}`}
-          {...props}
-        />
-      </div>
+      <input
+        id={id}
+        required={isRequired}
+        className={`... ${error ? 'border-red-500' : 'border-vinculo-gray'} ${className}`}
+        {...props}
+      />
 
-      {error && <span className="text-sm text-red-500">{error}</span>}
+      
+      {error && (
+        <span className="text-red-500 text-xs mt-1 font-medium">
+          {error}
+        </span>
+      )}
     </div>
   );
 }
