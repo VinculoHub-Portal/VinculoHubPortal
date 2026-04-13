@@ -2,9 +2,9 @@ import { api } from "../services/api";
 
 export interface CnpjResult {
   cnpj: string;
-  legalName: string;
-  tradeName: string;
-  situation: string;
+  razao_social: string;
+  nome_fantasia: string;
+  situacao_cadastral: string;
 }
 
 export async function fetchCnpjData(digits: string): Promise<CnpjResult> {
