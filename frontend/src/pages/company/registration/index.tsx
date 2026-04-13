@@ -101,8 +101,8 @@ export default function CompanyRegistrationPage() {
     if (cnpjData) {
       setBasicInfo((prev) => ({
         ...prev,
-        name: cnpjData.legalName || prev.name,
-        tradeName: cnpjData.tradeName || prev.tradeName,
+        name: cnpjData.razao_social || prev.name,
+        tradeName: cnpjData.nome_fantasia || prev.tradeName,
       }));
     }
   }, [cnpjData]);
@@ -243,17 +243,6 @@ export default function CompanyRegistrationPage() {
                 iconPosition="left"
                 disabled
               />
-              <Input
-                label="Nome Fantasia"
-                id="tradeName"
-                placeholder="Nome fantasia"
-                maxLength={255}
-                value={basicInfo.tradeName}
-                onChange={handleBasicChange}
-                icon={<CompanyIcon />}
-                iconPosition="left"
-                disabled
-              />
             </div>
 
             <TextArea
@@ -267,10 +256,11 @@ export default function CompanyRegistrationPage() {
             />
 
             <div className="flex justify-end gap-3 mt-2 pt-4 border-t border-slate-100">
-              <BaseButton variant="ghost" className="w-28">
+              <BaseButton type="button" variant="ghost" className="w-28">
                 Voltar
               </BaseButton>
               <BaseButton
+                type="button"
                 variant="secondary"
                 className="w-28"
                 onClick={() => setCurrentStep(3)}
@@ -400,6 +390,7 @@ export default function CompanyRegistrationPage() {
 
             <div className="flex justify-end gap-3 mt-2 pt-4 border-t border-slate-100">
               <BaseButton
+                type="button"
                 variant="ghost"
                 className="w-28"
                 onClick={() => setCurrentStep(2)}
@@ -407,6 +398,7 @@ export default function CompanyRegistrationPage() {
                 Voltar
               </BaseButton>
               <BaseButton
+                type="button"
                 variant="secondary"
                 className="w-28"
                 onClick={() => setCurrentStep(4)}
@@ -469,6 +461,7 @@ export default function CompanyRegistrationPage() {
 
             <div className="flex justify-end gap-3 mt-2 pt-4 border-t border-slate-100">
               <BaseButton
+                type="button"
                 variant="ghost"
                 className="w-28"
                 onClick={() => setCurrentStep(3)}
@@ -476,6 +469,7 @@ export default function CompanyRegistrationPage() {
                 Voltar
               </BaseButton>
               <BaseButton
+                type="button"
                 variant="secondary"
                 className="w-28"
                 onClick={() => setCurrentStep(5)}
