@@ -1,7 +1,7 @@
 /* (C)2026 */
 package com.vinculohub.backend.dto;
 
-public record CepResponseDto(
+public record CepResponseDTO(
         String zipCode,
         String street,
         String complement,
@@ -9,8 +9,8 @@ public record CepResponseDto(
         String stateCode,
         String state) {
 
-    public static CepResponseDto from(CepRawResponseDto raw) {
-        return new CepResponseDto(
+    public static CepResponseDTO from(CepRawResponseDTO raw) {
+        return new CepResponseDTO(
                 raw.zipCode(),
                 raw.street(),
                 raw.complement(),
