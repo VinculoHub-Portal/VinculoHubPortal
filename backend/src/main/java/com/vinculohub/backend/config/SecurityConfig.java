@@ -54,8 +54,7 @@ public class SecurityConfig {
                                         .permitAll()
                                         .requestMatchers("/public/**")
                                         .permitAll()
-                                        .requestMatchers(
-                                                HttpMethod.POST, "/api/npo-accounts")
+                                        .requestMatchers(HttpMethod.POST, "/api/npo-accounts")
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated())
