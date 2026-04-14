@@ -2,6 +2,7 @@
 package com.vinculohub.backend.config;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,6 +55,8 @@ public class SecurityConfig {
                                         .permitAll()
                                         .requestMatchers("/public/**")
                                         .permitAll()
+                                        .requestMatchers("/cep/**", "/cnpj/**")
+                                        .permitAll()
                                         .anyRequest()
                                         .authenticated())
                 .oauth2ResourceServer(
@@ -96,7 +99,7 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(frontendUrl));
+        configuration.setAllowedOrigins(parseAllowedOrigins(frontendUrl));
         configuration.setAllowedMethods(
                 List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
@@ -106,5 +109,12 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    private static List<String> parseAllowedOrigins(String value) {
+        return Arrays.stream(value.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isBlank())
+                .toList();
     }
 }
