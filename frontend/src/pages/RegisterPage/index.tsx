@@ -9,8 +9,9 @@ import { NpoStepThree } from "../../components/ong/NpoStepThree";
 import { stepValidators } from "../../config/wizard.config";
 import type {
   FieldErrors,
-  WizardFormData,
   OrganizationType,
+  WizardEsgOption,
+  WizardFormData,
 } from "../../types/wizard.types";
 
 const auth0Audience = import.meta.env.VITE_AUTH0_AUDIENCE;
@@ -50,8 +51,59 @@ function readNpoSignupDraft(): NpoSignupDraft | null {
   }
 }
 
-function NpoStepFour() {
-  return <div>Passo 4 - ONG - Informações Básicas 3</div>;
+type NpoStepFourProps = {
+  formData: WizardFormData;
+  setFormData: Dispatch<SetStateAction<WizardFormData>>;
+  errors: FieldErrors;
+};
+
+const esgOptions: Array<{ value: WizardEsgOption; label: string }> = [
+  { value: "ambiental", label: "Ambiental" },
+  { value: "social", label: "Social" },
+  { value: "governanca", label: "Governanca" },
+];
+
+function NpoStepFour({ formData, setFormData, errors }: NpoStepFourProps) {
+  function toggleEsg(value: WizardEsgOption) {
+    setFormData((prev) => {
+      const selected = prev.esg.includes(value);
+
+      return {
+        ...prev,
+        esg: selected
+          ? prev.esg.filter((option) => option !== value)
+          : [...prev.esg, value],
+      };
+    });
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      <h2 className="text-vinculo-dark font-semibold text-lg">Pilares ESG</h2>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {esgOptions.map((option) => (
+          <label
+            key={option.value}
+            className="flex items-center gap-3 rounded-lg border border-vinculo-gray px-4 py-3 text-vinculo-dark"
+          >
+            <input
+              type="checkbox"
+              checked={formData.esg.includes(option.value)}
+              onChange={() => toggleEsg(option.value)}
+            />
+            {option.label}
+          </label>
+        ))}
+      </div>
+
+      {errors.esg && (
+        <p className="text-sm text-error" role="alert">
+          {errors.esg}
+        </p>
+      )}
+    </div>
+  );
 }
 
 function NpoStepFive() {
@@ -109,7 +161,12 @@ function getSteps({
         setFormData={setFormData}
         errors={errors}
       />,
-      <NpoStepFour key="npo-step-4" />,
+      <NpoStepFour
+        key="npo-step-4"
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+      />,
       <NpoStepFive key="npo-step-5" />,
     ];
   }
@@ -221,7 +278,7 @@ export default function RegisterPage() {
               Voltar
             </BaseButton>
             <BaseButton variant="secondary" className="w-32" onClick={handleNext}>
-              {currentStep === totalSteps ? "Finalizar" : "Próximo"}
+              {currentStep === totalSteps ? "Finalizar" : "Proximo"}
             </BaseButton>
           </div>
         </section>

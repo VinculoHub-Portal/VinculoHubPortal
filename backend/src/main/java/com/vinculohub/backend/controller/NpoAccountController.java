@@ -10,6 +10,8 @@ import com.vinculohub.backend.exception.InvalidDocumentException;
 import com.vinculohub.backend.service.NpoAccountService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,9 +26,11 @@ public class NpoAccountController {
 
     @PostMapping
     public ResponseEntity<NpoInstitutionalSignupResponse> create(
-            @RequestBody NpoInstitutionalSignupRequest request) {
+            @AuthenticationPrincipal Jwt jwt, @RequestBody NpoInstitutionalSignupRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(npoAccountService.registerInstitutionalAccount(request));
+                .body(
+                        npoAccountService.registerInstitutionalAccount(
+                                jwt.getSubject(), jwt.getClaimAsString("email"), request));
     }
 
     @ExceptionHandler({
