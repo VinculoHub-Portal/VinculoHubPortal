@@ -2,8 +2,11 @@
 package com.vinculohub.backend.controller;
 
 import com.vinculohub.backend.dto.AuthenticatedProfileResponse;
+import com.vinculohub.backend.model.Company;
 import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.model.User;
+import com.vinculohub.backend.model.enums.UserType;
+import com.vinculohub.backend.repository.CompanyRepository;
 import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.UserRepository;
 import java.util.Optional;
@@ -19,10 +22,15 @@ public class MeController {
 
     private final UserRepository userRepository;
     private final NpoRepository npoRepository;
+    private final CompanyRepository companyRepository;
 
-    public MeController(UserRepository userRepository, NpoRepository npoRepository) {
+    public MeController(
+            UserRepository userRepository,
+            NpoRepository npoRepository,
+            CompanyRepository companyRepository) {
         this.userRepository = userRepository;
         this.npoRepository = npoRepository;
+        this.companyRepository = companyRepository;
     }
 
     @GetMapping("/profile")
@@ -31,12 +39,21 @@ public class MeController {
 
         if (user.isEmpty()) {
             return new AuthenticatedProfileResponse(
-                    jwt.getSubject(), jwt.getClaimAsString("email"), null, null, null, false);
+                    jwt.getSubject(), jwt.getClaimAsString("email"), null, null, null, null, false);
         }
 
         User savedUser = user.get();
         Integer npoId =
-                npoRepository.findByUserId(savedUser.getId()).map(Npo::getId).orElse(null);
+                savedUser.getUserType() == UserType.npo
+                        ? npoRepository.findByUserId(savedUser.getId()).map(Npo::getId).orElse(null)
+                        : null;
+        Integer companyId =
+                savedUser.getUserType() == UserType.company
+                        ? companyRepository
+                                .findByUserId(savedUser.getId())
+                                .map(Company::getId)
+                                .orElse(null)
+                        : null;
 
         return new AuthenticatedProfileResponse(
                 savedUser.getAuth0Id(),
@@ -44,6 +61,7 @@ public class MeController {
                 savedUser.getId(),
                 savedUser.getUserType(),
                 npoId,
-                npoId != null);
+                companyId,
+                npoId != null || companyId != null);
     }
 }

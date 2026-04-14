@@ -1,8 +1,6 @@
 /* (C)2026 */
-package com.vinculohub.backend.controller;
+package com.vinculohub.backend.exception;
 
-import com.vinculohub.backend.exception.NotFoundException;
-import com.vinculohub.backend.exception.UnprocessableEntityException;
 import java.time.LocalDateTime;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +21,12 @@ public class GlobalExceptionHandler {
             UnprocessableEntityException ex) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(new ErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY.value(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ErrorResponse> handleBadRequest(BadRequestException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
     }
 
     public record ErrorResponse(int status, String message, LocalDateTime timestamp) {

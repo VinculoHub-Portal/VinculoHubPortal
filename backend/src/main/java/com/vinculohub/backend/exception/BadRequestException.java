@@ -1,0 +1,8 @@
+/* (C)2026 */
+package com.vinculohub.backend.exception;
+
+public class BadRequestException extends RuntimeException {
+    public BadRequestException(String message) {
+        super(message);
+    }
+}

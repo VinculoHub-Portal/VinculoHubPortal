@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "../../components/general/Header";
 import { BaseButton } from "../../components/general/BaseButton";
 import { WizardSteps } from "../../components/auth/WizardSteps";
@@ -182,6 +183,7 @@ function getSteps({
 
 export default function RegisterPage() {
   const { loginWithRedirect } = useAuth0();
+  const navigate = useNavigate();
   const [initialDraft] = useState(readNpoSignupDraft);
   const [currentStep, setCurrentStep] = useState(initialDraft?.currentStep ?? 1);
   const [organizationType, setOrganizationType] =
@@ -206,6 +208,12 @@ export default function RegisterPage() {
 
   const totalSteps = steps.length;
   const currentStepContent = steps[currentStep - 1];
+
+  useEffect(() => {
+    if (organizationType === "enterprise" && currentStep > 1) {
+      navigate("/company/register", { replace: true });
+    }
+  }, [currentStep, navigate, organizationType]);
 
   async function handleNpoSignup() {
     sessionStorage.setItem(
@@ -243,6 +251,11 @@ export default function RegisterPage() {
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+
+    if (organizationType === "enterprise") {
+      navigate("/company/register");
       return;
     }
 

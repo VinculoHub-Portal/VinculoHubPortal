@@ -9,4 +9,5 @@ public record AuthenticatedProfileResponse(
         Integer userId,
         UserType userType,
         Integer npoId,
+        Integer companyId,
         boolean registrationCompleted) {}
