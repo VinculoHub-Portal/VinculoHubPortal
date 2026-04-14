@@ -7,19 +7,11 @@ import lombok.Builder;
 @Builder
 public record CompanyDTO(
         Integer id,
-        @NotEmpty
-        String legalName,
-        @NotEmpty
-        String socialName,
+        @NotEmpty String legalName,
+        @NotEmpty String socialName,
         String description,
-        @NotEmpty
-        String logoUrl,
-        @NotEmpty
-        String cnpj,
-        @NotEmpty
-        String phone,
-        @NotEmpty
-        UserDTO user,
-        @NotEmpty
-        AddressDTO address) {
-}
+        @NotEmpty String logoUrl,
+        @NotEmpty String cnpj,
+        @NotEmpty String phone,
+        @NotEmpty UserDTO user,
+        @NotEmpty AddressDTO address) {}

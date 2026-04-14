@@ -4,8 +4,6 @@ package com.vinculohub.backend.service;
 import com.vinculohub.backend.dto.AddressDTO;
 import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.repository.AddressRepository;
-import jakarta.persistence.EntityNotFoundException;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

@@ -7,9 +7,7 @@ import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.model.Company;
 import com.vinculohub.backend.model.Users;
 import com.vinculohub.backend.repository.CompanyRepository;
-import com.vinculohub.backend.repository.UsersRepository;
 import jakarta.persistence.*;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +22,7 @@ public class CompanyService {
 
     @Transactional
     public CompanyDTO createCompany(CompanyDTO companyDTO) {
-        if(companyRepository.existsByCnpj(companyDTO.cnpj())){
+        if (companyRepository.existsByCnpj(companyDTO.cnpj())) {
             throw new CompanyAlreadyExistsException();
         }
 
