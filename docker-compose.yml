@@ -10,7 +10,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/${POSTGRES_DB:-vinculohub_db}
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-vinculohub}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-vinculohub}
-      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173,http://localhost}
       - AUTH0_ISSUER_URI=${AUTH0_ISSUER_URI}
       - AUTH0_AUDIENCE=${AUTH0_AUDIENCE}
       - AUTH0_ROLES_CLAIM=${AUTH0_ROLES_CLAIM:-https://vinculohub/roles}
