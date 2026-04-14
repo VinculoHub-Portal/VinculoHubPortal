@@ -11,9 +11,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 public class CompanyController {
-
     private final CompanyService companyService;
-    @PostMapping("/public/register")
+    @PostMapping("/public/company/register")
     public ResponseEntity<CompanyDTO> createCompany(@RequestBody CompanyDTO companyDTO) {
         return ResponseEntity.status(HttpStatus.CREATED).body(companyService.createCompany(companyDTO));
     }

@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedDate;
 
 @Getter
 @Setter
@@ -30,11 +32,16 @@ public class Address {
     private String zipCode;
 
     @Column(name = "created_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    @CreatedDate
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     @Column(name = "deleted_at")
+    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime deletedAt;
 }

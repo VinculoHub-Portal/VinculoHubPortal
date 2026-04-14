@@ -25,7 +25,7 @@ public class Users {
     private String auth0Id;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "user_type")
+    @Column(name = "user_type", columnDefinition = "user_type")
     private UserType userType;
 
     @Column(name = "created_at")

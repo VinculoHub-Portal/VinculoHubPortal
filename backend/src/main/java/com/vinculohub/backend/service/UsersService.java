@@ -1,11 +1,10 @@
 /* (C)2026 */
 package com.vinculohub.backend.service;
 
-import com.vinculohub.backend.dto.UsersDTO;
+import com.vinculohub.backend.dto.UserDTO;
+import com.vinculohub.backend.model.UserType;
 import com.vinculohub.backend.model.Users;
 import com.vinculohub.backend.repository.UsersRepository;
-import jakarta.persistence.EntityNotFoundException;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,36 +14,18 @@ public class UsersService {
 
     private final UsersRepository usersRepository;
 
-    public Optional<UsersDTO> findById(Integer id) {
-        return usersRepository.findById(id).map(UsersDTO::from);
-    }
-
-    public UsersDTO createUser(UsersDTO dto) {
+    public Users createUser(UserDTO usersDTO) {
         Users user = new Users();
-        user.setName(dto.name());
-        user.setEmail(dto.email());
-        user.setUserType(dto.userType());
-
-        return UsersDTO.from(usersRepository.save(user));
+        user.setName(usersDTO.name());
+        user.setEmail(usersDTO.email());
+        user.setUserType(UserType.company);
+        return usersRepository.save(user);
     }
 
-    public UsersDTO updateUser(Integer id, UsersDTO dto) {
-        Users user =
-                usersRepository
-                        .findById(id)
-                        .orElseThrow(() -> new EntityNotFoundException("User not found"));
-
-        user.setName(dto.name());
-        user.setEmail(dto.email());
-        user.setUserType(dto.userType());
-
-        return UsersDTO.from(usersRepository.save(user));
-    }
-
-    public void deleteUser(Integer id) {
-        usersRepository
-                .findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
-        usersRepository.deleteById(id);
+    public UserDTO userToUserDTO(Users user) {
+        return UserDTO.builder()
+                .name(user.getName())
+                .email(user.getEmail())
+                .build();
     }
 }

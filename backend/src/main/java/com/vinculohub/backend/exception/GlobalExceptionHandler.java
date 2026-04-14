@@ -23,6 +23,12 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY.value(), ex.getMessage()));
     }
 
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ErrorResponse> handleBadRequest(BadRequestException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
+    }
+
     public record ErrorResponse(int status, String message, LocalDateTime timestamp) {
         public ErrorResponse(int status, String message) {
             this(status, message, LocalDateTime.now());
