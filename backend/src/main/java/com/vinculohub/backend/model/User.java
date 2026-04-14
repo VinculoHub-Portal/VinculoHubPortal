@@ -33,6 +33,9 @@ public class User {
     @Column(nullable = false, unique = true, length = 255)
     private String email;
 
+    @Column(name = "auth0_id", unique = true, length = 255)
+    private String auth0Id;
+
     @Enumerated(EnumType.STRING)
     @JdbcType(PostgreSQLEnumJdbcType.class)
     @Column(name = "user_type", nullable = false, columnDefinition = "user_type")

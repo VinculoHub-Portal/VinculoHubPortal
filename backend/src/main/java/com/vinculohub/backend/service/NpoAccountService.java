@@ -36,16 +36,21 @@ public class NpoAccountService {
 
     @Transactional
     public NpoInstitutionalSignupResponse registerInstitutionalAccount(
-            NpoInstitutionalSignupRequest request) {
+            String auth0Id, String auth0Email, NpoInstitutionalSignupRequest request) {
         if (request == null) {
-            throw new IllegalArgumentException("Os dados do cadastro são obrigatórios.");
+            throw new IllegalArgumentException("Os dados do cadastro sao obrigatorios.");
         }
 
-        String name = requireText(request.name(), "Nome da instituição é obrigatório.");
-        String email = normalizeEmail(request.email());
+        String normalizedAuth0Id = requireText(auth0Id, "Identidade Auth0 e obrigatoria.");
+        String name = requireText(request.name(), "Nome da instituicao e obrigatorio.");
+        String email = normalizeEmail(firstPresent(auth0Email, request.email()));
+
+        if (userRepository.existsByAuth0Id(normalizedAuth0Id)) {
+            throw new DuplicateLoginException("Ja existe uma conta cadastrada para este login.");
+        }
 
         if (userRepository.existsByEmailIgnoreCase(email)) {
-            throw new DuplicateLoginException("Já existe uma conta cadastrada com este e-mail.");
+            throw new DuplicateLoginException("Ja existe uma conta cadastrada com este e-mail.");
         }
 
         npoDocumentService.validateDocuments(request.cpf(), request.cnpj());
@@ -54,7 +59,12 @@ public class NpoAccountService {
 
         User savedUser =
                 userRepository.save(
-                        User.builder().name(name).email(email).userType(UserType.npo).build());
+                        User.builder()
+                                .name(name)
+                                .email(email)
+                                .auth0Id(normalizedAuth0Id)
+                                .userType(UserType.npo)
+                                .build());
 
         Npo npo =
                 Npo.builder()
@@ -77,7 +87,12 @@ public class NpoAccountService {
     }
 
     private static String normalizeEmail(String value) {
-        return requireText(value, "E-mail é obrigatório.").toLowerCase(Locale.ROOT);
+        return requireText(value, "E-mail e obrigatorio.").toLowerCase(Locale.ROOT);
+    }
+
+    private static String firstPresent(String first, String second) {
+        String normalizedFirst = trimToNull(first);
+        return normalizedFirst == null ? second : normalizedFirst;
     }
 
     private static String requireText(String value, String message) {
@@ -99,13 +114,13 @@ public class NpoAccountService {
 
     private static NpoSize parseNpoSize(String value) {
         String normalized =
-                requireText(value, "Porte da ONG é obrigatório.").toLowerCase(Locale.ROOT);
+                requireText(value, "Porte da ONG e obrigatorio.").toLowerCase(Locale.ROOT);
 
         return switch (normalized) {
             case "small", "pequena" -> NpoSize.small;
-            case "medium", "media", "média" -> NpoSize.medium;
+            case "medium", "media" -> NpoSize.medium;
             case "large", "grande" -> NpoSize.large;
-            default -> throw new IllegalArgumentException("Porte da ONG inválido.");
+            default -> throw new IllegalArgumentException("Porte da ONG invalido.");
         };
     }
 
