@@ -1,16 +1,10 @@
-<<<<<<< HEAD
-import { useMemo, useState } from "react";
+import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import {
   WizardFormProvider,
   useWizardForm,
 } from "../../contexts/WizardFormContext";
-=======
-import { useEffect, useMemo, useState } from "react";
-import type { Dispatch, SetStateAction } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
-import { useNavigate } from "react-router-dom";
->>>>>>> 44b6e88927b42d37b59267745ee8f1050a6bf58b
 import { Header } from "../../components/general/Header";
+import type { WizardFormData } from "../../types/wizard.types";
 import { WizardSteps } from "../../components/auth/WizardSteps";
 import { WizardSingUp } from "../../components/wizard/WizardSignUp";
 import { NpoStepThree } from "../../components/ong/NpoStepThree";
@@ -25,11 +19,10 @@ import type {
   FieldErrors,
   OrganizationType,
   WizardEsgOption,
-<<<<<<< HEAD
-=======
-  WizardFormData,
->>>>>>> 44b6e88927b42d37b59267745ee8f1050a6bf58b
 } from "../../types/wizard.types";
+import { useAuth0 } from "@auth0/auth0-react";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const auth0Audience = import.meta.env.VITE_AUTH0_AUDIENCE;
 const npoSignupDraftKey = "vinculohub:npo-signup-draft";
@@ -51,6 +44,14 @@ const emptyFormData: WizardFormData = {
   porteOng: "",
   resumoInstitucional: "",
   esg: [],
+  phone: "",
+  addressZipCode: "",
+  addressState: "",
+  addressStateCode: "",
+  addressCity: "",
+  addressStreet: "",
+  addressNumber: "",
+  addressComplement: "",
 };
 
 function readNpoSignupDraft(): NpoSignupDraft | null {
@@ -95,35 +96,10 @@ function NpoStepFour({ formData, setFormData, errors }: NpoStepFourProps) {
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <h2 className="text-vinculo-dark font-semibold text-lg">Pilares ESG</h2>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {esgOptions.map((option) => (
-          <label
-            key={option.value}
-            className="flex items-center gap-3 rounded-lg border border-vinculo-gray px-4 py-3 text-vinculo-dark"
-          >
-            <input
-              type="checkbox"
-              checked={formData.esg.includes(option.value)}
-              onChange={() => toggleEsg(option.value)}
-            />
-            {option.label}
-          </label>
-        ))}
-      </div>
-
-      {errors.esg && (
-        <p className="text-sm text-error" role="alert">
-          {errors.esg}
-        </p>
-      )}
-    </div>
+    <div><NpoStepTwo /></div>
   );
 }
 
-<<<<<<< HEAD
 const ESG_OPTIONS: { value: WizardEsgOption; label: string }[] = [
   { value: "ambiental", label: "Ambiental" },
   { value: "social", label: "Social" },
@@ -131,8 +107,6 @@ const ESG_OPTIONS: { value: WizardEsgOption; label: string }[] = [
 ];
 
 /** Pilares ESG (mínimo um — exigência da API). Cadastro de projeto pode evoluir neste passo. */
-=======
->>>>>>> 44b6e88927b42d37b59267745ee8f1050a6bf58b
 function NpoStepFive() {
   const { formData, setFormData, errors } = useWizardForm();
 
@@ -181,6 +155,9 @@ function NpoStepFive() {
   );
 }
 
+{
+  /* Enterprise Steps - Mesma lógica dos NPOs*/
+}
 function EnterpriseStepTwo() {
   return <div>Passo 2 - Empresa - Cadastro da Empresa</div>;
 }
@@ -232,16 +209,13 @@ function getSteps({
         setFormData={setFormData}
         errors={errors}
       />,
-<<<<<<< HEAD
-      <NPOStepFour key="npo-step-4" />,
-=======
       <NpoStepFour
         key="npo-step-4"
         formData={formData}
         setFormData={setFormData}
         errors={errors}
       />,
->>>>>>> 44b6e88927b42d37b59267745ee8f1050a6bf58b
+      <NPOStepFour key="npo-step-4" />,
       <NpoStepFive key="npo-step-5" />,
     ];
   }
@@ -261,7 +235,6 @@ export default function RegisterPage() {
   const [initialDraft] = useState(readNpoSignupDraft);
   const [currentStep, setCurrentStep] = useState(initialDraft?.currentStep ?? 1);
   const [organizationType, setOrganizationType] =
-<<<<<<< HEAD
     useState<OrganizationType | null>(null);
 
   const [formData, setFormData] = useState<WizardFormData>({
@@ -283,12 +256,6 @@ export default function RegisterPage() {
     addressStreet: "",
     addressNumber: "",
     addressComplement: "",
-=======
-    useState<OrganizationType | null>(initialDraft?.organizationType ?? null);
-  const [formData, setFormData] = useState<WizardFormData>({
-    ...emptyFormData,
-    ...initialDraft?.formData,
->>>>>>> 44b6e88927b42d37b59267745ee8f1050a6bf58b
   });
   const [errors, setErrors] = useState<FieldErrors>({});
 
@@ -386,7 +353,6 @@ export default function RegisterPage() {
 
             {currentStepContent}
 
-<<<<<<< HEAD
             <NpoRegistrationFeedback
               success={npoRegistration.success}
               errorMessage={npoRegistration.errorMessage}
@@ -402,21 +368,6 @@ export default function RegisterPage() {
               onFinalizeNpo={handleFinalizeNpo}
             />
           </WizardFormProvider>
-=======
-          <div className="flex justify-center gap-4 mt-8">
-            <BaseButton
-              variant="ghost"
-              className="w-32"
-              onClick={handleBack}
-              disabled={currentStep === 1}
-            >
-              Voltar
-            </BaseButton>
-            <BaseButton variant="secondary" className="w-32" onClick={handleNext}>
-              {currentStep === totalSteps ? "Finalizar" : "Proximo"}
-            </BaseButton>
-          </div>
->>>>>>> 44b6e88927b42d37b59267745ee8f1050a6bf58b
         </section>
       </main>
     </div>
