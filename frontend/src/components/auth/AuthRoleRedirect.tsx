@@ -1,6 +1,10 @@
 import { useAuth0 } from "@auth0/auth0-react";
+import axios from "axios";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { registerCompany, type CompanyRegistrationPayload } from "../../api/company";
+import { api } from "../../services/api";
+import type { WizardFormData } from "../../types/wizard.types";
 
 type UserRole = "ADMIN" | "NPO" | "COMPANY" | "UNKNOWN";
 
@@ -8,7 +12,28 @@ type TokenPayload = {
   [rolesClaim]?: string[];
 };
 
+type NpoSignupDraft = {
+  formData?: WizardFormData;
+};
+
+type CompanySignupDraft = {
+  payload?: CompanyRegistrationPayload;
+};
+
+type Auth0User = {
+  email?: string;
+};
+
+type AuthenticatedProfile = {
+  userType?: "admin" | "npo" | "company" | null;
+  npoId?: number | null;
+  companyId?: number | null;
+  registrationCompleted: boolean;
+};
+
 const loginCompletedKey = "auth0-login-completed";
+const npoSignupDraftKey = "vinculohub:npo-signup-draft";
+const companySignupDraftKey = "vinculohub:company-signup-draft";
 const rolesClaim = "https://vinculohub/roles";
 
 export function AuthRoleRedirect() {
@@ -28,12 +53,42 @@ export function AuthRoleRedirect() {
     async function redirectByRole() {
       try {
         const token = await getAccessTokenSilently();
+        const hasNpoDraft = sessionStorage.getItem(npoSignupDraftKey) !== null;
+        const hasCompanyDraft = sessionStorage.getItem(companySignupDraftKey) !== null;
+        let npoDraftSubmitted = false;
+        let companyDraftSubmitted = false;
+
+        if (hasNpoDraft) {
+          try {
+            await submitNpoSignupDraft(token, user);
+            npoDraftSubmitted = true;
+          } catch (error) {
+            console.warn("Nao foi possivel reenviar o cadastro da ONG:", getErrorMessage(error));
+          }
+        }
+
+        if (hasCompanyDraft) {
+          try {
+            await submitCompanySignupDraft(token, user);
+            companyDraftSubmitted = true;
+          } catch (error) {
+            console.warn("Nao foi possivel reenviar o cadastro da empresa:", getErrorMessage(error));
+          }
+        }
+
+        const profile = await getAuthenticatedProfile(token);
         const tokenRoles = getRolesFromToken(token);
         const userRoles = getRolesFromUser(user);
-        const role = resolvePrimaryRole([...tokenRoles, ...userRoles]);
-        const redirectPath = redirectPathForRole(role);
+        const role = profileRole(profile) ?? resolvePrimaryRole([...tokenRoles, ...userRoles]);
+        const redirectPath = redirectPathAfterSignupDraft({
+          profile,
+          role,
+          npoDraftSubmitted: npoDraftSubmitted || hasNpoDraft,
+          companyDraftSubmitted: companyDraftSubmitted || hasCompanyDraft,
+        });
 
         console.info("Roles Auth0 detectadas:", {
+          profile,
           tokenRoles,
           userRoles,
           selectedRole: role,
@@ -53,6 +108,102 @@ export function AuthRoleRedirect() {
   }, [getAccessTokenSilently, isAuthenticated, isLoading, location.pathname, navigate, user]);
 
   return null;
+}
+
+function getErrorMessage(error: unknown) {
+  if (axios.isAxiosError(error)) {
+    const message = (error.response?.data as { message?: string } | undefined)?.message;
+    return message ?? error.message;
+  }
+
+  return String(error);
+}
+
+async function getAuthenticatedProfile(token: string) {
+  try {
+    const response = await api.get<AuthenticatedProfile>("/api/me/profile", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.warn("Nao foi possivel carregar o perfil autenticado:", error);
+    return null;
+  }
+}
+
+async function submitNpoSignupDraft(token: string, user: unknown) {
+  const savedDraft = sessionStorage.getItem(npoSignupDraftKey);
+
+  if (!savedDraft) {
+    return;
+  }
+
+  const draft = JSON.parse(savedDraft) as NpoSignupDraft;
+  const formData = draft.formData;
+
+  if (!formData) {
+    return;
+  }
+
+  await api.post(
+    "/api/npo-accounts",
+    {
+      name: formData.nomeInstituicao,
+      email: getUserEmail(user),
+      cpf: formData.cpf,
+      cnpj: formData.cnpj || null,
+      npoSize: formData.porteOng,
+      description: formData.resumoInstitucional || null,
+      phone: null,
+      environmental: formData.esg.includes("ambiental"),
+      social: formData.esg.includes("social"),
+      governance: formData.esg.includes("governanca"),
+      address: null,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+
+  sessionStorage.removeItem(npoSignupDraftKey);
+}
+
+async function submitCompanySignupDraft(token: string, user: unknown) {
+  const savedDraft = sessionStorage.getItem(companySignupDraftKey);
+
+  if (!savedDraft) {
+    return;
+  }
+
+  const draft = JSON.parse(savedDraft) as CompanySignupDraft;
+  const payload = draft.payload;
+
+  if (!payload) {
+    return;
+  }
+
+  await registerCompany(
+    {
+      ...payload,
+      email: getUserEmail(user) ?? payload.email,
+    },
+    token,
+  );
+
+  sessionStorage.removeItem(companySignupDraftKey);
+}
+
+function getUserEmail(user: unknown) {
+  if (!user || typeof user !== "object") {
+    return null;
+  }
+
+  return (user as Auth0User).email ?? null;
 }
 
 function getRolesFromToken(token: string) {
@@ -112,5 +263,46 @@ function redirectPathForRole(role: UserRole) {
       return "/empresa/dashboard";
     default:
       return "/cadastro";
+  }
+}
+
+function redirectPathAfterSignupDraft({
+  profile,
+  role,
+  npoDraftSubmitted,
+  companyDraftSubmitted,
+}: {
+  profile: AuthenticatedProfile | null;
+  role: UserRole;
+  npoDraftSubmitted: boolean;
+  companyDraftSubmitted: boolean;
+}) {
+  if (profile?.registrationCompleted) {
+    if (npoDraftSubmitted && profile.npoId) {
+      return "/ong/dashboard";
+    }
+
+    if (companyDraftSubmitted && profile.companyId) {
+      return "/empresa/dashboard";
+    }
+  }
+
+  return redirectPathForRole(role);
+}
+
+function profileRole(profile: AuthenticatedProfile | null): UserRole | null {
+  if (!profile?.registrationCompleted) {
+    return null;
+  }
+
+  switch (profile.userType) {
+    case "admin":
+      return "ADMIN";
+    case "npo":
+      return "NPO";
+    case "company":
+      return "COMPANY";
+    default:
+      return null;
   }
 }

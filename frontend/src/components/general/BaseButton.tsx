@@ -22,7 +22,7 @@ export function BaseButton({
       className={`
         rounded-lg font-semibold transition-all duration-200
         flex items-center justify-center gap-2
-        px-6 py-2 
+        px-6 py-2 cursor-pointer
         ${variants[variant]} 
         ${fullWidth ? "w-full" : "w-fit"}
         ${className} 

@@ -1,64 +1,137 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "../../components/general/Header";
 import { BaseButton } from "../../components/general/BaseButton";
 import { WizardSteps } from "../../components/auth/WizardSteps";
 import { WizardSingUp } from "../../components/wizard/WizardSignUp";
-import { NpoStepTwo } from "../../components/ong/NpoStepTwo";
+import { NpoStepThree } from "../../components/ong/NpoStepThree";
 import { stepValidators } from "../../config/wizard.config";
 import type {
   FieldErrors,
-  WizardFormData,
   OrganizationType,
+  WizardEsgOption,
+  WizardFormData,
 } from "../../types/wizard.types";
 
-{
-  /* NPO Steps
-  Agora são chamados diretamente no return!
-  Só tem a func salva, para não quebrar o código.
+const auth0Audience = import.meta.env.VITE_AUTH0_AUDIENCE;
+const npoSignupDraftKey = "vinculohub:npo-signup-draft";
 
-function NpoStepTwoDisplay() { ERRADO!
+type NpoSignupDraft = {
+  currentStep?: number;
+  organizationType?: OrganizationType;
+  formData?: WizardFormData;
+};
+
+const emptyFormData: WizardFormData = {
+  nomeInstituicao: "",
+  email: "",
+  senha: "",
+  confirmarSenha: "",
+  cnpj: "",
+  razaoSocial: "",
+  cpf: "",
+  porteOng: "",
+  resumoInstitucional: "",
+  esg: [],
+};
+
+function readNpoSignupDraft(): NpoSignupDraft | null {
+  const savedDraft = sessionStorage.getItem(npoSignupDraftKey);
+
+  if (!savedDraft) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(savedDraft) as NpoSignupDraft;
+  } catch {
+    sessionStorage.removeItem(npoSignupDraftKey);
+    return null;
+  }
+}
+
+type NpoStepFourProps = {
+  formData: WizardFormData;
+  setFormData: Dispatch<SetStateAction<WizardFormData>>;
+  errors: FieldErrors;
+};
+
+const esgOptions: Array<{ value: WizardEsgOption; label: string }> = [
+  { value: "ambiental", label: "Ambiental" },
+  { value: "social", label: "Social" },
+  { value: "governanca", label: "Governanca" },
+];
+
+function NpoStepFour({ formData, setFormData, errors }: NpoStepFourProps) {
+  function toggleEsg(value: WizardEsgOption) {
+    setFormData((prev) => {
+      const selected = prev.esg.includes(value);
+
+      return {
+        ...prev,
+        esg: selected
+          ? prev.esg.filter((option) => option !== value)
+          : [...prev.esg, value],
+      };
+    });
+  }
+
   return (
-    <div><NpoStepTwo /></div>
+    <div className="flex flex-col gap-5">
+      <h2 className="text-vinculo-dark font-semibold text-lg">Pilares ESG</h2>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {esgOptions.map((option) => (
+          <label
+            key={option.value}
+            className="flex items-center gap-3 rounded-lg border border-vinculo-gray px-4 py-3 text-vinculo-dark"
+          >
+            <input
+              type="checkbox"
+              checked={formData.esg.includes(option.value)}
+              onChange={() => toggleEsg(option.value)}
+            />
+            {option.label}
+          </label>
+        ))}
+      </div>
+
+      {errors.esg && (
+        <p className="text-sm text-error" role="alert">
+          {errors.esg}
+        </p>
+      )}
+    </div>
   );
 }
-*/
-}
 
-function NpoStepThree() {
-  return <div>Passo 3 - ONG - Informações Básicas 2</div>;
-}
-function NpoStepFour() {
-  return <div>Passo 4 - ONG - Informações Básicas 3</div>;
-}
 function NpoStepFive() {
   return <div>Passo 5 - ONG - Cadastro de Projeto</div>;
 }
 
-{
-  /* Enterprise Steps - Mesma lógica dos NPOs*/
-}
 function EnterpriseStepTwo() {
   return <div>Passo 2 - Empresa - Cadastro da Empresa</div>;
 }
+
 function EnterpriseStepThree() {
   return <div>Passo 3 - Empresa - Cadastro da Empresa 2</div>;
 }
+
 function EnterpriseStepFour() {
   return <div>Passo 4 - Empresa - Cadastro da Empresa 3</div>;
 }
+
 function EnterpriseStepFive() {
   return <div>Passo 5 - Empresa - Cadastro da Empresa 4</div>;
 }
 
-{
-  /* Deve ter uma tela de review das infos? */
-}
-
 type GetStepsParams = {
-  organizationType: OrganizationType | null;
+  organizationType: OrganizationType;
   onSelectOrganizationType: (type: OrganizationType) => void;
   formData: WizardFormData;
-  setFormData: React.Dispatch<React.SetStateAction<WizardFormData>>;
+  setFormData: Dispatch<SetStateAction<WizardFormData>>;
   errors: FieldErrors;
 };
 
@@ -83,14 +156,18 @@ function getSteps({
   if (organizationType === "npo") {
     return [
       commonFirstStep,
-      <NpoStepTwo
-        key="npo-step-2"
+      <NpoStepThree
+        key="npo-step-3"
         formData={formData}
         setFormData={setFormData}
         errors={errors}
       />,
-      <NpoStepThree key="npo-step-3" />,
-      <NpoStepFour key="npo-step-4" />,
+      <NpoStepFour
+        key="npo-step-4"
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+      />,
       <NpoStepFive key="npo-step-5" />,
     ];
   }
@@ -104,27 +181,23 @@ function getSteps({
   ];
 }
 
-export default function LandingPage() {
-  const [currentStep, setCurrentStep] = useState(1);
+export default function RegisterPage() {
+  const { loginWithRedirect } = useAuth0();
+  const navigate = useNavigate();
+  const [initialDraft] = useState(readNpoSignupDraft);
+  const [currentStep, setCurrentStep] = useState(initialDraft?.currentStep ?? 1);
   const [organizationType, setOrganizationType] =
-    useState<OrganizationType | null>(null);
-
-  //
+    useState<OrganizationType | null>(initialDraft?.organizationType ?? null);
   const [formData, setFormData] = useState<WizardFormData>({
-    nomeInstituicao: "",
-    email: "",
-    senha: "",
-    confirmarSenha: "",
-    cnpj: "",
-    razaoSocial: "",
+    ...emptyFormData,
+    ...initialDraft?.formData,
   });
-
   const [errors, setErrors] = useState<FieldErrors>({});
 
   const steps = useMemo(
     () =>
       getSteps({
-        organizationType,
+        organizationType: organizationType ?? "npo",
         onSelectOrganizationType: setOrganizationType,
         formData,
         setFormData,
@@ -135,6 +208,34 @@ export default function LandingPage() {
 
   const totalSteps = steps.length;
   const currentStepContent = steps[currentStep - 1];
+
+  useEffect(() => {
+    if (organizationType === "enterprise" && currentStep > 1) {
+      navigate("/company/register", { replace: true });
+    }
+  }, [currentStep, navigate, organizationType]);
+
+  async function handleNpoSignup() {
+    sessionStorage.setItem(
+      npoSignupDraftKey,
+      JSON.stringify({
+        currentStep,
+        organizationType,
+        formData,
+      }),
+    );
+
+    await loginWithRedirect({
+      appState: {
+        returnTo: "/ong/dashboard",
+      },
+      authorizationParams: {
+        audience: auth0Audience,
+        role: "NPO",
+        screen_hint: "signup",
+      },
+    });
+  }
 
   function handleNext() {
     if (!organizationType) {
@@ -150,6 +251,16 @@ export default function LandingPage() {
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+
+    if (organizationType === "enterprise") {
+      navigate("/company/register");
+      return;
+    }
+
+    if (organizationType === "npo" && currentStep === totalSteps) {
+      void handleNpoSignup();
       return;
     }
 
@@ -179,13 +290,8 @@ export default function LandingPage() {
             >
               Voltar
             </BaseButton>
-            <BaseButton
-              variant="secondary"
-              className="w-32"
-              onClick={handleNext}
-              disabled={currentStep === totalSteps}
-            >
-              Próximo
+            <BaseButton variant="secondary" className="w-32" onClick={handleNext}>
+              {currentStep === totalSteps ? "Finalizar" : "Proximo"}
             </BaseButton>
           </div>
         </section>

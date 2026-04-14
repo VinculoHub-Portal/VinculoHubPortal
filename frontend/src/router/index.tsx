@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import LandingPage from "../pages/LandingPage/"
 import ComponentsPage from "../pages/ComponentsPage"
@@ -5,7 +6,7 @@ import RegisterPage from "../pages/RegisterPage"
 import { AuthRoleRedirect } from "../components/auth/AuthRoleRedirect"
 import { ProtectedRoute } from "../components/auth/ProtectedRoute"
 import { RoleHomePage } from "../pages/RoleHomePage"
-
+import CompanyRegistrationPage from "../pages/company/registration"
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -14,6 +15,8 @@ export const AppRouter = () => (
       <Route path="/" element={<LandingPage />} />
       <Route path="/components" element={<ComponentsPage />} />
       <Route path="/cadastro" element={<RegisterPage />} />
+      <Route path="/cadastro/instituicao" element={<RegisterPage />} />
+      <Route path="/company/register" element={<CompanyRegistrationPage />} />
       <Route
         path="/admin/dashboard"
         element={
@@ -49,4 +52,4 @@ export const AppRouter = () => (
       />
     </Routes>
   </BrowserRouter>
-)
+);
