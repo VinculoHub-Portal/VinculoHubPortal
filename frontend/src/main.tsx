@@ -1,7 +1,8 @@
-
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
 import './styles/main.css' 
+import ComponentsPage from './pages/ComponentsPage/index' 
+import { StrictMode } from "react"
+import { createRoot } from "react-dom/client"
+import "./styles/main.css"
 import { Auth0Provider } from '@auth0/auth0-react'
 import { AppRouter } from './router'
 
@@ -31,7 +32,7 @@ createRoot(document.getElementById("root")!).render(
         )
       }}
     >
-      <AppRouter />
+      <ComponentsPage />
     </Auth0Provider>
   </StrictMode>,
 )

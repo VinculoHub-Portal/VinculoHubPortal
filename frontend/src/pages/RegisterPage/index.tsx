@@ -4,7 +4,7 @@ import { BaseButton } from "../../components/general/BaseButton";
 import { WizardSteps } from "../../components/auth/WizardSteps";
 import { WizardSingUp } from "../../components/wizard/WizardSignUp";
 import { NpoStepTwo } from "../../components/ong/NpoStepTwo";
-import { NPO_StepFour } from "../../components/ong/NpoStepFour";
+import { NPOStepFour } from "../../components/ong/NpoStepFour";
 import { stepValidators } from "../../config/wizard.config";
 import type {
   FieldErrors,
@@ -29,7 +29,7 @@ function NpoStepThree() {
   return <div>Passo 3 - ONG - Informações Básicas 2</div>;
 }
 function NpoStepFour() {
-  return <div>Passo 4 - ONG - Informações Básicas 3<NPO_StepFour /></div>;
+  return <div>Passo 4 - ONG - Informações Básicas 3<NPOStepFour /></div>;
 }
 function NpoStepFive() {
   return <div>Passo 5 - ONG - Cadastro de Projeto</div>;
