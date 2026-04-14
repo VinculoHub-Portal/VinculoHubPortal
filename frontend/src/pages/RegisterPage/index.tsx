@@ -1,10 +1,15 @@
 import { useMemo, useState } from "react";
+import { WizardFormProvider } from "../../contexts/WizardFormContext";
 import { Header } from "../../components/general/Header";
-import { BaseButton } from "../../components/general/BaseButton";
 import { WizardSteps } from "../../components/auth/WizardSteps";
 import { WizardSingUp } from "../../components/wizard/WizardSignUp";
 import { NpoStepTwo } from "../../components/ong/NpoStepTwo";
 import { NPOStepFour } from "../../components/ong/NpoStepFour";
+import {
+  NpoRegistrationFeedback,
+  NpoWizardFooter,
+} from "../../components/npo-registration";
+import { useNpoAccountRegistration } from "../../hooks/useNpoAccountRegistration";
 import { stepValidators } from "../../config/wizard.config";
 import type {
   FieldErrors,
@@ -27,9 +32,6 @@ function NpoStepTwoDisplay() { ERRADO!
 
 function NpoStepThree() {
   return <div>Passo 3 - ONG - Informações Básicas 2</div>;
-}
-function NpoStepFour() {
-  return <div>Passo 4 - ONG - Informações Básicas 3<NPOStepFour /></div>;
 }
 function NpoStepFive() {
   return <div>Passo 5 - ONG - Cadastro de Projeto</div>;
@@ -91,7 +93,7 @@ function getSteps({
         errors={errors}
       />,
       <NpoStepThree key="npo-step-3" />,
-      <NpoStepFour key="npo-step-4" />,
+      <NPOStepFour key="npo-step-4" />,
       <NpoStepFive key="npo-step-5" />,
     ];
   }
@@ -118,9 +120,25 @@ export default function LandingPage() {
     confirmarSenha: "",
     cnpj: "",
     razaoSocial: "",
+    cpf: "",
+    description: "",
+    phone: "",
+    npoSize: "",
+    esgEnvironmental: false,
+    esgSocial: false,
+    esgGovernance: false,
+    addressZipCode: "",
+    addressState: "",
+    addressStateCode: "",
+    addressCity: "",
+    addressStreet: "",
+    addressNumber: "",
+    addressComplement: "",
   });
 
   const [errors, setErrors] = useState<FieldErrors>({});
+
+  const npoRegistration = useNpoAccountRegistration();
 
   const steps = useMemo(
     () =>
@@ -161,34 +179,38 @@ export default function LandingPage() {
     setCurrentStep((prev) => Math.max(1, prev - 1));
   }
 
+  function handleFinalizeNpo() {
+    void npoRegistration.submit(formData);
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
       <Header />
 
       <main className="max-w-4xl mx-auto w-full flex flex-col gap-12 px-6">
         <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
-          <WizardSteps currentStep={currentStep} totalSteps={totalSteps} />
+          <WizardFormProvider
+            value={{ formData, setFormData, errors }}
+          >
+            <WizardSteps currentStep={currentStep} totalSteps={totalSteps} />
 
-          {currentStepContent}
+            {currentStepContent}
 
-          <div className="flex justify-center gap-4 mt-8">
-            <BaseButton
-              variant="ghost"
-              className="w-32"
-              onClick={handleBack}
-              disabled={currentStep === 1}
-            >
-              Voltar
-            </BaseButton>
-            <BaseButton
-              variant="secondary"
-              className="w-32"
-              onClick={handleNext}
-              disabled={currentStep === totalSteps}
-            >
-              Próximo
-            </BaseButton>
-          </div>
+            <NpoRegistrationFeedback
+              success={npoRegistration.success}
+              errorMessage={npoRegistration.errorMessage}
+            />
+
+            <NpoWizardFooter
+              currentStep={currentStep}
+              totalSteps={totalSteps}
+              organizationType={organizationType}
+              isSubmitting={npoRegistration.isSubmitting}
+              onBack={handleBack}
+              onNext={handleNext}
+              onFinalizeNpo={handleFinalizeNpo}
+            />
+          </WizardFormProvider>
         </section>
       </main>
     </div>

@@ -1,3 +1,5 @@
+import type { NpoSize } from "./npo-account.types";
+
 export type OrganizationType = "npo" | "enterprise";
 
 /* Se precisar de campos opcionais utilize "pick". EXs:
@@ -16,7 +18,21 @@ export type WizardFormData = {
   confirmarSenha: string;
   cnpj: string;
   razaoSocial: string;
-  // ...campos dos próximos steps
+  cpf: string;
+  description: string;
+  phone: string;
+  /** Vazio até o utilizador escolher no passo correspondente. */
+  npoSize: NpoSize | "";
+  esgEnvironmental: boolean;
+  esgSocial: boolean;
+  esgGovernance: boolean;
+  addressZipCode: string;
+  addressState: string;
+  addressStateCode: string;
+  addressCity: string;
+  addressStreet: string;
+  addressNumber: string;
+  addressComplement: string;
 };
 
 export type FieldErrors = Partial<
