@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Getter
 @Setter
@@ -39,11 +41,16 @@ public class Company {
     private Users user;
 
     @Column(name = "created_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     @Column(name = "deleted_at")
+    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime deletedAt;
 }

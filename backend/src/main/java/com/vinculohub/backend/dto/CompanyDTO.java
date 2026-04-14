@@ -19,7 +19,7 @@ public record CompanyDTO(
         @NotEmpty
         String phone,
         @NotEmpty
-        String userId,
+        UserDTO user,
         @NotEmpty
         AddressDTO address) {
 }
