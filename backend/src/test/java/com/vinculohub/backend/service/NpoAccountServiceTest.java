@@ -6,11 +6,13 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import com.vinculohub.backend.dto.AddressSignupRequest;
+import com.vinculohub.backend.dto.NpoFirstProjectSignupRequest;
 import com.vinculohub.backend.dto.NpoInstitutionalSignupRequest;
 import com.vinculohub.backend.dto.NpoInstitutionalSignupResponse;
 import com.vinculohub.backend.exception.DuplicateLoginException;
 import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.model.Npo;
+import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.model.enums.NpoSize;
 import com.vinculohub.backend.model.enums.UserType;
@@ -35,10 +37,14 @@ class NpoAccountServiceTest {
 
     @Mock private NpoEsgService npoEsgService;
 
+    @Mock private ProjectService projectService;
+
+    @Mock private ProjectValidationService projectValidationService;
+
     @InjectMocks private NpoAccountService npoAccountService;
 
     @Test
-    @DisplayName("Deve registrar User + Npo na mesma operação transacional")
+    @DisplayName("Deve registrar User + Npo + Project na mesma operação transacional")
     void shouldRegisterUserAndNpoAccount() {
         NpoInstitutionalSignupRequest request = validRequest();
 
@@ -52,6 +58,7 @@ class NpoAccountServiceTest {
                         });
         when(npoDocumentService.sanitizeCpf("529.982.247-25")).thenReturn("52998224725");
         when(npoDocumentService.sanitizeCnpj(null)).thenReturn(null);
+
         when(npoService.saveWithAddress(any(Npo.class), any(Address.class)))
                 .thenAnswer(
                         invocation -> {
@@ -60,8 +67,36 @@ class NpoAccountServiceTest {
                             return npo;
                         });
 
+        when(projectService.createFirstProject(
+                        any(Npo.class), any(NpoFirstProjectSignupRequest.class)))
+                .thenAnswer(
+                        invocation -> {
+                            Npo npo = invocation.getArgument(0);
+                            NpoFirstProjectSignupRequest firstProject = invocation.getArgument(1);
+
+                            Project project =
+                                    Project.builder()
+                                            .npo(npo)
+                                            .title(firstProject.name())
+                                            .description(firstProject.description())
+                                            .budgetNeeded(firstProject.capital())
+                                            .build();
+
+                            project.setId(30L);
+                            return project;
+                        });
+
         NpoInstitutionalSignupResponse response =
                 npoAccountService.registerInstitutionalAccount(request);
+
+        verify(projectValidationService).validateFirstProject(request.firstProject());
+        verify(projectService).createFirstProject(any(Npo.class), eq(request.firstProject()));
+
+        assertEquals(10, response.userId());
+        assertEquals(20, response.npoId());
+        assertEquals(30L, response.projectId());
+        assertEquals("contato@ong.org", response.email());
+        assertTrue(response.accessReleased());
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         ArgumentCaptor<Npo> npoCaptor = ArgumentCaptor.forClass(Npo.class);
@@ -69,6 +104,8 @@ class NpoAccountServiceTest {
 
         verify(userRepository).save(userCaptor.capture());
         verify(npoService).saveWithAddress(npoCaptor.capture(), addressCaptor.capture());
+        verify(projectService).createFirstProject(any(Npo.class), eq(request.firstProject()));
+
         verify(npoDocumentService).validateDocuments("529.982.247-25", null);
         verify(npoEsgService).validateEsgSelection(true, false, false);
 
@@ -89,8 +126,12 @@ class NpoAccountServiceTest {
         assertEquals("São Paulo", savedAddress.getCity());
         assertEquals("SP", savedAddress.getStateCode());
 
+        verify(projectValidationService).validateFirstProject(request.firstProject());
+        verify(projectService).createFirstProject(any(Npo.class), eq(request.firstProject()));
+
         assertEquals(10, response.userId());
         assertEquals(20, response.npoId());
+        assertEquals(30L, response.projectId());
         assertEquals("contato@ong.org", response.email());
         assertTrue(response.accessReleased());
     }
@@ -133,6 +174,11 @@ class NpoAccountServiceTest {
                 false,
                 false,
                 new AddressSignupRequest(
-                        "São Paulo", "SP", "São Paulo", "Rua A", "123", "Sala 1", "01000-000"));
+                        "São Paulo", "SP", "São Paulo", "Rua A", "123", "Sala 1", "01000-000"),
+                new NpoFirstProjectSignupRequest(
+                        "Projeto Inicial",
+                        "Descrição do projeto inicial",
+                        new java.math.BigDecimal("1000.00"),
+                        java.util.List.of("1")));
     }
 }

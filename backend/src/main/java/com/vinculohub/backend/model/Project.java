@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLRestriction;
@@ -45,6 +47,12 @@ public class Project {
 
     @Column(name = "invested_amount", precision = 15, scale = 2)
     private BigDecimal investedAmount;
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "project_ods", joinColumns = @JoinColumn(name = "project_id"))
+    @Column(name = "ods_code", nullable = false)
+    @Builder.Default
+    private Set<Integer> odsCodes = new LinkedHashSet<>();
 
     @Column(name = "start_date")
     private LocalDate startDate;

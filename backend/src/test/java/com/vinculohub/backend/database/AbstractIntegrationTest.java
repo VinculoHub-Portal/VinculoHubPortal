@@ -8,7 +8,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 @SpringBootTest
-@ActiveProfiles("test-postgres")
+@ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
 
     private static final PostgreSQLContainer<?> POSTGRES =

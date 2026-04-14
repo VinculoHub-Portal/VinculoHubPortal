@@ -7,6 +7,7 @@ import com.vinculohub.backend.dto.NpoInstitutionalSignupResponse;
 import com.vinculohub.backend.exception.DuplicateLoginException;
 import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.model.Npo;
+import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.model.enums.NpoSize;
 import com.vinculohub.backend.model.enums.UserType;
@@ -20,21 +21,27 @@ public class NpoAccountService {
 
     private final UserRepository userRepository;
     private final NpoService npoService;
+    private final ProjectService projectService;
+    private final ProjectValidationService projectValidationService;
     private final NpoDocumentService npoDocumentService;
     private final NpoEsgService npoEsgService;
 
     public NpoAccountService(
             UserRepository userRepository,
             NpoService npoService,
+            ProjectService projectService,
+            ProjectValidationService projectValidationService,
             NpoDocumentService npoDocumentService,
             NpoEsgService npoEsgService) {
         this.userRepository = userRepository;
         this.npoService = npoService;
+        this.projectService = projectService;
+        this.projectValidationService = projectValidationService;
         this.npoDocumentService = npoDocumentService;
         this.npoEsgService = npoEsgService;
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public NpoInstitutionalSignupResponse registerInstitutionalAccount(
             NpoInstitutionalSignupRequest request) {
         if (request == null) {
@@ -51,6 +58,7 @@ public class NpoAccountService {
         npoDocumentService.validateDocuments(request.cpf(), request.cnpj());
         npoEsgService.validateEsgSelection(
                 request.environmental(), request.social(), request.governance());
+        projectValidationService.validateFirstProject(request.firstProject());
 
         User savedUser =
                 userRepository.save(
@@ -72,8 +80,14 @@ public class NpoAccountService {
 
         Npo savedNpo = npoService.saveWithAddress(npo, toAddressOrNull(request.address()));
 
+        Project savedProject = projectService.createFirstProject(savedNpo, request.firstProject());
+
         return new NpoInstitutionalSignupResponse(
-                savedUser.getId(), savedNpo.getId(), savedUser.getEmail(), true);
+                savedUser.getId(),
+                savedNpo.getId(),
+                savedProject.getId(),
+                savedUser.getEmail(),
+                true);
     }
 
     private static String normalizeEmail(String value) {
@@ -92,7 +106,6 @@ public class NpoAccountService {
         if (value == null) {
             return null;
         }
-
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
     }
@@ -126,12 +139,12 @@ public class NpoAccountService {
     }
 
     private static boolean isBlankAddress(AddressSignupRequest request) {
-        return trimToNull(request.state()) == null
+        return (trimToNull(request.state()) == null
                 && trimToNull(request.stateCode()) == null
                 && trimToNull(request.city()) == null
                 && trimToNull(request.street()) == null
                 && trimToNull(request.number()) == null
                 && trimToNull(request.complement()) == null
-                && trimToNull(request.zipCode()) == null;
+                && trimToNull(request.zipCode()) == null);
     }
 }
