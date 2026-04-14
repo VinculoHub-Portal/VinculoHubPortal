@@ -27,12 +27,13 @@ public class NpoAccountService {
     private final NpoEsgService npoEsgService;
 
     public NpoAccountService(
-            UserRepository userRepository,
-            NpoService npoService,
-            ProjectService projectService,
-            ProjectValidationService projectValidationService,
-            NpoDocumentService npoDocumentService,
-            NpoEsgService npoEsgService) {
+        UserRepository userRepository,
+        NpoService npoService,
+        ProjectService projectService,
+        ProjectValidationService projectValidationService,
+        NpoDocumentService npoDocumentService,
+        NpoEsgService npoEsgService
+    ) {
         this.userRepository = userRepository;
         this.npoService = npoService;
         this.projectService = projectService;
@@ -43,55 +44,78 @@ public class NpoAccountService {
 
     @Transactional(rollbackFor = Exception.class)
     public NpoInstitutionalSignupResponse registerInstitutionalAccount(
-            NpoInstitutionalSignupRequest request) {
+        NpoInstitutionalSignupRequest request
+    ) {
         if (request == null) {
-            throw new IllegalArgumentException("Os dados do cadastro são obrigatórios.");
+            throw new IllegalArgumentException(
+                "Os dados do cadastro são obrigatórios."
+            );
         }
 
-        String name = requireText(request.name(), "Nome da instituição é obrigatório.");
+        String name = requireText(
+            request.name(),
+            "Nome da instituição é obrigatório."
+        );
         String email = normalizeEmail(request.email());
 
         if (userRepository.existsByEmailIgnoreCase(email)) {
-            throw new DuplicateLoginException("Já existe uma conta cadastrada com este e-mail.");
+            throw new DuplicateLoginException(
+                "Já existe uma conta cadastrada com este e-mail."
+            );
         }
 
         npoDocumentService.validateDocuments(request.cpf(), request.cnpj());
         npoEsgService.validateEsgSelection(
-                request.environmental(), request.social(), request.governance());
+            request.environmental(),
+            request.social(),
+            request.governance()
+        );
         projectValidationService.validateFirstProject(request.firstProject());
 
-        User savedUser =
-                userRepository.save(
-                        User.builder().name(name).email(email).userType(UserType.npo).build());
+        User savedUser = userRepository.save(
+            User.builder()
+                .name(name)
+                .email(email)
+                .userType(UserType.npo)
+                .build()
+        );
 
-        Npo npo =
-                Npo.builder()
-                        .name(name)
-                        .userId(savedUser.getId())
-                        .description(trimToNull(request.description()))
-                        .npoSize(parseNpoSize(request.npoSize()))
-                        .cpf(trimToNull(npoDocumentService.sanitizeCpf(request.cpf())))
-                        .cnpj(trimToNull(npoDocumentService.sanitizeCnpj(request.cnpj())))
-                        .phone(trimToNull(request.phone()))
-                        .environmental(Boolean.TRUE.equals(request.environmental()))
-                        .social(Boolean.TRUE.equals(request.social()))
-                        .governance(Boolean.TRUE.equals(request.governance()))
-                        .build();
+        Npo npo = Npo.builder()
+            .name(name)
+            .userId(savedUser.getId())
+            .description(trimToNull(request.description()))
+            .npoSize(parseNpoSize(request.npoSize()))
+            .cpf(trimToNull(npoDocumentService.sanitizeCpf(request.cpf())))
+            .cnpj(trimToNull(npoDocumentService.sanitizeCnpj(request.cnpj())))
+            .phone(trimToNull(request.phone()))
+            .environmental(Boolean.TRUE.equals(request.environmental()))
+            .social(Boolean.TRUE.equals(request.social()))
+            .governance(Boolean.TRUE.equals(request.governance()))
+            .build();
 
-        Npo savedNpo = npoService.saveWithAddress(npo, toAddressOrNull(request.address()));
+        Npo savedNpo = npoService.saveWithAddress(
+            npo,
+            toAddressOrNull(request.address())
+        );
 
-        Project savedProject = projectService.createFirstProject(savedNpo, request.firstProject());
+        Project savedProject = projectService.createFirstProject(
+            savedNpo,
+            request.firstProject()
+        );
 
         return new NpoInstitutionalSignupResponse(
-                savedUser.getId(),
-                savedNpo.getId(),
-                savedProject.getId(),
-                savedUser.getEmail(),
-                true);
+            savedUser.getId(),
+            savedNpo.getId(),
+            savedProject.getId(),
+            savedUser.getEmail(),
+            true
+        );
     }
 
     private static String normalizeEmail(String value) {
-        return requireText(value, "E-mail é obrigatório.").toLowerCase(Locale.ROOT);
+        return requireText(value, "E-mail é obrigatório.").toLowerCase(
+            Locale.ROOT
+        );
     }
 
     private static String requireText(String value, String message) {
@@ -111,14 +135,18 @@ public class NpoAccountService {
     }
 
     private static NpoSize parseNpoSize(String value) {
-        String normalized =
-                requireText(value, "Porte da ONG é obrigatório.").toLowerCase(Locale.ROOT);
+        String normalized = requireText(
+            value,
+            "Porte da ONG é obrigatório."
+        ).toLowerCase(Locale.ROOT);
 
         return switch (normalized) {
             case "small", "pequena" -> NpoSize.small;
             case "medium", "media", "média" -> NpoSize.medium;
             case "large", "grande" -> NpoSize.large;
-            default -> throw new IllegalArgumentException("Porte da ONG inválido.");
+            default -> throw new IllegalArgumentException(
+                "Porte da ONG inválido."
+            );
         };
     }
 
@@ -128,23 +156,25 @@ public class NpoAccountService {
         }
 
         return Address.builder()
-                .state(trimToNull(request.state()))
-                .stateCode(trimToNull(request.stateCode()))
-                .city(trimToNull(request.city()))
-                .street(trimToNull(request.street()))
-                .number(trimToNull(request.number()))
-                .complement(trimToNull(request.complement()))
-                .zipCode(trimToNull(request.zipCode()))
-                .build();
+            .state(trimToNull(request.state()))
+            .stateCode(trimToNull(request.stateCode()))
+            .city(trimToNull(request.city()))
+            .street(trimToNull(request.street()))
+            .number(trimToNull(request.number()))
+            .complement(trimToNull(request.complement()))
+            .zipCode(trimToNull(request.zipCode()))
+            .build();
     }
 
     private static boolean isBlankAddress(AddressSignupRequest request) {
-        return (trimToNull(request.state()) == null
-                && trimToNull(request.stateCode()) == null
-                && trimToNull(request.city()) == null
-                && trimToNull(request.street()) == null
-                && trimToNull(request.number()) == null
-                && trimToNull(request.complement()) == null
-                && trimToNull(request.zipCode()) == null);
+        return
+            trimToNull(request.state()) == null &&
+            trimToNull(request.stateCode()) == null &&
+            trimToNull(request.city()) == null &&
+            trimToNull(request.street()) == null &&
+            trimToNull(request.number()) == null &&
+            trimToNull(request.complement()) == null &&
+            trimToNull(request.zipCode()) == null
+        ;
     }
 }
