@@ -1,4 +1,4 @@
-/** Alinhar com o DTO do POST /api/npo-accounts (backend #71) quando estiver fechado. */
+/** Contrato JSON de POST /api/npo-accounts (NpoInstitutionalSignupRequest). */
 
 export type NpoSize = "small" | "medium" | "large";
 
@@ -12,22 +12,17 @@ export type NpoAddressPayload = {
   complement: string;
 };
 
-export type NpoEsgPayload = {
-  environmental: boolean;
-  social: boolean;
-  governance: boolean;
-};
-
+/** Corpo enviado ao backend (campos raiz; sem objeto `esg` aninhado). */
 export type NpoAccountRegistrationPayload = {
   name: string;
   email: string;
-  /** Incluir se o contrato do #71 exigir senha no mesmo POST. */
-  password?: string;
   cpf: string;
   cnpj: string;
   npoSize: NpoSize;
   description: string;
   phone: string;
-  esg: NpoEsgPayload;
+  environmental: boolean;
+  social: boolean;
+  governance: boolean;
   address: NpoAddressPayload;
 };

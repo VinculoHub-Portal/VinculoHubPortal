@@ -1,17 +1,19 @@
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
   isRequired?: boolean;
-  error?: string; 
+  error?: string;
 }
 
 export function Input({
   label,
   id,
   isRequired,
-  error, 
+  error,
   className = "",
   ...props
 }: InputProps) {
+  const invalid = Boolean(error);
+
   return (
     <div className="flex flex-col gap-1 w-full text-left">
       <label htmlFor={id} className="...">
@@ -22,15 +24,22 @@ export function Input({
       <input
         id={id}
         required={isRequired}
-        className={`... ${error ? 'border-red-500' : 'border-vinculo-gray'} ${className}`}
+        aria-invalid={invalid}
+        className={`rounded-xl px-4 py-3 outline-none transition-all placeholder:text-slate-400
+        border border-vinculo-gray
+        focus:border-vinculo-dark focus:ring-1 focus:ring-vinculo-dark
+        ${className}
+        ${
+          invalid
+            ? "!border !border-error focus:!border-error focus:!ring-error"
+            : ""
+        }`}
         {...props}
       />
-
-      
       {error && (
-        <span className="text-red-500 text-xs mt-1 font-medium">
+        <p className="text-sm text-error" role="alert">
           {error}
-        </span>
+        </p>
       )}
     </div>
   );

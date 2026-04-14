@@ -1,6 +1,6 @@
-import type { NpoSize } from "./npo-account.types";
-
 export type OrganizationType = "npo" | "enterprise";
+
+export type WizardEsgOption = "ambiental" | "social" | "governanca";
 
 /* Se precisar de campos opcionais utilize "pick". EXs:
 type SignupFields = Pick<
@@ -19,13 +19,10 @@ export type WizardFormData = {
   cnpj: string;
   razaoSocial: string;
   cpf: string;
-  description: string;
+  porteOng: "" | "pequena" | "media" | "grande";
+  resumoInstitucional: string;
+  esg: WizardEsgOption[];
   phone: string;
-  /** Vazio até o utilizador escolher no passo correspondente. */
-  npoSize: NpoSize | "";
-  esgEnvironmental: boolean;
-  esgSocial: boolean;
-  esgGovernance: boolean;
   addressZipCode: string;
   addressState: string;
   addressStateCode: string;

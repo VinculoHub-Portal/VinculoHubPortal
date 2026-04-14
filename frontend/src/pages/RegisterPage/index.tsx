@@ -1,9 +1,13 @@
 import { useMemo, useState } from "react";
-import { WizardFormProvider } from "../../contexts/WizardFormContext";
+import {
+  WizardFormProvider,
+  useWizardForm,
+} from "../../contexts/WizardFormContext";
 import { Header } from "../../components/general/Header";
 import { WizardSteps } from "../../components/auth/WizardSteps";
 import { WizardSingUp } from "../../components/wizard/WizardSignUp";
 import { NpoStepTwo } from "../../components/ong/NpoStepTwo";
+import { NpoStepThree } from "../../components/ong/NpoStepThree";
 import { NPOStepFour } from "../../components/ong/NpoStepFour";
 import {
   NpoRegistrationFeedback,
@@ -15,6 +19,7 @@ import type {
   FieldErrors,
   WizardFormData,
   OrganizationType,
+  WizardEsgOption,
 } from "../../types/wizard.types";
 
 {
@@ -30,11 +35,59 @@ function NpoStepTwoDisplay() { ERRADO!
 */
 }
 
-function NpoStepThree() {
-  return <div>Passo 3 - ONG - Informações Básicas 2</div>;
-}
+const ESG_OPTIONS: { value: WizardEsgOption; label: string }[] = [
+  { value: "ambiental", label: "Ambiental" },
+  { value: "social", label: "Social" },
+  { value: "governanca", label: "Governança" },
+];
+
+/** Pilares ESG (mínimo um — exigência da API). Cadastro de projeto pode evoluir neste passo. */
 function NpoStepFive() {
-  return <div>Passo 5 - ONG - Cadastro de Projeto</div>;
+  const { formData, setFormData, errors } = useWizardForm();
+
+  function toggleEsg(option: WizardEsgOption) {
+    setFormData((prev) => {
+      const has = prev.esg.includes(option);
+      return {
+        ...prev,
+        esg: has
+          ? prev.esg.filter((x) => x !== option)
+          : [...prev.esg, option],
+      };
+    });
+  }
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-vinculo-dark font-semibold text-lg">
+        Pilares ESG
+      </h2>
+      <p className="text-sm text-slate-600">
+        Selecione pelo menos um pilar alinhado à instituição.
+      </p>
+      <div className="flex flex-col gap-3">
+        {ESG_OPTIONS.map(({ value, label }) => (
+          <label
+            key={value}
+            className="flex items-center gap-3 cursor-pointer text-slate-800"
+          >
+            <input
+              type="checkbox"
+              checked={formData.esg.includes(value)}
+              onChange={() => toggleEsg(value)}
+              className="h-4 w-4 rounded border-vinculo-gray"
+            />
+            {label}
+          </label>
+        ))}
+      </div>
+      {errors.esg && (
+        <p className="text-sm text-error" role="alert">
+          {errors.esg}
+        </p>
+      )}
+    </div>
+  );
 }
 
 {
@@ -92,7 +145,12 @@ function getSteps({
         setFormData={setFormData}
         errors={errors}
       />,
-      <NpoStepThree key="npo-step-3" />,
+      <NpoStepThree
+        key="npo-step-3"
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+      />,
       <NPOStepFour key="npo-step-4" />,
       <NpoStepFive key="npo-step-5" />,
     ];
@@ -112,7 +170,6 @@ export default function LandingPage() {
   const [organizationType, setOrganizationType] =
     useState<OrganizationType | null>(null);
 
-  //
   const [formData, setFormData] = useState<WizardFormData>({
     nomeInstituicao: "",
     email: "",
@@ -121,12 +178,10 @@ export default function LandingPage() {
     cnpj: "",
     razaoSocial: "",
     cpf: "",
-    description: "",
+    porteOng: "",
+    resumoInstitucional: "",
+    esg: [],
     phone: "",
-    npoSize: "",
-    esgEnvironmental: false,
-    esgSocial: false,
-    esgGovernance: false,
     addressZipCode: "",
     addressState: "",
     addressStateCode: "",
@@ -189,9 +244,7 @@ export default function LandingPage() {
 
       <main className="max-w-4xl mx-auto w-full flex flex-col gap-12 px-6">
         <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
-          <WizardFormProvider
-            value={{ formData, setFormData, errors }}
-          >
+          <WizardFormProvider value={{ formData, setFormData, errors }}>
             <WizardSteps currentStep={currentStep} totalSteps={totalSteps} />
 
             {currentStepContent}

@@ -1,36 +1,37 @@
 import type { NpoAccountRegistrationPayload } from "../types/npo-account.types";
 import type { WizardFormData } from "../types/wizard.types";
 
+const PORTE_TO_SIZE: Record<
+  Exclude<WizardFormData["porteOng"], "">,
+  NpoAccountRegistrationPayload["npoSize"]
+> = {
+  pequena: "small",
+  media: "medium",
+  grande: "large",
+};
+
 const DEFAULT_SIZE: NpoAccountRegistrationPayload["npoSize"] = "small";
 
 /**
  * Monta o body do POST /api/npo-accounts a partir do estado do wizard.
- * Campos ainda não preenchidos nos passos viram string vazia / defaults seguros.
  */
 export function mapWizardToNpoPayload(
   data: WizardFormData,
 ): NpoAccountRegistrationPayload {
   const npoSize =
-    data.npoSize === "small" ||
-    data.npoSize === "medium" ||
-    data.npoSize === "large"
-      ? data.npoSize
-      : DEFAULT_SIZE;
+    data.porteOng !== "" ? PORTE_TO_SIZE[data.porteOng] : DEFAULT_SIZE;
 
   return {
     name: data.nomeInstituicao.trim(),
     email: data.email.trim(),
-    password: data.senha || undefined,
     cpf: data.cpf.trim(),
     cnpj: data.cnpj.trim(),
     npoSize,
-    description: data.description.trim(),
+    description: data.resumoInstitucional.trim(),
     phone: data.phone.trim(),
-    esg: {
-      environmental: data.esgEnvironmental,
-      social: data.esgSocial,
-      governance: data.esgGovernance,
-    },
+    environmental: data.esg.includes("ambiental"),
+    social: data.esg.includes("social"),
+    governance: data.esg.includes("governanca"),
     address: {
       zipCode: data.addressZipCode.trim(),
       state: data.addressState.trim(),
