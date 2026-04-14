@@ -12,9 +12,10 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class CompanyController {
     private final CompanyService companyService;
+
     @PostMapping("/public/company/register")
     public ResponseEntity<CompanyDTO> createCompany(@RequestBody CompanyDTO companyDTO) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(companyService.createCompany(companyDTO));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(companyService.createCompany(companyDTO));
     }
-
 }

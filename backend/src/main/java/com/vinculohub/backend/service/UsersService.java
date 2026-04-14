@@ -23,9 +23,6 @@ public class UsersService {
     }
 
     public UserDTO userToUserDTO(Users user) {
-        return UserDTO.builder()
-                .name(user.getName())
-                .email(user.getEmail())
-                .build();
+        return UserDTO.builder().name(user.getName()).email(user.getEmail()).build();
     }
 }
