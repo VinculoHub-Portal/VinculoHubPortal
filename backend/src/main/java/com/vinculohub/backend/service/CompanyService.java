@@ -7,7 +7,6 @@ import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.model.Company;
 import com.vinculohub.backend.model.Users;
 import com.vinculohub.backend.repository.CompanyRepository;
-import jakarta.persistence.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
