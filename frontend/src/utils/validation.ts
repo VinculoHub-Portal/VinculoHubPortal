@@ -108,12 +108,6 @@ export const validateSignupStep: StepValidator = (_data, context) => {
   return errors;
 };
 
-export const validateNpoStepTwo = composeValidators(
-  validateEmailField,
-  validatePasswordField,
-  validateConfirmPasswordField,
-);
-
 export const validateCpfField: StepValidator = (data) => {
   const errors: FieldErrors = {};
   const digits = data.cpf.replace(/\D/g, "");

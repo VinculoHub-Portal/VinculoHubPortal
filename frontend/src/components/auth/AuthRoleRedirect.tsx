@@ -9,6 +9,7 @@ type TokenPayload = {
 };
 
 const loginCompletedKey = "auth0-login-completed";
+const npoSignupDraftKey = "vinculohub:npo-signup-draft";
 const rolesClaim = "https://vinculohub/roles";
 
 export function AuthRoleRedirect() {
@@ -111,6 +112,10 @@ function redirectPathForRole(role: UserRole) {
     case "COMPANY":
       return "/empresa/dashboard";
     default:
+      if (sessionStorage.getItem(npoSignupDraftKey)) {
+        return "/ong/dashboard";
+      }
+
       return "/cadastro";
   }
 }
