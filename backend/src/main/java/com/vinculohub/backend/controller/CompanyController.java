@@ -3,6 +3,7 @@ package com.vinculohub.backend.controller;
 
 import com.vinculohub.backend.dto.CompanyDTO;
 import com.vinculohub.backend.service.CompanyService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +15,7 @@ public class CompanyController {
     private final CompanyService companyService;
 
     @PostMapping("/public/company/register")
-    public ResponseEntity<CompanyDTO> createCompany(@RequestBody CompanyDTO companyDTO) {
+    public ResponseEntity<CompanyDTO> createCompany(@Valid @RequestBody CompanyDTO companyDTO) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(companyService.createCompany(companyDTO));
     }
