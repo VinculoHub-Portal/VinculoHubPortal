@@ -55,6 +55,8 @@ public class SecurityConfig {
                                         .permitAll()
                                         .requestMatchers("/public/**")
                                         .permitAll()
+                                        .requestMatchers("/cep/**", "/cnpj/**")
+                                        .permitAll()
                                         .anyRequest()
                                         .authenticated())
                 .oauth2ResourceServer(
