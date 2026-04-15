@@ -4,10 +4,10 @@ import { Hero } from "../../pages/LandingPage/Hero"
 
 export default function LandingPage() {
   return (
-    <>
+    <div className="pb-6">
       <Header />
       <Hero />
       <InfoTab />
-    </>
+    </div>
   )
 }

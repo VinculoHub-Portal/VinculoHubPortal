@@ -1,6 +1,8 @@
 import type { Dispatch, SetStateAction } from "react";
 import { Input } from "../general/SimpleTextInput";
-import type { FieldErrors, WizardFormData } from "../../types/wizard.types";
+import { TextArea } from "../general/SimpleTextArea";
+import { CnpjIcon, DescriptionIcon } from "../icons";
+import type { FieldErrors, WizardEsgOption, WizardFormData } from "../../types/wizard.types";
 
 type NpoStepThreeProps = {
   formData: WizardFormData;
@@ -8,184 +10,151 @@ type NpoStepThreeProps = {
   errors: FieldErrors;
 };
 
-const PORTE_LABELS: Record<Exclude<WizardFormData["porteOng"], "">, string> =
-  {
-    pequena: "Pequena",
-    media: "Média",
-    grande: "Grande",
-  };
+const PORTE_LABELS: Record<Exclude<WizardFormData["porteOng"], "">, string> = {
+  pequena: "Pequena",
+  media: "Média",
+  grande: "Grande",
+};
 
-export function NpoStepThree({
-  formData,
-  setFormData,
-  errors,
-}: NpoStepThreeProps) {
-  const inputFilledClass =
-    "!bg-vinculo-light-gray !border-0 focus:!ring-1 focus:!ring-vinculo-dark";
+const ESG_OPTIONS: Array<{ value: WizardEsgOption; label: string; description: string }> = [
+  { value: "ambiental", label: "Ambiental", description: "Práticas de preservação e sustentabilidade" },
+  { value: "social", label: "Social", description: "Impacto na comunidade e bem-estar social" },
+  { value: "governanca", label: "Governança", description: "Transparência e gestão responsável" },
+];
 
-  const invalidResumo = Boolean(errors.resumoInstitucional);
-  const invalidCnpj = Boolean(errors.cnpj);
+export function NpoStepThree({ formData, setFormData, errors }: NpoStepThreeProps) {
+  function toggleEsg(value: WizardEsgOption) {
+    setFormData((prev) => ({
+      ...prev,
+      esg: prev.esg.includes(value)
+        ? prev.esg.filter((o) => o !== value)
+        : [...prev.esg, value],
+    }));
+  }
 
   return (
-    <>
-      <h2 className="text-vinculo-dark font-semibold text-lg mb-6">
-        Informações Básicas
-      </h2>
+    <div className="flex flex-col gap-6">
+      <div>
+        <h2 className="text-vinculo-dark font-semibold text-lg">Informações Básicas</h2>
+        <p className="text-sm text-slate-500 mt-1">Preencha os dados principais da sua ONG.</p>
+      </div>
 
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-4">
         <Input
-          id="nome-instituicao"
+          id="nomeInstituicao"
           label="Nome da Instituição"
           isRequired
+          placeholder="Ex: Instituto Esperança"
+          maxLength={200}
           value={formData.nomeInstituicao}
-          onChange={(e) =>
-            setFormData((prev) => ({
-              ...prev,
-              nomeInstituicao: e.target.value,
-            }))
-          }
+          onChange={(e) => setFormData((prev) => ({ ...prev, nomeInstituicao: e.target.value }))}
           error={errors.nomeInstituicao}
-          className={inputFilledClass}
         />
 
-        <Input
-          id="cpf"
-          label="CPF"
-          isRequired
-          inputMode="numeric"
-          autoComplete="off"
-          value={formData.cpf}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, cpf: e.target.value }))
-          }
-          error={errors.cpf}
-          className={inputFilledClass}
-          placeholder="000.000.000-00"
-        />
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div className="flex flex-col gap-1 w-full text-left">
-            <label
-              htmlFor="porte-ong"
-              className="text-slate-700 font-medium text-sm flex gap-1"
-            >
-              Porte da ONG
-              <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="porte-ong"
-              required
-              value={formData.porteOng}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  porteOng: e.target.value as WizardFormData["porteOng"],
-                }))
-              }
-              className={`rounded-xl px-4 py-3 outline-none transition-all text-slate-900
-                border border-vinculo-gray
-                focus:border-vinculo-dark focus:ring-1 focus:ring-vinculo-dark
-                ${inputFilledClass}
-                ${
-                  errors.porteOng
-                    ? "!border !border-error focus:!border-error focus:!ring-error"
-                    : ""
-                }`}
-            >
-              <option value="" disabled hidden>
-                Selecione
-              </option>
-              {(Object.keys(PORTE_LABELS) as Array<keyof typeof PORTE_LABELS>).map(
-                (key) => (
-                  <option key={key} value={key}>
-                    {PORTE_LABELS[key]}
-                  </option>
-                ),
-              )}
-            </select>
-            {errors.porteOng && (
-              <p className="text-sm text-error" role="alert">
-                {errors.porteOng}
-              </p>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-1 w-full text-left">
-            <label
-              htmlFor="cnpj"
-              className="text-slate-700 font-medium text-sm flex gap-1 flex-wrap items-baseline"
-            >
-              CNPJ{" "}
-              <span className="text-slate-400 font-normal">(opcional)</span>
-            </label>
-            <input
-              id="cnpj"
-              type="text"
+        <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              id="cpf"
+              label="CPF do Responsável"
               inputMode="numeric"
               autoComplete="off"
-              aria-invalid={invalidCnpj}
-              value={formData.cnpj}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  cnpj: e.target.value,
-                }))
-              }
-              placeholder="00.000.000/0000-00"
-              className={`rounded-xl px-4 py-3 outline-none transition-all placeholder:text-slate-400 w-full
-                border border-vinculo-gray
-                focus:border-vinculo-dark focus:ring-1 focus:ring-vinculo-dark
-                ${inputFilledClass}
-                ${
-                  invalidCnpj
-                    ? "!border !border-error focus:!border-error focus:!ring-error"
-                    : ""
-                }`}
+              placeholder="000.000.000-00"
+              maxLength={14}
+              value={formData.cpf}
+              onChange={(e) => setFormData((prev) => ({ ...prev, cpf: e.target.value }))}
+              error={errors.cpf}
             />
-            {errors.cnpj && (
-              <p className="text-sm text-error" role="alert">
-                {errors.cnpj}
-              </p>
-            )}
+
+            <Input
+              id="cnpj"
+              label="CNPJ"
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder="00.000.000/0000-00"
+              maxLength={18}
+              value={formData.cnpj}
+              onChange={(e) => setFormData((prev) => ({ ...prev, cnpj: e.target.value }))}
+              error={errors.cnpj}
+              icon={<CnpjIcon />}
+              iconPosition="left"
+            />
           </div>
+          <p className="text-xs text-slate-500">Informe o CPF, o CNPJ ou ambos. Ao menos um é obrigatório.</p>
         </div>
 
         <div className="flex flex-col gap-1 w-full text-left">
-          <label
-            htmlFor="resumo-institucional"
-            className="text-slate-700 font-medium text-sm flex gap-1 flex-wrap items-baseline"
-          >
-            Resumo Institucional{" "}
-            <span className="text-slate-400 font-normal">(opcional)</span>
+          <label htmlFor="porteOng" className="text-slate-700 font-semibold text-sm flex gap-1">
+            Porte da ONG
+            <span className="text-red-500">*</span>
           </label>
-          <textarea
-            id="resumo-institucional"
-            rows={5}
-            aria-invalid={invalidResumo}
-            value={formData.resumoInstitucional}
+          <select
+            id="porteOng"
+            required
+            value={formData.porteOng}
             onChange={(e) =>
               setFormData((prev) => ({
                 ...prev,
-                resumoInstitucional: e.target.value,
+                porteOng: e.target.value as WizardFormData["porteOng"],
               }))
             }
-            className={`rounded-xl px-4 py-3 outline-none transition-all placeholder:text-slate-400 resize-y min-h-[120px]
-              border border-vinculo-gray
+            className={`w-full rounded-xl px-4 py-3 outline-none transition-all text-slate-900
+              border border-vinculo-gray bg-white
               focus:border-vinculo-dark focus:ring-1 focus:ring-vinculo-dark
-              ${inputFilledClass}
-              ${
-                invalidResumo
-                  ? "!border !border-error focus:!border-error focus:!ring-error"
-                  : ""
-              }`}
-          />
-          {errors.resumoInstitucional && (
-            <p className="text-sm text-error" role="alert">
-              {errors.resumoInstitucional}
-            </p>
+              ${errors.porteOng ? "!border !border-error focus:!border-error focus:!ring-error" : ""}`}
+          >
+            <option value="" disabled hidden>Selecione</option>
+            {(Object.keys(PORTE_LABELS) as Array<keyof typeof PORTE_LABELS>).map((key) => (
+              <option key={key} value={key}>{PORTE_LABELS[key]}</option>
+            ))}
+          </select>
+          {errors.porteOng && (
+            <p className="text-sm text-error" role="alert">{errors.porteOng}</p>
           )}
         </div>
+
+        <TextArea
+          id="resumoInstitucional"
+          label="Resumo Institucional (opcional)"
+          placeholder="Descreva brevemente a missão e atuação da ONG..."
+          maxLength={500}
+          value={formData.resumoInstitucional}
+          onChange={(e) => setFormData((prev) => ({ ...prev, resumoInstitucional: e.target.value }))}
+          icon={<DescriptionIcon />}
+        />
       </div>
-    </>
+
+      <fieldset className="border-t border-slate-100 pt-5 border-x-0 border-b-0">
+        <legend className="text-vinculo-dark font-semibold text-base mb-1">
+          Pilares ESG <span className="text-red-500" aria-hidden="true">*</span>
+        </legend>
+        <p className="text-sm text-slate-500 mb-4">Selecione os pilares que a ONG atua.</p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {ESG_OPTIONS.map((option) => {
+            const selected = formData.esg.includes(option.value);
+            return (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => toggleEsg(option.value)}
+                className={`flex flex-col gap-1 rounded-xl border-2 px-4 py-3 text-left transition-all
+                  ${selected
+                    ? "border-vinculo-green bg-vinculo-green/10 text-vinculo-dark"
+                    : "border-vinculo-gray bg-white text-slate-600 hover:border-slate-300"
+                  }`}
+              >
+                <span className="font-semibold text-sm">{option.label}</span>
+                <span className="text-xs text-slate-500">{option.description}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {errors.esg && (
+          <p className="text-sm text-error mt-2" role="alert">{errors.esg}</p>
+        )}
+      </fieldset>
+    </div>
   );
 }

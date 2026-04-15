@@ -24,6 +24,7 @@ createRoot(document.getElementById("root")!).render(
       authorizationParams={{
         redirect_uri: window.location.origin,
         audience: auth0Audience,
+        ui_locales: 'pt-BR',
       }}
       onRedirectCallback={(appState) => {
         sessionStorage.setItem("auth0-login-completed", "true")

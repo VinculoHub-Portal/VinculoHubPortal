@@ -6,7 +6,7 @@ function LoginButton() {
 
   return (
     !isAuthenticated && (
-      <BaseButton variant="primary" onClick={() => loginWithRedirect()}>
+      <BaseButton variant="primary" onClick={() => loginWithRedirect({ authorizationParams: { ui_locales: 'pt-BR' } })}>
         Log in
       </BaseButton>
     )
