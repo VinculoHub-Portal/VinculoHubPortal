@@ -52,7 +52,7 @@ export function Header() {
         </div>
 
         <div className="hidden md:flex gap-4">
-          <Link to="/cadastro/instituicao">
+          <Link to="/cadastro">
             <BaseButton
               variant="outline"
               className="border-white text-white hover:bg-white/10"

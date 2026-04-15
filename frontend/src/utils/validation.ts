@@ -70,14 +70,18 @@ function isValidCnpj(value: string): boolean {
   const firstDigit = calculateDigit([5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
   const secondDigit = calculateDigit([6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
 
-  return firstDigit === Number(digits[12]) && secondDigit === Number(digits[13]);
+  return (
+    firstDigit === Number(digits[12]) && secondDigit === Number(digits[13])
+  );
 }
 
 function mergeErrors(...errorsList: FieldErrors[]): FieldErrors {
   return errorsList.reduce((acc, current) => ({ ...acc, ...current }), {});
 }
 
-export function composeValidators(...validators: StepValidator[]): StepValidator {
+export function composeValidators(
+  ...validators: StepValidator[]
+): StepValidator {
   return (data, context) =>
     mergeErrors(...validators.map((validator) => validator(data, context)));
 }
@@ -144,6 +148,29 @@ export const validateRazaoSocialField: StepValidator = (data) => {
   return errors;
 };
 
+export const validateSizeField: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+
+  if (!data.npo_size.trim()) {
+    errors.npo_size = "Informe o tamanho da empresa.";
+  }
+
+  return errors;
+};
+
+export const validateNpoSizeField: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+  if (!data.npo_size) {
+    errors.npo_size = "Selecione o porte da ONG.";
+  }
+  return errors;
+};
+
+{
+  /* Validadores por step */
+}
+
+/* Validação para a primeira tela */
 export const validateSignupStep: StepValidator = (_data, context) => {
   const errors: FieldErrors = {};
 
@@ -175,21 +202,17 @@ export const validateOptionalCnpjField: StepValidator = (data) => {
   return errors;
 };
 
-export const validatePorteOngField: StepValidator = (data) => {
-  const errors: FieldErrors = {};
-
-  if (!data.porteOng) {
-    errors.porteOng = "Selecione o porte da ONG.";
-  }
-
-  return errors;
-};
+export const validateNpoStepTwo = composeValidators(
+  validateEmailField,
+  validatePasswordField,
+  validateConfirmPasswordField,
+);
 
 export const validateNpoStepThree = composeValidators(
   validateInstitutionName,
   validateCpfField,
   validateOptionalCnpjField,
-  validatePorteOngField,
+  validateNpoSizeField,
 );
 
 export const validateNpoStepFour: StepValidator = (data) => {
@@ -202,6 +225,7 @@ export const validateNpoStepFour: StepValidator = (data) => {
   return errors;
 };
 
-export const validateEnterpriseStepTwo = composeValidators(
-  validateRazaoSocialField,
-);
+export const validateEnterpriseStepTwo = composeValidators();
+
+// Trava sem mostrar os campos, pois não foi implementado.
+// Colocar os campos corretos ou remover para teste.

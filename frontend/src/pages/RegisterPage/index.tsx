@@ -6,14 +6,16 @@ import { Header } from "../../components/general/Header";
 import { BaseButton } from "../../components/general/BaseButton";
 import { WizardSteps } from "../../components/auth/WizardSteps";
 import { WizardSingUp } from "../../components/wizard/WizardSignUp";
-import { NpoStepThree } from "../../components/ong/NpoStepThree";
 import { stepValidators } from "../../config/wizard.config";
 import type {
   FieldErrors,
   OrganizationType,
-  WizardEsgOption,
   WizardFormData,
 } from "../../types/wizard.types";
+import { NPORegisteringStep2 } from "./Steps/Step2";
+import { NPORegisteringStep3 } from "./Steps/Step3";
+import { NPORegisteringStep4 } from "./Steps/Step4";
+import { NPORegisteringStep5 } from "./Steps/Step5";
 
 const auth0Audience = import.meta.env.VITE_AUTH0_AUDIENCE;
 const npoSignupDraftKey = "vinculohub:npo-signup-draft";
@@ -22,19 +24,6 @@ type NpoSignupDraft = {
   currentStep?: number;
   organizationType?: OrganizationType;
   formData?: WizardFormData;
-};
-
-const emptyFormData: WizardFormData = {
-  nomeInstituicao: "",
-  email: "",
-  senha: "",
-  confirmarSenha: "",
-  cnpj: "",
-  razaoSocial: "",
-  cpf: "",
-  porteOng: "",
-  resumoInstitucional: "",
-  esg: [],
 };
 
 function readNpoSignupDraft(): NpoSignupDraft | null {
@@ -52,63 +41,77 @@ function readNpoSignupDraft(): NpoSignupDraft | null {
   }
 }
 
-type NpoStepFourProps = {
+{
+  /* NPO Steps
+  Agora são chamados diretamente no return!
+  Só tem a func salva, para não quebrar o código.
+  */
+}
+
+function NpoStepTwo({
+  formData,
+  setFormData,
+  errors,
+}: {
   formData: WizardFormData;
-  setFormData: Dispatch<SetStateAction<WizardFormData>>;
+  setFormData: React.Dispatch<React.SetStateAction<WizardFormData>>;
   errors: FieldErrors;
-};
-
-const esgOptions: Array<{ value: WizardEsgOption; label: string }> = [
-  { value: "ambiental", label: "Ambiental" },
-  { value: "social", label: "Social" },
-  { value: "governanca", label: "Governanca" },
-];
-
-function NpoStepFour({ formData, setFormData, errors }: NpoStepFourProps) {
-  function toggleEsg(value: WizardEsgOption) {
-    setFormData((prev) => {
-      const selected = prev.esg.includes(value);
-
-      return {
-        ...prev,
-        esg: selected
-          ? prev.esg.filter((option) => option !== value)
-          : [...prev.esg, value],
-      };
-    });
-  }
-
+}) {
   return (
-    <div className="flex flex-col gap-5">
-      <h2 className="text-vinculo-dark font-semibold text-lg">Pilares ESG</h2>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {esgOptions.map((option) => (
-          <label
-            key={option.value}
-            className="flex items-center gap-3 rounded-lg border border-vinculo-gray px-4 py-3 text-vinculo-dark"
-          >
-            <input
-              type="checkbox"
-              checked={formData.esg.includes(option.value)}
-              onChange={() => toggleEsg(option.value)}
-            />
-            {option.label}
-          </label>
-        ))}
-      </div>
-
-      {errors.esg && (
-        <p className="text-sm text-error" role="alert">
-          {errors.esg}
-        </p>
-      )}
+    <div>
+      <NPORegisteringStep2
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+      />
     </div>
   );
 }
 
-function NpoStepFive() {
-  return <div>Passo 5 - ONG - Cadastro de Projeto</div>;
+function NpoStepThree({
+  formData,
+  setFormData,
+  errors,
+}: {
+  formData: WizardFormData;
+  setFormData: React.Dispatch<React.SetStateAction<WizardFormData>>;
+  errors: FieldErrors;
+}) {
+  return (
+    <div>
+      <NPORegisteringStep3
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+      />
+    </div>
+  );
+}
+function NpoStepFour() {
+  return (
+    <div>
+      <NPORegisteringStep4 />
+    </div>
+  );
+}
+function NpoStepFive({
+  formData,
+  setFormData,
+  errors,
+}: {
+  formData: WizardFormData;
+  setFormData: React.Dispatch<React.SetStateAction<WizardFormData>>;
+  errors: FieldErrors;
+}) {
+  return (
+    <div>
+      <NPORegisteringStep5
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+      />
+    </div>
+  );
 }
 
 function EnterpriseStepTwo() {
@@ -162,13 +165,13 @@ function getSteps({
         setFormData={setFormData}
         errors={errors}
       />,
-      <NpoStepFour
-        key="npo-step-4"
+      <NpoStepFour key="npo-step-4" />,
+      <NpoStepFive
+        key="npo-step-5"
         formData={formData}
         setFormData={setFormData}
         errors={errors}
       />,
-      <NpoStepFive key="npo-step-5" />,
     ];
   }
 
@@ -185,19 +188,34 @@ export default function RegisterPage() {
   const { loginWithRedirect } = useAuth0();
   const navigate = useNavigate();
   const [initialDraft] = useState(readNpoSignupDraft);
-  const [currentStep, setCurrentStep] = useState(initialDraft?.currentStep ?? 1);
+  const [currentStep, setCurrentStep] = useState(
+    initialDraft?.currentStep ?? 1,
+  );
   const [organizationType, setOrganizationType] =
     useState<OrganizationType | null>(initialDraft?.organizationType ?? null);
   const [formData, setFormData] = useState<WizardFormData>({
-    ...emptyFormData,
-    ...initialDraft?.formData,
+    nomeInstituicao: "",
+    nomeProjeto: "",
+    email: "",
+    senha: "",
+    confirmarSenha: "",
+    cpf: "",
+    cnpj: "",
+    razaoSocial: "",
+    description: "",
+    npo_size: "",
+    ods: [],
+    environmental: false,
+    social: false,
+    governance: false,
+    capital: 0,
   });
   const [errors, setErrors] = useState<FieldErrors>({});
 
   const steps = useMemo(
     () =>
       getSteps({
-        organizationType: organizationType ?? "npo",
+        organizationType: organizationType ?? null,
         onSelectOrganizationType: setOrganizationType,
         formData,
         setFormData,
@@ -290,7 +308,11 @@ export default function RegisterPage() {
             >
               Voltar
             </BaseButton>
-            <BaseButton variant="secondary" className="w-32" onClick={handleNext}>
+            <BaseButton
+              variant="secondary"
+              className="w-32"
+              onClick={handleNext}
+            >
               {currentStep === totalSteps ? "Finalizar" : "Proximo"}
             </BaseButton>
           </div>
