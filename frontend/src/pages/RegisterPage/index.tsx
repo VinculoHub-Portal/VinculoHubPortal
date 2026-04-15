@@ -40,10 +40,6 @@ const emptyFormData: WizardFormData = {
   phone: "",
 };
 
-function NpoStepFive() {
-  return <div>Passo 5 - ONG - Cadastro de Projeto</div>;
-}
-
 function EnterpriseStepTwo() {
   return <div>Passo 2 - Empresa - Cadastro da Empresa</div>;
 }
@@ -101,7 +97,6 @@ function getSteps({
         setFormData={setFormData}
         errors={errors}
       />,
-      <NpoStepFive key="npo-step-5" />,
     ];
   }
 

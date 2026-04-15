@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 import type { Dispatch, SetStateAction } from "react";
 import type {
   OrganizationType,
@@ -57,6 +57,7 @@ export function WizardSingUp({
   onSelectOrganizationType,
   errors,
 }: WizardSingUpProps) {
+  const { loginWithRedirect } = useAuth0();
   return (
     <div>
       <div className="flex items-center w-full justify-center py-4 mx-auto max-w-xl">
@@ -86,11 +87,13 @@ export function WizardSingUp({
       </div>
 
       <div className="flex items-center w-full justify-center py-8 mx-auto max-w-xl">
-        <Link to="/Login">
-          <a className="text-vinculo-dark text-x -webkit-font-smoothing hover:underline">
-            Já tenho login
-          </a>
-        </Link>
+        <button
+          type="button"
+          onClick={() => void loginWithRedirect({ authorizationParams: { ui_locales: "pt-BR" } })}
+          className="text-vinculo-dark text-sm hover:underline"
+        >
+          Já tenho login
+        </button>
       </div>
     </div>
   );

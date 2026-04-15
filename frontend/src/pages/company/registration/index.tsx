@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useNavigate } from "react-router-dom";
+import { logger } from "../../../utils/logger";
 import { WizardSteps } from "../../../components/auth/WizardSteps";
 import { AuthRedirectModal } from "../../../components/auth/AuthRedirectModal";
 import { BackLink } from "../../../components/general/BackLink";
@@ -21,10 +22,20 @@ import type { CompanyRegistrationPayload } from "../../../api/company";
 const auth0Audience = import.meta.env.VITE_AUTH0_AUDIENCE;
 const companySignupDraftKey = "vinculohub:company-signup-draft";
 
+const LOG = "CompanyRegistration";
+
 export default function CompanyRegistrationPage() {
   const { loginWithRedirect } = useAuth0();
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(2);
+
+  const [currentStep, _setCurrentStep] = useState(2);
+  const setCurrentStep = useCallback((step: number | ((prev: number) => number)) => {
+    _setCurrentStep((prev) => {
+      const next = typeof step === "function" ? step(prev) : step;
+      logger.info(LOG, `Step ${prev} → ${next}`);
+      return next;
+    });
+  }, []);
   const [signupError, setSignupError] = useState("");
   const [isRedirectingToAuth0, setIsRedirectingToAuth0] = useState(false);
   const [isAuthRedirectModalOpen, setIsAuthRedirectModalOpen] = useState(false);
@@ -51,17 +62,21 @@ export default function CompanyRegistrationPage() {
 
   const validateCredentialsStep = () => {
     const email = credentials.email.trim();
+    logger.info(LOG, "Validating credentials", { email });
 
     if (!email) {
+      logger.warn(LOG, "Credentials validation failed: empty email");
       setCredentialsErrors({ email: "Informe um e-mail" });
       return false;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      logger.warn(LOG, "Credentials validation failed: invalid email format");
       setCredentialsErrors({ email: "E-mail inválido" });
       return false;
     }
 
+    logger.info(LOG, "Credentials validation passed");
     setCredentials((prev) => ({ ...prev, email }));
     setCredentialsErrors({ email: "" });
     return true;
@@ -92,6 +107,7 @@ export default function CompanyRegistrationPage() {
   });
 
   const resetCompanyWizard = () => {
+    logger.warn(LOG, "Wizard reset triggered");
     sessionStorage.removeItem(companySignupDraftKey);
     setCurrentStep(2);
     setSignupError("");
@@ -136,6 +152,7 @@ export default function CompanyRegistrationPage() {
 
   useEffect(() => {
     if (cnpjData) {
+      logger.info(LOG, "CNPJ data received", { razao: cnpjData.razao_social, fantasia: cnpjData.nome_fantasia });
       const timeoutId = window.setTimeout(() => {
         setBasicInfo((prev) => ({
           ...prev,
@@ -150,11 +167,12 @@ export default function CompanyRegistrationPage() {
 
   useEffect(() => {
     if (zipCodeData) {
+      logger.info(LOG, "ZIP code data received", { city: zipCodeData.city, state: zipCodeData.stateCode });
       const timeoutId = window.setTimeout(() => {
         setContactInfo((prev) => ({
           ...prev,
           street: zipCodeData.street || prev.street,
-          complement: zipCodeData.complement || prev.complement,
+          number: (zipCodeData.complement ?? "").slice(0, 20) || prev.number,
           city: zipCodeData.city || prev.city,
           state: zipCodeData.state || prev.state,
           state_code: zipCodeData.stateCode || prev.state_code,
@@ -190,6 +208,7 @@ export default function CompanyRegistrationPage() {
 
   const handleStepTwoSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    logger.info(LOG, "Step 2 submit", { cnpj: basicInfo.cnpj, name: basicInfo.name });
 
     if (!basicInfo.cnpj) {
       setCnpjError("Informe o CNPJ");
@@ -197,7 +216,7 @@ export default function CompanyRegistrationPage() {
     }
 
     if (!validateCnpj(basicInfo.cnpj)) {
-      setCnpjError("CNPJ invalido");
+      setCnpjError("CNPJ inválido");
       return;
     }
 
@@ -222,7 +241,10 @@ export default function CompanyRegistrationPage() {
   });
 
   const handleCompanySignup = async () => {
+    logger.info(LOG, "handleCompanySignup called", { email: credentials.email, hasError: !!credentialsErrors.email });
+
     if (!credentials.email || credentialsErrors.email) {
+      logger.warn(LOG, "Signup blocked: email missing or has error");
       setCredentialsErrors((prev) => ({
         ...prev,
         email: prev.email || "Informe um e-mail valido",
@@ -234,11 +256,14 @@ export default function CompanyRegistrationPage() {
     setIsRedirectingToAuth0(true);
 
     try {
+      const payload = buildCompanyPayload();
+      logger.info(LOG, "Saving company draft to sessionStorage", { cnpj: payload.cnpj, email: payload.email });
       sessionStorage.setItem(
         companySignupDraftKey,
-        JSON.stringify({ payload: buildCompanyPayload() }),
+        JSON.stringify({ payload }),
       );
 
+      logger.info(LOG, "Redirecting to Auth0 for signup");
       await loginWithRedirect({
         appState: {
           returnTo: "/empresa/dashboard",
@@ -251,7 +276,8 @@ export default function CompanyRegistrationPage() {
           ui_locales: 'pt-BR',
         },
       });
-    } catch {
+    } catch (error) {
+      logger.error(LOG, "Auth0 redirect failed", error);
       setIsRedirectingToAuth0(false);
       setSignupError("Não foi possível abrir a próxima etapa do cadastro. Tente novamente.");
     }
@@ -395,7 +421,7 @@ export default function CompanyRegistrationPage() {
         )}
 
         {currentStep === 3 && (
-          <form className="flex flex-col gap-4">
+          <form className="flex flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
             <div className="flex flex-col gap-1">
               <Input
                 label="CEP"
@@ -443,6 +469,7 @@ export default function CompanyRegistrationPage() {
                 onChange={handleContactChange}
                 icon={<AddressIcon />}
                 iconPosition="left"
+                isRequired
               />
             </div>
 
@@ -533,7 +560,7 @@ export default function CompanyRegistrationPage() {
         )}
 
         {currentStep === 4 && (
-          <form className="flex flex-col gap-4">
+          <form className="flex flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
             <Input
               label="E-mail"
               id="email"
