@@ -1,0 +1,9 @@
+/* (C)2026 */
+package com.vinculohub.backend.exception;
+
+public class DuplicateLoginException extends RuntimeException {
+
+    public DuplicateLoginException(String message) {
+        super(message);
+    }
+}

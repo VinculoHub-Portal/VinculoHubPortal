@@ -4,11 +4,16 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - 8080:8080
+      - ${BACKEND_PORT:-8080}:${BACKEND_PORT:-8080}
     environment:
+      - BACKEND_PORT=${BACKEND_PORT:-8080}
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/${POSTGRES_DB:-vinculohub_db}
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-vinculohub}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-vinculohub}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173,http://localhost}
+      - AUTH0_ISSUER_URI=${AUTH0_ISSUER_URI}
+      - AUTH0_AUDIENCE=${AUTH0_AUDIENCE}
+      - AUTH0_ROLES_CLAIM=${AUTH0_ROLES_CLAIM:-https://vinculohub/roles}
     depends_on:
       db:
         condition: service_healthy
@@ -16,8 +21,25 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:8080}
+        - VITE_AUTH0_DOMAIN=${VITE_AUTH0_DOMAIN}
+        - VITE_AUTH0_CLIENT_ID=${VITE_AUTH0_CLIENT_ID}
+        - VITE_AUTH0_AUDIENCE=${VITE_AUTH0_AUDIENCE:-https://api.vinculohub}
     ports:
       - 80:80
+  flyway:
+    image: flyway/flyway:9
+    container_name: flyway
+    depends_on:
+      - db
+    volumes:
+      - ./backend/src/main/resources/db/migration:/flyway/sql:ro
+    command: >
+      -url=jdbc:postgresql://db:5432/${POSTGRES_DB:-vinculohub_db}
+      -user=${POSTGRES_USER:-vinculohub}
+      -password=${POSTGRES_PASSWORD:-vinculohub}
+      migrate
   db:
     image: postgres:16-alpine
     environment:
@@ -29,10 +51,13 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vinculohub} -d ${POSTGRES_DB:-vinculohub_db}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-vinculohub} -d ${POSTGRES_DB:-vinculohub_db}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 5
 volumes:
   db_data:
-
