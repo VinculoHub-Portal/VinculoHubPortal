@@ -1,18 +1,21 @@
-import { useNavigate } from "react-router-dom";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 interface BackLinkProps {
   label: string;
+  onClick: () => void;
 }
 
-export function BackLink({ label }: BackLinkProps) {
-  const navigate = useNavigate();
-
+export function BackLink({ label, onClick }: BackLinkProps) {
   return (
     <button
-      onClick={() => navigate(-1)}
-      className="flex items-center gap-1 text-vinculo-dark hover:text-vinculo-dark-hover text-sm transition-colors w-fit font-medium cursor-pointer"
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className="inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-medium text-vinculo-dark transition-colors hover:bg-slate-200 hover:text-vinculo-dark-hover cursor-pointer"
     >
-      🡐 {label}
+      <ArrowBackIcon fontSize="small" />
+      <span>{label}</span>
     </button>
   );
 }

@@ -157,11 +157,21 @@ async function submitNpoSignupDraft(token: string, user: unknown) {
       cnpj: formData.cnpj || null,
       npoSize: formData.porteOng,
       description: formData.resumoInstitucional || null,
-      phone: null,
+      phone: formData.phone || null,
       environmental: formData.esg.includes("ambiental"),
       social: formData.esg.includes("social"),
       governance: formData.esg.includes("governanca"),
-      address: null,
+      address: formData.zipCode
+        ? {
+            state: formData.state || null,
+            stateCode: formData.stateCode || null,
+            city: formData.city || null,
+            street: formData.street || null,
+            number: formData.streetNumber || null,
+            complement: formData.complement || null,
+            zipCode: formData.zipCode,
+          }
+        : null,
     },
     {
       headers: {

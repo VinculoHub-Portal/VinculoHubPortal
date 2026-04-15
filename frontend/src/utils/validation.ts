@@ -185,22 +185,69 @@ export const validatePorteOngField: StepValidator = (data) => {
   return errors;
 };
 
-export const validateNpoStepThree = composeValidators(
-  validateInstitutionName,
-  validateCpfField,
-  validateOptionalCnpjField,
-  validatePorteOngField,
-);
-
-export const validateNpoStepFour: StepValidator = (data) => {
+export const validateEsgField: StepValidator = (data) => {
   const errors: FieldErrors = {};
 
-  if (data.esg.length === 0) {
+  if (!data.esg || data.esg.length === 0) {
     errors.esg = "Selecione pelo menos um pilar ESG.";
   }
 
   return errors;
 };
+
+export const validateCpfOrCnpjField: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+
+  const cpfDigits = data.cpf.replace(/\D/g, "");
+  const cnpjDigits = data.cnpj.replace(/\D/g, "");
+
+  const hasCpf = cpfDigits.length > 0;
+  const hasCnpj = cnpjDigits.length > 0;
+
+  if (!hasCpf && !hasCnpj) {
+    errors.cpf = "Informe o CPF ou o CNPJ.";
+    return errors;
+  }
+
+  if (hasCpf && !isValidCpf(data.cpf)) {
+    errors.cpf = "CPF inválido.";
+  }
+
+  if (hasCnpj && !isValidCnpj(data.cnpj)) {
+    errors.cnpj = "CNPJ inválido.";
+  }
+
+  return errors;
+};
+
+export const validateNpoStepThree = composeValidators(
+  validateInstitutionName,
+  validateCpfOrCnpjField,
+  validatePorteOngField,
+  validateEsgField,
+);
+
+export const validateZipCodeField: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+  const digits = data.zipCode.replace(/\D/g, "");
+  if (!digits) {
+    errors.zipCode = "Informe o CEP.";
+  } else if (digits.length !== 8) {
+    errors.zipCode = "CEP inválido.";
+  }
+  return errors;
+};
+
+export const validateStreetNumberField: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+  if (!data.streetNumber.trim()) errors.streetNumber = "Informe o número.";
+  return errors;
+};
+
+export const validateNpoStepFour = composeValidators(
+  validateZipCodeField,
+  validateStreetNumberField,
+);
 
 export const validateEnterpriseStepTwo = composeValidators(
   validateRazaoSocialField,

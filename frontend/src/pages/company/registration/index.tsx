@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import { useNavigate } from "react-router-dom";
 import { WizardSteps } from "../../../components/auth/WizardSteps";
+import { AuthRedirectModal } from "../../../components/auth/AuthRedirectModal";
 import { BackLink } from "../../../components/general/BackLink";
 import { Input } from "../../../components/general/SimpleTextInput";
 import { TextArea } from "../../../components/general/SimpleTextArea";
@@ -21,9 +23,11 @@ const companySignupDraftKey = "vinculohub:company-signup-draft";
 
 export default function CompanyRegistrationPage() {
   const { loginWithRedirect } = useAuth0();
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(2);
   const [signupError, setSignupError] = useState("");
   const [isRedirectingToAuth0, setIsRedirectingToAuth0] = useState(false);
+  const [isAuthRedirectModalOpen, setIsAuthRedirectModalOpen] = useState(false);
 
   const [basicInfo, setBasicInfo] = useState({
     name: "",
@@ -44,6 +48,24 @@ export default function CompanyRegistrationPage() {
   const [credentialsErrors, setCredentialsErrors] = useState({
     email: "",
   });
+
+  const validateCredentialsStep = () => {
+    const email = credentials.email.trim();
+
+    if (!email) {
+      setCredentialsErrors({ email: "Informe um e-mail" });
+      return false;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setCredentialsErrors({ email: "E-mail inválido" });
+      return false;
+    }
+
+    setCredentials((prev) => ({ ...prev, email }));
+    setCredentialsErrors({ email: "" });
+    return true;
+  };
 
   const handleCredentialsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -68,6 +90,37 @@ export default function CompanyRegistrationPage() {
     state_code: "",
     phone: "",
   });
+
+  const resetCompanyWizard = () => {
+    sessionStorage.removeItem(companySignupDraftKey);
+    setCurrentStep(2);
+    setSignupError("");
+    setIsRedirectingToAuth0(false);
+    setBasicInfo({
+      name: "",
+      tradeName: "",
+      description: "",
+      cnpj: "",
+    });
+    setCnpjError("");
+    setCredentials({
+      email: "",
+    });
+    setCredentialsErrors({
+      email: "",
+    });
+    setContactInfo({
+      zip_code: "",
+      street: "",
+      number: "",
+      complement: "",
+      city: "",
+      state: "",
+      state_code: "",
+      phone: "",
+    });
+    navigate("/cadastro", { replace: true });
+  };
 
   const {
     data: cnpjData,
@@ -195,12 +248,18 @@ export default function CompanyRegistrationPage() {
           login_hint: credentials.email,
           role: "COMPANY",
           screen_hint: "signup",
+          ui_locales: 'pt-BR',
         },
       });
     } catch {
       setIsRedirectingToAuth0(false);
-      setSignupError("Nao foi possivel abrir o cadastro Auth0. Tente novamente.");
+      setSignupError("Não foi possível abrir a próxima etapa do cadastro. Tente novamente.");
     }
+  };
+
+  const openCompanySignupRedirectNotice = () => {
+    setSignupError("");
+    setIsAuthRedirectModalOpen(true);
   };
 
   const stepTitles: Record<number, { heading: string; subtitle: string }> = {
@@ -214,7 +273,7 @@ export default function CompanyRegistrationPage() {
     },
     4: {
       heading: "Acesso à Conta",
-      subtitle: "Informe o e-mail que sera usado no cadastro Auth0.",
+      subtitle: "Informe o e-mail que será usado para criar o acesso à conta.",
     },
     5: {
       heading: "Cadastro Concluído!",
@@ -225,7 +284,7 @@ export default function CompanyRegistrationPage() {
   return (
     <div className="min-h-screen bg-stone-100 flex flex-col px-4 py-8">
       <div className="w-full max-w-2xl mx-auto">
-        <BackLink label="Voltar ao início" />
+        <BackLink label="Voltar ao início" onClick={resetCompanyWizard} />
       </div>
 
       <WizardSteps currentStep={currentStep} />
@@ -316,7 +375,12 @@ export default function CompanyRegistrationPage() {
             />
 
             <div className="flex justify-end gap-3 mt-2 pt-4 border-t border-slate-100">
-              <BaseButton type="button" variant="ghost" className="w-28">
+              <BaseButton
+                type="button"
+                variant="ghost"
+                className="w-28"
+                onClick={resetCompanyWizard}
+              >
                 Voltar
               </BaseButton>
               <BaseButton
@@ -489,7 +553,7 @@ export default function CompanyRegistrationPage() {
 
             <InfoBox
               title="Importante"
-              message="A senha sera criada no cadastro seguro do Auth0. Aqui usamos o e-mail para iniciar esse cadastro."
+              message="A senha será criada na próxima etapa, em um ambiente seguro. Aqui usamos seu e-mail para iniciar esse cadastro."
             />
 
             <div className="flex justify-end gap-3 mt-2 pt-4 border-t border-slate-100">
@@ -505,7 +569,10 @@ export default function CompanyRegistrationPage() {
                 type="button"
                 variant="secondary"
                 className="w-28"
-                onClick={() => setCurrentStep(5)}
+                onClick={() => {
+                  if (!validateCredentialsStep()) return;
+                  setCurrentStep(5);
+                }}
               >
                 Próximo
               </BaseButton>
@@ -548,12 +615,25 @@ export default function CompanyRegistrationPage() {
               },
             ]}
             onBack={() => setCurrentStep(4)}
-            onSubmit={handleCompanySignup}
+            onSubmit={openCompanySignupRedirectNotice}
             isLoading={isRedirectingToAuth0}
             errorMessage={signupError || undefined}
           />
         )}
       </div>
+
+      <AuthRedirectModal
+        open={isAuthRedirectModalOpen}
+        title="Você será redirecionado para concluir o acesso"
+        description="Na próxima etapa, abriremos o ambiente seguro de autenticação para criar sua conta e concluir a entrada no VinculoHubPortal."
+        confirmLabel="Continuar"
+        isLoading={isRedirectingToAuth0}
+        onCancel={() => setIsAuthRedirectModalOpen(false)}
+        onConfirm={() => {
+          setIsAuthRedirectModalOpen(false);
+          void handleCompanySignup();
+        }}
+      />
     </div>
   );
 }
