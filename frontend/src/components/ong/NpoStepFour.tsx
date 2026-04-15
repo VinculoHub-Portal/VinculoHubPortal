@@ -25,7 +25,7 @@ export function NpoStepFour({ formData, setFormData, errors }: NpoStepFourProps)
       setFormData((prev) => ({
         ...prev,
         street: zipCodeData.street || prev.street,
-        complement: zipCodeData.complement || prev.complement,
+        streetNumber: (zipCodeData.complement ?? "").slice(0, 20) || prev.streetNumber,
         city: zipCodeData.city || prev.city,
         state: zipCodeData.state || prev.state,
         stateCode: zipCodeData.stateCode || prev.stateCode,

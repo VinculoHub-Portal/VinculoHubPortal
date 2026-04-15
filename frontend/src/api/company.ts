@@ -1,4 +1,5 @@
 import { api } from "../services/api";
+import { logger } from "../utils/logger";
 
 export interface CompanyAddress {
   id: number;
@@ -74,18 +75,25 @@ export async function registerCompany(
   token?: string,
 ): Promise<CompanyResult> {
   const requestBody = toCompanyRegistrationRequest(payload);
-  const { data } = await api.post<CompanyResult>(
-    "/api/company-accounts",
-    requestBody,
-    token
-      ? {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      : undefined,
-  );
-  return data;
+  logger.info("CompanyAPI", "Registering company", { cnpj: payload.cnpj, email: payload.email, hasToken: !!token });
+  try {
+    const { data } = await api.post<CompanyResult>(
+      "/api/company-accounts",
+      requestBody,
+      token
+        ? {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        : undefined,
+    );
+    logger.info("CompanyAPI", "Company registered successfully", { companyId: data.id });
+    return data;
+  } catch (error) {
+    logger.error("CompanyAPI", "Company registration failed", error);
+    throw error;
+  }
 }
 
 function toCompanyRegistrationRequest(
