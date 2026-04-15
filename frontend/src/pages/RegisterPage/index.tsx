@@ -1,28 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
-import type { Dispatch, SetStateAction } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "../../components/general/Header";
+import { BackLink } from "../../components/general/BackLink";
 import { BaseButton } from "../../components/general/BaseButton";
+import { AuthRedirectModal } from "../../components/auth/AuthRedirectModal";
 import { WizardSteps } from "../../components/auth/WizardSteps";
 import { WizardSingUp } from "../../components/wizard/WizardSignUp";
 import { NpoStepThree } from "../../components/ong/NpoStepThree";
+import { NpoStepFour } from "../../components/ong/NpoStepFour";
 import { stepValidators } from "../../config/wizard.config";
 import type {
   FieldErrors,
   OrganizationType,
-  WizardEsgOption,
   WizardFormData,
 } from "../../types/wizard.types";
 
 const auth0Audience = import.meta.env.VITE_AUTH0_AUDIENCE;
 const npoSignupDraftKey = "vinculohub:npo-signup-draft";
-
-type NpoSignupDraft = {
-  currentStep?: number;
-  organizationType?: OrganizationType;
-  formData?: WizardFormData;
-};
 
 const emptyFormData: WizardFormData = {
   nomeInstituicao: "",
@@ -35,77 +30,15 @@ const emptyFormData: WizardFormData = {
   porteOng: "",
   resumoInstitucional: "",
   esg: [],
+  zipCode: "",
+  street: "",
+  streetNumber: "",
+  complement: "",
+  city: "",
+  state: "",
+  stateCode: "",
+  phone: "",
 };
-
-function readNpoSignupDraft(): NpoSignupDraft | null {
-  const savedDraft = sessionStorage.getItem(npoSignupDraftKey);
-
-  if (!savedDraft) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(savedDraft) as NpoSignupDraft;
-  } catch {
-    sessionStorage.removeItem(npoSignupDraftKey);
-    return null;
-  }
-}
-
-type NpoStepFourProps = {
-  formData: WizardFormData;
-  setFormData: Dispatch<SetStateAction<WizardFormData>>;
-  errors: FieldErrors;
-};
-
-const esgOptions: Array<{ value: WizardEsgOption; label: string }> = [
-  { value: "ambiental", label: "Ambiental" },
-  { value: "social", label: "Social" },
-  { value: "governanca", label: "Governanca" },
-];
-
-function NpoStepFour({ formData, setFormData, errors }: NpoStepFourProps) {
-  function toggleEsg(value: WizardEsgOption) {
-    setFormData((prev) => {
-      const selected = prev.esg.includes(value);
-
-      return {
-        ...prev,
-        esg: selected
-          ? prev.esg.filter((option) => option !== value)
-          : [...prev.esg, value],
-      };
-    });
-  }
-
-  return (
-    <div className="flex flex-col gap-5">
-      <h2 className="text-vinculo-dark font-semibold text-lg">Pilares ESG</h2>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {esgOptions.map((option) => (
-          <label
-            key={option.value}
-            className="flex items-center gap-3 rounded-lg border border-vinculo-gray px-4 py-3 text-vinculo-dark"
-          >
-            <input
-              type="checkbox"
-              checked={formData.esg.includes(option.value)}
-              onChange={() => toggleEsg(option.value)}
-            />
-            {option.label}
-          </label>
-        ))}
-      </div>
-
-      {errors.esg && (
-        <p className="text-sm text-error" role="alert">
-          {errors.esg}
-        </p>
-      )}
-    </div>
-  );
-}
 
 function NpoStepFive() {
   return <div>Passo 5 - ONG - Cadastro de Projeto</div>;
@@ -128,10 +61,10 @@ function EnterpriseStepFive() {
 }
 
 type GetStepsParams = {
-  organizationType: OrganizationType;
+  organizationType: OrganizationType | null;
   onSelectOrganizationType: (type: OrganizationType) => void;
   formData: WizardFormData;
-  setFormData: Dispatch<SetStateAction<WizardFormData>>;
+  setFormData: React.Dispatch<React.SetStateAction<WizardFormData>>;
   errors: FieldErrors;
 };
 
@@ -184,20 +117,17 @@ function getSteps({
 export default function RegisterPage() {
   const { loginWithRedirect } = useAuth0();
   const navigate = useNavigate();
-  const [initialDraft] = useState(readNpoSignupDraft);
-  const [currentStep, setCurrentStep] = useState(initialDraft?.currentStep ?? 1);
+  const [currentStep, setCurrentStep] = useState(1);
   const [organizationType, setOrganizationType] =
-    useState<OrganizationType | null>(initialDraft?.organizationType ?? null);
-  const [formData, setFormData] = useState<WizardFormData>({
-    ...emptyFormData,
-    ...initialDraft?.formData,
-  });
+    useState<OrganizationType | null>(null);
+  const [formData, setFormData] = useState<WizardFormData>({ ...emptyFormData });
   const [errors, setErrors] = useState<FieldErrors>({});
+  const [isAuthRedirectModalOpen, setIsAuthRedirectModalOpen] = useState(false);
 
   const steps = useMemo(
     () =>
       getSteps({
-        organizationType: organizationType ?? "npo",
+        organizationType,
         onSelectOrganizationType: setOrganizationType,
         formData,
         setFormData,
@@ -218,23 +148,22 @@ export default function RegisterPage() {
   async function handleNpoSignup() {
     sessionStorage.setItem(
       npoSignupDraftKey,
-      JSON.stringify({
-        currentStep,
-        organizationType,
-        formData,
-      }),
+      JSON.stringify({ currentStep, organizationType, formData }),
     );
 
     await loginWithRedirect({
-      appState: {
-        returnTo: "/ong/dashboard",
-      },
+      appState: { returnTo: "/ong/dashboard" },
       authorizationParams: {
         audience: auth0Audience,
         role: "NPO",
         screen_hint: "signup",
+        ui_locales: "pt-BR",
       },
     });
+  }
+
+  function openNpoSignupRedirectNotice() {
+    setIsAuthRedirectModalOpen(true);
   }
 
   function handleNext() {
@@ -244,15 +173,11 @@ export default function RegisterPage() {
     }
 
     const validator = stepValidators[organizationType][currentStep - 1];
-    const nextErrors = validator
-      ? validator(formData, { organizationType })
-      : {};
+    const nextErrors = validator ? validator(formData, { organizationType }) : {};
 
     setErrors(nextErrors);
 
-    if (Object.keys(nextErrors).length > 0) {
-      return;
-    }
+    if (Object.keys(nextErrors).length > 0) return;
 
     if (organizationType === "enterprise") {
       navigate("/company/register");
@@ -260,7 +185,7 @@ export default function RegisterPage() {
     }
 
     if (organizationType === "npo" && currentStep === totalSteps) {
-      void handleNpoSignup();
+      openNpoSignupRedirectNotice();
       return;
     }
 
@@ -271,31 +196,51 @@ export default function RegisterPage() {
     setCurrentStep((prev) => Math.max(1, prev - 1));
   }
 
+  function handleResetToFirstStep() {
+    sessionStorage.removeItem(npoSignupDraftKey);
+    setCurrentStep(1);
+    setOrganizationType(null);
+    setFormData({ ...emptyFormData });
+    setErrors({});
+    navigate("/cadastro", { replace: true });
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
       <Header />
 
       <main className="max-w-4xl mx-auto w-full flex flex-col gap-12 px-6">
         <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+          <BackLink label="Voltar ao início" onClick={handleResetToFirstStep} />
+
           <WizardSteps currentStep={currentStep} totalSteps={totalSteps} />
 
           {currentStepContent}
 
           <div className="flex justify-center gap-4 mt-8">
-            <BaseButton
-              variant="ghost"
-              className="w-32"
-              onClick={handleBack}
-              disabled={currentStep === 1}
-            >
-              Voltar
-            </BaseButton>
+            {currentStep > 1 && (
+              <BaseButton variant="ghost" className="w-32" onClick={handleBack}>
+                Voltar
+              </BaseButton>
+            )}
             <BaseButton variant="secondary" className="w-32" onClick={handleNext}>
-              {currentStep === totalSteps ? "Finalizar" : "Proximo"}
+              {currentStep === totalSteps ? "Finalizar" : "Próximo"}
             </BaseButton>
           </div>
         </section>
       </main>
+
+      <AuthRedirectModal
+        open={isAuthRedirectModalOpen}
+        title="Você será redirecionado para concluir o acesso"
+        description="Na próxima etapa, abriremos o ambiente seguro de autenticação para criar sua conta e concluir a entrada no VinculoHubPortal."
+        confirmLabel="Continuar"
+        onCancel={() => setIsAuthRedirectModalOpen(false)}
+        onConfirm={() => {
+          setIsAuthRedirectModalOpen(false);
+          void handleNpoSignup();
+        }}
+      />
     </div>
   );
 }

@@ -22,6 +22,15 @@ export type WizardFormData = {
   porteOng: "" | "pequena" | "media" | "grande";
   resumoInstitucional: string;
   esg: WizardEsgOption[];
+  // address
+  zipCode: string;
+  street: string;
+  streetNumber: string;
+  complement: string;
+  city: string;
+  state: string;
+  stateCode: string;
+  phone: string;
 };
 
 export type FieldErrors = Partial<
