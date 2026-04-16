@@ -1,6 +1,6 @@
-# VinculoHub Portal — Revisão de Código e Análise
+# VinculoHub Portal — Revisão de Código
 
-> **Escopo:** Fluxos de cadastro de ONG e Empresa (frontend + backend) e infraestrutura compartilhada.
+> **Escopo:** Análise completa de consistência, qualidade e prontidão para produção.
 > **Última atualização:** Abril 2026
 
 ---
@@ -9,753 +9,620 @@
 
 | Severidade | Significado |
 |------------|-------------|
-| **CRÍTICO** | Quebrado ou explorável ativamente; bloqueia funcionalidade central |
+| **CRÍTICO** | Quebrado ou explorável; bloqueia funcionalidade central |
 | **ALTO** | Bug significativo, falha de segurança ou risco de integridade de dados |
-| **MÉDIO** | Comportamento incorreto em casos de borda, risco de manutenção ou degradação de UX |
+| **MÉDIO** | Comportamento incorreto em edge cases, inconsistência ou degradação de UX |
 | **BAIXO** | Polimento, código morto ou inconsistência menor |
 
 | Prioridade | Significado |
 |------------|-------------|
-| **P0** | Corrigir agora — usuários estão sendo afetados |
-| **P1** | Corrigir nesta sprint — causará problemas em breve |
-| **P2** | Corrigir na próxima sprint — melhora a qualidade |
-| **P3** | Backlog — desejável |
+| **P0** | Corrigir agora |
+| **P1** | Corrigir nesta sprint |
+| **P2** | Corrigir na próxima sprint |
+| **P3** | Backlog |
 
 ---
 
-## CRÍTICO
+## Problemas Já Corrigidos
 
-### 1. Pressionar Enter no campo de e-mail (step 4) reseta o wizard para o step 2 ✅ Corrigido
+| Item | Descrição |
+|------|-----------|
+| Enter no step 4 resetava wizard para step 2 | Forms sem `onSubmit` causavam submit nativo. Adicionado `preventDefault`. |
+| Step 5 da ONG era placeholder vazio | Step removido do array; wizard vai direto ao "Finalizar". |
+| Link "Já tenho login" levava a página em branco | Substituído por `<button>` com `loginWithRedirect()`. |
+| Typo "CNPJ invalido" sem acento | Corrigido para "CNPJ inválido". |
+| CEP preenchia "Complemento" em vez de "Número" | ViaCEP `complemento` redirecionado para `number`/`streetNumber` + truncamento `.slice(0, 20)`. |
+| ViaCEP complemento > 20 chars causava 500 | Truncamento adicionado antes de atualizar estado React. |
+| `@Valid` ausente no `CompanyController` | Adicionado `@Valid` + `spring-boot-starter-validation` + handler `MethodArgumentNotValidException`. |
+| Entidades JPA duplicadas (`User` vs `Users`) | Deletados `Users.java`, `UsersRepository.java`, `UsersService.java`. |
+| `UserType` enum duplicado | Deletado `model/UserType.java`; consolidado em `model/enums/UserType.java`. |
+| `IllegalArgumentException` retornava 500 | Substituído por `BadRequestException` + handler global. |
+| `CompanyDTO` — `phone` e `logoUrl` obrigatórios | Corrigidos para opcionais; `user`/`address` usam `@NotNull @Valid`. |
+| Wizard empresa avançava sem "Número" | Validação no step 3: CEP + Número obrigatórios. |
+| `CompanyAlreadyExistsException` — typo "comany" | Mensagens distintas por cenário (CNPJ, Auth0 ID, email). |
+| `@Slf4j` ausente em serviços críticos | Adicionado em 7 serviços (`NpoAccountService`, `NpoService`, `NpoDocumentService`, `NpoEsgService`, `AddressService`, `CepValidationService`, `CnpjValidationService`). |
+| `Company.java` sem `@SQLRestriction` | Adicionado `@SQLRestriction("deleted_at IS NULL")`. |
+| `@Temporal` desnecessário no `Company.java` | Removidos 3 `@Temporal` redundantes. |
+| Dependências duplicadas no `pom.xml` | Removidos `springdoc-openapi` duplicado e `thymeleaf-extras` não utilizado. |
+| Mensagens de erro backend em inglês/sem acento | Padronizado para PT-BR com acentos em todas as exceções e serviços. |
+| Erros genéricos do Axios (ex: "Request failed with status code 404") | Criado `getApiErrorMessage()` com fallbacks amigáveis. Aplicado em CEP e CNPJ. |
+| `api.tsx` com extensão `.tsx` sem JSX | Renomeado para `api.ts`. |
+| Strings de validação sem acento no frontend | Corrigidos acentos em `validation.ts` e `company/registration/index.tsx`. |
+| Código morto no frontend | Removidos: `useAuth.ts`, `useCompany.ts`, `formatter.ts`, `theme.ts`, `types/index.ts`, `OngCard.tsx`, `LoginButton.tsx`, `LogoutButton.tsx`, `validateCpf.ts` + código comentado (`LogoUpload`, `entityIcon`). |
+| Validadores desalinhados com steps da ONG | Array em `wizard.config.ts` alinhado com os 3 steps reais. |
+| Gramática incorreta em `NpoStepThree` | "pilares que a ONG atua" → "pilares em que a ONG atua". |
+| `WizardSingUp` — typo no nome | Export, props type e imports renomeados para `WizardSignUp` em todos os arquivos. |
+| Pastas inconsistentes (camelCase/lowercase) | `pages/company/` → `CompanyRegistration/`; `assets/landingPage/` → `LandingPage/`. Imports atualizados. |
+| Nomes de arquivo não batem com exports | `SimpleTextInput.tsx` → `Input.tsx`; `SimpleTextArea.tsx` → `TextArea.tsx`. Imports atualizados em 4 arquivos. |
+| Exports mistos (default vs named) | Todos os pages e componentes padronizados para named exports. `HeroIcon`, `InfoTab` inclusos. Router atualizado. |
+| Falha no CEP travava campos permanentemente | Campos de endereço agora editáveis quando CEP não retornou dados (`disabled={!!zipCodeData}`). Ambos os fluxos. |
+| Queries CNPJ/CEP em todos os steps | Queries agora limitadas ao step relevante (CNPJ no step 2, CEP no step 3). |
+| `useAuthenticatedApi` nunca importado | Removido de `api.ts`. Imports desnecessários de `useAuth0` e `useMemo` limpos. |
 
-| | |
+---
+
+## 1. Bugs e Funcionalidade
+
+### 1.1 Estado do wizard perdido ao recarregar a página
+
+| Sev/Pri | CRÍTICO / P0 |
 |---|---|
-| **Arquivos** | `frontend/src/pages/company/registration/index.tsx` |
-| **Severidade / Prioridade** | CRÍTICO / P0 |
-| **Categoria** | Bug |
+| **Arquivos** | `frontend/src/pages/company/registration/index.tsx`, `frontend/src/pages/RegisterPage/index.tsx` |
 
-**Problema:** Os steps 3 e 4 do wizard de empresa usavam `<form>` sem `onSubmit`. Pressionar Enter no campo de e-mail acionava o submit padrão do navegador, recarregando a página e resetando todo o estado React para o step 2.
+Todos os campos do formulário e o `currentStep` são `useState` efêmero. O rascunho só é salvo no `sessionStorage` antes do redirect Auth0. Qualquer recarga, restauração de aba ou navegação acidental apaga todo o progresso. Afeta ambos os fluxos (ONG e Empresa).
 
-**Correção aplicada:** Adicionado `onSubmit={(e) => e.preventDefault()}` nos dois formulários.
+**Correção:** Persistir step + dados do formulário no `sessionStorage` a cada mudança e reidratar na montagem.
 
 ---
 
-### 2. Estado do wizard é perdido ao recarregar a página
+### 1.2 Erros de cadastro são engolidos — usuário vai pro dashboard sem conta
 
-| | |
+| Sev/Pri | MÉDIO / P1 |
 |---|---|
-| **Arquivos** | `frontend/src/pages/company/registration/index.tsx` |
-| **Severidade / Prioridade** | CRÍTICO / P0 |
-| **Categoria** | Bug / UX |
+| **Arquivos** | `frontend/src/components/auth/AuthRoleRedirect.tsx` |
 
-**Problema:** `currentStep` e todos os campos do formulário são estado React efêmero, inicializado do zero a cada montagem. O rascunho só é salvo no `sessionStorage` imediatamente antes do redirecionamento para o Auth0. Qualquer recarga, restauração de aba ou navegação apaga todo o progresso.
+Quando o POST do rascunho falha (409 duplicado, 400 inválido, rede), o erro é logado e o fluxo continua. O JWT já tem o role atribuído pelo Auth0, então `resolvePrimaryRole` roteia pro dashboard sem conta no banco. O rascunho permanece no `sessionStorage` e será reenviado a cada login.
 
-**Correção sugerida:** Persistir estado do wizard (step + dados do formulário) no `sessionStorage` a cada mudança e reidratar na montagem.
+**Correção:** Em falha de envio, não navegar pro dashboard. Redirecionar para `/cadastro` com a mensagem de erro da API.
 
 ---
 
-### 3. Overflow de VARCHAR(20) derruba os endpoints de cadastro com erro 500 ✅ Corrigido
+### 1.3 Sem validação cruzada de unicidade de CPF/CNPJ entre ONG e Empresa
 
-| | |
-|---|---|
-| **Arquivos** | `frontend/src/components/ong/NpoStepFour.tsx`, `frontend/src/pages/company/registration/index.tsx` |
-| **Severidade / Prioridade** | CRÍTICO / P0 |
-| **Categoria** | Bug — overflow no banco |
-
-**Problema:** O campo `complemento` do ViaCEP pode conter descritores postais longos (ex: `"de 1 a 499 - lado ímpar"`). Após ser mapeado para o campo `number`/`streetNumber`, o valor era salvo no estado React sem restrição de tamanho. O atributo HTML `maxLength={20}` só impede digitação do usuário — atualizações programáticas de estado o ignoram completamente. Ao chegar no banco, o PostgreSQL rejeitava com:
-
-```
-PSQLException: ERROR: value too long for type character varying(20)
-```
-
-Ambos `/api/npo-accounts` e `/api/company-accounts` retornavam 500. Nenhum registro era criado.
-
-**Observado em teste:**
-```
-hasNpoDraft: true, hasCompanyDraft: true
-POST /api/npo-accounts    → 500 (overflow em address.number)
-POST /api/company-accounts → 500 (mesma causa)
-GET  /api/me/profile      → registrationCompleted: false
-→ redirecionado para /empresa/dashboard sem conta criada
-```
-
-**Correção aplicada:** Ambos os pontos de auto-preenchimento agora truncam para 20 caracteres antes de atualizar o estado:
-```ts
-number: (zipCodeData.complement ?? "").slice(0, 20) || prev.number,
-```
-
-**Lição:** `maxLength` em `<input>` não se aplica a atualizações programáticas de estado React. Qualquer auto-preenchimento de fonte externa deve impor restrições de tamanho explicitamente no código.
-
----
-
-## ALTO
-
-### 4. Empresa pode ser criada com CNPJ já utilizado por uma ONG
-
-| | |
+| Sev/Pri | ALTO / P1 |
 |---|---|
 | **Arquivos** | `backend/.../service/CompanyService.java`, `backend/.../service/NpoDocumentService.java` |
-| **Severidade / Prioridade** | ALTO / P1 |
-| **Categoria** | Integridade de dados |
 
-**Problema:** A verificação de duplicidade de CNPJ para empresas (`companyRepository.existsByCnpj`) só consulta a tabela `company`. A tabela `npo` tem sua própria coluna `cnpj`. Um CNPJ já cadastrado como ONG pode ser reutilizado no cadastro de uma empresa sem nenhum bloqueio.
+O sistema não garante unicidade de CPF/CNPJ entre as entidades `npo` e `company`:
+- `CompanyService.existsByCnpj` só consulta a tabela `company`
+- `NpoDocumentService` só consulta a tabela `npo`
+- Um CNPJ já utilizado por uma ONG pode ser cadastrado como empresa e vice-versa
 
-**Correção sugerida:** Validar unicidade de CNPJ entre ambas as entidades (`npo` e `company`) antes de persistir.
+Além disso, o **frontend não tem feedback** quando o backend rejeita por duplicidade. O erro 409 é logado e engolido pelo `AuthRoleRedirect`, e o usuário é redirecionado ao dashboard sem conta. Não há mecanismo para levar o usuário de volta ao step relevante do wizard para corrigir os dados.
 
----
+**Correção (backend):** Criar um serviço de validação de documentos compartilhado que consulte ambas as tabelas (`npo` e `company`) antes de permitir o cadastro.
 
-### 5. `@Valid` ausente no `CompanyController` — Bean Validation ignorado
+**Correção (frontend — dívida técnica):** Quando o POST do rascunho falhar com 409 ou 400, o fluxo deveria:
+1. Detectar o tipo de erro (documento duplicado, email em uso, etc.)
+2. Redirecionar o usuário de volta ao step relevante do wizard (não ao dashboard)
+3. Exibir a mensagem específica da API inline no campo problemático
+4. Manter os dados preenchidos para que o usuário corrija apenas o campo com conflito
 
-| | |
-|---|---|
-| **Arquivos** | `backend/.../controller/CompanyController.java`, `backend/.../dto/CompanyDTO.java` |
-| **Severidade / Prioridade** | ALTO / P1 |
-| **Categoria** | Validação / Segurança |
-
-**Problema:** `CompanyDTO` possui `@NotEmpty`, `@Email` e outras anotações de Bean Validation, mas o parâmetro do controller é `@RequestBody CompanyDTO` **sem `@Valid`**. Todas as anotações são silenciosamente ignoradas.
-
-**Correção sugerida:** Adicionar `@Valid` e tratar `MethodArgumentNotValidException` no `GlobalExceptionHandler`.
+Isso requer persistência do estado do wizard (ver #1.1) e um mecanismo de "retorno com erro" após o redirect do Auth0, que hoje não existe.
 
 ---
 
-### 6. CNPJ não é normalizado antes da verificação de duplicidade
+### 1.4 CNPJ não normalizado antes da verificação de duplicidade
 
-| | |
+| Sev/Pri | ALTO / P1 |
 |---|---|
 | **Arquivos** | `backend/.../service/CompanyService.java` |
-| **Severidade / Prioridade** | ALTO / P1 |
-| **Categoria** | Integridade de dados |
 
-**Problema:** `existsByCnpj` compara a string bruta da requisição. O frontend envia CNPJs formatados (`12.345.678/0001-90`), mas não há normalização para apenas dígitos antes de verificar ou persistir. Formatos diferentes podem burlar a checagem de duplicidade.
+`existsByCnpj` compara a string bruta. O frontend envia CNPJs formatados (`12.345.678/0001-90`). Sem normalização para apenas dígitos, formatos diferentes podem burlar a checagem.
 
-**Correção sugerida:** Remover caracteres não numéricos do CNPJ antes da verificação e da persistência (como o `NpoDocumentService` já faz para ONG).
+**Correção:** Remover caracteres não numéricos antes da verificação e persistência (como `NpoDocumentService` já faz).
 
 ---
 
-### 7. Sem enforcement de papéis (roles) nos endpoints do servidor
+### 1.5 ONGs com nomes duplicados são aceitas sem validação
 
-| | |
+| Sev/Pri | BAIXO / P2 |
+|---|---|
+| **Arquivos** | `backend/.../service/NpoAccountService.java` |
+
+Nenhuma verificação de nome duplicado para ONGs.
+
+---
+
+### 1.6 Flag `npoDraftSubmitted || hasNpoDraft` induz redirect incorreto
+
+| Sev/Pri | MÉDIO / P2 |
+|---|---|
+| **Arquivos** | `frontend/src/components/auth/AuthRoleRedirect.tsx` |
+
+`redirectPathAfterSignupDraft` recebe `true` se o rascunho existia, mesmo que o envio tenha falhado. Pode disparar redirecionamento para dashboard sem conta criada.
+
+**Correção:** Passar apenas o flag de sucesso real.
+
+---
+
+## 2. Segurança
+
+### 2.1 Sem enforcement de roles nos endpoints do servidor
+
+| Sev/Pri | ALTO / P1 |
 |---|---|
 | **Arquivos** | `backend/.../config/SecurityConfig.java`, todos os controllers |
-| **Severidade / Prioridade** | ALTO / P1 |
-| **Categoria** | Segurança |
 
-**Problema:** `@EnableMethodSecurity` está configurado e os roles do JWT são mapeados para `ROLE_*`, mas **nenhum controller usa `@PreAuthorize`**. Qualquer usuário autenticado pode chamar qualquer endpoint protegido. O controle baseado em papel é apenas uma preocupação do frontend.
-
-**Correção sugerida:** Adicionar `@PreAuthorize` nos endpoints sensíveis. No mínimo, restringir rotas de admin e validar a intenção do caller nos endpoints de cadastro.
+`@EnableMethodSecurity` está habilitado e roles são mapeados para `ROLE_*`, mas nenhum controller usa `@PreAuthorize`. Qualquer token autenticado acessa qualquer endpoint protegido.
 
 ---
 
-### 8. Entidades JPA duplicadas na tabela `users`
+### 2.2 Proteção de rotas no frontend é apenas auth, sem verificação de papel
 
-| | |
-|---|---|
-| **Arquivos** | `backend/.../model/User.java`, `backend/.../model/Users.java` |
-| **Severidade / Prioridade** | ALTO / P1 |
-| **Categoria** | Manutenibilidade / Integridade de dados |
-
-**Problema:** Duas classes `@Entity` mapeiam a mesma tabela `users` com **configurações diferentes**: `User` tem `@SQLRestriction("deleted_at IS NULL")`, builders Lombok e `enums.UserType`; `Users` não tem nada disso. O Hibernate gera entradas de metamodelo conflitantes.
-
-**Correção sugerida:** Deletar `Users.java`, `UsersRepository.java` e `UsersService.java` (nenhum usado por controller ou serviço ativo). Consolidar em `User.java`.
-
----
-
-### 9. Enum `UserType` duplicado em dois pacotes
-
-| | |
-|---|---|
-| **Arquivos** | `backend/.../model/UserType.java`, `backend/.../model/enums/UserType.java` |
-| **Severidade / Prioridade** | ALTO / P1 |
-| **Categoria** | Manutenibilidade |
-
-**Problema:** Valores idênticos em dois pacotes. `User.java` e os serviços ativos usam `model.enums.UserType`; o código morto em `Users.java` usa `model.UserType`. Se um for atualizado e o outro não, os mapeamentos quebram silenciosamente.
-
-**Correção sugerida:** Deletar `model/UserType.java` junto com a entidade `Users` duplicada.
-
----
-
-### 10. Proteção de rotas baseada apenas em autenticação, sem verificação de papel
-
-| | |
+| Sev/Pri | ALTO / P1 |
 |---|---|
 | **Arquivos** | `frontend/src/components/auth/ProtectedRoute.tsx`, `frontend/src/router/index.tsx` |
-| **Severidade / Prioridade** | ALTO / P1 |
-| **Categoria** | Segurança |
 
-**Problema:** `ProtectedRoute` só verifica `isAuthenticated`. Qualquer usuário logado pode acessar `/admin/dashboard` digitando a URL. Não há verificação de papel no frontend ou backend para rotas de dashboard.
-
-**Correção sugerida:** Criar um wrapper `RequireRole` que verifique o papel do usuário via JWT ou perfil, e aplicar em cada rota de dashboard.
+`ProtectedRoute` só checa `isAuthenticated`. Qualquer usuário logado acessa `/admin/dashboard` pela URL.
 
 ---
 
-### 11. `CompanyAlreadyExistsException` usa a mesma mensagem para 3 causas diferentes
+### 2.3 `AuthTestController` expõe internos do JWT em produção
 
-| | |
-|---|---|
-| **Arquivos** | `backend/.../service/CompanyService.java`, `backend/.../exception/CompanyAlreadyExistsException.java` |
-| **Severidade / Prioridade** | ALTO / P2 |
-| **Categoria** | UX / Depuração |
-
-**Problema:** CNPJ duplicado, Auth0 ID duplicado e e-mail duplicado lançam a mesma `CompanyAlreadyExistsException` com uma mensagem sobre "CNPJ" (e com typo: "comany"). Usuário e desenvolvedor não conseguem distinguir a causa.
-
-**Correção sugerida:** Usar mensagens parametrizadas ou tipos de exceção distintos para cada cenário de duplicidade.
-
----
-
-### 12. `IllegalArgumentException` no `CompanyService` retorna HTTP 500
-
-| | |
-|---|---|
-| **Arquivos** | `backend/.../service/CompanyService.java`, `backend/.../exception/GlobalExceptionHandler.java` |
-| **Severidade / Prioridade** | ALTO / P2 |
-| **Categoria** | Tratamento de erros |
-
-**Problema:** `CompanyService` lança `IllegalArgumentException` para Auth0 ID em branco e e-mail ausente. O `GlobalExceptionHandler` não trata essa exceção — ela cai no handler genérico de `Exception`, retornando HTTP 500 com "Erro interno do servidor".
-
-**Correção sugerida:** Adicionar `@ExceptionHandler(IllegalArgumentException.class)` → 400, ou substituir por `BadRequestException`.
-
----
-
-### 13. Variáveis de ambiente do Auth0 falham silenciosamente
-
-| | |
-|---|---|
-| **Arquivos** | `frontend/src/main.tsx`, `backend/.../application.properties` |
-| **Severidade / Prioridade** | ALTO / P2 |
-| **Categoria** | Configuração |
-
-**Problema:** O frontend apenas faz `console.error` quando as variáveis `VITE_AUTH0_*` estão ausentes — o app ainda monta `Auth0Provider` com `undefined`. No backend, `AUTH0_ISSUER_URI` e `AUTH0_AUDIENCE` não têm padrões — valores em branco causam falhas de inicialização crípticas.
-
-**Correção sugerida:** Falhar rapidamente: lançar erro antes de renderizar no frontend; adicionar validação de startup no backend.
-
----
-
-### 14. Docker Compose: backend pode iniciar antes do Flyway terminar
-
-| | |
-|---|---|
-| **Arquivos** | `docker-compose.yml` |
-| **Severidade / Prioridade** | ALTO / P2 |
-| **Categoria** | Infraestrutura |
-
-**Problema:** `backend` depende de `db` (healthy), mas o Flyway roda como serviço separado. Com `ddl-auto=validate`, o backend pode falhar na inicialização se as migrações não tiverem terminado.
-
-**Correção sugerida:** Fazer `backend` depender de `flyway` com condição, ou executar o Flyway como parte do startup do backend (o Spring Boot já tem auto-config do Flyway habilitado).
-
----
-
-## MÉDIO
-
-### 15. Erros de cadastro são ignorados — usuário vai para o dashboard sem conta criada
-
-| | |
-|---|---|
-| **Arquivos** | `frontend/src/components/auth/AuthRoleRedirect.tsx` |
-| **Severidade / Prioridade** | MÉDIO / P1 |
-| **Categoria** | UX / Tratamento de erros |
-
-**Problema:** Quando `submitNpoSignupDraft` ou `submitCompanySignupDraft` falha, o erro é apenas logado e o fluxo continua silenciosamente. Observado em produção:
-
-```
-POST /api/npo-accounts → 409 "Já existe uma instituição cadastrada com este CPF."
-GET  /api/me/profile   → 200 { registrationCompleted: false, npoId: null }
-→ Role do JWT = "NPO" → navigate("/ong/dashboard")
-```
-
-O usuário é enviado para `/ong/dashboard` mesmo sem que o registro de ONG tenha sido criado. O JWT já tem o papel NPO (definido pelo Auth0 no momento do signup), então `resolvePrimaryRole` retorna `"NPO"` e roteia para o dashboard — independentemente de o backend ter ou não criado um registro. O rascunho permanece no `sessionStorage` e será reenviado a cada login subsequente.
-
-**Cenários que disparam isso:**
-- CPF/CNPJ já cadastrado (409 duplicado) — **ONG e Empresa**
-- Documento inválido (400)
-- Falha de rede durante o POST do rascunho
-
-**Correção sugerida:** Em caso de falha no envio do rascunho, não navegar para o dashboard. Redirecionar para `/cadastro` e exibir a mensagem de erro específica da API para que o usuário possa corrigir os dados e tentar novamente.
-
----
-
-### 16. Sem validação de e-mail já em uso no cadastro de empresa (frontend)
-
-| | |
-|---|---|
-| **Arquivos** | `frontend/src/pages/company/registration/index.tsx` |
-| **Severidade / Prioridade** | MÉDIO / P1 |
-| **Categoria** | UX / Validação |
-
-**Problema:** O frontend não valida se o e-mail digitado no step 4 já está em uso antes de redirecionar para o Auth0. O erro de e-mail duplicado só aparece na tela do Auth0 (que valida isso internamente) — o usuário completa o wizard inteiro, é redirecionado, e só então descobre que o e-mail não pode ser usado, sem nenhum contexto ou orientação sobre o que fazer.
-
-**Correção sugerida:** Não há como verificar unicidade de e-mail no frontend antes do Auth0. A solução correta é, após o retorno do Auth0 com erro, exibir uma mensagem clara orientando o usuário a usar outro e-mail ou fazer login com o existente.
-
----
-
-### 17. Formulário exibe mensagens de erro genéricas e sem contexto
-
-| | |
-|---|---|
-| **Arquivos** | `frontend/src/components/ong/NpoStepFour.tsx`, `frontend/src/pages/company/registration/index.tsx` |
-| **Severidade / Prioridade** | MÉDIO / P1 |
-| **Categoria** | UX |
-
-**Problema:** Quando a consulta de CEP ou CNPJ falha com 404 (endereço/empresa não encontrado), o frontend exibe o erro técnico do Axios diretamente: `"Request failed with status code 404"`. O código usa `(error as Error).message` como fallback primário, mas o `.message` do erro Axios já é preenchido com essa string técnica — a mensagem amigável nunca é exibida.
-
-```tsx
-// padrão atual — fallback nunca é atingido quando .message existe
-{(zipCodeQueryError as Error).message || "Erro ao consultar o CEP. Tente novamente."}
-```
-
-**Correção sugerida:** Verificar o status HTTP do erro Axios e mapear para mensagens amigáveis:
-```tsx
-// CEP não encontrado → "CEP não encontrado. Verifique e tente novamente."
-// Erro de rede → "Não foi possível consultar o CEP. Verifique sua conexão."
-```
-
----
-
-### 18. Wizard permite avançar do step 3 sem preencher o campo "Número" (marcado com \*)
-
-| | |
-|---|---|
-| **Arquivos** | `frontend/src/pages/company/registration/index.tsx` |
-| **Severidade / Prioridade** | MÉDIO / P1 |
-| **Categoria** | Validação / UX |
-
-**Problema:** O botão "Próximo" no step 3 da empresa chama `setCurrentStep(4)` diretamente, sem nenhuma validação. O campo "Número" está marcado com `isRequired` (exibe asterisco) mas não há validação que impeça o avanço com ele vazio. O usuário pode chegar ao resumo com endereço incompleto.
-
-**Correção sugerida:** Validar campos obrigatórios do endereço (no mínimo CEP, logradouro e número) antes de avançar para o step 4.
-
----
-
-### 19. Falta de padronização entre os wizards de cadastro de ONG e Empresa
-
-| | |
-|---|---|
-| **Arquivos** | `frontend/src/pages/RegisterPage/index.tsx`, `frontend/src/pages/company/registration/index.tsx` |
-| **Severidade / Prioridade** | MÉDIO / P2 |
-| **Categoria** | UX / Manutenibilidade |
-
-**Problema:** Os dois wizards foram desenvolvidos de formas distintas e apresentam inconsistências visuais e de comportamento:
-- ONG usa estado centralizado em `RegisterPage` com steps como componentes no array; Empresa usa um único componente gigante com renderização condicional por `currentStep`
-- ONG tem validação por `stepValidators` configurados em `wizard.config.ts`; Empresa tem validação inline e incompleta
-- ONG usa `useMemo` para os steps; Empresa usa `if/else` no JSX
-- Navegação de "Voltar" difere entre os dois fluxos
-- ONG não tem step de resumo; Empresa tem `RegistrationSummary`
-
-**Correção sugerida:** Extrair um componente genérico de wizard reutilizável entre os dois fluxos, padronizando navegação, validação e estilos.
-
----
-
-### 20. Flag `npoDraftSubmitted || hasNpoDraft` induz lógica de redirecionamento incorreta
-
-| | |
-|---|---|
-| **Arquivos** | `frontend/src/components/auth/AuthRoleRedirect.tsx` |
-| **Severidade / Prioridade** | MÉDIO / P2 |
-| **Categoria** | Erro de lógica |
-
-**Problema:** `redirectPathAfterSignupDraft` recebe `npoDraftSubmitted: npoDraftSubmitted || hasNpoDraft`. Se o envio falhou mas o rascunho existia, o flag ainda é `true` — pode disparar redirecionamento incorreto para o dashboard.
-
-**Correção sugerida:** Passar apenas o flag de sucesso real.
-
----
-
-### 21. Falha no CEP trava campos de endereço permanentemente
-
-| | |
-|---|---|
-| **Arquivos** | `frontend/src/components/ong/NpoStepFour.tsx`, `frontend/src/pages/company/registration/index.tsx` |
-| **Severidade / Prioridade** | MÉDIO / P2 |
-| **Categoria** | UX |
-
-**Problema:** Logradouro, cidade, estado e UF são `disabled` em ambos os fluxos. São preenchidos apenas pela API de CEP. Se a consulta falha ou retorna dados incompletos, o usuário não consegue inserir o endereço manualmente e fica travado.
-
-**Correção sugerida:** Habilitar edição quando a consulta falhar; permitir sobrescrita manual com indicador visual claro.
-
----
-
-### 22. Incompatibilidade de contrato nos campos `phone` e `logoUrl`
-
-| | |
-|---|---|
-| **Arquivos** | `backend/.../dto/CompanyDTO.java`, `frontend/src/api/company.ts` |
-| **Severidade / Prioridade** | MÉDIO / P2 |
-| **Categoria** | Contrato de API |
-
-**Problema:** `CompanyDTO` tem `@NotEmpty` em `phone` e `logoUrl`. O frontend não exige telefone e sempre envia `logoUrl: ""`. Quando `@Valid` for adicionado (issue #5), esses campos falharão com 400.
-
-**Correção sugerida:** Marcar `phone` e `logoUrl` como `@Nullable`/opcionais no DTO, ou exigi-los na UI.
-
----
-
-### 23. Parse de JWT sem tratamento de erros
-
-| | |
-|---|---|
-| **Arquivos** | `frontend/src/components/auth/AuthRoleRedirect.tsx` |
-| **Severidade / Prioridade** | MÉDIO / P2 |
-| **Categoria** | Robustez |
-
-**Problema:** `getRolesFromToken` divide e faz parse do payload do JWT sem try/catch. Um token malformado lança exceção e envia o usuário para `/cadastro`.
-
-**Correção sugerida:** Envolver em try/catch, retornar array vazio em caso de falha.
-
----
-
-### 24. Exceções de conflito tratadas apenas no `NpoAccountController`
-
-| | |
-|---|---|
-| **Arquivos** | `backend/.../controller/NpoAccountController.java`, `backend/.../exception/GlobalExceptionHandler.java` |
-| **Severidade / Prioridade** | MÉDIO / P2 |
-| **Categoria** | Tratamento de erros |
-
-**Problema:** `DuplicateLoginException` e `DuplicateDocumentException` têm `@ExceptionHandler` local apenas no `NpoAccountController`. Se lançadas em outro controller, caem no handler genérico e retornam 500.
-
-**Correção sugerida:** Mover para `GlobalExceptionHandler` para respostas 409 consistentes.
-
----
-
-### 25. `AuthTestController` expõe internos do JWT em produção
-
-| | |
+| Sev/Pri | MÉDIO / P2 |
 |---|---|
 | **Arquivos** | `backend/.../controller/AuthTestController.java` |
-| **Severidade / Prioridade** | MÉDIO / P2 |
-| **Categoria** | Segurança / Divulgação de informação |
 
-**Problema:** `GET /api/me` retorna subject, e-mail, issuer, audience, escopos e roles do JWT — útil para depuração, mas sensível em produção.
-
-**Correção sugerida:** Restringir a um perfil de dev, somente admin, ou remover.
+`GET /api/me` retorna subject, email, issuer, audience, escopos e roles. Útil para debug mas sensível em produção.
 
 ---
 
-### 26. Roles claim hardcoded no frontend, configurável no backend
+### 2.4 Email de cadastro da ONG pode vir do body da requisição
 
-| | |
-|---|---|
-| **Arquivos** | `frontend/src/components/auth/AuthRoleRedirect.tsx`, `backend/.../application.properties` |
-| **Severidade / Prioridade** | MÉDIO / P2 |
-| **Categoria** | Drift de configuração |
-
-**Problema:** O frontend hardcoda `rolesClaim = "https://vinculohub/roles"`. O backend lê de `AUTH0_ROLES_CLAIM` via env var. Se a var mudar, frontend e backend discordam sobre onde os roles estão no JWT.
-
-**Correção sugerida:** Usar `import.meta.env.VITE_AUTH0_ROLES_CLAIM` no frontend, ou documentar o valor como imutável.
-
----
-
-### 27. Endereço parcial aceito pelo backend da ONG
-
-| | |
+| Sev/Pri | MÉDIO / P2 |
 |---|---|
 | **Arquivos** | `backend/.../service/NpoAccountService.java` |
-| **Severidade / Prioridade** | MÉDIO / P2 |
-| **Categoria** | Integridade de dados |
 
-**Problema:** `isBlankAddress` retorna false se *qualquer* campo for não-nulo. Uma requisição com apenas `zipCode` preenchido (sem logradouro, cidade, estado) passa e é persistida como endereço incompleto.
-
-**Correção sugerida:** Exigir um conjunto mínimo coerente (ex: se `zipCode` presente, exigir cidade + estado).
+Se o JWT não tem claim `email`, o serviço usa `request.email()` como fallback. Um cliente poderia enviar email arbitrário.
 
 ---
 
-### 28. E-mail de cadastro da ONG pode vir do body da requisição
+### 2.5 Roles claim hardcoded no frontend, configurável no backend
 
-| | |
+| Sev/Pri | MÉDIO / P2 |
 |---|---|
-| **Arquivos** | `backend/.../service/NpoAccountService.java` |
-| **Severidade / Prioridade** | MÉDIO / P2 |
-| **Categoria** | Segurança / Fronteira de confiança |
+| **Arquivos** | `frontend/.../AuthRoleRedirect.tsx` (hardcoded), `backend/.../application.properties` (env var) |
 
-**Problema:** Se o JWT não tem a claim `email`, o serviço usa `request.email()` como fallback. Um cliente poderia enviar um e-mail arbitrário que não corresponde à identidade Auth0.
-
-**Correção sugerida:** Exigir a claim de e-mail do Auth0 para o cadastro; rejeitar se ausente.
+Se a env var mudar, frontend e backend discordam sobre onde os roles estão no JWT.
 
 ---
 
-### 29. Sem Bean Validation no `NpoInstitutionalSignupRequest`
+### 2.6 PII logada em ambos os lados
 
-| | |
+| Sev/Pri | BAIXO / P3 |
 |---|---|
-| **Arquivos** | `backend/.../dto/NpoInstitutionalSignupRequest.java` |
-| **Severidade / Prioridade** | MÉDIO / P2 |
-| **Categoria** | Validação |
+| **Arquivos** | Múltiplos controllers e componentes frontend |
 
-**Problema:** Todos os campos são opcionais na camada de DTO. A validação é manual no serviço. Sem `@Size`, `@Email` ou `@NotBlank` — fácil esquecer checagens ao adicionar campos.
-
-**Correção sugerida:** Adicionar anotações de Bean Validation para restrições por campo; manter regras de lógica cruzada no serviço.
+Email e CNPJ são logados em nível INFO. Mascarar dados sensíveis para LGPD.
 
 ---
 
-### 30. Queries de CNPJ/CEP executam em todos os steps do wizard
+## 3. Consistência de Padrões — Frontend
 
-| | |
+> Itens 3.1, 3.2, 3.3, 3.5, 3.7, 3.8, 3.9, 3.10 foram **corrigidos** — ver "Problemas Já Corrigidos".
+
+### 3.4 Falta de padronização entre os wizards de ONG e Empresa
+
+| Sev/Pri | MÉDIO / P2 |
 |---|---|
-| **Arquivos** | `frontend/src/pages/company/registration/index.tsx` |
-| **Severidade / Prioridade** | MÉDIO / P3 |
-| **Categoria** | Performance |
+| **Arquivos** | `RegisterPage/index.tsx`, `CompanyRegistration/registration/index.tsx` |
 
-**Problema:** `useCnpj` e `useZipCode` ficam habilitados sempre que os dígitos têm o tamanho correto, mesmo nos steps 4–5. Refetches desnecessários podem ocorrer ao focar a aba ou remontar.
+- ONG usa estado centralizado com steps como componentes num array + `stepValidators` em `wizard.config.ts`
+- Empresa usa um componente monolítico com renderização condicional + validação inline
+- Navegação de "Voltar" difere entre os fluxos
+- ONG não tem step de resumo; Empresa tem `RegistrationSummary`
 
-**Correção sugerida:** Adicionar `enabled: currentStep === 2` (CNPJ) e `enabled: currentStep === 3` (CEP).
+**Padrão:** Extrair wizard genérico reutilizável.
 
 ---
 
-### 31. Dados obsoletos de CNPJ/CEP podem sobrescrever campos editados pelo usuário
+### 3.6 Sem validação de email já em uso no cadastro de empresa
 
-| | |
+| Sev/Pri | MÉDIO / P1 |
 |---|---|
-| **Arquivos** | `frontend/src/pages/company/registration/index.tsx` |
-| **Severidade / Prioridade** | MÉDIO / P3 |
-| **Categoria** | Race condition |
+| **Arquivos** | `frontend/src/pages/CompanyRegistration/registration/index.tsx` |
 
-**Problema:** O `useEffect` para dados de CNPJ e CEP dispara sempre que a referência dos dados da query muda. Se dados cacheados de uma query anterior forem brevemente servidos, podem sobrescrever os campos atuais do formulário.
-
-**Correção sugerida:** Guardar o efeito comparando os dígitos atuais do input com o resultado da query.
+O erro de email duplicado só aparece na tela do Auth0. O usuário completa o wizard inteiro, é redirecionado, e só então descobre que o email já está em uso.
 
 ---
 
-### 32. `useAuthenticatedApi` hook não é utilizado
+## 4. Consistência de Padrões — Backend
 
-| | |
+### 4.1 Injeção de dependência misturada
+
+| Sev/Pri | MÉDIO / P2 |
 |---|---|
-| **Arquivos** | `frontend/src/services/api.tsx` |
-| **Severidade / Prioridade** | MÉDIO / P3 |
-| **Categoria** | Código morto |
 
-**Problema:** Definido mas nunca importado em nenhum lugar. Chamadas autenticadas anexam o header Bearer manualmente.
+- **`@RequiredArgsConstructor`:** `CompanyController`, `CompanyService`, `AddressService`
+- **Constructor manual:** `MeController`, `NpoAccountController`, `CepController`, `CnpjController`, `NpoAccountService`, `NpoService`, etc.
 
-**Correção sugerida:** Adotar consistentemente ou remover.
+**Padrão:** Padronizar em `@RequiredArgsConstructor` com `final` fields em todos.
 
 ---
 
-## BAIXO
+### 4.2 Nomenclatura de DTOs inconsistente
 
-### 33. CEP preenchia campo "Complemento" incorretamente — agora mapeado para "Número" ✅ Corrigido
-
-| | |
+| Sev/Pri | BAIXO / P2 |
 |---|---|
-| **Arquivos** | `frontend/src/components/ong/NpoStepFour.tsx`, `frontend/src/pages/company/registration/index.tsx` |
-| **Severidade / Prioridade** | BAIXO / P0 |
-| **Categoria** | Bug / UX |
 
-**Problema:** O campo `complemento` do ViaCEP era mapeado diretamente para o input "Complemento" (destinado a "Apto, Sala..."), preenchendo-o com dados postais sem sentido para o usuário. O campo "Número" na empresa não estava marcado como obrigatório.
-
-**Correção aplicada:**
-- `NpoStepFour.tsx`: `complement` do ViaCEP agora mapeia para `streetNumber` ("Número"), truncado para 20 chars.
-- `CompanyRegistrationPage`: `complement` do ViaCEP agora mapeia para `number` ("Número"), truncado para 20 chars; input marcado com `isRequired`.
-- O campo "Complemento" em ambos os fluxos fica em branco para preenchimento manual.
-
----
-
-### 34. Link "Já tenho login" quebrado ✅ Corrigido
-
-| | |
+| Nome atual | Problema |
 |---|---|
-| **Arquivos** | `frontend/src/components/wizard/WizardSignUp.tsx` |
-| **Severidade / Prioridade** | BAIXO / P2 |
-| **Categoria** | Bug / UX |
+| `CompanyDTO`, `UserDTO`, `AddressDTO` | Sufixo `DTO` |
+| `NpoInstitutionalSignupRequest` | Sufixo `Request` |
+| `AuthenticatedProfileResponse` | Sufixo `Response` |
+| `CepResponseDTO`, `CnpjResponseDTO` | `Response` + `DTO` |
 
-**Problema:** `Link` do React Router envolvia outro `<a>` — HTML aninhado inválido. O destino `/Login` não tinha rota correspondente — usuários viam uma página em branco.
-
-**Correção aplicada:** Substituído por `<button>` que chama `loginWithRedirect()` diretamente.
+**Padrão:** Usar `*Request` para entrada, `*Response` para saída, sem misturar `DTO` com `Request`/`Response`.
 
 ---
 
-### 35. Typo no nome do componente `WizardSingUp` ✅ Corrigido
+### 4.3 Formato de erro da API inconsistente entre controllers
 
-| | |
+| Sev/Pri | ALTO / P2 |
 |---|---|
-| **Arquivos** | `frontend/src/components/wizard/WizardSignUp.tsx` |
-| **Severidade / Prioridade** | BAIXO / P3 |
-| **Categoria** | Manutenibilidade |
 
-**Problema:** Export era `WizardSingUp` ("Sing" em vez de "Sign").
+- **`GlobalExceptionHandler.ErrorResponse`:** `{ status, message, timestamp }`
+- **`NpoAccountController.ApiError`:** `{ message }` apenas
 
-**Correção aplicada:** Renomeado para `WizardSignUp`.
+Clientes recebem JSONs diferentes dependendo do endpoint.
+
+**Correção:** Mover exception handlers do `NpoAccountController` para `GlobalExceptionHandler` e usar `ErrorResponse` único.
 
 ---
 
-### 36. Step 5 da ONG era um placeholder vazio ✅ Corrigido
+### 4.4 `CompanyAlreadyExistsException` com mensagem genérica e typo
 
-| | |
+| Sev/Pri | ALTO / P2 |
 |---|---|
-| **Arquivos** | `frontend/src/pages/RegisterPage/index.tsx` |
-| **Severidade / Prioridade** | BAIXO / P3 |
-| **Categoria** | UX |
+| **Arquivo** | `backend/.../exception/CompanyAlreadyExistsException.java` |
 
-**Problema:** O step 5 exibia apenas o texto `"Passo 5 - ONG - Cadastro de Projeto"` sem conteúdo. O usuário precisava avançar por uma tela vazia para chegar ao "Finalizar".
+CNPJ duplicado, Auth0 ID duplicado e email duplicado lançam a mesma exceção com mensagem sobre "CNPJ" e typo "comany". A exception extends `BadRequestException` → 400, mas deveria ser 409 (como no fluxo de ONG).
 
-**Correção aplicada:** Step removido do array. O wizard da ONG agora vai direto do endereço para o "Finalizar".
+**Correção:** Mensagens distintas por cenário, corrigir typo, e usar HTTP 409 para duplicidade.
 
 ---
 
-### 37. Cadastro de projeto não existe (funcionalidade planejada)
+### 4.5 `@Slf4j` ausente em serviços críticos
 
-| | |
+| Sev/Pri | MÉDIO / P2 |
 |---|---|
-| **Arquivos** | `backend/src/main/resources/db/migration/V1__init.sql`, backend em geral |
-| **Severidade / Prioridade** | BAIXO / P3 |
-| **Categoria** | Funcionalidade ausente |
 
-**Problema:** O banco de dados já possui as tabelas `project`, `sdg`, `document`, `edital`, `project_sdg` e `company_project`. Nenhuma dessas tabelas tem entidade JPA, repositório, serviço ou controller correspondentes no backend. No frontend, o wizard da ONG tinha um step de "Cadastro de Projeto" que foi removido por ser placeholder. A funcionalidade central da plataforma (projetos sociais e conexão empresa-ONG) não está implementada.
+Sem logging: `NpoAccountService`, `NpoDocumentService`, `NpoEsgService`, `NpoService`, `AddressService`, `CepValidationService`, `CnpjValidationService`, `AuthTestController`.
 
-**Correção sugerida:** Implementar o CRUD de projetos e a funcionalidade de vinculação empresa-ONG, que é o propósito central da plataforma.
+Serviços de integração externa (CEP, CNPJ) não logam sucesso nem falha de chamadas HTTP.
 
 ---
 
-### 38. Permite cadastrar ONGs com nomes duplicados
+### 4.6 `@Transactional` inconsistente
 
-| | |
+| Sev/Pri | BAIXO / P3 |
 |---|---|
-| **Arquivos** | `backend/.../service/NpoAccountService.java`, `backend/.../repository/NpoRepository.java` |
-| **Severidade / Prioridade** | BAIXO / P2 |
-| **Categoria** | Integridade de dados / UX |
 
-**Problema:** Não existe nenhuma validação de nome duplicado para ONGs. O sistema permite criar múltiplas ONGs com o mesmo nome, o que degrada a qualidade dos dados e confunde usuários que buscam organizações.
-
-**Correção sugerida:** Adicionar verificação de nome único (case-insensitive) antes de persistir, ou ao menos um aviso quando um nome similar já existe.
+`AddressService.createAddress` não tem `@Transactional`, sendo chamado de dentro da transação do `CompanyService`. Funciona, mas depende de ser chamado dentro de um contexto transacional.
 
 ---
 
-### 39. Duplicação de validações de CPF/CNPJ no frontend
+### 4.7 `RestClient` criado inline em cada serviço de integração
 
-| | |
+| Sev/Pri | BAIXO / P3 |
 |---|---|
-| **Arquivos** | `frontend/src/utils/validation.ts`, `frontend/src/utils/validateCpf.ts`, `frontend/src/utils/validateCnpj.ts` |
-| **Severidade / Prioridade** | BAIXO / P3 |
-| **Categoria** | Duplicação de código |
+| **Arquivos** | `CepValidationService.java`, `CnpjValidationService.java` |
 
-**Problema:** Duas implementações independentes de validação de checksum de CPF e CNPJ. `validation.ts` tem `isValidCpf`/`isValidCnpj` privados; os arquivos standalone exportam versões separadas.
+Cada um cria `RestClient.create()` como field. Sem timeouts, métricas ou testabilidade.
 
-**Correção sugerida:** Fonte única — fazer `validation.ts` importar dos arquivos standalone, ou deletar os standalone.
+**Padrão:** Bean compartilhado de `RestClient` com timeouts configurados.
 
 ---
 
-### 40. Código morto espalhado no projeto
+### 4.8 Entity soft delete inconsistente
 
-| | |
+| Sev/Pri | MÉDIO / P2 |
 |---|---|
-| **Arquivos** | Múltiplos |
-| **Severidade / Prioridade** | BAIXO / P3 |
-| **Categoria** | Manutenibilidade |
 
-Arquivos e exports não utilizados:
-- `frontend/src/hooks/useAuth.ts` — nunca importado (todos usam `useAuth0` diretamente)
-- `frontend/src/types/index.ts` — tipo `User` nunca referenciado
-- `frontend/src/utils/formatter.ts` — `formatDate` nunca importado
-- `frontend/src/styles/theme.ts` — tema MUI definido mas sem `ThemeProvider`
-- `backend/.../service/UsersService.java` — nenhum controller referencia
-- `backend/.../repository/UsersRepository.java` — só usado pelo `UsersService` morto
-- `frontend/src/hooks/useCompany.ts` — busca `/company/${id}`, endpoint inexistente no backend
-- `LogoUpload` comentado no cadastro de empresa
+- `User`, `Npo`, `Address`: têm `@SQLRestriction("deleted_at IS NULL")`
+- `Company`: tem coluna `deletedAt` mas **sem** `@SQLRestriction`
 
-**Correção sugerida:** Remover o código morto para reduzir confusão.
+Queries de `Company` retornam registros soft-deleted.
 
 ---
 
-### 41. `ProtectedRoute` não passa `audience` no redirecionamento de login
+### 4.9 Tabelas com nomes singular vs plural
 
-| | |
+| Sev/Pri | BAIXO / P3 |
 |---|---|
-| **Arquivos** | `frontend/src/components/auth/ProtectedRoute.tsx` |
-| **Severidade / Prioridade** | BAIXO / P3 |
-| **Categoria** | Consistência de autenticação |
 
-**Problema:** `loginWithRedirect` aqui passa apenas `ui_locales`, sem `audience`. Dependendo da configuração do Auth0 SPA, o token resultante pode não ter o audience da API.
+- `users` (plural), `address` (singular), `npo` (sigla), `company` (singular)
 
-**Correção sugerida:** Passar `audience: auth0Audience` consistentemente.
+**Padrão:** Padronizar (plural é o mais comum com Spring Data).
 
 ---
 
-### 42. `accessReleased` na resposta da ONG é sempre `true`
+### 4.10 `@Temporal` desnecessário no `Company.java`
 
-| | |
+| Sev/Pri | BAIXO / P3 |
 |---|---|
-| **Arquivos** | `backend/.../service/NpoAccountService.java` |
-| **Severidade / Prioridade** | BAIXO / P3 |
-| **Categoria** | API enganosa |
+| **Arquivo** | `backend/.../model/Company.java` |
 
-**Problema:** O quarto campo de `NpoInstitutionalSignupResponse` é hardcoded como `true`.
-
-**Correção sugerida:** Derivar de lógica de negócio ou remover até ser definido.
+`@Temporal(TemporalType.TIMESTAMP)` em `LocalDateTime` é redundante em JPA 2.2+. `User` e `Npo` não usam.
 
 ---
 
-### 43. Inconsistências de texto em português
+### 4.11 Enums em lowercase (`admin`, `npo`) em vez de UPPERCASE
 
-| | |
+| Sev/Pri | BAIXO / P3 |
 |---|---|
-| **Arquivos** | `frontend/src/utils/validation.ts`, `frontend/src/pages/company/registration/index.tsx` |
-| **Severidade / Prioridade** | BAIXO / P3 |
-| **Categoria** | Polimento de UX |
+| **Arquivos** | `enums/UserType.java`, `enums/NpoSize.java` |
 
-**Problema:** Textos misturados com e sem acento ("CNPJ invalido" vs "CNPJ inválido"), "instituicao" sem acento nas mensagens de validação.
-
-**Correção sugerida:** Normalizar todas as strings visíveis ao usuário para português correto.
+Convenção Java é `ADMIN`, `NPO`, `COMPANY`. Funciona com `@Enumerated(EnumType.STRING)` em lowercase, mas exige mapeamento se mudar.
 
 ---
 
-### 44. `AuthRedirectModal` sem semântica de dialog acessível
+### 4.12 Dependência duplicada no `pom.xml`
 
-| | |
+| Sev/Pri | BAIXO / P3 |
 |---|---|
-| **Arquivos** | `frontend/src/components/auth/AuthRedirectModal.tsx` |
-| **Severidade / Prioridade** | BAIXO / P3 |
-| **Categoria** | Acessibilidade |
+| **Arquivo** | `pom.xml` |
 
-**Problema:** Sem `role="dialog"`, `aria-modal`, `aria-labelledby`, armadilha de foco ou tratamento da tecla Escape.
-
-**Correção sugerida:** Usar padrão adequado de dialog (MUI `Dialog` está disponível nas dependências).
+`springdoc-openapi-starter-webmvc-ui` declarada duas vezes. `thymeleaf-extras-springsecurity6` presente sem camada Thymeleaf visível.
 
 ---
 
-### 45. `WizardSteps` sem alternativas textuais
+### 4.13 `NpoInstitutionalSignupRequest` sem Bean Validation
 
-| | |
+| Sev/Pri | MÉDIO / P2 |
 |---|---|
-| **Arquivos** | `frontend/src/components/auth/WizardSteps.tsx` |
-| **Severidade / Prioridade** | BAIXO / P3 |
-| **Categoria** | Acessibilidade |
+| **Arquivo** | `dto/NpoInstitutionalSignupRequest.java` |
 
-**Problema:** Indicadores de step são apenas visuais (números/checkmarks). Sem `aria-label`, `aria-current` ou contexto para leitores de tela.
-
-**Correção sugerida:** Adicionar `aria-current="step"` e labels ("Passo 1 de 5").
+Nenhuma anotação `@NotBlank`, `@Email`, `@Size`. Controller não usa `@Valid`. Inconsistente com o fluxo de empresa que já tem validação ativa.
 
 ---
 
-### 46. Dados sensíveis (PII) nos logs de frontend e backend
+## 5. Mensagens e Internacionalização
 
-| | |
+### 5.1 Idioma misturado nas mensagens de erro da API
+
+| Sev/Pri | MÉDIO / P2 |
 |---|---|
-| **Arquivos** | `CompanyController`, `CompanyService`, `NpoAccountController`, página de cadastro de empresa, `api/company.ts` |
-| **Severidade / Prioridade** | BAIXO / P3 |
-| **Categoria** | Privacidade / LGPD |
 
-**Problema:** E-mail e CNPJ são logados em nível INFO tanto no console do frontend quanto nos logs Docker do backend.
+| Arquivo | Mensagem | Idioma |
+|---|---|---|
+| `CompanyAlreadyExistsException` | "comany already exists" | EN (com typo) |
+| `CompanyService` | "Auth0 ID é obrigatório" | PT |
+| `NpoAccountService` | "sao obrigatorios", "e obrigatorio" | PT sem acento |
+| `CepNotFoundException` | "Cep not found" | EN |
+| `CnpjNotFoundException` | "CNPJ not found" | EN |
+| `GlobalExceptionHandler` | "Erro interno do servidor" | PT |
 
-**Correção sugerida:** Mascarar dados sensíveis nos logs de produção (ex: `k***@gmail.com`, `12.345.***/**01-90`).
+**Padrão:** Escolher um idioma para mensagens de API. Se PT-BR, normalizar acentos em toda a base.
 
 ---
 
-## Resumo de Vitórias Rápidas
+### 5.2 Strings do frontend sem acento ou gramaticalmente incorretas
 
-| # | Problema | Esforço | Status |
-|---|----------|---------|--------|
-| 1 | Enter no step 4 reseta wizard para step 2 | 2 min | ✅ Concluído |
-| 3 | ViaCEP complement > 20 chars derruba endpoints com 500 | 2 min | ✅ Concluído |
-| 33 | CEP preenchia campo "Complemento" errado; "Número" não obrigatório na empresa | 5 min | ✅ Concluído |
-| 34 | Link "Já tenho login" levava a página em branco | 5 min | ✅ Concluído |
-| 35 | Typo `WizardSingUp` → `WizardSignUp` | 2 min | ✅ Concluído |
-| 36 | Step 5 da ONG era placeholder vazio | 1 min | ✅ Concluído |
-| 5 | Adicionar `@Valid` no `CompanyController.createCompany` | 1 min | Pendente |
-| 8–9 | Deletar `Users.java`, `UsersRepository.java`, `UsersService.java`, `model/UserType.java` | 5 min | Pendente |
-| 12 | Substituir `IllegalArgumentException` por `BadRequestException` no `CompanyService` | 5 min | Pendente |
-| 17 | Validação de campos obrigatórios no step 3 da empresa | 15 min | Pendente |
-| 40 | Remover código morto (8 arquivos/exports não utilizados) | 10 min | Pendente |
+| Sev/Pri | BAIXO / P2 |
+|---|---|
+
+| Arquivo | Exemplo | Correto |
+|---|---|---|
+| `validation.ts` (múltiplas linhas) | "instituicao", "valido", "minimo", "nao", "razao social" | "instituição", "válido", "mínimo", "não", "razão social" |
+| `company/registration/index.tsx` L274 | "Informe um e-mail valido" | "Informe um e-mail válido" |
+| `NpoStepThree.tsx` L130 | "Selecione os pilares que a ONG atua." | "Selecione os pilares em que a ONG atua." |
+
+---
+
+### 5.3 Botões Login/Logout em inglês
+
+| Sev/Pri | BAIXO / P3 |
+|---|---|
+| **Arquivos** | `LoginButton.tsx`, `LogoutButton.tsx` |
+
+Texto "Log in" / "Log out" enquanto o resto da UI é em português. Esses componentes não são importados em nenhum lugar atualmente (possivelmente dead code).
+
+---
+
+## 6. Acessibilidade
+
+### 6.1 `AuthRedirectModal` sem semântica de dialog
+
+| Sev/Pri | BAIXO / P3 |
+|---|---|
+| **Arquivo** | `frontend/.../AuthRedirectModal.tsx` |
+
+Sem `role="dialog"`, `aria-modal`, `aria-labelledby`, armadilha de foco ou tecla Escape.
+
+---
+
+### 6.2 `WizardSteps` sem alternativas textuais
+
+| Sev/Pri | BAIXO / P3 |
+|---|---|
+| **Arquivo** | `frontend/.../WizardSteps.tsx` |
+
+Indicadores de step visuais apenas. Sem `aria-current="step"` ou labels para leitores de tela.
+
+---
+
+### 6.3 `TypeCard` sem `aria-pressed` para estado selecionado
+
+| Sev/Pri | BAIXO / P3 |
+|---|---|
+| **Arquivo** | `frontend/.../WizardSignUp.tsx` |
+
+Botões de seleção de tipo não comunicam estado para tecnologias assistivas.
+
+---
+
+### 6.4 Múltiplos `<h1>` na landing page
+
+| Sev/Pri | BAIXO / P3 |
+|---|---|
+| **Arquivos** | `Hero.tsx`, `InfoTab.tsx` |
+
+Dois `<h1>` na mesma página. `InfoTab` deveria usar `<h2>`.
+
+---
+
+## 7. Infraestrutura e Configuração
+
+### 7.1 Variáveis de Auth0 falham silenciosamente
+
+| Sev/Pri | ALTO / P2 |
+|---|---|
+| **Arquivos** | `frontend/src/main.tsx`, `backend/.../application.properties` |
+
+Frontend só faz `console.error` e monta `Auth0Provider` com `undefined`. Backend não tem defaults para `AUTH0_ISSUER_URI` e `AUTH0_AUDIENCE`.
+
+---
+
+### 7.2 Docker Compose: backend pode iniciar antes do Flyway
+
+| Sev/Pri | ALTO / P2 |
+|---|---|
+| **Arquivo** | `docker-compose.yml` |
+
+`backend` depende de `db` (healthy) mas Flyway roda como serviço separado. Com `ddl-auto=validate`, o backend pode falhar se migrações não terminaram.
+
+---
+
+### 7.3 `ProtectedRoute` não passa `audience` no redirect de login
+
+| Sev/Pri | BAIXO / P3 |
+|---|---|
+| **Arquivo** | `frontend/.../ProtectedRoute.tsx` |
+
+Outros call sites passam `audience`. Token resultante pode não ter o audience da API.
+
+---
+
+### 7.4 `accessReleased` na resposta da ONG é sempre `true`
+
+| Sev/Pri | BAIXO / P3 |
+|---|---|
+| **Arquivo** | `backend/.../service/NpoAccountService.java` |
+
+Campo hardcoded sem lógica de negócio.
+
+---
+
+## 8. Código Morto
+
+### 8.1 Componentes e arquivos nunca importados
+
+| Sev/Pri | BAIXO / P3 |
+|---|---|
+
+| Arquivo | Situação |
+|---|---|
+| `components/ong/OngCard.tsx` | Nunca importado |
+| `components/auth/LoginButton.tsx` | Nunca importado |
+| `components/auth/LogoutButton.tsx` | Nunca importado |
+| `utils/validateCpf.ts` | `validation.ts` duplica a lógica internamente; este nunca é importado |
+| `pages/Registering/` (3 arquivos) | Nenhuma rota em `router/index.tsx` aponta para este módulo |
+| `pages/Registering/Steps/Step4.tsx` | `Enterprise_Registering_Step_4` é um export vazio |
+
+---
+
+### 8.2 Código comentado em produção
+
+| Sev/Pri | BAIXO / P3 |
+|---|---|
+
+| Arquivo | O que está comentado |
+|---|---|
+| `company/registration/index.tsx` | `LogoUpload` import, estado, JSX; `entityIcon` prop |
+| `RegistrationSummary.tsx` | Bloco de ícone |
+| `RegisterPage/index.tsx` | Enterprise steps 2–5 são `<div>` placeholder |
+
+---
+
+### 8.3 Validadores desalinhados com steps reais da ONG
+
+| Sev/Pri | BAIXO / P3 |
+|---|---|
+| **Arquivo** | `frontend/src/config/wizard.config.ts` |
+
+Array de validadores NPO tem 4 entradas (incluindo `() => ({})` placeholder) mas o wizard renderiza apenas 3 steps. Quarto validador nunca é executado.
+
+---
+
+### 8.4 Dependências desnecessárias no `pom.xml`
+
+| Sev/Pri | BAIXO / P3 |
+|---|---|
+
+- `springdoc-openapi-starter-webmvc-ui` declarada duas vezes
+- `thymeleaf-extras-springsecurity6` sem camada Thymeleaf visível
+- Spotless `googleJavaFormat` com duas tags `<version>` (inválido)
+
+---
+
+## 9. Styling e Cores
+
+### 9.1 Dois "azuis da marca" diferentes
+
+| Sev/Pri | BAIXO / P2 |
+|---|---|
+
+- `main.css`: `--color-vinculo-dark: #004481`
+- `Registering/register-page.tsx`: `text-[#00467F]`
+
+**Padrão:** Usar token do tema (`text-vinculo-dark`).
+
+---
+
+### 9.2 Background de página inconsistente
+
+| Sev/Pri | BAIXO / P3 |
+|---|---|
+
+- `company/registration/index.tsx`: `bg-stone-100`
+- `RegisterPage/`, `RoleHomePage/`: `bg-slate-50`
+
+**Padrão:** Um único token de superfície.
+
+---
+
+### 9.3 Inline styles misturados com Tailwind
+
+| Sev/Pri | BAIXO / P3 |
+|---|---|
+| **Arquivos** | `InfoTab.tsx`, `WizardSteps.tsx` |
+
+`style={{ fontSize: ... }}` em ícones MUI e width dinâmico no progresso. Preferir classes Tailwind onde possível.
+
+---
+
+## Resumo por Status
+
+| Categoria | Crítico | Alto | Médio | Baixo |
+|---|---|---|---|---|
+| Bugs / Funcionalidade | 1 | 2 | 2 | 1 |
+| Segurança | — | 2 | 3 | 1 |
+| Padrões Frontend | — | — | 7 | 3 |
+| Padrões Backend | — | 1 | 5 | 6 |
+| Mensagens / i18n | — | — | 2 | 1 |
+| Acessibilidade | — | — | — | 4 |
+| Infra / Config | — | 2 | — | 2 |
+| Código Morto | — | — | — | 4 |
+| Styling | — | — | — | 3 |
+| **Total** | **1** | **7** | **19** | **25** |
 
 ---
 
 ## Ordem de Correção Recomendada
 
-1. **P0 (imediato):** Persistir estado do wizard em sessionStorage (#2)
-2. **P1 (esta sprint):** Feedback de erros de cadastro para o usuário (#15, #16, #17, #18); CNPJ cross-entidade (#4); adicionar `@Valid` (#5); normalizar CNPJ (#6)
-3. **P1 (esta sprint):** Enforcement de roles nas rotas (#10) e endpoints (#7); deletar entidades duplicadas (#8, #9)
-4. **P2 (próxima sprint):** Padronizar wizards (#19); tratamento de exceções (#11, #12, #24); gaps de validação (#21, #22, #29); validação de ambiente (#13)
-5. **P2 (próxima sprint):** Itens de segurança (#25, #26, #28) e infraestrutura (#14)
-6. **P3 (backlog):** Implementar cadastro de projetos (#37); limpeza de código morto (#40); polimento de UX, acessibilidade e logs
+1. **P0:** Persistir estado do wizard (#1.1)
+2. **P1:** Feedback de erros e validação cruzada CPF/CNPJ (#1.2, #1.3, #3.5, #3.6); roles no servidor (#2.1) e frontend (#2.2); normalizar CNPJ (#1.4)
+3. **P2:** Quick wins de backend e frontend (ver tabelas acima); padronizar wizards (#3.4); formato de erro da API (#4.3); soft delete Company (#4.8); validação NPO DTO (#4.13); mensagens PT-BR (#5.1, #5.2)
+4. **P3:** Limpeza de código morto (#8.*); acessibilidade (#6.*); infraestrutura (#7.*); polimento de styling (#9.*)

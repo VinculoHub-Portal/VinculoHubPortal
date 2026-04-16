@@ -6,7 +6,7 @@ import { BackLink } from "../../components/general/BackLink";
 import { BaseButton } from "../../components/general/BaseButton";
 import { AuthRedirectModal } from "../../components/auth/AuthRedirectModal";
 import { WizardSteps } from "../../components/auth/WizardSteps";
-import { WizardSingUp } from "../../components/wizard/WizardSignUp";
+import { WizardSignUp } from "../../components/wizard/WizardSignUp";
 import { NpoStepThree } from "../../components/ong/NpoStepThree";
 import { NpoStepFour } from "../../components/ong/NpoStepFour";
 import { stepValidators } from "../../config/wizard.config";
@@ -72,7 +72,7 @@ function getSteps({
   errors,
 }: GetStepsParams) {
   const commonFirstStep = (
-    <WizardSingUp
+    <WizardSignUp
       key="signup"
       organizationType={organizationType}
       onSelectOrganizationType={onSelectOrganizationType}
@@ -109,7 +109,7 @@ function getSteps({
   ];
 }
 
-export default function RegisterPage() {
+export function RegisterPage() {
   const { loginWithRedirect } = useAuth0();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);

@@ -5,9 +5,11 @@ import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.repository.AddressRepository;
 import com.vinculohub.backend.repository.NpoRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 public class NpoService {
 

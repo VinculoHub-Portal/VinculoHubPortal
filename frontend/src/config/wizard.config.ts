@@ -8,16 +8,12 @@ import {
 
 export const stepValidators: Record<OrganizationType, StepValidator[]> = {
   npo: [
-    validateSignupStep,    // step 1 — WizardSingUp
-    validateNpoStepThree,  // step 2 — informações básicas + ESG
-    validateNpoStepFour,   // step 3 — endereço
-    () => ({}),            // step 4 — placeholder (projeto)
+    validateSignupStep,
+    validateNpoStepThree,
+    validateNpoStepFour,
   ],
   enterprise: [
     validateSignupStep,
     validateEnterpriseStepTwo,
-    () => ({}),
-    () => ({}),
-    () => ({}),
   ],
 };
