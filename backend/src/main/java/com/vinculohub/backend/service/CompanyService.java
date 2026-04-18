@@ -3,6 +3,7 @@ package com.vinculohub.backend.service;
 
 import com.vinculohub.backend.dto.CompanyDTO;
 import com.vinculohub.backend.dto.UserDTO;
+import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.CompanyAlreadyExistsException;
 import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.model.Company;
@@ -30,17 +31,17 @@ public class CompanyService {
 
         if (auth0Id == null || auth0Id.isBlank()) {
             log.error("Auth0 ID is blank");
-            throw new IllegalArgumentException("Auth0 ID e obrigatorio.");
+            throw new BadRequestException("Auth0 ID é obrigatório.");
         }
 
         if (companyRepository.existsByCnpj(companyDTO.cnpj())) {
             log.warn("Duplicate CNPJ: {}", companyDTO.cnpj());
-            throw new CompanyAlreadyExistsException();
+            throw new CompanyAlreadyExistsException("Já existe uma empresa cadastrada com este CNPJ.");
         }
 
         if (userRepository.existsByAuth0Id(auth0Id)) {
             log.warn("Duplicate Auth0 ID: {}", auth0Id);
-            throw new CompanyAlreadyExistsException();
+            throw new CompanyAlreadyExistsException("Já existe uma conta cadastrada para este login.");
         }
 
         String email =
@@ -49,12 +50,12 @@ public class CompanyService {
 
         if (email == null) {
             log.error("No email provided (auth0Email and DTO email both null)");
-            throw new IllegalArgumentException("E-mail e obrigatorio.");
+            throw new BadRequestException("E-mail é obrigatório.");
         }
 
         if (userRepository.existsByEmailIgnoreCase(email)) {
             log.warn("Duplicate email: {}", email);
-            throw new CompanyAlreadyExistsException();
+            throw new CompanyAlreadyExistsException("Já existe uma conta cadastrada com este e-mail.");
         }
 
         Company company = new Company();

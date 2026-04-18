@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
-import { Input } from "../general/SimpleTextInput";
-import { TextArea } from "../general/SimpleTextArea";
+import { Input } from "../general/Input";
+import { TextArea } from "../general/TextArea";
 import { CnpjIcon, DescriptionIcon } from "../icons";
 import type { FieldErrors, WizardEsgOption, WizardFormData } from "../../types/wizard.types";
 
@@ -127,7 +127,7 @@ export function NpoStepThree({ formData, setFormData, errors }: NpoStepThreeProp
         <legend className="text-vinculo-dark font-semibold text-base mb-1">
           Pilares ESG <span className="text-red-500" aria-hidden="true">*</span>
         </legend>
-        <p className="text-sm text-slate-500 mb-4">Selecione os pilares que a ONG atua.</p>
+        <p className="text-sm text-slate-500 mb-4">Selecione os pilares em que a ONG atua.</p>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {ESG_OPTIONS.map((option) => {

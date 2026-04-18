@@ -1,15 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useNavigate } from "react-router-dom";
-import { logger } from "../../../utils/logger";
+import { logger, getApiErrorMessage } from "../../../utils/logger";
 import { WizardSteps } from "../../../components/auth/WizardSteps";
 import { AuthRedirectModal } from "../../../components/auth/AuthRedirectModal";
 import { BackLink } from "../../../components/general/BackLink";
-import { Input } from "../../../components/general/SimpleTextInput";
-import { TextArea } from "../../../components/general/SimpleTextArea";
+import { Input } from "../../../components/general/Input";
+import { TextArea } from "../../../components/general/TextArea";
 import { BaseButton } from "../../../components/general/BaseButton";
 import { InfoBox } from "../../../components/general/InfoBox";
-// import { LogoUpload } from "../../../components/general/LogoUpload";
 import { useZipCode } from "../../../hooks/useZipCode";
 import { useCnpj } from "../../../hooks/useCnpj";
 import { CompanyIcon, DescriptionIcon, CnpjIcon, AddressIcon, StateIcon, PhoneIcon, EmailIcon } from "../../../components/icons";
@@ -24,7 +23,7 @@ const companySignupDraftKey = "vinculohub:company-signup-draft";
 
 const LOG = "CompanyRegistration";
 
-export default function CompanyRegistrationPage() {
+export function CompanyRegistrationPage() {
   const { loginWithRedirect } = useAuth0();
   const navigate = useNavigate();
 
@@ -47,10 +46,30 @@ export default function CompanyRegistrationPage() {
     cnpj: "",
   });
 
-  // const [logoFile, setLogoFile] = useState<File | null>(null);
-  // const [logoPreview, setLogoPreview] = useState<string | null>(null);
-
   const [cnpjError, setCnpjError] = useState("");
+
+  const [contactErrors, setContactErrors] = useState({
+    zip_code: "",
+    number: "",
+  });
+
+  const validateContactStep = () => {
+    const errors = { zip_code: "", number: "" };
+    let valid = true;
+
+    if (contactInfo.zip_code.replace(/\D/g, "").length !== 8) {
+      errors.zip_code = "Informe um CEP válido";
+      valid = false;
+    }
+
+    if (!contactInfo.number.trim()) {
+      errors.number = "Informe o número";
+      valid = false;
+    }
+
+    setContactErrors(errors);
+    return valid;
+  };
 
   const [credentials, setCredentials] = useState({
     email: "",
@@ -119,6 +138,7 @@ export default function CompanyRegistrationPage() {
       cnpj: "",
     });
     setCnpjError("");
+    setContactErrors({ zip_code: "", number: "" });
     setCredentials({
       email: "",
     });
@@ -142,13 +162,13 @@ export default function CompanyRegistrationPage() {
     data: cnpjData,
     isFetching: loadingCnpj,
     error: cnpjQueryError,
-  } = useCnpj(basicInfo.cnpj);
+  } = useCnpj(currentStep === 2 ? basicInfo.cnpj : "");
 
   const {
     data: zipCodeData,
     isFetching: loadingZipCode,
     error: zipCodeQueryError,
-  } = useZipCode(contactInfo.zip_code);
+  } = useZipCode(currentStep === 3 ? contactInfo.zip_code : "");
 
   useEffect(() => {
     if (cnpjData) {
@@ -247,7 +267,7 @@ export default function CompanyRegistrationPage() {
       logger.warn(LOG, "Signup blocked: email missing or has error");
       setCredentialsErrors((prev) => ({
         ...prev,
-        email: prev.email || "Informe um e-mail valido",
+        email: prev.email || "Informe um e-mail válido",
       }));
       return;
     }
@@ -329,21 +349,6 @@ export default function CompanyRegistrationPage() {
 
         {currentStep === 2 && (
           <form className="flex flex-col gap-4" onSubmit={handleStepTwoSubmit}>
-            { /*
-            <LogoUpload
-              label="Logo da Empresa"
-              preview={logoPreview}
-              onChange={(file, previewUrl) => {
-                setLogoFile(file);
-                setLogoPreview(previewUrl);
-              }}
-              onRemove={() => {
-                setLogoFile(null);
-                setLogoPreview(null);
-              }}
-            />
-            */ }
-
             <div className="flex flex-col gap-1">
               <Input
                 label="CNPJ"
@@ -353,7 +358,7 @@ export default function CompanyRegistrationPage() {
                 value={basicInfo.cnpj}
                 onChange={handleBasicChange}
                 onBlur={handleCnpjBlur}
-                error={cnpjError || (cnpjQueryError ? "Erro ao consultar o CNPJ. Tente novamente." : "")}
+                error={cnpjError || (cnpjQueryError ? getApiErrorMessage(cnpjQueryError, "CNPJ não encontrado. Verifique e tente novamente.") : "")}
                 icon={<CnpjIcon />}
                 iconPosition="left"
                 isRequired
@@ -429,7 +434,11 @@ export default function CompanyRegistrationPage() {
                 placeholder="00000-000"
                 maxLength={9}
                 value={contactInfo.zip_code}
-                onChange={handleContactChange}
+                onChange={(e) => {
+                  handleContactChange(e);
+                  setContactErrors((prev) => ({ ...prev, zip_code: "" }));
+                }}
+                error={contactErrors.zip_code}
                 icon={<AddressIcon />}
                 iconPosition="left"
                 isRequired
@@ -441,7 +450,7 @@ export default function CompanyRegistrationPage() {
               )}
               {zipCodeQueryError && (
                 <span className="text-sm text-error">
-                  {(zipCodeQueryError as Error).message || "Erro ao consultar o CEP. Tente novamente."}
+                  {getApiErrorMessage(zipCodeQueryError, "CEP não encontrado. Verifique e tente novamente.")}
                 </span>
               )}
             </div>
@@ -457,7 +466,7 @@ export default function CompanyRegistrationPage() {
                   onChange={handleContactChange}
                   icon={<AddressIcon />}
                   iconPosition="left"
-                  disabled
+                  disabled={!!zipCodeData}
                 />
               </div>
               <Input
@@ -466,7 +475,11 @@ export default function CompanyRegistrationPage() {
                 placeholder="Ex: 123"
                 maxLength={20}
                 value={contactInfo.number}
-                onChange={handleContactChange}
+                onChange={(e) => {
+                  handleContactChange(e);
+                  setContactErrors((prev) => ({ ...prev, number: "" }));
+                }}
+                error={contactErrors.number}
                 icon={<AddressIcon />}
                 iconPosition="left"
                 isRequired
@@ -493,7 +506,7 @@ export default function CompanyRegistrationPage() {
                 onChange={handleContactChange}
                 icon={<StateIcon />}
                 iconPosition="left"
-                disabled
+                disabled={!!zipCodeData}
               />
             </div>
 
@@ -507,7 +520,7 @@ export default function CompanyRegistrationPage() {
                 onChange={handleContactChange}
                 icon={<StateIcon />}
                 iconPosition="left"
-                disabled
+                disabled={!!zipCodeData}
               />
               <Input
                 label="UF"
@@ -518,7 +531,7 @@ export default function CompanyRegistrationPage() {
                 onChange={handleContactChange}
                 icon={<StateIcon />}
                 iconPosition="left"
-                disabled
+                disabled={!!zipCodeData}
               />
             </div>
 
@@ -551,7 +564,10 @@ export default function CompanyRegistrationPage() {
                 type="button"
                 variant="secondary"
                 className="w-28"
-                onClick={() => setCurrentStep(4)}
+                onClick={() => {
+                  if (!validateContactStep()) return;
+                  setCurrentStep(4);
+                }}
               >
                 Próximo
               </BaseButton>
@@ -611,7 +627,6 @@ export default function CompanyRegistrationPage() {
           <RegistrationSummary
             entityName={basicInfo.tradeName || basicInfo.name}
             entitySubtitle={basicInfo.cnpj}
-            // entityIcon={<CompanyIcon sx={{ fontSize: 36 }} className="text-vinculo-green" />}
             completedSteps={5}
             totalSteps={5}
             sections={[

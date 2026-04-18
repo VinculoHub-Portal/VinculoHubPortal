@@ -87,7 +87,7 @@ export const validateInstitutionName: StepValidator = (data) => {
 
   if (!isValidInstitutionName(data.nomeInstituicao)) {
     errors.nomeInstituicao =
-      "Informe o nome da instituicao (entre 2 e 200 caracteres).";
+      "Informe o nome da instituição (entre 2 e 200 caracteres).";
   }
 
   return errors;
@@ -97,7 +97,7 @@ export const validateEmailField: StepValidator = (data) => {
   const errors: FieldErrors = {};
 
   if (!isValidEmail(data.email)) {
-    errors.email = "Informe um e-mail valido.";
+    errors.email = "Informe um e-mail válido.";
   }
 
   return errors;
@@ -108,7 +108,7 @@ export const validatePasswordField: StepValidator = (data) => {
 
   if (!isValidPassword(data.senha)) {
     errors.senha =
-      "A senha deve ter no minimo 8 caracteres, com letras e numeros.";
+      "A senha deve ter no mínimo 8 caracteres, com letras e números.";
   }
 
   return errors;
@@ -118,7 +118,7 @@ export const validateConfirmPasswordField: StepValidator = (data) => {
   const errors: FieldErrors = {};
 
   if (data.confirmarSenha !== data.senha) {
-    errors.confirmarSenha = "As senhas nao coincidem.";
+    errors.confirmarSenha = "As senhas não coincidem.";
   }
 
   return errors;
@@ -138,7 +138,7 @@ export const validateRazaoSocialField: StepValidator = (data) => {
   const errors: FieldErrors = {};
 
   if (!data.razaoSocial.trim()) {
-    errors.razaoSocial = "Informe a razao social.";
+    errors.razaoSocial = "Informe a razão social.";
   }
 
   return errors;
@@ -158,7 +158,7 @@ export const validateCpfField: StepValidator = (data) => {
   const errors: FieldErrors = {};
 
   if (!isValidCpf(data.cpf)) {
-    errors.cpf = "Informe um CPF valido.";
+    errors.cpf = "Informe um CPF válido.";
   }
 
   return errors;
@@ -169,7 +169,7 @@ export const validateOptionalCnpjField: StepValidator = (data) => {
   const digits = onlyDigits(data.cnpj);
 
   if (digits.length > 0 && !isValidCnpj(data.cnpj)) {
-    errors.cnpj = "Informe um CNPJ valido.";
+    errors.cnpj = "Informe um CNPJ válido.";
   }
 
   return errors;

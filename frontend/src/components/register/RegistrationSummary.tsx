@@ -16,7 +16,6 @@ export interface SummarySection {
 interface RegistrationSummaryProps {
   entityName: string;
   entitySubtitle?: string;
-  // entityIcon: ReactNode;
   sections: SummarySection[];
   completedSteps: number;
   totalSteps: number;
@@ -81,7 +80,6 @@ function SectionCard({ title, fields }: { title: string; fields: SummaryField[] 
 export function RegistrationSummary({
   entityName,
   entitySubtitle,
-  // entityIcon,
   sections,
   completedSteps,
   totalSteps,
@@ -97,9 +95,6 @@ export function RegistrationSummary({
     <div className="flex flex-col gap-6">
       {/* Cabeçalho da entidade */}
       <div className="flex flex-col items-center gap-1 py-4 border-b border-slate-100">
-        { /* <div className="w-16 h-16 rounded-full bg-vinculo-green/10 flex items-center justify-center mb-1">
-          {entityIcon}
-        </div> */ }
         <h2 className="text-xl font-bold text-vinculo-dark">
           {entityName || "—"}
         </h2>
