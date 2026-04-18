@@ -181,11 +181,7 @@
                     </formats>
                     <java>
                         <googleJavaFormat>
-                            <version>1.15.0</version>
-<<<<<<< HEAD
-=======
                             <version>1.24.0</version>
->>>>>>> origin/fix/clean-up
                             <style>AOSP</style>
                             <reflowLongStrings>true</reflowLongStrings>
                             <formatJavadoc>false</formatJavadoc>
