@@ -15,6 +15,7 @@ export type WizardFormData = {
   cpf: string;
   cnpj: string;
   razaoSocial: string;
+<<<<<<< HEAD
   description: string;
   npo_size: NpoSize;
   ods: ODSOptions[];
@@ -23,6 +24,21 @@ export type WizardFormData = {
   governance: boolean;
   capital: number;
   // ...campos dos próximos steps
+=======
+  cpf: string;
+  porteOng: "" | "pequena" | "media" | "grande";
+  resumoInstitucional: string;
+  esg: WizardEsgOption[];
+  // address
+  zipCode: string;
+  street: string;
+  streetNumber: string;
+  complement: string;
+  city: string;
+  state: string;
+  stateCode: string;
+  phone: string;
+>>>>>>> origin/fix/clean-up
 };
 
 export type FieldErrors = Partial<

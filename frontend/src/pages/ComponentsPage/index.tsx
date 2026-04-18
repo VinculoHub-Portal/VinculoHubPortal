@@ -1,11 +1,11 @@
-import { useState } from "react";
-import { Header } from "../../components/general/Header";
-import { BaseButton } from "../../components/general/BaseButton";
-import { Input } from "../../components/general/SimpleTextInput";
-import { WizardSteps } from "../../components/auth/WizardSteps";
+import { useState } from "react"
+import { Header } from "../../components/general/Header"
+import { BaseButton } from "../../components/general/BaseButton"
+import { Input } from "../../components/general/Input"
+import { WizardSteps } from "../../components/auth/WizardSteps"
 
-export default function ComponentsPage() {
-  const [currentStep, setCurrentStep] = useState(1);
+export function ComponentsPage() {
+  const [currentStep, setCurrentStep] = useState(1)
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
@@ -49,7 +49,7 @@ export default function ComponentsPage() {
             <Input
               id="email"
               label="E-mail"
-              isRequired 
+              isRequired
               placeholder="seu@email.com"
               type="email"
             />
@@ -64,7 +64,7 @@ export default function ComponentsPage() {
               id="valor"
               label="Investimento Desejado"
               placeholder="15000"
-              type="number" 
+              type="number"
             />
             <Input
               id="fantasia"
@@ -122,5 +122,5 @@ export default function ComponentsPage() {
         </section>
       </main>
     </div>
-  );
+  )
 }

@@ -1,5 +1,10 @@
 import type { Dispatch, SetStateAction } from "react";
-import { Input } from "../../../components/general/SimpleTextInput";
+import { useEffect } from "react";
+import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
+import { useCnpj } from "../../../hooks/useCnpj";
+import { CnpjInput } from "../../../components/inputs/CnpjInput";
+import { CpfInput } from "../../../components/inputs/CpfInput";
+import { Input } from "../../../components/general/Input";
 import { Select } from "../../../components/general/SimpleSelect";
 import type { NpoSize } from "../../../types/wizard.types";
 import type { FieldErrors, WizardFormData } from "../../../types/wizard.types";
@@ -10,6 +15,8 @@ type NPORegisteringStep3Props = {
   formData: WizardFormData;
   setFormData: Dispatch<SetStateAction<WizardFormData>>;
   errors: FieldErrors;
+  // allow parent to set errors via setErrors if needed
+  setErrors?: (next: FieldErrors) => void;
 };
 
 const NPO_SIZE_LABELS: Record<
@@ -25,9 +32,28 @@ export function NPORegisteringStep3({
   formData,
   setFormData,
   errors,
+  setErrors,
 }: NPORegisteringStep3Props) {
   const inputFilledClass =
     "!bg-vinculo-light-gray !border-0 focus:!ring-1 focus:!ring-vinculo-dark";
+
+  // Debounced CNPJ for lookup (parent-level lookup in this step)
+  const debouncedCnpj = useDebouncedValue(formData.cnpj ?? "", 400);
+  const cnpjDigits = debouncedCnpj.replace(/\D/g, "");
+  const {
+    data: cnpjData,
+    isFetching: cnpjLoading,
+    error: cnpjQueryError,
+  } = useCnpj(cnpjDigits.length === 14 ? debouncedCnpj : "");
+
+  // If (for this step) you want to auto-fill some fields when lookup returns:
+  useEffect(() => {
+    if (cnpjData) {
+      // For NPO step CNPJ is optional; you may want to pre-fill some fields only if empty
+      // setFormData(prev => ({ ...prev, ... }))
+      // In many cases you may opt to NOT auto-fill in NPO flow; keep this commented or minimal.
+    }
+  }, [cnpjData, setFormData]);
 
   return (
     <>
@@ -55,20 +81,21 @@ export function NPORegisteringStep3({
             placeholder="Instituição das Boas Causas"
           />
 
-          <Input
+          <CpfInput
             id="cpf"
             label="CPF"
-            isRequired
             value={formData.cpf}
-            onChange={(e) =>
+            onChange={(next) =>
               setFormData((prev) => ({
                 ...prev,
-                cpf: e.target.value,
+                cpf: next,
               }))
             }
             error={errors.cpf}
+            // optional: to surface errors in parent error bag:
+            setError={(msg) => setErrors?.({ ...errors, cpf: msg })}
             className={inputFilledClass}
-            placeholder="000.000.000-00"
+            // placeholder preserved by CpfInput's formatted input config
           />
 
           <div className="flex col-auto justify-between">
@@ -94,20 +121,24 @@ export function NPORegisteringStep3({
               />
             </div>
 
-            <Input
+            <CnpjInput
               id="cnpj"
               label="CNPJ (Opcional)"
-              type="text"
-              autoComplete=""
               value={formData.cnpj}
-              onChange={(e) =>
+              onChange={(next) =>
                 setFormData((prev) => ({
                   ...prev,
-                  cnpj: e.target.value,
+                  cnpj: next,
                 }))
               }
+              error={errors.cnpj}
+              setError={(msg) => setErrors?.({ ...errors, cnpj: msg })}
+              // pass lookup state from this step's query
+              lookupLoading={cnpjLoading}
+              lookupError={cnpjQueryError}
+              // keep autoLookup disabled in NPO flow if you prefer:
+              // (we already do the lookup here, so input doesn't do its own)
               className={inputFilledClass}
-              placeholder="00.000.000/0000-00"
             />
           </div>
         </div>

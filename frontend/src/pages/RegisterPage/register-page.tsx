@@ -14,7 +14,7 @@ export default function CadastroInstituicao() {
   const [currentStep, setCurrentStep] = useState(4);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[#F6F3EC]">
+    <div className="flex items-center justify-center min-h-screen bg-surface">
       <div className="bg-white p-8 rounded-xl shadow-md w-600 max-w-md space-y-6">
         <div className="text-center">
           <h1 className="text-2xl font-semibold text-[#00467F]">

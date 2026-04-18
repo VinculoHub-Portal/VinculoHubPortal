@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 import type { Dispatch, SetStateAction } from "react";
 import type {
   OrganizationType,
@@ -6,7 +6,7 @@ import type {
   WizardFormData,
 } from "../../types/wizard.types";
 
-type WizardSingUpProps = {
+type WizardSignUpProps = {
   organizationType: OrganizationType | null;
   onSelectOrganizationType: (type: OrganizationType) => void;
   formData: WizardFormData;
@@ -52,11 +52,12 @@ function TypeCard({ title, selected, onClick }: TypeCardProps) {
   );
 }
 
-export function WizardSingUp({
+export function WizardSignUp({
   organizationType,
   onSelectOrganizationType,
   errors,
-}: WizardSingUpProps) {
+}: WizardSignUpProps) {
+  const { loginWithRedirect } = useAuth0();
   return (
     <div>
       <div className="flex items-center w-full justify-center py-4 mx-auto max-w-xl">
@@ -69,13 +70,19 @@ export function WizardSingUp({
         <TypeCard
           title="Cadastro como ONG"
           selected={organizationType === "npo"}
-          onClick={() => onSelectOrganizationType("npo")}
+          onClick={() => {
+            console.log("WizardSignUp: selected npo");
+            onSelectOrganizationType("npo");
+          }}
         />
 
         <TypeCard
           title="Cadastro como Empresa"
           selected={organizationType === "enterprise"}
-          onClick={() => onSelectOrganizationType("enterprise")}
+          onClick={() => {
+            console.log("WizardSignUp: selected enterprise");
+            onSelectOrganizationType("enterprise");
+          }}
         />
 
         {errors.organizationType && (
@@ -86,11 +93,17 @@ export function WizardSingUp({
       </div>
 
       <div className="flex items-center w-full justify-center py-8 mx-auto max-w-xl">
-        <Link to="/Login">
-          <a className="text-vinculo-dark text-x -webkit-font-smoothing hover:underline">
-            Já tenho login
-          </a>
-        </Link>
+        <button
+          type="button"
+          onClick={() =>
+            void loginWithRedirect({
+              authorizationParams: { ui_locales: "pt-BR" },
+            })
+          }
+          className="text-vinculo-dark text-sm hover:underline"
+        >
+          Já tenho login
+        </button>
       </div>
     </div>
   );

@@ -13,9 +13,11 @@ import com.vinculohub.backend.model.enums.NpoSize;
 import com.vinculohub.backend.model.enums.UserType;
 import com.vinculohub.backend.repository.UserRepository;
 import java.util.Locale;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 public class NpoAccountService {
 
@@ -43,13 +45,18 @@ public class NpoAccountService {
 
     @Transactional(rollbackFor = Exception.class)
     public NpoInstitutionalSignupResponse registerInstitutionalAccount(
-            NpoInstitutionalSignupRequest request) {
+            String auth0Id, String auth0Email, NpoInstitutionalSignupRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("Os dados do cadastro são obrigatórios.");
         }
 
+        String normalizedAuth0Id = requireText(auth0Id, "Identidade Auth0 é obrigatória.");
         String name = requireText(request.name(), "Nome da instituição é obrigatório.");
-        String email = normalizeEmail(request.email());
+        String email = normalizeEmail(firstPresent(auth0Email, request.email()));
+
+        if (userRepository.existsByAuth0Id(normalizedAuth0Id)) {
+            throw new DuplicateLoginException("Já existe uma conta cadastrada para este login.");
+        }
 
         if (userRepository.existsByEmailIgnoreCase(email)) {
             throw new DuplicateLoginException("Já existe uma conta cadastrada com este e-mail.");
@@ -62,7 +69,12 @@ public class NpoAccountService {
 
         User savedUser =
                 userRepository.save(
-                        User.builder().name(name).email(email).userType(UserType.npo).build());
+                        User.builder()
+                                .name(name)
+                                .email(email)
+                                .auth0Id(normalizedAuth0Id)
+                                .userType(UserType.npo)
+                                .build());
 
         Npo npo =
                 Npo.builder()
@@ -94,6 +106,11 @@ public class NpoAccountService {
         return requireText(value, "E-mail é obrigatório.").toLowerCase(Locale.ROOT);
     }
 
+    private static String firstPresent(String first, String second) {
+        String normalizedFirst = trimToNull(first);
+        return normalizedFirst == null ? second : normalizedFirst;
+    }
+
     private static String requireText(String value, String message) {
         String normalized = trimToNull(value);
         if (normalized == null) {
@@ -116,7 +133,7 @@ public class NpoAccountService {
 
         return switch (normalized) {
             case "small", "pequena" -> NpoSize.small;
-            case "medium", "media", "média" -> NpoSize.medium;
+            case "medium", "media" -> NpoSize.medium;
             case "large", "grande" -> NpoSize.large;
             default -> throw new IllegalArgumentException("Porte da ONG inválido.");
         };

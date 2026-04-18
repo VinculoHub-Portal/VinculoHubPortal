@@ -48,6 +48,7 @@ class NpoAccountServiceTest {
     void shouldRegisterUserAndNpoAccount() {
         NpoInstitutionalSignupRequest request = validRequest();
 
+        when(userRepository.existsByAuth0Id("auth0|npo")).thenReturn(false);
         when(userRepository.existsByEmailIgnoreCase("contato@ong.org")).thenReturn(false);
         when(userRepository.save(any(User.class)))
                 .thenAnswer(
@@ -87,7 +88,8 @@ class NpoAccountServiceTest {
                         });
 
         NpoInstitutionalSignupResponse response =
-                npoAccountService.registerInstitutionalAccount(request);
+                npoAccountService.registerInstitutionalAccount(
+                        "auth0|npo", " Contato@ONG.org ", request);
 
         verify(projectValidationService).validateFirstProject(request.firstProject());
         verify(projectService).createFirstProject(any(Npo.class), eq(request.firstProject()));
@@ -112,6 +114,7 @@ class NpoAccountServiceTest {
         User savedUser = userCaptor.getValue();
         assertEquals("ONG Exemplo", savedUser.getName());
         assertEquals("contato@ong.org", savedUser.getEmail());
+        assertEquals("auth0|npo", savedUser.getAuth0Id());
         assertEquals(UserType.npo, savedUser.getUserType());
 
         Npo savedNpo = npoCaptor.getValue();
@@ -140,11 +143,14 @@ class NpoAccountServiceTest {
     @DisplayName("Deve bloquear login duplicado antes de salvar qualquer entidade")
     void shouldRejectDuplicateLogin() {
         NpoInstitutionalSignupRequest request = validRequest();
+        when(userRepository.existsByAuth0Id("auth0|npo")).thenReturn(false);
         when(userRepository.existsByEmailIgnoreCase("contato@ong.org")).thenReturn(true);
 
         assertThrows(
                 DuplicateLoginException.class,
-                () -> npoAccountService.registerInstitutionalAccount(request));
+                () ->
+                        npoAccountService.registerInstitutionalAccount(
+                                "auth0|npo", " Contato@ONG.org ", request));
 
         verify(userRepository, never()).save(any());
         verify(npoService, never()).saveWithAddress(any(), any());
@@ -157,7 +163,10 @@ class NpoAccountServiceTest {
         assertNotNull(
                 NpoAccountService.class
                         .getMethod(
-                                "registerInstitutionalAccount", NpoInstitutionalSignupRequest.class)
+                                "registerInstitutionalAccount",
+                                String.class,
+                                String.class,
+                                NpoInstitutionalSignupRequest.class)
                         .getAnnotation(Transactional.class));
     }
 
