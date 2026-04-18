@@ -6,7 +6,7 @@ import type {
   WizardFormData,
 } from "../../types/wizard.types";
 
-type WizardSingUpProps = {
+type WizardSignUpProps = {
   organizationType: OrganizationType | null;
   onSelectOrganizationType: (type: OrganizationType) => void;
   formData: WizardFormData;
@@ -52,11 +52,11 @@ function TypeCard({ title, selected, onClick }: TypeCardProps) {
   );
 }
 
-export function WizardSingUp({
+export function WizardSignUp({
   organizationType,
   onSelectOrganizationType,
   errors,
-}: WizardSingUpProps) {
+}: WizardSignUpProps) {
   const { loginWithRedirect } = useAuth0();
   return (
     <div>

@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import InfoTab from './InfoTab'
+import { InfoTab } from './InfoTab'
 
 describe('InfoTab', () => {
   beforeEach(() => {

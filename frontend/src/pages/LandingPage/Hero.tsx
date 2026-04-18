@@ -1,5 +1,5 @@
 import { BaseButton } from "../../components/general/BaseButton"
-import HeroIcon from "../../assets/landingPage/HeroIcon.tsx"
+import { HeroIcon } from "../../assets/LandingPage/HeroIcon"
 
 export function Hero() {
   return (

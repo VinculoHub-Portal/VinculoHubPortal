@@ -1,12 +1,12 @@
 
 import { BrowserRouter, Routes, Route } from "react-router-dom"
-import LandingPage from "../pages/LandingPage/"
-import ComponentsPage from "../pages/ComponentsPage"
-import RegisterPage from "../pages/RegisterPage"
+import { LandingPage } from "../pages/LandingPage"
+import { ComponentsPage } from "../pages/ComponentsPage"
+import { RegisterPage } from "../pages/RegisterPage"
 import { AuthRoleRedirect } from "../components/auth/AuthRoleRedirect"
 import { ProtectedRoute } from "../components/auth/ProtectedRoute"
 import { RoleHomePage } from "../pages/RoleHomePage"
-import CompanyRegistrationPage from "../pages/company/registration"
+import { CompanyRegistrationPage } from "../pages/CompanyRegistration/registration"
 
 export const AppRouter = () => (
   <BrowserRouter>

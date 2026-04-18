@@ -1,11 +1,12 @@
 import { useEffect } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import { Input } from "../general/SimpleTextInput";
+import { Input } from "../general/Input";
 import { AddressIcon, StateIcon, PhoneIcon } from "../icons";
 import { useZipCode } from "../../hooks/useZipCode";
 import { formatZipCode } from "../../utils/formatZipCode";
 import { InfoBox } from "../general/InfoBox";
 import type { FieldErrors, WizardFormData } from "../../types/wizard.types";
+import { getApiErrorMessage } from "../../utils/logger";
 
 type NpoStepFourProps = {
   formData: WizardFormData;
@@ -78,7 +79,7 @@ export function NpoStepFour({ formData, setFormData, errors }: NpoStepFourProps)
           )}
           {zipCodeQueryError && (
             <span className="text-sm text-error">
-              {(zipCodeQueryError as Error).message || "Erro ao consultar o CEP. Tente novamente."}
+              {getApiErrorMessage(zipCodeQueryError, "CEP não encontrado. Verifique e tente novamente.")}
             </span>
           )}
         </div>
@@ -94,7 +95,7 @@ export function NpoStepFour({ formData, setFormData, errors }: NpoStepFourProps)
               onChange={handleChange}
               icon={<AddressIcon />}
               iconPosition="left"
-              disabled
+              disabled={!!zipCodeData}
             />
           </div>
           <Input
@@ -131,7 +132,7 @@ export function NpoStepFour({ formData, setFormData, errors }: NpoStepFourProps)
             onChange={handleChange}
             icon={<StateIcon />}
             iconPosition="left"
-            disabled
+            disabled={!!zipCodeData}
           />
         </div>
 
@@ -145,7 +146,7 @@ export function NpoStepFour({ formData, setFormData, errors }: NpoStepFourProps)
             onChange={handleChange}
             icon={<StateIcon />}
             iconPosition="left"
-            disabled
+            disabled={!!zipCodeData}
           />
           <Input
             label="UF"
@@ -156,7 +157,7 @@ export function NpoStepFour({ formData, setFormData, errors }: NpoStepFourProps)
             onChange={handleChange}
             icon={<StateIcon />}
             iconPosition="left"
-            disabled
+            disabled={!!zipCodeData}
           />
         </div>
 
