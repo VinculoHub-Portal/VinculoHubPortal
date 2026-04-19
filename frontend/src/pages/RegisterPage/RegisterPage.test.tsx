@@ -5,6 +5,12 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RegisterPage } from "./index";
+import {
+  selectNpoAndProceed,
+  fillCredentialsAndProceed,
+  fillInstitutionStepAndProceedFlexible,
+  fillContactStepAndProceed,
+} from "./test-utils";
 
 // Mock Auth0 hook so it doesn't try to open real login
 vi.mock("@auth0/auth0-react", () => ({
@@ -47,46 +53,7 @@ function renderWithProviders() {
   );
 }
 
-// Helpers
-async function selectNpoAndProceed(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole("button", { name: /Cadastro como ONG/i }));
-  await user.click(screen.getByRole("button", { name: /Próximo/i }));
-}
-
-async function fillCredentialsAndProceed(
-  user: ReturnType<typeof userEvent.setup>,
-) {
-  await user.type(await screen.findByLabelText(/E-mail/i), "test@example.com");
-  await user.type(screen.getByLabelText(/^Senha\s*\*?$/i), "Abcd1234");
-  await user.type(screen.getByLabelText(/Confirmar senha/i), "Abcd1234");
-  await user.click(screen.getByRole("button", { name: /Próximo/i }));
-}
-
-async function fillInstitutionStepAndProceed(
-  user: ReturnType<typeof userEvent.setup>,
-) {
-  await user.type(
-    await screen.findByLabelText(/Nome da Instituição/i),
-    "Instituição Teste",
-  );
-  await user.type(
-    screen.getByLabelText(/CPF do Responsável/i),
-    "529.982.247-25",
-  );
-  await user.selectOptions(screen.getByLabelText(/Tamanho/i), "small");
-  await user.click(screen.getByRole("button", { name: /Ambiental/i })); // required by validateEsgField
-  await user.type(screen.getByLabelText(/Resumo Institucional/i), "Resumo.");
-  await user.click(screen.getByRole("button", { name: /Próximo/i }));
-}
-
-async function fillContactStepAndProceed(
-  user: ReturnType<typeof userEvent.setup>,
-) {
-  await user.type(await screen.findByLabelText(/CEP/i), "01310-100");
-  await user.type(screen.getByLabelText(/Número/i), "123");
-  await user.type(screen.getByLabelText(/Telefone/i), "(11) 91234-5678");
-  await user.click(screen.getByRole("button", { name: /Próximo/i }));
-}
+// Helpers moved to test-utils.tsx
 
 describe("RegisterPage — legacy suite aligned to current Steps", () => {
   beforeEach(() => {
@@ -118,7 +85,7 @@ describe("RegisterPage — legacy suite aligned to current Steps", () => {
     renderWithProviders();
     await selectNpoAndProceed(user);
     await fillCredentialsAndProceed(user);
-    await fillInstitutionStepAndProceed(user);
+    await fillInstitutionStepAndProceedFlexible(user);
     expect(await screen.findByLabelText(/CEP/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Número/i)).toBeInTheDocument();
   });
@@ -128,7 +95,7 @@ describe("RegisterPage — legacy suite aligned to current Steps", () => {
     renderWithProviders();
     await selectNpoAndProceed(user);
     await fillCredentialsAndProceed(user);
-    await fillInstitutionStepAndProceed(user);
+    await fillInstitutionStepAndProceedFlexible(user);
     await fillContactStepAndProceed(user);
     expect(
       await screen.findByLabelText(/Nome do Projeto/i),
@@ -140,7 +107,7 @@ describe("RegisterPage — legacy suite aligned to current Steps", () => {
     renderWithProviders();
     await selectNpoAndProceed(user);
     await fillCredentialsAndProceed(user);
-    await fillInstitutionStepAndProceed(user);
+    await fillInstitutionStepAndProceedFlexible(user);
     await fillContactStepAndProceed(user);
 
     await user.type(

@@ -9,12 +9,6 @@ function onlyDigits(value: string): string {
   return value.replace(/\D/g, "");
 }
 
-{
-  /*function hasSameDigits(value: string): boolean {
-  return /^(\d)\1+$/.test(value);
-}*/
-}
-
 function mergeErrors(...errorsList: FieldErrors[]): FieldErrors {
   return errorsList.reduce((acc, current) => ({ ...acc, ...current }), {});
 }

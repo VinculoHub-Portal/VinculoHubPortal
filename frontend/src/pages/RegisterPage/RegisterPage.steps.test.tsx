@@ -5,6 +5,12 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RegisterPage } from "./index";
+import {
+  selectNpoAndProceed,
+  fillCredentialsAndProceed,
+  fillInstitutionStepAndProceedFlexible,
+  fillContactStepAndProceed,
+} from "./test-utils";
 
 vi.mock("@auth0/auth0-react", () => ({
   useAuth0: () => ({
@@ -47,56 +53,6 @@ function renderWithProviders() {
   );
 }
 
-async function selectNpoAndProceed(user: ReturnType<typeof userEvent.setup>) {
-  const npoButton = screen.getByRole("button", { name: /Cadastro como ONG/i });
-  await user.click(npoButton);
-  await user.click(screen.getByRole("button", { name: /Próximo/i }));
-}
-
-async function fillCredentialsAndProceed(
-  user: ReturnType<typeof userEvent.setup>,
-) {
-  await user.type(await screen.findByLabelText(/E-mail/i), "test@example.com");
-  await user.type(screen.getByLabelText(/^Senha\s*\*?$/i), "Abcd1234");
-  await user.type(screen.getByLabelText(/Confirmar senha/i), "Abcd1234");
-  await user.click(screen.getByRole("button", { name: /Próximo/i }));
-}
-
-async function fillInstitutionStepAndProceed(
-  user: ReturnType<typeof userEvent.setup>,
-) {
-  await user.type(
-    await screen.findByLabelText(/Nome da Instituição/i),
-    "Instituição Teste",
-  );
-  await user.type(
-    screen.getByLabelText(/CPF do Responsável/i),
-    "529.982.247-25",
-  );
-  await user.selectOptions(
-    screen.getByLabelText(/Tamanho/i) as HTMLSelectElement,
-    "small",
-  );
-  // ESG is optional, but we can select one for completeness
-  await user.click(screen.getByRole("button", { name: /Ambiental/i }));
-  await user.type(screen.getByLabelText(/Resumo Institucional/i), "Resumo.");
-  await user.click(screen.getByRole("button", { name: /Próximo/i }));
-}
-
-async function fillContactStepAndProceed(
-  user: ReturnType<typeof userEvent.setup>,
-) {
-  await user.type(await screen.findByLabelText(/CEP/i), "01310-100");
-  // Wait for ZIP lookup to complete and fields to be disabled
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  await user.type(screen.getByLabelText(/Número/i), "123");
-
-  await user.type(screen.getByLabelText(/Telefone/i), "(11) 91234-5678");
-
-  await user.click(screen.getByRole("button", { name: /Próximo/i }));
-}
-
 describe("RegisterPage — per-step tests (NPO flow)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -128,16 +84,73 @@ describe("RegisterPage — per-step tests (NPO flow)", () => {
     expect(screen.getByLabelText(/Tamanho/i)).toBeInTheDocument();
   });
 
-  it("Step 3: accepts institution data and advances to step 4 (contact)", async () => {
+  it("Step 3: accepts institution data (CPF only) and advances to step 4 (contact)", async () => {
     const user = userEvent.setup();
     renderWithProviders();
 
     await selectNpoAndProceed(user);
     await fillCredentialsAndProceed(user);
-    await fillInstitutionStepAndProceed(user);
+    await fillInstitutionStepAndProceedFlexible(user);
 
     expect(await screen.findByLabelText(/CEP/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Número/i)).toBeInTheDocument();
+  });
+
+  it("Step 3: NPO success with CNPJ only", async () => {
+    const user = userEvent.setup();
+    renderWithProviders();
+
+    await selectNpoAndProceed(user);
+    await fillCredentialsAndProceed(user);
+    await fillInstitutionStepAndProceedFlexible(user, {
+      cnpj: "11.444.777/0001-61",
+    });
+    await fillContactStepAndProceed(user);
+
+    await user.type(
+      await screen.findByLabelText(/Nome do Projeto/i),
+      "Projeto CNPJ",
+    );
+    await user.type(
+      screen.getByLabelText(/Descrição do Projeto/i),
+      "Descrição válida de projeto",
+    );
+    await user.click(screen.getByLabelText(/ODS/i));
+    await user.click(screen.getByText(/ODS 1 - Erradicação da Pobreza/i));
+    await user.click(screen.getByRole("button", { name: /Finalizar/i }));
+
+    expect(
+      await screen.findByRole("button", { name: /Continuar/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("Step 3: NPO success with CPF + CNPJ", async () => {
+    const user = userEvent.setup();
+    renderWithProviders();
+
+    await selectNpoAndProceed(user);
+    await fillCredentialsAndProceed(user);
+    await fillInstitutionStepAndProceedFlexible(user, {
+      cpf: "529.982.247-25",
+      cnpj: "11.444.777/0001-61",
+    });
+    await fillContactStepAndProceed(user);
+
+    await user.type(
+      await screen.findByLabelText(/Nome do Projeto/i),
+      "Projeto Completo",
+    );
+    await user.type(
+      screen.getByLabelText(/Descrição do Projeto/i),
+      "Descrição válida de projeto",
+    );
+    await user.click(screen.getByLabelText(/ODS/i));
+    await user.click(screen.getByText(/ODS 2 - Fome Zero/i));
+    await user.click(screen.getByRole("button", { name: /Finalizar/i }));
+
+    expect(
+      await screen.findByText(/Você será redirecionado/i),
+    ).toBeInTheDocument();
   });
 
   it("Step 4: advances to step 5 (project form)", async () => {
@@ -146,7 +159,7 @@ describe("RegisterPage — per-step tests (NPO flow)", () => {
 
     await selectNpoAndProceed(user);
     await fillCredentialsAndProceed(user);
-    await fillInstitutionStepAndProceed(user);
+    await fillInstitutionStepAndProceedFlexible(user);
     await fillContactStepAndProceed(user);
 
     expect(
@@ -162,7 +175,7 @@ describe("RegisterPage — per-step tests (NPO flow)", () => {
 
     await selectNpoAndProceed(user);
     await fillCredentialsAndProceed(user);
-    await fillInstitutionStepAndProceed(user);
+    await fillInstitutionStepAndProceedFlexible(user);
     await fillContactStepAndProceed(user);
 
     await user.type(
