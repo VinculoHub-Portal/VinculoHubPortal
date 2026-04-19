@@ -1,4 +1,6 @@
 import type { FieldErrors, StepValidator } from "../types/wizard.types";
+import { validateCpf } from "./validateCpf";
+import { validateCnpj } from "./validateCnpj";
 
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const PASSWORD_REGEX = /^(?=.*[A-Za-zÀ-ÿ])(?=.*\d).{8,}$/;
@@ -7,58 +9,10 @@ function onlyDigits(value: string): string {
   return value.replace(/\D/g, "");
 }
 
-function hasSameDigits(value: string): boolean {
+{
+  /*function hasSameDigits(value: string): boolean {
   return /^(\d)\1+$/.test(value);
-}
-
-function isValidCpf(value: string): boolean {
-  const digits = onlyDigits(value);
-
-  if (digits.length !== 11 || hasSameDigits(digits)) {
-    return false;
-  }
-
-  let sum = 0;
-  for (let index = 0; index < 9; index += 1) {
-    sum += Number(digits[index]) * (10 - index);
-  }
-
-  const firstDigit = (sum * 10) % 11;
-  if ((firstDigit === 10 ? 0 : firstDigit) !== Number(digits[9])) {
-    return false;
-  }
-
-  sum = 0;
-  for (let index = 0; index < 10; index += 1) {
-    sum += Number(digits[index]) * (11 - index);
-  }
-
-  const secondDigit = (sum * 10) % 11;
-  return (secondDigit === 10 ? 0 : secondDigit) === Number(digits[10]);
-}
-
-function isValidCnpj(value: string): boolean {
-  const digits = onlyDigits(value);
-
-  if (digits.length !== 14 || hasSameDigits(digits)) {
-    return false;
-  }
-
-  const calculateDigit = (weights: number[]) => {
-    const sum = weights.reduce(
-      (total, weight, index) => total + Number(digits[index]) * weight,
-      0,
-    );
-    const remainder = sum % 11;
-    return remainder < 2 ? 0 : 11 - remainder;
-  };
-
-  const firstDigit = calculateDigit([5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
-  const secondDigit = calculateDigit([6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
-
-  return (
-    firstDigit === Number(digits[12]) && secondDigit === Number(digits[13])
-  );
+}*/
 }
 
 function mergeErrors(...errorsList: FieldErrors[]): FieldErrors {
@@ -154,8 +108,8 @@ export const validateSizeField: StepValidator = (data) => {
 
 export const validateNpoSizeField: StepValidator = (data) => {
   const errors: FieldErrors = {};
-  if (!data.porteOng) {
-    errors.porteOng = "Selecione o porte da ONG.";
+  if (!data.npoSize) {
+    errors.npoSize = "Selecione o porte da ONG.";
   }
   return errors;
 };
@@ -172,8 +126,11 @@ export const validateSignupStep: StepValidator = (_data, context) => {
 
 export const validateCpfField: StepValidator = (data) => {
   const errors: FieldErrors = {};
+  const digits = data.cpf.replace(/\D/g, "");
 
-  if (!isValidCpf(data.cpf)) {
+  if (!digits) {
+    errors.cpf = "Informe o CPF.";
+  } else if (!validateCpf(data.cpf)) {
     errors.cpf = "Informe um CPF válido.";
   }
 
@@ -182,34 +139,10 @@ export const validateCpfField: StepValidator = (data) => {
 
 export const validateCnpjField: StepValidator = (data) => {
   const errors: FieldErrors = {};
+  const digits = data.cnpj.replace(/\D/g, "");
 
-  if (!data.cnpj.trim()) {
-    errors.cnpj = "Informe o CNPJ.";
-  }
-
-  return errors;
-};
-
-export const validateCpfOrCnpjField: StepValidator = (data) => {
-  const errors: FieldErrors = {};
-
-  const cpfDigits = data.cpf.replace(/\D/g, "");
-  const cnpjDigits = data.cnpj.replace(/\D/g, "");
-
-  const hasCpf = cpfDigits.length > 0;
-  const hasCnpj = cnpjDigits.length > 0;
-
-  if (!hasCpf && !hasCnpj) {
-    errors.cpf = "Informe o CPF ou o CNPJ.";
-    return errors;
-  }
-
-  if (hasCpf && !isValidCpf(data.cpf)) {
-    errors.cpf = "CPF inválido.";
-  }
-
-  if (hasCnpj && !isValidCnpj(data.cnpj)) {
-    errors.cnpj = "CNPJ inválido.";
+  if (digits.length > 0 && !validateCnpj(data.cnpj)) {
+    errors.cnpj = "Informe um CNPJ válido.";
   }
 
   return errors;
@@ -219,18 +152,30 @@ export const validateOptionalCnpjField: StepValidator = (data) => {
   const errors: FieldErrors = {};
   const digits = onlyDigits(data.cnpj);
 
-  if (digits.length > 0 && !isValidCnpj(data.cnpj)) {
+  if (digits.length > 0 && !validateCnpj(data.cnpj)) {
     errors.cnpj = "Informe um CNPJ válido.";
   }
 
   return errors;
 };
 
-export const validatePorteOngField: StepValidator = (data) => {
+export const validateCpfOrCnpjField: StepValidator = (data) => {
   const errors: FieldErrors = {};
+  const cpfDigits = data.cpf.replace(/\D/g, "");
+  const cnpjDigits = data.cnpj.replace(/\D/g, "");
 
-  if (!data.porteOng) {
-    errors.porteOng = "Selecione o porte da ONG.";
+  // at least one required
+  if (!cpfDigits && !cnpjDigits) {
+    errors.cpf = "Informe o CPF ou o CNPJ.";
+    return errors;
+  }
+
+  if (cpfDigits && !validateCpf(data.cpf)) {
+    errors.cpf = "Informe um CPF válido.";
+  }
+
+  if (cnpjDigits && !validateCnpj(data.cnpj)) {
+    errors.cnpj = "Informe um CNPJ válido.";
   }
 
   return errors;
@@ -263,6 +208,62 @@ export const validateStreetNumberField: StepValidator = (data) => {
   return errors;
 };
 
+export const validateProjectName: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+  const name = data.nomeProjeto?.trim() || "";
+
+  if (!name) {
+    errors.nomeProjeto = "Informe o nome do projeto.";
+  } else if (name.length < 3) {
+    errors.nomeProjeto = "O nome do projeto deve ter no mínimo 3 caracteres.";
+  } else if (name.length > 100) {
+    errors.nomeProjeto = "O nome do projeto deve ter no máximo 100 caracteres.";
+  }
+
+  return errors;
+};
+
+export const validateProjectDescription: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+  const description = data.description?.trim() || "";
+
+  if (!description) {
+    errors.description = "Informe a descrição do projeto.";
+  } else if (description.length < 10) {
+    errors.description = "A descrição deve ter no mínimo 10 caracteres.";
+  } else if (description.length > 500) {
+    errors.description = "A descrição deve ter no máximo 500 caracteres.";
+  }
+
+  return errors;
+};
+
+export const validateProjectCapital: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+
+  if (
+    data.capital !== undefined &&
+    data.capital !== null &&
+    data.capital !== 0
+  ) {
+    if (typeof data.capital === "number" && data.capital < 0) {
+      errors.capital = "A meta de captação não pode ser negativa.";
+    }
+  }
+
+  return errors;
+};
+
+export const validateProjectODS: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+
+  if (!data.ods || data.ods.length === 0) {
+    errors.ods = "Selecione pelo menos uma ODS.";
+  }
+
+  return errors;
+};
+
 {
   /* Steps individuais com seus determinados validadores
      Se um step tiver um validador, que não é exportado para a tela, o step não vai prosseguir, pois requer determinada validação.
@@ -278,7 +279,7 @@ export const validateNpoStepTwo = composeValidators(
 export const validateNpoStepThree = composeValidators(
   validateInstitutionName,
   validateCpfOrCnpjField,
-  validatePorteOngField,
+  validateNpoSizeField,
   validateEsgField,
 );
 
@@ -286,8 +287,13 @@ export const validateNpoStepFour = composeValidators(
   validateZipCodeField,
   validateStreetNumberField,
 );
-
-export const validateNpoStepFive = composeValidators /*Primeiro Projeto*/();
+/*Primeiro Projeto*/
+export const validateNpoStepFive = composeValidators(
+  validateProjectName,
+  validateProjectDescription,
+  validateProjectCapital,
+  validateProjectODS,
+);
 
 export const validateEnterpriseStepTwo = composeValidators(validateCnpjField);
 

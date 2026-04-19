@@ -2,8 +2,6 @@ import type { Dispatch, SetStateAction } from "react";
 import { Input } from "../../../components/general/Input";
 import type { FieldErrors, WizardFormData } from "../../../types/wizard.types";
 
-export function EnterpriseRegisteringStep2() {}
-
 type NPORegisteringStep2Props = {
   formData: WizardFormData;
   setFormData: Dispatch<SetStateAction<WizardFormData>>;

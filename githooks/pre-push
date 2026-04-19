@@ -9,6 +9,7 @@ REMOTE_REF=$(git rev-parse --abbrev-ref @{upstream} 2>/dev/null || echo "origin/
 CHANGED_FILES=$(git diff --name-only "$REMOTE_REF"...HEAD 2>/dev/null || git diff --name-only HEAD~1 HEAD 2>/dev/null || true)
 
 BACKEND_CHANGED=$(echo "$CHANGED_FILES" | grep -c "^backend/" || true)
+FRONTEND_CHANGED=$(echo "$CHANGED_FILES" | grep -c "^frontend/" || true)
 
 if [ "$BACKEND_CHANGED" -gt 0 ]; then
     start_time=$(date +%s)
@@ -38,6 +39,30 @@ if [ "$BACKEND_CHANGED" -gt 0 ]; then
 else
     printf '─%.0s' {1..60}; echo
     echo "⏭️  Backend: No changes, skipping..."
+fi
+
+# Frontend tests
+if [ "$FRONTEND_CHANGED" -gt 0 ]; then
+    start_time=$(date +%s)
+    printf '─%.0s' {1..60}; echo
+    echo "Running frontend tests..."
+
+    cd "$ROOT_DIR/frontend"
+
+    # Run the frontend test script. The "--" forwards the --run flag to the underlying test runner (vitest).
+    # This executes tests once instead of starting the watch mode.
+    if ! npm --prefix "$ROOT_DIR/frontend" test -- --run --silent; then
+        echo "❌ Frontend: tests failed. Fix the failing tests and push again."
+        exit 1
+    fi
+
+    end_time=$(date +%s)
+    elapsed=$(( end_time - start_time ))
+    echo "✅ Frontend: OK"
+    echo "Execution time: ${elapsed}s"
+else
+    printf '─%.0s' {1..60}; echo
+    echo "⏭️  Frontend: No changes, skipping..."
 fi
 
 printf '─%.0s' {1..60}; echo

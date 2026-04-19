@@ -7,8 +7,6 @@ import type {
 } from "../../../types/wizard.types";
 import { MultiSelect } from "../../../components/general/MultiSelect";
 
-export function EnterpriseRegisteringStep5() {}
-
 type NPORegisteringStep5Props = {
   formData: WizardFormData;
   setFormData: Dispatch<SetStateAction<WizardFormData>>;

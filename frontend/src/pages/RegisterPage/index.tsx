@@ -63,10 +63,22 @@ function NpoStepThree({
     </div>
   );
 }
-function NpoStepFour() {
+function NpoStepFour({
+  formData,
+  setFormData,
+  errors,
+}: {
+  formData: WizardFormData;
+  setFormData: React.Dispatch<React.SetStateAction<WizardFormData>>;
+  errors: FieldErrors;
+}) {
   return (
     <div>
-      <NPORegisteringStep4 />
+      <NPORegisteringStep4
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+      />
     </div>
   );
 }
@@ -124,15 +136,23 @@ const npoSignupDraftKey = "vinculohub:npo-signup-draft";
 
 const emptyFormData: WizardFormData = {
   nomeInstituicao: "",
+  nomeProjeto: "",
   email: "",
   senha: "",
   confirmarSenha: "",
   cnpj: "",
   razaoSocial: "",
   cpf: "",
-  porteOng: "",
+  npoSize: "",
+  npo_size: "",
   resumoInstitucional: "",
+  description: "",
   esg: [],
+  ods: [],
+  environmental: false,
+  social: false,
+  governance: false,
+  capital: 0,
   zipCode: "",
   street: "",
   streetNumber: "",
@@ -188,13 +208,24 @@ function getSteps({
   if (organizationType === "npo") {
     return [
       commonFirstStep,
+      <NpoStepTwo
+        key="npo-step-2"
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+      />,
       <NpoStepThree
         key="npo-step-3"
         formData={formData}
         setFormData={setFormData}
         errors={errors}
       />,
-      <NpoStepFour key="npo-step-4" />,
+      <NpoStepFour
+        key="npo-step-4"
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+      />,
       <NpoStepFive
         key="npo-step-5"
         formData={formData}
