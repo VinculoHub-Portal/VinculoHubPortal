@@ -289,7 +289,7 @@ export const validateNpoStepFive = composeValidators(
   validateProjectODS,
 );
 
-export const validateEnterpriseStepTwo = composeValidators(validateCnpjField);
+export const validateEnterpriseStepTwo = composeValidators();
 
 export const validateEnterpriseStepThree = composeValidators();
 

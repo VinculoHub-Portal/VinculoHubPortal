@@ -27,7 +27,6 @@ export function CpfInput({
   disabled = false,
   className,
 }: CpfInputProps) {
-  // we keep debounced in case you want to extend with lookup later
   useDebouncedValue(value, 300);
 
   useEffect(() => {

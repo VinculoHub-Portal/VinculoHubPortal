@@ -31,7 +31,7 @@ const companySignupDraftKey = "vinculohub:company-signup-draft";
 
 const LOG = "CompanyRegistration";
 
-export function CompanyRegistrationPage() {
+export default function CompanyRegistrationPage() {
   const { loginWithRedirect } = useAuth0();
   const navigate = useNavigate();
   const [currentStep, _setCurrentStep] = useState(2);
@@ -55,6 +55,9 @@ export function CompanyRegistrationPage() {
     description: "",
     cnpj: "",
   });
+
+  // const [logoFile, setLogoFile] = useState<File | null>(null);
+  // const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   const [cnpjError, setCnpjError] = useState("");
 
@@ -376,6 +379,20 @@ export function CompanyRegistrationPage() {
 
         {currentStep === 2 && (
           <form className="flex flex-col gap-4" onSubmit={handleStepTwoSubmit}>
+            {/*
+              <LogoUpload
+              label="Logo da Empresa"
+              preview={logoPreview}
+              onChange={(file, previewUrl) => {
+                setLogoFile(file);
+                setLogoPreview(previewUrl);
+              }}
+              onRemove={() => {
+                setLogoFile(null);
+                setLogoPreview(null);
+              }}
+              />
+              */}
             <div className="flex flex-col gap-1">
               <Input
                 label="CNPJ"
@@ -390,7 +407,7 @@ export function CompanyRegistrationPage() {
                   (cnpjQueryError
                     ? getApiErrorMessage(
                         cnpjQueryError,
-                        "CNPJ não encontrado. Verifique e tente novamente.",
+                        "Erro ao consultar CNPJ. Tente novamente.",
                       )
                     : "")
                 }
@@ -486,7 +503,7 @@ export function CompanyRegistrationPage() {
                 <span className="text-sm text-error">
                   {getApiErrorMessage(
                     zipCodeQueryError,
-                    "CEP não encontrado. Verifique e tente novamente.",
+                    "Erro ao consultar CEP. Tente novamente.",
                   )}
                 </span>
               )}
@@ -665,6 +682,7 @@ export function CompanyRegistrationPage() {
           <RegistrationSummary
             entityName={basicInfo.tradeName || basicInfo.name}
             entitySubtitle={basicInfo.cnpj}
+            // entityIcon={<CompanyIcon sx={{ fontSize: 36 }} className="text-vinculo-green" />}
             completedSteps={5}
             totalSteps={5}
             sections={[

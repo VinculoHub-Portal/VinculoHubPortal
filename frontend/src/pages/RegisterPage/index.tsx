@@ -18,12 +18,6 @@ import { NPORegisteringStep3 } from "./Steps/Step3";
 import { NPORegisteringStep4 } from "./Steps/Step4";
 import { NPORegisteringStep5 } from "./Steps/Step5";
 
-{
-  /* NPO Steps
-  Agora são chamados diretamente no return!
-  */
-}
-
 function NpoStepTwo({
   formData,
   setFormData,
@@ -144,14 +138,10 @@ const emptyFormData: WizardFormData = {
   razaoSocial: "",
   cpf: "",
   npoSize: "",
-  npo_size: "",
   resumoInstitucional: "",
   description: "",
   esg: [],
   ods: [],
-  environmental: false,
-  social: false,
-  governance: false,
   capital: 0,
   zipCode: "",
   street: "",
@@ -244,24 +234,19 @@ function getSteps({
   ];
 }
 
-export function RegisterPage() {
+export default function RegisterPage() {
   const { loginWithRedirect } = useAuth0();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [organizationType, setOrganizationType] =
     useState<OrganizationType | null>(null);
 
-  // --- NEW: stable handler that selects organization type and resets step ---
   const handleSelectOrganizationType = (type: OrganizationType) => {
     setOrganizationType(type);
-    // ensure we start at step 1 for the selected flow
     setCurrentStep(1);
-    // clear validation errors when switching flows
     setErrors({});
-    // optional debug:
     console.log("handleSelectOrganizationType ->", { type, currentStep: 1 });
   };
-  // --- END NEW ---
 
   const [formData, setFormData] = useState<WizardFormData>({
     ...emptyFormData,

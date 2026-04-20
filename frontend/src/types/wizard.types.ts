@@ -21,7 +21,6 @@ export type WizardFormData = {
   governance: boolean;
   capital: number;
   npoSize: "" | "small" | "medium" | "large";
-  //porteOng: "" | "pequena" | "media" | "grande";
   resumoInstitucional: string;
   esg: WizardEsgOption[];
   zipCode: string;

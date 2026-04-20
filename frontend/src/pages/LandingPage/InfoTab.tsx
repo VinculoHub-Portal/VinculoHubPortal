@@ -1,8 +1,8 @@
-import { FeatureCard } from "./FeatureCard"
-import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined"
-import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined"
+import { FeatureCard } from "./FeatureCard";
+import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
+import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
 
-export function InfoTab() {
+export default function InfoTab() {
   return (
     <div className="h-screen bg-surface flex flex-col">
       <main className="flex flex-col items-center text-center px-6">
@@ -58,5 +58,5 @@ export function InfoTab() {
         </div>
       </main>
     </div>
-  )
+  );
 }
