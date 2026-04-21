@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ public class CompanyController {
     private final CompanyService companyService;
 
     @PostMapping("/api/company-accounts")
+    @PreAuthorize("!hasRole('npo') && !hasRole('admin')")
     public ResponseEntity<CompanyDTO> createCompany(
             @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody CompanyDTO companyDTO) {
         log.info("POST /api/company-accounts | sub={} email={} cnpj={}",
