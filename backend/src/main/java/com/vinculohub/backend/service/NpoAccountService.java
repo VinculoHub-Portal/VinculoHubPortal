@@ -8,10 +8,10 @@ import com.vinculohub.backend.exception.DuplicateLoginException;
 import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.model.Project;
-import com.vinculohub.backend.model.User;
+import com.vinculohub.backend.model.Users;
 import com.vinculohub.backend.model.enums.NpoSize;
 import com.vinculohub.backend.model.enums.UserType;
-import com.vinculohub.backend.repository.UserRepository;
+import com.vinculohub.backend.repository.UsersRepository;
 import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class NpoAccountService {
 
-    private final UserRepository userRepository;
+    private final UsersRepository usersRepository;
     private final NpoService npoService;
     private final ProjectService projectService;
     private final ProjectValidationService projectValidationService;
@@ -29,13 +29,13 @@ public class NpoAccountService {
     private final NpoEsgService npoEsgService;
 
     public NpoAccountService(
-            UserRepository userRepository,
+            UsersRepository usersRepository,
             NpoService npoService,
             ProjectService projectService,
             ProjectValidationService projectValidationService,
             NpoDocumentService npoDocumentService,
             NpoEsgService npoEsgService) {
-        this.userRepository = userRepository;
+        this.usersRepository = usersRepository;
         this.npoService = npoService;
         this.projectService = projectService;
         this.projectValidationService = projectValidationService;
@@ -54,11 +54,11 @@ public class NpoAccountService {
         String name = requireText(request.name(), "Nome da instituição é obrigatório.");
         String email = normalizeEmail(firstPresent(auth0Email, request.email()));
 
-        if (userRepository.existsByAuth0Id(normalizedAuth0Id)) {
+        if (usersRepository.existsByAuth0Id(normalizedAuth0Id)) {
             throw new DuplicateLoginException("Já existe uma conta cadastrada para este login.");
         }
 
-        if (userRepository.existsByEmailIgnoreCase(email)) {
+        if (usersRepository.existsByEmailIgnoreCase(email)) {
             throw new DuplicateLoginException("Já existe uma conta cadastrada com este e-mail.");
         }
 
@@ -67,9 +67,9 @@ public class NpoAccountService {
                 request.environmental(), request.social(), request.governance());
         projectValidationService.validateFirstProject(request.firstProject());
 
-        User savedUser =
-                userRepository.save(
-                        User.builder()
+        Users savedUser =
+                usersRepository.save(
+                        Users.builder()
                                 .name(name)
                                 .email(email)
                                 .auth0Id(normalizedAuth0Id)
@@ -156,12 +156,12 @@ public class NpoAccountService {
     }
 
     private static boolean isBlankAddress(AddressSignupRequest request) {
-        return trimToNull(request.state()) == null
+        return (trimToNull(request.state()) == null
                 && trimToNull(request.stateCode()) == null
                 && trimToNull(request.city()) == null
                 && trimToNull(request.street()) == null
                 && trimToNull(request.number()) == null
                 && trimToNull(request.complement()) == null
-                && trimToNull(request.zipCode()) == null;
+                && trimToNull(request.zipCode()) == null);
     }
 }

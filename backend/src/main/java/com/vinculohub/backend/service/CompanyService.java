@@ -7,10 +7,10 @@ import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.CompanyAlreadyExistsException;
 import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.model.Company;
-import com.vinculohub.backend.model.User;
+import com.vinculohub.backend.model.Users;
 import com.vinculohub.backend.model.enums.UserType;
 import com.vinculohub.backend.repository.CompanyRepository;
-import com.vinculohub.backend.repository.UserRepository;
+import com.vinculohub.backend.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,7 +23,7 @@ public class CompanyService {
 
     private final CompanyRepository companyRepository;
     private final AddressService addressService;
-    private final UserRepository userRepository;
+    private final UsersRepository usersRepository;
 
     @Transactional
     public CompanyDTO createCompany(String auth0Id, String auth0Email, CompanyDTO companyDTO) {
@@ -44,7 +44,7 @@ public class CompanyService {
                     "Já existe uma empresa cadastrada com este CNPJ.");
         }
 
-        if (userRepository.existsByAuth0Id(auth0Id)) {
+        if (usersRepository.existsByAuth0Id(auth0Id)) {
             log.warn("Duplicate Auth0 ID: {}", auth0Id);
             throw new CompanyAlreadyExistsException(
                     "Já existe uma conta cadastrada para este login.");
@@ -59,7 +59,7 @@ public class CompanyService {
             throw new BadRequestException("E-mail é obrigatório.");
         }
 
-        if (userRepository.existsByEmailIgnoreCase(email)) {
+        if (usersRepository.existsByEmailIgnoreCase(email)) {
             log.warn("Duplicate email: {}", email);
             throw new CompanyAlreadyExistsException(
                     "Já existe uma conta cadastrada com este e-mail.");
@@ -79,15 +79,15 @@ public class CompanyService {
 
         company.setAddress(address);
 
-        User user =
-                User.builder()
+        Users users =
+                Users.builder()
                         .name(firstPresent(companyDTO.socialName(), companyDTO.legalName()))
                         .email(email)
                         .auth0Id(auth0Id)
                         .userType(UserType.company)
                         .build();
 
-        User savedUser = userRepository.save(user);
+        Users savedUser = usersRepository.save(users);
         log.info("User created | id={} email={}", savedUser.getId(), savedUser.getEmail());
         company.setUser(savedUser);
 
@@ -110,8 +110,12 @@ public class CompanyService {
                 .build();
     }
 
-    private UserDTO userToUserDTO(User user) {
-        return UserDTO.builder().name(user.getName()).email(user.getEmail()).build();
+    private UserDTO userToUserDTO(Users user) {
+        return UserDTO.builder()
+                .name(user.getName())
+                .email(user.getEmail())
+                .userType(user.getUserType().name())
+                .build();
     }
 
     private String firstPresent(String first, String second) {

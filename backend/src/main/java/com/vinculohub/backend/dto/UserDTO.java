@@ -6,4 +6,4 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.Builder;
 
 @Builder
-public record UserDTO(@NotEmpty String name, @NotEmpty @Email String email) {}
+public record UserDTO(@NotEmpty String name, @NotEmpty @Email String email, String userType) {}
