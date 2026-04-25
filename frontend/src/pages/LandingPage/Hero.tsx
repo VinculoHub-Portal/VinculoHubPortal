@@ -1,5 +1,5 @@
-import { BaseButton } from "../../components/general/BaseButton";
-import { HeroIcon } from "../../assets/landingPage/HeroIcon.tsx";
+import { BaseButton } from "../../components/general/BaseButton"
+import HeroIcon from "../../assets/landingPage/HeroIcon.tsx"
 
 export function Hero() {
   return (
@@ -29,7 +29,7 @@ export function Hero() {
                 document.getElementById("sobre-nos")?.scrollIntoView({
                   behavior: "smooth",
                   block: "start",
-                });
+                })
               }}
             >
               Sobre Nós
@@ -49,5 +49,5 @@ export function Hero() {
         </div>
       </div>
     </section>
-  );
+  )
 }

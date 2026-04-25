@@ -1,6 +1,6 @@
-import { FeatureCard } from "./FeatureCard";
-import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
-import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
+import { FeatureCard } from "./FeatureCard"
+import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined"
+import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined"
 
 export default function InfoTab() {
   return (
@@ -58,5 +58,5 @@ export default function InfoTab() {
         </div>
       </main>
     </div>
-  );
+  )
 }

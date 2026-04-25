@@ -44,7 +44,7 @@ class ProjectRepositoryTest extends AbstractIntegrationTest {
         assertNotNull(project.getId());
         assertEquals(ProjectStatus.DRAFT, project.getStatus());
 
-        List<Project> projects = projectRepository.findAllByNpoId(npo.getId());
+        List<Project> projects = projectRepository.findAllByNpoId(Long.valueOf(npo.getId()));
 
         assertEquals(1, projects.size());
         assertEquals(npo.getId(), projects.get(0).getNpo().getId());

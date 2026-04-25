@@ -2,6 +2,8 @@ export type OrganizationType = "npo" | "enterprise";
 
 export type WizardEsgOption = "ambiental" | "social" | "governanca";
 
+export type NpoSize = "" | "small" | "medium" | "large";
+
 export type ODSOptions = "" | "1" | "2" | "3";
 
 export type WizardFormData = {
@@ -20,17 +22,7 @@ export type WizardFormData = {
   social: boolean;
   governance: boolean;
   capital: number;
-  npoSize: "" | "small" | "medium" | "large";
-  resumoInstitucional: string;
-  esg: WizardEsgOption[];
-  zipCode: string;
-  street: string;
-  streetNumber: string;
-  complement: string;
-  city: string;
-  state: string;
-  stateCode: string;
-  phone: string;
+  // ...campos dos próximos steps
 };
 
 export type FieldErrors = Partial<

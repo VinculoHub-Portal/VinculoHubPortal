@@ -38,7 +38,7 @@ public class Company {
 
     @OneToOne
     @JoinColumn(name = "user_id")
-    private Users user;
+    private User user;
 
     @Column(name = "created_at")
     @Temporal(TemporalType.TIMESTAMP)

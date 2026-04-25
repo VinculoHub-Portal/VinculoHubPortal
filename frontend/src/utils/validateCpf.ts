@@ -1,34 +1,12 @@
-// Port of the CPF validation logic used in validation.ts
-function onlyDigits(value: string): string {
-  return value.replace(/\D/g, "");
-}
+export const validateCpf = (value: string): boolean => {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length !== 11 || /^(\d)\1+$/.test(digits)) return false;
 
-function hasSameDigits(value: string): boolean {
-  return /^(\d)\1+$/.test(value);
-}
+  const calc = (d: string, length: number) => {
+    const sum = Array.from({ length }, (_, i) => parseInt(d[i]) * (length + 1 - i)).reduce((a, b) => a + b, 0);
+    const rem = (sum * 10) % 11;
+    return rem === 10 || rem === 11 ? 0 : rem;
+  };
 
-export function validateCpf(value: string): boolean {
-  const digits = onlyDigits(value);
-
-  if (digits.length !== 11 || hasSameDigits(digits)) {
-    return false;
-  }
-
-  let sum = 0;
-  for (let index = 0; index < 9; index += 1) {
-    sum += Number(digits[index]) * (10 - index);
-  }
-
-  const firstDigit = (sum * 10) % 11;
-  if ((firstDigit === 10 ? 0 : firstDigit) !== Number(digits[9])) {
-    return false;
-  }
-
-  sum = 0;
-  for (let index = 0; index < 10; index += 1) {
-    sum += Number(digits[index]) * (11 - index);
-  }
-
-  const secondDigit = (sum * 10) % 11;
-  return (secondDigit === 10 ? 0 : secondDigit) === Number(digits[10]);
-}
+  return parseInt(digits[9]) === calc(digits, 9) && parseInt(digits[10]) === calc(digits, 10);
+};

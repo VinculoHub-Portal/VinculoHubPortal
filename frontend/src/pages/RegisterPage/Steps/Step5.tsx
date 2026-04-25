@@ -1,11 +1,13 @@
 import type { Dispatch, SetStateAction } from "react";
-import { Input } from "../../../components/general/Input";
+import { Input } from "../../../components/general/SimpleTextInput";
 import type {
   FieldErrors,
   WizardFormData,
   ODSOptions,
 } from "../../../types/wizard.types";
 import { MultiSelect } from "../../../components/general/MultiSelect";
+
+export function EnterpriseRegisteringStep5() {}
 
 type NPORegisteringStep5Props = {
   formData: WizardFormData;

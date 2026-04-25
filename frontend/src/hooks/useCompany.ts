@@ -1,20 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@auth0/auth0-react";
+import { useAuth0 } from "@auth0/auth0-react";
 import type { CompanyResult } from "../api/company";
 
-const apiBasedUrl = import.meta.env.VITE_API_BASE_URL || "https://localhost:8000";
+const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
-export const useCompany = (id: number | undefined) {
-  const { getAccessTokenSilently } = useAuth();
+export function useCompany(id: number | undefined) {
+  const { getAccessTokenSilently } = useAuth0();
 
   return useQuery<CompanyResult>({
     queryKey: ["company", id],
     queryFn: async () => {
       const token = await getAccessTokenSilently();
-      const res = await fetch(`${apiBasedUrl}/company/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await fetch(`${apiBaseUrl}/company/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error("Failed to fetch company");
       return response.json();
@@ -22,4 +20,4 @@ export const useCompany = (id: number | undefined) {
     enabled: id != null,
     retry: false,
   });
-};
+}

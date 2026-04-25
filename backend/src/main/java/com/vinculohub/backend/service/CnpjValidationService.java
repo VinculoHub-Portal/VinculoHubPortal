@@ -4,12 +4,10 @@ package com.vinculohub.backend.service;
 import com.vinculohub.backend.dto.CnpjResponseDTO;
 import com.vinculohub.backend.exception.CnpjInactiveException;
 import com.vinculohub.backend.exception.CnpjNotFoundException;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
-@Slf4j
 @Service
 public class CnpjValidationService {
 

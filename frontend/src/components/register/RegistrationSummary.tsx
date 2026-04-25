@@ -16,6 +16,7 @@ export interface SummarySection {
 interface RegistrationSummaryProps {
   entityName: string;
   entitySubtitle?: string;
+  // entityIcon: ReactNode;
   sections: SummarySection[];
   completedSteps: number;
   totalSteps: number;
@@ -33,34 +34,22 @@ function computeProgress(sections: SummarySection[]): {
   const requiredFields = allFields.filter((f) => f.required);
   const optionalFields = allFields.filter((f) => !f.required);
 
-  const filledRequired = requiredFields.filter(
-    (f) => f.value.trim() !== "",
-  ).length;
-  const filledOptional = optionalFields.filter(
-    (f) => f.value.trim() !== "",
-  ).length;
+  const filledRequired = requiredFields.filter((f) => f.value.trim() !== "").length;
+  const filledOptional = optionalFields.filter((f) => f.value.trim() !== "").length;
 
-  const progress =
-    requiredFields.length > 0
-      ? Math.round((filledRequired / requiredFields.length) * 100)
-      : 100;
+  const progress = requiredFields.length > 0
+    ? Math.round((filledRequired / requiredFields.length) * 100)
+    : 100;
 
   const total = allFields.length;
-  const profileCompletion =
-    total > 0
-      ? Math.round(((filledRequired + filledOptional) / total) * 100)
-      : 100;
+  const profileCompletion = total > 0
+    ? Math.round(((filledRequired + filledOptional) / total) * 100)
+    : 100;
 
   return { progress, profileCompletion };
 }
 
-function SectionCard({
-  title,
-  fields,
-}: {
-  title: string;
-  fields: SummaryField[];
-}) {
+function SectionCard({ title, fields }: { title: string; fields: SummaryField[] }) {
   return (
     <div className="border border-slate-200 rounded-xl p-5 flex flex-col gap-3">
       <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
@@ -92,6 +81,7 @@ function SectionCard({
 export function RegistrationSummary({
   entityName,
   entitySubtitle,
+  // entityIcon,
   sections,
   completedSteps,
   totalSteps,
@@ -107,9 +97,9 @@ export function RegistrationSummary({
     <div className="flex flex-col gap-6">
       {/* Cabeçalho da entidade */}
       <div className="flex flex-col items-center gap-1 py-4 border-b border-slate-100">
-        {/* <div className="w-16 h-16 rounded-full bg-vinculo-green/10 flex items-center justify-center mb-1">
-         {entityIcon}
-        </div> */}
+        { /* <div className="w-16 h-16 rounded-full bg-vinculo-green/10 flex items-center justify-center mb-1">
+          {entityIcon}
+        </div> */ }
         <h2 className="text-xl font-bold text-vinculo-dark">
           {entityName || "—"}
         </h2>
@@ -141,11 +131,7 @@ export function RegistrationSummary({
 
       {/* Seções de resumo */}
       {sections.map((section) => (
-        <SectionCard
-          key={section.title}
-          title={section.title}
-          fields={section.fields}
-        />
+        <SectionCard key={section.title} title={section.title} fields={section.fields} />
       ))}
 
       {/* Aviso se incompleto */}

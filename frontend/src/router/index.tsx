@@ -9,7 +9,7 @@ import CompanyRegistrationPage from "../pages/company/registration";
 
 export const AppRouter = () => (
   <BrowserRouter>
-    {/*<AuthRoleRedirect />*/}
+    <AuthRoleRedirect />
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/components" element={<ComponentsPage />} />
@@ -48,15 +48,6 @@ export const AppRouter = () => (
           </ProtectedRoute>
         }
       />
-<<<<<<< HEAD
-      <Route
-        path="*"
-        element={
-          <div style={{ color: "black", padding: 24 }}>NO ROUTE MATCH</div>
-        }
-      />
-=======
->>>>>>> development
     </Routes>
   </BrowserRouter>
 );
