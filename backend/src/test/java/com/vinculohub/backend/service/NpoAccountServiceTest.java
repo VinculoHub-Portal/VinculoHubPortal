@@ -13,10 +13,10 @@ import com.vinculohub.backend.exception.DuplicateLoginException;
 import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.model.Project;
-import com.vinculohub.backend.model.User;
+import com.vinculohub.backend.model.Users;
 import com.vinculohub.backend.model.enums.NpoSize;
 import com.vinculohub.backend.model.enums.UserType;
-import com.vinculohub.backend.repository.UserRepository;
+import com.vinculohub.backend.repository.UsersRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,7 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 @ExtendWith(MockitoExtension.class)
 class NpoAccountServiceTest {
 
-    @Mock private UserRepository userRepository;
+    @Mock private UsersRepository usersRepository;
 
     @Mock private NpoService npoService;
 
@@ -44,16 +44,16 @@ class NpoAccountServiceTest {
     @InjectMocks private NpoAccountService npoAccountService;
 
     @Test
-    @DisplayName("Deve registrar User + Npo + Project na mesma operação transacional")
+    @DisplayName("Deve registrar Users + Npo + Project na mesma operação transacional")
     void shouldRegisterUserAndNpoAccount() {
         NpoInstitutionalSignupRequest request = validRequest();
 
-        when(userRepository.existsByAuth0Id("auth0|npo")).thenReturn(false);
-        when(userRepository.existsByEmailIgnoreCase("contato@ong.org")).thenReturn(false);
-        when(userRepository.save(any(User.class)))
+        when(usersRepository.existsByAuth0Id("auth0|npo")).thenReturn(false);
+        when(usersRepository.existsByEmailIgnoreCase("contato@ong.org")).thenReturn(false);
+        when(usersRepository.save(any(Users.class)))
                 .thenAnswer(
                         invocation -> {
-                            User user = invocation.getArgument(0);
+                            Users user = invocation.getArgument(0);
                             user.setId(10);
                             return user;
                         });
@@ -100,18 +100,18 @@ class NpoAccountServiceTest {
         assertEquals("contato@ong.org", response.email());
         assertTrue(response.accessReleased());
 
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<Users> userCaptor = ArgumentCaptor.forClass(Users.class);
         ArgumentCaptor<Npo> npoCaptor = ArgumentCaptor.forClass(Npo.class);
         ArgumentCaptor<Address> addressCaptor = ArgumentCaptor.forClass(Address.class);
 
-        verify(userRepository).save(userCaptor.capture());
+        verify(usersRepository).save(userCaptor.capture());
         verify(npoService).saveWithAddress(npoCaptor.capture(), addressCaptor.capture());
         verify(projectService).createFirstProject(any(Npo.class), eq(request.firstProject()));
 
         verify(npoDocumentService).validateDocuments("529.982.247-25", null);
         verify(npoEsgService).validateEsgSelection(true, false, false);
 
-        User savedUser = userCaptor.getValue();
+        Users savedUser = userCaptor.getValue();
         assertEquals("ONG Exemplo", savedUser.getName());
         assertEquals("contato@ong.org", savedUser.getEmail());
         assertEquals("auth0|npo", savedUser.getAuth0Id());
@@ -143,8 +143,8 @@ class NpoAccountServiceTest {
     @DisplayName("Deve bloquear login duplicado antes de salvar qualquer entidade")
     void shouldRejectDuplicateLogin() {
         NpoInstitutionalSignupRequest request = validRequest();
-        when(userRepository.existsByAuth0Id("auth0|npo")).thenReturn(false);
-        when(userRepository.existsByEmailIgnoreCase("contato@ong.org")).thenReturn(true);
+        when(usersRepository.existsByAuth0Id("auth0|npo")).thenReturn(false);
+        when(usersRepository.existsByEmailIgnoreCase("contato@ong.org")).thenReturn(true);
 
         assertThrows(
                 DuplicateLoginException.class,
@@ -152,13 +152,13 @@ class NpoAccountServiceTest {
                         npoAccountService.registerInstitutionalAccount(
                                 "auth0|npo", " Contato@ONG.org ", request));
 
-        verify(userRepository, never()).save(any());
+        verify(usersRepository, never()).save(any());
         verify(npoService, never()).saveWithAddress(any(), any());
         verifyNoInteractions(npoDocumentService, npoEsgService);
     }
 
     @Test
-    @DisplayName("O cadastro final deve ser transacional para manter User + Npo atômicos")
+    @DisplayName("O cadastro final deve ser transacional para manter Users + Npo atômicos")
     void shouldBeTransactional() throws NoSuchMethodException {
         assertNotNull(
                 NpoAccountService.class

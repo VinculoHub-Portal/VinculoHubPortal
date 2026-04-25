@@ -2,7 +2,7 @@
 package com.vinculohub.backend.service;
 
 import com.vinculohub.backend.dto.CompanyDTO;
-import com.vinculohub.backend.dto.UserDTO;
+import com.vinculohub.backend.dto.UsersDTO;
 import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.CompanyAlreadyExistsException;
 import com.vinculohub.backend.model.Address;
@@ -110,10 +110,11 @@ public class CompanyService {
                 .build();
     }
 
-    private UserDTO userToUserDTO(Users user) {
-        return UserDTO.builder()
-                .name(user.getName())
+    private UsersDTO userToUserDTO(Users user) {
+        return UsersDTO.builder()
+                .firstName(user.getName())
                 .email(user.getEmail())
+                .password(null)
                 .userType(user.getUserType().name())
                 .build();
     }

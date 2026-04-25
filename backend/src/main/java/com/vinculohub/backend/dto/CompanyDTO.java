@@ -15,5 +15,5 @@ public record CompanyDTO(
         @NotBlank String logoUrl,
         @NotBlank String cnpj,
         @NotBlank String phone,
-        @NotBlank @Valid UserDTO user,
+        @NotBlank @Valid UsersDTO user,
         @NotBlank @Valid AddressDTO address) {}

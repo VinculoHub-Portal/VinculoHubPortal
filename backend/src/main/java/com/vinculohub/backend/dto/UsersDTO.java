@@ -8,7 +8,6 @@ import lombok.Builder;
 @Builder
 public record UsersDTO(
         @NotEmpty String firstName,
-        @NotEmpty String lastName,
         @NotEmpty @Email String email,
         @NotEmpty String password,
         @NotEmpty String userType) {}
