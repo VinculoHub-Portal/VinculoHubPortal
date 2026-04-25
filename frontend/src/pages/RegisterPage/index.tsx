@@ -18,6 +18,37 @@ import { NPORegisteringStep3 } from "./Steps/Step3";
 import { NPORegisteringStep4 } from "./Steps/Step4";
 import { NPORegisteringStep5 } from "./Steps/Step5";
 
+const auth0Audience = import.meta.env.VITE_AUTH0_AUDIENCE;
+const npoSignupDraftKey = "vinculohub:npo-signup-draft";
+
+type NpoSignupDraft = {
+  currentStep?: number;
+  organizationType?: OrganizationType;
+  formData?: WizardFormData;
+};
+
+function readNpoSignupDraft(): NpoSignupDraft | null {
+  const savedDraft = sessionStorage.getItem(npoSignupDraftKey);
+
+  if (!savedDraft) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(savedDraft) as NpoSignupDraft;
+  } catch {
+    sessionStorage.removeItem(npoSignupDraftKey);
+    return null;
+  }
+}
+
+{
+  /* NPO Steps
+  Agora são chamados diretamente no return!
+  Só tem a func salva, para não quebrar o código.
+  */
+}
+
 function NpoStepTwo({
   formData,
   setFormData,
@@ -210,8 +241,14 @@ function getSteps({
         setFormData={setFormData}
         errors={errors}
       />,
+<<<<<<< HEAD
       <NpoStepFour
         key="npo-step-4"
+=======
+      <NpoStepFour key="npo-step-4" />,
+      <NpoStepFive
+        key="npo-step-5"
+>>>>>>> development
         formData={formData}
         setFormData={setFormData}
         errors={errors}
@@ -237,7 +274,10 @@ function getSteps({
 export default function RegisterPage() {
   const { loginWithRedirect } = useAuth0();
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [initialDraft] = useState(readNpoSignupDraft);
+  const [currentStep, setCurrentStep] = useState(
+    initialDraft?.currentStep ?? 1,
+  );
   const [organizationType, setOrganizationType] =
     useState<OrganizationType | null>(null);
 
@@ -249,7 +289,21 @@ export default function RegisterPage() {
   };
 
   const [formData, setFormData] = useState<WizardFormData>({
-    ...emptyFormData,
+    nomeInstituicao: "",
+    nomeProjeto: "",
+    email: "",
+    senha: "",
+    confirmarSenha: "",
+    cpf: "",
+    cnpj: "",
+    razaoSocial: "",
+    description: "",
+    npo_size: "",
+    ods: [],
+    environmental: false,
+    social: false,
+    governance: false,
+    capital: 0,
   });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [isAuthRedirectModalOpen, setIsAuthRedirectModalOpen] = useState(false);
@@ -364,7 +418,14 @@ export default function RegisterPage() {
               className="w-32"
               onClick={handleNext}
             >
-              {currentStep === totalSteps ? "Finalizar" : "Próximo"}
+              Voltar
+            </BaseButton>
+            <BaseButton
+              variant="secondary"
+              className="w-32"
+              onClick={handleNext}
+            >
+              {currentStep === totalSteps ? "Finalizar" : "Proximo"}
             </BaseButton>
           </div>
         </section>

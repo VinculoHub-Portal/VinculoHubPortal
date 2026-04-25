@@ -2,7 +2,10 @@ import { useAuth0 } from "@auth0/auth0-react";
 import axios from "axios";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { registerCompany, type CompanyRegistrationPayload } from "../../api/company";
+import {
+  registerCompany,
+  type CompanyRegistrationPayload,
+} from "../../api/company";
 import { api } from "../../services/api";
 import type { WizardFormData } from "../../types/wizard.types";
 import { logger } from "../../utils/logger";
@@ -38,7 +41,8 @@ const companySignupDraftKey = "vinculohub:company-signup-draft";
 const rolesClaim = "https://vinculohub/roles";
 
 export function AuthRoleRedirect() {
-  const { getAccessTokenSilently, isAuthenticated, isLoading, user } = useAuth0();
+  const { getAccessTokenSilently, isAuthenticated, isLoading, user } =
+    useAuth0();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -58,9 +62,14 @@ export function AuthRoleRedirect() {
         logger.info("AuthRedirect", "Token acquired");
 
         const hasNpoDraft = sessionStorage.getItem(npoSignupDraftKey) !== null;
+<<<<<<< HEAD
         const hasCompanyDraft = sessionStorage.getItem(companySignupDraftKey) !== null;
         logger.info("AuthRedirect", "Draft check", { hasNpoDraft, hasCompanyDraft });
 
+=======
+        const hasCompanyDraft =
+          sessionStorage.getItem(companySignupDraftKey) !== null;
+>>>>>>> development
         let npoDraftSubmitted = false;
         let companyDraftSubmitted = false;
 
@@ -71,7 +80,14 @@ export function AuthRoleRedirect() {
             npoDraftSubmitted = true;
             logger.info("AuthRedirect", "NPO draft submitted successfully");
           } catch (error) {
+<<<<<<< HEAD
             logger.error("AuthRedirect", "NPO draft submission failed", getErrorMessage(error));
+=======
+            console.warn(
+              "Nao foi possivel reenviar o cadastro da ONG:",
+              getErrorMessage(error),
+            );
+>>>>>>> development
           }
         }
 
@@ -82,7 +98,14 @@ export function AuthRoleRedirect() {
             companyDraftSubmitted = true;
             logger.info("AuthRedirect", "Company draft submitted successfully");
           } catch (error) {
+<<<<<<< HEAD
             logger.error("AuthRedirect", "Company draft submission failed", getErrorMessage(error));
+=======
+            console.warn(
+              "Nao foi possivel reenviar o cadastro da empresa:",
+              getErrorMessage(error),
+            );
+>>>>>>> development
           }
         }
 
@@ -92,7 +115,9 @@ export function AuthRoleRedirect() {
 
         const tokenRoles = getRolesFromToken(token);
         const userRoles = getRolesFromUser(user);
-        const role = profileRole(profile) ?? resolvePrimaryRole([...tokenRoles, ...userRoles]);
+        const role =
+          profileRole(profile) ??
+          resolvePrimaryRole([...tokenRoles, ...userRoles]);
         const redirectPath = redirectPathAfterSignupDraft({
           profile,
           role,
@@ -120,14 +145,22 @@ export function AuthRoleRedirect() {
     }
 
     void redirectByRole();
-  }, [getAccessTokenSilently, isAuthenticated, isLoading, location.pathname, navigate, user]);
+  }, [
+    getAccessTokenSilently,
+    isAuthenticated,
+    isLoading,
+    location.pathname,
+    navigate,
+    user,
+  ]);
 
   return null;
 }
 
 function getErrorMessage(error: unknown) {
   if (axios.isAxiosError(error)) {
-    const message = (error.response?.data as { message?: string } | undefined)?.message;
+    const message = (error.response?.data as { message?: string } | undefined)
+      ?.message;
     return message ?? error.message;
   }
 
@@ -170,6 +203,7 @@ async function submitNpoSignupDraft(token: string, user: unknown) {
       email: getUserEmail(user),
       cpf: formData.cpf,
       cnpj: formData.cnpj || null,
+<<<<<<< HEAD
       npoSize: formData.porteOng,
       description: formData.resumoInstitucional || null,
       phone: formData.phone || null,
@@ -187,6 +221,15 @@ async function submitNpoSignupDraft(token: string, user: unknown) {
             zipCode: formData.zipCode,
           }
         : null,
+=======
+      npoSize: formData.npo_size,
+      description: formData.description || null,
+      phone: null,
+      environmental: formData.environmental,
+      social: formData.social,
+      governance: formData.governance,
+      address: null,
+>>>>>>> development
     },
     {
       headers: {
@@ -259,7 +302,10 @@ function getRolesFromUser(user: unknown) {
 
 function decodeBase64Url(value: string) {
   const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
-  const paddedBase64 = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+  const paddedBase64 = base64.padEnd(
+    base64.length + ((4 - (base64.length % 4)) % 4),
+    "=",
+  );
   const binary = atob(paddedBase64);
   const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
 
