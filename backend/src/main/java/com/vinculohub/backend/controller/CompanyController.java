@@ -20,7 +20,7 @@ public class CompanyController {
     private final CompanyService companyService;
 
     @PostMapping("/api/company-accounts")
-    @PreAuthorize("!hasRole('npo') && !hasRole('admin')")
+    @PreAuthorize("!hasRole('NPO') && !hasRole('ADMIN')")
     public ResponseEntity<CompanyDTO> createCompany(
             @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody CompanyDTO companyDTO) {
         log.info("POST /api/company-accounts | sub={} email={} cnpj={}",

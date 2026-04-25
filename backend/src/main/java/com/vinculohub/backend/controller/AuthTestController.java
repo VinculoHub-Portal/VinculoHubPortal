@@ -29,7 +29,7 @@ public class AuthTestController {
     }
 
     @GetMapping("/api/me")
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     public Map<String, Object> me(@AuthenticationPrincipal Jwt jwt) {
         List<String> authorities =
                 jwt.getClaimAsStringList("scope") == null
