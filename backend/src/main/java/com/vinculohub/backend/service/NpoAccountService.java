@@ -156,12 +156,12 @@ public class NpoAccountService {
     }
 
     private static boolean isBlankAddress(AddressSignupRequest request) {
-        return (trimToNull(request.state()) == null
+        return trimToNull(request.state()) == null
                 && trimToNull(request.stateCode()) == null
                 && trimToNull(request.city()) == null
                 && trimToNull(request.street()) == null
                 && trimToNull(request.number()) == null
                 && trimToNull(request.complement()) == null
-                && trimToNull(request.zipCode()) == null);
+                && trimToNull(request.zipCode()) == null;
     }
 }
