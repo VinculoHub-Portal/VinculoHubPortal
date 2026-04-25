@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { LandingPage } from './index'
+import LandingPage from './index'
 
 function renderLandingPage() {
   return render(
