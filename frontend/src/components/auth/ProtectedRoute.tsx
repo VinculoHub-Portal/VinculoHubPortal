@@ -14,9 +14,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         appState: {
           returnTo: window.location.pathname,
         },
-        authorizationParams: {
-          ui_locales: 'pt-BR',
-        },
       });
     }
   }, [isAuthenticated, isLoading, loginWithRedirect]);

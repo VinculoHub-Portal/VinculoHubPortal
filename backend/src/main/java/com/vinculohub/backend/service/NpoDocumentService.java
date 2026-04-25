@@ -5,10 +5,8 @@ import com.vinculohub.backend.exception.DuplicateDocumentException;
 import com.vinculohub.backend.exception.InvalidDocumentException;
 import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.utils.DocumentValidator;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-@Slf4j
 @Service
 public class NpoDocumentService {
 

@@ -44,7 +44,7 @@ export function Input({
           required={isRequired}
           aria-invalid={invalid}
           className={`w-full rounded-xl py-3 outline-none transition-all placeholder:text-slate-400
-          border border-vinculo-gray bg-white
+          border border-vinculo-gray
           focus:border-vinculo-dark focus:ring-1 focus:ring-vinculo-dark
           ${hasLeftIcon ? "pl-10 pr-4" : ""}
           ${hasRightIcon ? "pl-4 pr-10" : ""}

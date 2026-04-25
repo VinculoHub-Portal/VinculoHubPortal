@@ -70,14 +70,18 @@ function isValidCnpj(value: string): boolean {
   const firstDigit = calculateDigit([5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
   const secondDigit = calculateDigit([6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
 
-  return firstDigit === Number(digits[12]) && secondDigit === Number(digits[13]);
+  return (
+    firstDigit === Number(digits[12]) && secondDigit === Number(digits[13])
+  );
 }
 
 function mergeErrors(...errorsList: FieldErrors[]): FieldErrors {
   return errorsList.reduce((acc, current) => ({ ...acc, ...current }), {});
 }
 
-export function composeValidators(...validators: StepValidator[]): StepValidator {
+export function composeValidators(
+  ...validators: StepValidator[]
+): StepValidator {
   return (data, context) =>
     mergeErrors(...validators.map((validator) => validator(data, context)));
 }
@@ -87,7 +91,7 @@ export const validateInstitutionName: StepValidator = (data) => {
 
   if (!isValidInstitutionName(data.nomeInstituicao)) {
     errors.nomeInstituicao =
-      "Informe o nome da instituição (entre 2 e 200 caracteres).";
+      "Informe o nome da instituicao (entre 2 e 200 caracteres).";
   }
 
   return errors;
@@ -97,7 +101,7 @@ export const validateEmailField: StepValidator = (data) => {
   const errors: FieldErrors = {};
 
   if (!isValidEmail(data.email)) {
-    errors.email = "Informe um e-mail válido.";
+    errors.email = "Informe um e-mail valido.";
   }
 
   return errors;
@@ -108,7 +112,7 @@ export const validatePasswordField: StepValidator = (data) => {
 
   if (!isValidPassword(data.senha)) {
     errors.senha =
-      "A senha deve ter no mínimo 8 caracteres, com letras e números.";
+      "A senha deve ter no minimo 8 caracteres, com letras e numeros.";
   }
 
   return errors;
@@ -118,7 +122,7 @@ export const validateConfirmPasswordField: StepValidator = (data) => {
   const errors: FieldErrors = {};
 
   if (data.confirmarSenha !== data.senha) {
-    errors.confirmarSenha = "As senhas não coincidem.";
+    errors.confirmarSenha = "As senhas nao coincidem.";
   }
 
   return errors;
@@ -138,12 +142,35 @@ export const validateRazaoSocialField: StepValidator = (data) => {
   const errors: FieldErrors = {};
 
   if (!data.razaoSocial.trim()) {
-    errors.razaoSocial = "Informe a razão social.";
+    errors.razaoSocial = "Informe a razao social.";
   }
 
   return errors;
 };
 
+export const validateSizeField: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+
+  if (!data.npo_size.trim()) {
+    errors.npo_size = "Informe o tamanho da empresa.";
+  }
+
+  return errors;
+};
+
+export const validateNpoSizeField: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+  if (!data.npo_size) {
+    errors.npo_size = "Selecione o porte da ONG.";
+  }
+  return errors;
+};
+
+{
+  /* Validadores por step */
+}
+
+/* Validação para a primeira tela */
 export const validateSignupStep: StepValidator = (_data, context) => {
   const errors: FieldErrors = {};
 
@@ -158,7 +185,7 @@ export const validateCpfField: StepValidator = (data) => {
   const errors: FieldErrors = {};
 
   if (!isValidCpf(data.cpf)) {
-    errors.cpf = "Informe um CPF válido.";
+    errors.cpf = "Informe um CPF valido.";
   }
 
   return errors;
@@ -169,86 +196,36 @@ export const validateOptionalCnpjField: StepValidator = (data) => {
   const digits = onlyDigits(data.cnpj);
 
   if (digits.length > 0 && !isValidCnpj(data.cnpj)) {
-    errors.cnpj = "Informe um CNPJ válido.";
+    errors.cnpj = "Informe um CNPJ valido.";
   }
 
   return errors;
 };
 
-export const validatePorteOngField: StepValidator = (data) => {
+export const validateNpoStepTwo = composeValidators(
+  validateEmailField,
+  validatePasswordField,
+  validateConfirmPasswordField,
+);
+
+export const validateNpoStepThree = composeValidators(
+  validateInstitutionName,
+  validateCpfField,
+  validateOptionalCnpjField,
+  validateNpoSizeField,
+);
+
+export const validateNpoStepFour: StepValidator = (data) => {
   const errors: FieldErrors = {};
 
-  if (!data.porteOng) {
-    errors.porteOng = "Selecione o porte da ONG.";
-  }
-
-  return errors;
-};
-
-export const validateEsgField: StepValidator = (data) => {
-  const errors: FieldErrors = {};
-
-  if (!data.esg || data.esg.length === 0) {
+  if (data.esg.length === 0) {
     errors.esg = "Selecione pelo menos um pilar ESG.";
   }
 
   return errors;
 };
 
-export const validateCpfOrCnpjField: StepValidator = (data) => {
-  const errors: FieldErrors = {};
+export const validateEnterpriseStepTwo = composeValidators();
 
-  const cpfDigits = data.cpf.replace(/\D/g, "");
-  const cnpjDigits = data.cnpj.replace(/\D/g, "");
-
-  const hasCpf = cpfDigits.length > 0;
-  const hasCnpj = cnpjDigits.length > 0;
-
-  if (!hasCpf && !hasCnpj) {
-    errors.cpf = "Informe o CPF ou o CNPJ.";
-    return errors;
-  }
-
-  if (hasCpf && !isValidCpf(data.cpf)) {
-    errors.cpf = "CPF inválido.";
-  }
-
-  if (hasCnpj && !isValidCnpj(data.cnpj)) {
-    errors.cnpj = "CNPJ inválido.";
-  }
-
-  return errors;
-};
-
-export const validateNpoStepThree = composeValidators(
-  validateInstitutionName,
-  validateCpfOrCnpjField,
-  validatePorteOngField,
-  validateEsgField,
-);
-
-export const validateZipCodeField: StepValidator = (data) => {
-  const errors: FieldErrors = {};
-  const digits = data.zipCode.replace(/\D/g, "");
-  if (!digits) {
-    errors.zipCode = "Informe o CEP.";
-  } else if (digits.length !== 8) {
-    errors.zipCode = "CEP inválido.";
-  }
-  return errors;
-};
-
-export const validateStreetNumberField: StepValidator = (data) => {
-  const errors: FieldErrors = {};
-  if (!data.streetNumber.trim()) errors.streetNumber = "Informe o número.";
-  return errors;
-};
-
-export const validateNpoStepFour = composeValidators(
-  validateZipCodeField,
-  validateStreetNumberField,
-);
-
-export const validateEnterpriseStepTwo = composeValidators(
-  validateRazaoSocialField,
-);
+// Trava sem mostrar os campos, pois não foi implementado.
+// Colocar os campos corretos ou remover para teste.

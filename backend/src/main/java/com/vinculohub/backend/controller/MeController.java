@@ -10,14 +10,12 @@ import com.vinculohub.backend.repository.CompanyRepository;
 import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.UserRepository;
 import java.util.Optional;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/me")
 public class MeController {
@@ -37,11 +35,9 @@ public class MeController {
 
     @GetMapping("/profile")
     public AuthenticatedProfileResponse profile(@AuthenticationPrincipal Jwt jwt) {
-        log.info("GET /api/me/profile | sub={}", jwt.getSubject());
         Optional<User> user = userRepository.findByAuth0Id(jwt.getSubject());
 
         if (user.isEmpty()) {
-            log.info("No DB user found for auth0Id={}, returning empty profile", jwt.getSubject());
             return new AuthenticatedProfileResponse(
                     jwt.getSubject(), jwt.getClaimAsString("email"), null, null, null, null, false);
         }
@@ -58,9 +54,6 @@ public class MeController {
                                 .map(Company::getId)
                                 .orElse(null)
                         : null;
-
-        log.info("Profile loaded | userId={} type={} npoId={} companyId={} complete={}",
-                savedUser.getId(), savedUser.getUserType(), npoId, companyId, npoId != null || companyId != null);
 
         return new AuthenticatedProfileResponse(
                 savedUser.getAuth0Id(),

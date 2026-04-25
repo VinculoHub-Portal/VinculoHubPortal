@@ -1,4 +1,4 @@
-import { useAuth0 } from "@auth0/auth0-react";
+import { Link } from "react-router-dom";
 import type { Dispatch, SetStateAction } from "react";
 import type {
   OrganizationType,
@@ -6,7 +6,7 @@ import type {
   WizardFormData,
 } from "../../types/wizard.types";
 
-type WizardSignUpProps = {
+type WizardSingUpProps = {
   organizationType: OrganizationType | null;
   onSelectOrganizationType: (type: OrganizationType) => void;
   formData: WizardFormData;
@@ -52,12 +52,11 @@ function TypeCard({ title, selected, onClick }: TypeCardProps) {
   );
 }
 
-export function WizardSignUp({
+export function WizardSingUp({
   organizationType,
   onSelectOrganizationType,
   errors,
-}: WizardSignUpProps) {
-  const { loginWithRedirect } = useAuth0();
+}: WizardSingUpProps) {
   return (
     <div>
       <div className="flex items-center w-full justify-center py-4 mx-auto max-w-xl">
@@ -87,13 +86,11 @@ export function WizardSignUp({
       </div>
 
       <div className="flex items-center w-full justify-center py-8 mx-auto max-w-xl">
-        <button
-          type="button"
-          onClick={() => void loginWithRedirect({ authorizationParams: { ui_locales: "pt-BR" } })}
-          className="text-vinculo-dark text-sm hover:underline"
-        >
-          Já tenho login
-        </button>
+        <Link to="/Login">
+          <a className="text-vinculo-dark text-x -webkit-font-smoothing hover:underline">
+            Já tenho login
+          </a>
+        </Link>
       </div>
     </div>
   );

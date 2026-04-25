@@ -7,57 +7,63 @@ import com.vinculohub.backend.dto.NpoInstitutionalSignupResponse;
 import com.vinculohub.backend.exception.DuplicateLoginException;
 import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.model.Npo;
+import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.model.enums.NpoSize;
 import com.vinculohub.backend.model.enums.UserType;
 import com.vinculohub.backend.repository.UserRepository;
 import java.util.Locale;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Slf4j
 @Service
 public class NpoAccountService {
 
     private final UserRepository userRepository;
     private final NpoService npoService;
+    private final ProjectService projectService;
+    private final ProjectValidationService projectValidationService;
     private final NpoDocumentService npoDocumentService;
     private final NpoEsgService npoEsgService;
 
     public NpoAccountService(
             UserRepository userRepository,
             NpoService npoService,
+            ProjectService projectService,
+            ProjectValidationService projectValidationService,
             NpoDocumentService npoDocumentService,
             NpoEsgService npoEsgService) {
         this.userRepository = userRepository;
         this.npoService = npoService;
+        this.projectService = projectService;
+        this.projectValidationService = projectValidationService;
         this.npoDocumentService = npoDocumentService;
         this.npoEsgService = npoEsgService;
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public NpoInstitutionalSignupResponse registerInstitutionalAccount(
             String auth0Id, String auth0Email, NpoInstitutionalSignupRequest request) {
         if (request == null) {
-            throw new IllegalArgumentException("Os dados do cadastro são obrigatórios.");
+            throw new IllegalArgumentException("Os dados do cadastro sao obrigatorios.");
         }
 
-        String normalizedAuth0Id = requireText(auth0Id, "Identidade Auth0 é obrigatória.");
-        String name = requireText(request.name(), "Nome da instituição é obrigatório.");
+        String normalizedAuth0Id = requireText(auth0Id, "Identidade Auth0 e obrigatoria.");
+        String name = requireText(request.name(), "Nome da instituicao e obrigatorio.");
         String email = normalizeEmail(firstPresent(auth0Email, request.email()));
 
         if (userRepository.existsByAuth0Id(normalizedAuth0Id)) {
-            throw new DuplicateLoginException("Já existe uma conta cadastrada para este login.");
+            throw new DuplicateLoginException("Ja existe uma conta cadastrada para este login.");
         }
 
         if (userRepository.existsByEmailIgnoreCase(email)) {
-            throw new DuplicateLoginException("Já existe uma conta cadastrada com este e-mail.");
+            throw new DuplicateLoginException("Ja existe uma conta cadastrada com este e-mail.");
         }
 
         npoDocumentService.validateDocuments(request.cpf(), request.cnpj());
         npoEsgService.validateEsgSelection(
                 request.environmental(), request.social(), request.governance());
+        projectValidationService.validateFirstProject(request.firstProject());
 
         User savedUser =
                 userRepository.save(
@@ -84,12 +90,18 @@ public class NpoAccountService {
 
         Npo savedNpo = npoService.saveWithAddress(npo, toAddressOrNull(request.address()));
 
+        Project savedProject = projectService.createFirstProject(savedNpo, request.firstProject());
+
         return new NpoInstitutionalSignupResponse(
-                savedUser.getId(), savedNpo.getId(), savedUser.getEmail(), true);
+                savedUser.getId(),
+                savedNpo.getId(),
+                savedProject.getId(),
+                savedUser.getEmail(),
+                true);
     }
 
     private static String normalizeEmail(String value) {
-        return requireText(value, "E-mail é obrigatório.").toLowerCase(Locale.ROOT);
+        return requireText(value, "E-mail e obrigatorio.").toLowerCase(Locale.ROOT);
     }
 
     private static String firstPresent(String first, String second) {
@@ -109,20 +121,19 @@ public class NpoAccountService {
         if (value == null) {
             return null;
         }
-
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
     }
 
     private static NpoSize parseNpoSize(String value) {
         String normalized =
-                requireText(value, "Porte da ONG é obrigatório.").toLowerCase(Locale.ROOT);
+                requireText(value, "Porte da ONG e obrigatorio.").toLowerCase(Locale.ROOT);
 
         return switch (normalized) {
             case "small", "pequena" -> NpoSize.small;
             case "medium", "media" -> NpoSize.medium;
             case "large", "grande" -> NpoSize.large;
-            default -> throw new IllegalArgumentException("Porte da ONG inválido.");
+            default -> throw new IllegalArgumentException("Porte da ONG invalido.");
         };
     }
 

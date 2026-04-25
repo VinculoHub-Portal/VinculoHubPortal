@@ -2,10 +2,12 @@ import { useAuth0 } from "@auth0/auth0-react";
 import axios from "axios";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { registerCompany, type CompanyRegistrationPayload } from "../../api/company";
+import {
+  registerCompany,
+  type CompanyRegistrationPayload,
+} from "../../api/company";
 import { api } from "../../services/api";
 import type { WizardFormData } from "../../types/wizard.types";
-import { logger } from "../../utils/logger";
 
 type UserRole = "ADMIN" | "NPO" | "COMPANY" | "UNKNOWN";
 
@@ -38,7 +40,8 @@ const companySignupDraftKey = "vinculohub:company-signup-draft";
 const rolesClaim = "https://vinculohub/roles";
 
 export function AuthRoleRedirect() {
-  const { getAccessTokenSilently, isAuthenticated, isLoading, user } = useAuth0();
+  const { getAccessTokenSilently, isAuthenticated, isLoading, user } =
+    useAuth0();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -53,46 +56,43 @@ export function AuthRoleRedirect() {
 
     async function redirectByRole() {
       try {
-        logger.info("AuthRedirect", "Acquiring access token...");
         const token = await getAccessTokenSilently();
-        logger.info("AuthRedirect", "Token acquired");
-
         const hasNpoDraft = sessionStorage.getItem(npoSignupDraftKey) !== null;
-        const hasCompanyDraft = sessionStorage.getItem(companySignupDraftKey) !== null;
-        logger.info("AuthRedirect", "Draft check", { hasNpoDraft, hasCompanyDraft });
-
+        const hasCompanyDraft =
+          sessionStorage.getItem(companySignupDraftKey) !== null;
         let npoDraftSubmitted = false;
         let companyDraftSubmitted = false;
 
         if (hasNpoDraft) {
           try {
-            logger.info("AuthRedirect", "Submitting NPO draft...");
             await submitNpoSignupDraft(token, user);
             npoDraftSubmitted = true;
-            logger.info("AuthRedirect", "NPO draft submitted successfully");
           } catch (error) {
-            logger.error("AuthRedirect", "NPO draft submission failed", getErrorMessage(error));
+            console.warn(
+              "Nao foi possivel reenviar o cadastro da ONG:",
+              getErrorMessage(error),
+            );
           }
         }
 
         if (hasCompanyDraft) {
           try {
-            logger.info("AuthRedirect", "Submitting company draft...");
             await submitCompanySignupDraft(token, user);
             companyDraftSubmitted = true;
-            logger.info("AuthRedirect", "Company draft submitted successfully");
           } catch (error) {
-            logger.error("AuthRedirect", "Company draft submission failed", getErrorMessage(error));
+            console.warn(
+              "Nao foi possivel reenviar o cadastro da empresa:",
+              getErrorMessage(error),
+            );
           }
         }
 
-        logger.info("AuthRedirect", "Fetching authenticated profile...");
         const profile = await getAuthenticatedProfile(token);
-        logger.info("AuthRedirect", "Profile loaded", profile);
-
         const tokenRoles = getRolesFromToken(token);
         const userRoles = getRolesFromUser(user);
-        const role = profileRole(profile) ?? resolvePrimaryRole([...tokenRoles, ...userRoles]);
+        const role =
+          profileRole(profile) ??
+          resolvePrimaryRole([...tokenRoles, ...userRoles]);
         const redirectPath = redirectPathAfterSignupDraft({
           profile,
           role,
@@ -100,34 +100,40 @@ export function AuthRoleRedirect() {
           companyDraftSubmitted: companyDraftSubmitted || hasCompanyDraft,
         });
 
-        logger.info("AuthRedirect", "Role resolution complete", {
+        console.info("Roles Auth0 detectadas:", {
+          profile,
           tokenRoles,
           userRoles,
           selectedRole: role,
-          profileUserType: profile?.userType,
-          registrationCompleted: profile?.registrationCompleted,
           redirectPath,
         });
 
         if (redirectPath !== location.pathname) {
-          logger.info("AuthRedirect", `Navigating to ${redirectPath}`);
           navigate(redirectPath, { replace: true });
         }
       } catch (error) {
-        logger.error("AuthRedirect", "Redirect by role failed", error);
+        console.error("Erro ao redirecionar por role:", error);
         navigate("/cadastro", { replace: true });
       }
     }
 
     void redirectByRole();
-  }, [getAccessTokenSilently, isAuthenticated, isLoading, location.pathname, navigate, user]);
+  }, [
+    getAccessTokenSilently,
+    isAuthenticated,
+    isLoading,
+    location.pathname,
+    navigate,
+    user,
+  ]);
 
   return null;
 }
 
 function getErrorMessage(error: unknown) {
   if (axios.isAxiosError(error)) {
-    const message = (error.response?.data as { message?: string } | undefined)?.message;
+    const message = (error.response?.data as { message?: string } | undefined)
+      ?.message;
     return message ?? error.message;
   }
 
@@ -144,7 +150,7 @@ async function getAuthenticatedProfile(token: string) {
 
     return response.data;
   } catch (error) {
-    logger.error("AuthRedirect", "Failed to load authenticated profile", error);
+    console.warn("Nao foi possivel carregar o perfil autenticado:", error);
     return null;
   }
 }
@@ -170,23 +176,13 @@ async function submitNpoSignupDraft(token: string, user: unknown) {
       email: getUserEmail(user),
       cpf: formData.cpf,
       cnpj: formData.cnpj || null,
-      npoSize: formData.porteOng,
-      description: formData.resumoInstitucional || null,
-      phone: formData.phone || null,
-      environmental: formData.esg.includes("ambiental"),
-      social: formData.esg.includes("social"),
-      governance: formData.esg.includes("governanca"),
-      address: formData.zipCode
-        ? {
-            state: formData.state || null,
-            stateCode: formData.stateCode || null,
-            city: formData.city || null,
-            street: formData.street || null,
-            number: formData.streetNumber || null,
-            complement: formData.complement || null,
-            zipCode: formData.zipCode,
-          }
-        : null,
+      npoSize: formData.npo_size,
+      description: formData.description || null,
+      phone: null,
+      environmental: formData.environmental,
+      social: formData.social,
+      governance: formData.governance,
+      address: null,
     },
     {
       headers: {
@@ -202,7 +198,6 @@ async function submitCompanySignupDraft(token: string, user: unknown) {
   const savedDraft = sessionStorage.getItem(companySignupDraftKey);
 
   if (!savedDraft) {
-    logger.warn("AuthRedirect", "Company draft key exists but value is empty");
     return;
   }
 
@@ -210,23 +205,18 @@ async function submitCompanySignupDraft(token: string, user: unknown) {
   const payload = draft.payload;
 
   if (!payload) {
-    logger.warn("AuthRedirect", "Company draft parsed but payload is missing");
     return;
   }
-
-  const email = getUserEmail(user) ?? payload.email;
-  logger.info("AuthRedirect", "Calling registerCompany", { cnpj: payload.cnpj, email });
 
   await registerCompany(
     {
       ...payload,
-      email,
+      email: getUserEmail(user) ?? payload.email,
     },
     token,
   );
 
   sessionStorage.removeItem(companySignupDraftKey);
-  logger.info("AuthRedirect", "Company draft removed from sessionStorage");
 }
 
 function getUserEmail(user: unknown) {
@@ -259,7 +249,10 @@ function getRolesFromUser(user: unknown) {
 
 function decodeBase64Url(value: string) {
   const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
-  const paddedBase64 = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+  const paddedBase64 = base64.padEnd(
+    base64.length + ((4 - (base64.length % 4)) % 4),
+    "=",
+  );
   const binary = atob(paddedBase64);
   const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
 

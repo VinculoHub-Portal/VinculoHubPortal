@@ -1,6 +1,6 @@
 import * as React from "react"
 
-export function HeroIcon(props: React.SVGProps<SVGSVGElement>) {
+function HeroIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       className="w-full h-auto"
@@ -24,3 +24,4 @@ export function HeroIcon(props: React.SVGProps<SVGSVGElement>) {
   )
 }
 
+export default HeroIcon

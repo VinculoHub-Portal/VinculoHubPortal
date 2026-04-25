@@ -1,14 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { useNavigate } from "react-router-dom";
-import { logger, getApiErrorMessage } from "../../../utils/logger";
 import { WizardSteps } from "../../../components/auth/WizardSteps";
-import { AuthRedirectModal } from "../../../components/auth/AuthRedirectModal";
 import { BackLink } from "../../../components/general/BackLink";
-import { Input } from "../../../components/general/Input";
-import { TextArea } from "../../../components/general/TextArea";
+import { Input } from "../../../components/general/SimpleTextInput";
+import { TextArea } from "../../../components/general/SimpleTextArea";
 import { BaseButton } from "../../../components/general/BaseButton";
 import { InfoBox } from "../../../components/general/InfoBox";
+// import { LogoUpload } from "../../../components/general/LogoUpload";
 import { useZipCode } from "../../../hooks/useZipCode";
 import { useCnpj } from "../../../hooks/useCnpj";
 import { CompanyIcon, DescriptionIcon, CnpjIcon, AddressIcon, StateIcon, PhoneIcon, EmailIcon } from "../../../components/icons";
@@ -21,23 +19,11 @@ import type { CompanyRegistrationPayload } from "../../../api/company";
 const auth0Audience = import.meta.env.VITE_AUTH0_AUDIENCE;
 const companySignupDraftKey = "vinculohub:company-signup-draft";
 
-const LOG = "CompanyRegistration";
-
-export function CompanyRegistrationPage() {
+export default function CompanyRegistrationPage() {
   const { loginWithRedirect } = useAuth0();
-  const navigate = useNavigate();
-
-  const [currentStep, _setCurrentStep] = useState(2);
-  const setCurrentStep = useCallback((step: number | ((prev: number) => number)) => {
-    _setCurrentStep((prev) => {
-      const next = typeof step === "function" ? step(prev) : step;
-      logger.info(LOG, `Step ${prev} → ${next}`);
-      return next;
-    });
-  }, []);
+  const [currentStep, setCurrentStep] = useState(2);
   const [signupError, setSignupError] = useState("");
   const [isRedirectingToAuth0, setIsRedirectingToAuth0] = useState(false);
-  const [isAuthRedirectModalOpen, setIsAuthRedirectModalOpen] = useState(false);
 
   const [basicInfo, setBasicInfo] = useState({
     name: "",
@@ -46,30 +32,10 @@ export function CompanyRegistrationPage() {
     cnpj: "",
   });
 
+  // const [logoFile, setLogoFile] = useState<File | null>(null);
+  // const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
   const [cnpjError, setCnpjError] = useState("");
-
-  const [contactErrors, setContactErrors] = useState({
-    zip_code: "",
-    number: "",
-  });
-
-  const validateContactStep = () => {
-    const errors = { zip_code: "", number: "" };
-    let valid = true;
-
-    if (contactInfo.zip_code.replace(/\D/g, "").length !== 8) {
-      errors.zip_code = "Informe um CEP válido";
-      valid = false;
-    }
-
-    if (!contactInfo.number.trim()) {
-      errors.number = "Informe o número";
-      valid = false;
-    }
-
-    setContactErrors(errors);
-    return valid;
-  };
 
   const [credentials, setCredentials] = useState({
     email: "",
@@ -78,28 +44,6 @@ export function CompanyRegistrationPage() {
   const [credentialsErrors, setCredentialsErrors] = useState({
     email: "",
   });
-
-  const validateCredentialsStep = () => {
-    const email = credentials.email.trim();
-    logger.info(LOG, "Validating credentials", { email });
-
-    if (!email) {
-      logger.warn(LOG, "Credentials validation failed: empty email");
-      setCredentialsErrors({ email: "Informe um e-mail" });
-      return false;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      logger.warn(LOG, "Credentials validation failed: invalid email format");
-      setCredentialsErrors({ email: "E-mail inválido" });
-      return false;
-    }
-
-    logger.info(LOG, "Credentials validation passed");
-    setCredentials((prev) => ({ ...prev, email }));
-    setCredentialsErrors({ email: "" });
-    return true;
-  };
 
   const handleCredentialsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -125,54 +69,20 @@ export function CompanyRegistrationPage() {
     phone: "",
   });
 
-  const resetCompanyWizard = () => {
-    logger.warn(LOG, "Wizard reset triggered");
-    sessionStorage.removeItem(companySignupDraftKey);
-    setCurrentStep(2);
-    setSignupError("");
-    setIsRedirectingToAuth0(false);
-    setBasicInfo({
-      name: "",
-      tradeName: "",
-      description: "",
-      cnpj: "",
-    });
-    setCnpjError("");
-    setContactErrors({ zip_code: "", number: "" });
-    setCredentials({
-      email: "",
-    });
-    setCredentialsErrors({
-      email: "",
-    });
-    setContactInfo({
-      zip_code: "",
-      street: "",
-      number: "",
-      complement: "",
-      city: "",
-      state: "",
-      state_code: "",
-      phone: "",
-    });
-    navigate("/cadastro", { replace: true });
-  };
-
   const {
     data: cnpjData,
     isFetching: loadingCnpj,
     error: cnpjQueryError,
-  } = useCnpj(currentStep === 2 ? basicInfo.cnpj : "");
+  } = useCnpj(basicInfo.cnpj);
 
   const {
     data: zipCodeData,
     isFetching: loadingZipCode,
     error: zipCodeQueryError,
-  } = useZipCode(currentStep === 3 ? contactInfo.zip_code : "");
+  } = useZipCode(contactInfo.zip_code);
 
   useEffect(() => {
     if (cnpjData) {
-      logger.info(LOG, "CNPJ data received", { razao: cnpjData.razao_social, fantasia: cnpjData.nome_fantasia });
       const timeoutId = window.setTimeout(() => {
         setBasicInfo((prev) => ({
           ...prev,
@@ -187,12 +97,11 @@ export function CompanyRegistrationPage() {
 
   useEffect(() => {
     if (zipCodeData) {
-      logger.info(LOG, "ZIP code data received", { city: zipCodeData.city, state: zipCodeData.stateCode });
       const timeoutId = window.setTimeout(() => {
         setContactInfo((prev) => ({
           ...prev,
           street: zipCodeData.street || prev.street,
-          number: (zipCodeData.complement ?? "").slice(0, 20) || prev.number,
+          complement: zipCodeData.complement || prev.complement,
           city: zipCodeData.city || prev.city,
           state: zipCodeData.state || prev.state,
           state_code: zipCodeData.stateCode || prev.state_code,
@@ -228,7 +137,6 @@ export function CompanyRegistrationPage() {
 
   const handleStepTwoSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    logger.info(LOG, "Step 2 submit", { cnpj: basicInfo.cnpj, name: basicInfo.name });
 
     if (!basicInfo.cnpj) {
       setCnpjError("Informe o CNPJ");
@@ -236,7 +144,7 @@ export function CompanyRegistrationPage() {
     }
 
     if (!validateCnpj(basicInfo.cnpj)) {
-      setCnpjError("CNPJ inválido");
+      setCnpjError("CNPJ invalido");
       return;
     }
 
@@ -261,13 +169,10 @@ export function CompanyRegistrationPage() {
   });
 
   const handleCompanySignup = async () => {
-    logger.info(LOG, "handleCompanySignup called", { email: credentials.email, hasError: !!credentialsErrors.email });
-
     if (!credentials.email || credentialsErrors.email) {
-      logger.warn(LOG, "Signup blocked: email missing or has error");
       setCredentialsErrors((prev) => ({
         ...prev,
-        email: prev.email || "Informe um e-mail válido",
+        email: prev.email || "Informe um e-mail valido",
       }));
       return;
     }
@@ -276,14 +181,11 @@ export function CompanyRegistrationPage() {
     setIsRedirectingToAuth0(true);
 
     try {
-      const payload = buildCompanyPayload();
-      logger.info(LOG, "Saving company draft to sessionStorage", { cnpj: payload.cnpj, email: payload.email });
       sessionStorage.setItem(
         companySignupDraftKey,
-        JSON.stringify({ payload }),
+        JSON.stringify({ payload: buildCompanyPayload() }),
       );
 
-      logger.info(LOG, "Redirecting to Auth0 for signup");
       await loginWithRedirect({
         appState: {
           returnTo: "/empresa/dashboard",
@@ -293,19 +195,12 @@ export function CompanyRegistrationPage() {
           login_hint: credentials.email,
           role: "COMPANY",
           screen_hint: "signup",
-          ui_locales: 'pt-BR',
         },
       });
-    } catch (error) {
-      logger.error(LOG, "Auth0 redirect failed", error);
+    } catch {
       setIsRedirectingToAuth0(false);
-      setSignupError("Não foi possível abrir a próxima etapa do cadastro. Tente novamente.");
+      setSignupError("Nao foi possivel abrir o cadastro Auth0. Tente novamente.");
     }
-  };
-
-  const openCompanySignupRedirectNotice = () => {
-    setSignupError("");
-    setIsAuthRedirectModalOpen(true);
   };
 
   const stepTitles: Record<number, { heading: string; subtitle: string }> = {
@@ -319,7 +214,7 @@ export function CompanyRegistrationPage() {
     },
     4: {
       heading: "Acesso à Conta",
-      subtitle: "Informe o e-mail que será usado para criar o acesso à conta.",
+      subtitle: "Informe o e-mail que sera usado no cadastro Auth0.",
     },
     5: {
       heading: "Cadastro Concluído!",
@@ -330,7 +225,7 @@ export function CompanyRegistrationPage() {
   return (
     <div className="min-h-screen bg-stone-100 flex flex-col px-4 py-8">
       <div className="w-full max-w-2xl mx-auto">
-        <BackLink label="Voltar ao início" onClick={resetCompanyWizard} />
+        <BackLink label="Voltar ao início" />
       </div>
 
       <WizardSteps currentStep={currentStep} />
@@ -349,6 +244,21 @@ export function CompanyRegistrationPage() {
 
         {currentStep === 2 && (
           <form className="flex flex-col gap-4" onSubmit={handleStepTwoSubmit}>
+            { /*
+            <LogoUpload
+              label="Logo da Empresa"
+              preview={logoPreview}
+              onChange={(file, previewUrl) => {
+                setLogoFile(file);
+                setLogoPreview(previewUrl);
+              }}
+              onRemove={() => {
+                setLogoFile(null);
+                setLogoPreview(null);
+              }}
+            />
+            */ }
+
             <div className="flex flex-col gap-1">
               <Input
                 label="CNPJ"
@@ -358,7 +268,7 @@ export function CompanyRegistrationPage() {
                 value={basicInfo.cnpj}
                 onChange={handleBasicChange}
                 onBlur={handleCnpjBlur}
-                error={cnpjError || (cnpjQueryError ? getApiErrorMessage(cnpjQueryError, "CNPJ não encontrado. Verifique e tente novamente.") : "")}
+                error={cnpjError || (cnpjQueryError ? "Erro ao consultar o CNPJ. Tente novamente." : "")}
                 icon={<CnpjIcon />}
                 iconPosition="left"
                 isRequired
@@ -406,12 +316,7 @@ export function CompanyRegistrationPage() {
             />
 
             <div className="flex justify-end gap-3 mt-2 pt-4 border-t border-slate-100">
-              <BaseButton
-                type="button"
-                variant="ghost"
-                className="w-28"
-                onClick={resetCompanyWizard}
-              >
+              <BaseButton type="button" variant="ghost" className="w-28">
                 Voltar
               </BaseButton>
               <BaseButton
@@ -426,7 +331,7 @@ export function CompanyRegistrationPage() {
         )}
 
         {currentStep === 3 && (
-          <form className="flex flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
+          <form className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
               <Input
                 label="CEP"
@@ -434,11 +339,7 @@ export function CompanyRegistrationPage() {
                 placeholder="00000-000"
                 maxLength={9}
                 value={contactInfo.zip_code}
-                onChange={(e) => {
-                  handleContactChange(e);
-                  setContactErrors((prev) => ({ ...prev, zip_code: "" }));
-                }}
-                error={contactErrors.zip_code}
+                onChange={handleContactChange}
                 icon={<AddressIcon />}
                 iconPosition="left"
                 isRequired
@@ -450,7 +351,7 @@ export function CompanyRegistrationPage() {
               )}
               {zipCodeQueryError && (
                 <span className="text-sm text-error">
-                  {getApiErrorMessage(zipCodeQueryError, "CEP não encontrado. Verifique e tente novamente.")}
+                  {(zipCodeQueryError as Error).message || "Erro ao consultar o CEP. Tente novamente."}
                 </span>
               )}
             </div>
@@ -466,7 +367,7 @@ export function CompanyRegistrationPage() {
                   onChange={handleContactChange}
                   icon={<AddressIcon />}
                   iconPosition="left"
-                  disabled={!!zipCodeData}
+                  disabled
                 />
               </div>
               <Input
@@ -475,14 +376,9 @@ export function CompanyRegistrationPage() {
                 placeholder="Ex: 123"
                 maxLength={20}
                 value={contactInfo.number}
-                onChange={(e) => {
-                  handleContactChange(e);
-                  setContactErrors((prev) => ({ ...prev, number: "" }));
-                }}
-                error={contactErrors.number}
+                onChange={handleContactChange}
                 icon={<AddressIcon />}
                 iconPosition="left"
-                isRequired
               />
             </div>
 
@@ -506,7 +402,7 @@ export function CompanyRegistrationPage() {
                 onChange={handleContactChange}
                 icon={<StateIcon />}
                 iconPosition="left"
-                disabled={!!zipCodeData}
+                disabled
               />
             </div>
 
@@ -520,7 +416,7 @@ export function CompanyRegistrationPage() {
                 onChange={handleContactChange}
                 icon={<StateIcon />}
                 iconPosition="left"
-                disabled={!!zipCodeData}
+                disabled
               />
               <Input
                 label="UF"
@@ -531,7 +427,7 @@ export function CompanyRegistrationPage() {
                 onChange={handleContactChange}
                 icon={<StateIcon />}
                 iconPosition="left"
-                disabled={!!zipCodeData}
+                disabled
               />
             </div>
 
@@ -564,10 +460,7 @@ export function CompanyRegistrationPage() {
                 type="button"
                 variant="secondary"
                 className="w-28"
-                onClick={() => {
-                  if (!validateContactStep()) return;
-                  setCurrentStep(4);
-                }}
+                onClick={() => setCurrentStep(4)}
               >
                 Próximo
               </BaseButton>
@@ -576,7 +469,7 @@ export function CompanyRegistrationPage() {
         )}
 
         {currentStep === 4 && (
-          <form className="flex flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
+          <form className="flex flex-col gap-4">
             <Input
               label="E-mail"
               id="email"
@@ -596,7 +489,7 @@ export function CompanyRegistrationPage() {
 
             <InfoBox
               title="Importante"
-              message="A senha será criada na próxima etapa, em um ambiente seguro. Aqui usamos seu e-mail para iniciar esse cadastro."
+              message="A senha sera criada no cadastro seguro do Auth0. Aqui usamos o e-mail para iniciar esse cadastro."
             />
 
             <div className="flex justify-end gap-3 mt-2 pt-4 border-t border-slate-100">
@@ -612,10 +505,7 @@ export function CompanyRegistrationPage() {
                 type="button"
                 variant="secondary"
                 className="w-28"
-                onClick={() => {
-                  if (!validateCredentialsStep()) return;
-                  setCurrentStep(5);
-                }}
+                onClick={() => setCurrentStep(5)}
               >
                 Próximo
               </BaseButton>
@@ -627,6 +517,7 @@ export function CompanyRegistrationPage() {
           <RegistrationSummary
             entityName={basicInfo.tradeName || basicInfo.name}
             entitySubtitle={basicInfo.cnpj}
+            // entityIcon={<CompanyIcon sx={{ fontSize: 36 }} className="text-vinculo-green" />}
             completedSteps={5}
             totalSteps={5}
             sections={[
@@ -657,25 +548,12 @@ export function CompanyRegistrationPage() {
               },
             ]}
             onBack={() => setCurrentStep(4)}
-            onSubmit={openCompanySignupRedirectNotice}
+            onSubmit={handleCompanySignup}
             isLoading={isRedirectingToAuth0}
             errorMessage={signupError || undefined}
           />
         )}
       </div>
-
-      <AuthRedirectModal
-        open={isAuthRedirectModalOpen}
-        title="Você será redirecionado para concluir o acesso"
-        description="Na próxima etapa, abriremos o ambiente seguro de autenticação para criar sua conta e concluir a entrada no VinculoHubPortal."
-        confirmLabel="Continuar"
-        isLoading={isRedirectingToAuth0}
-        onCancel={() => setIsAuthRedirectModalOpen(false)}
-        onConfirm={() => {
-          setIsAuthRedirectModalOpen(false);
-          void handleCompanySignup();
-        }}
-      />
     </div>
   );
 }

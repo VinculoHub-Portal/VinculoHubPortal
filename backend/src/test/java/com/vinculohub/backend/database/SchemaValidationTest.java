@@ -18,11 +18,11 @@ class SchemaValidationTest extends AbstractIntegrationTest {
         List<String> columns =
                 jdbcTemplate.queryForList(
                         """
-                        select column_name
-                        from information_schema.columns
-                        where table_schema = 'public'
-                          and table_name = 'users'
-                        """,
+            select column_name
+            from information_schema.columns
+            where table_schema = 'public'
+              and table_name = 'users'
+            """,
                         String.class);
 
         assertThat(columns)
@@ -39,12 +39,12 @@ class SchemaValidationTest extends AbstractIntegrationTest {
         String emailType =
                 jdbcTemplate.queryForObject(
                         """
-                        select data_type
-                        from information_schema.columns
-                        where table_schema = 'public'
-                          and table_name = 'users'
-                          and column_name = 'email'
-                        """,
+            select data_type
+            from information_schema.columns
+            where table_schema = 'public'
+              and table_name = 'users'
+              and column_name = 'email'
+            """,
                         String.class);
 
         assertThat(emailType).isEqualTo("character varying");
@@ -68,11 +68,11 @@ class SchemaValidationTest extends AbstractIntegrationTest {
         List<String> columns =
                 jdbcTemplate.queryForList(
                         """
-                        select column_name
-                        from information_schema.columns
-                        where table_schema = 'public'
-                          and table_name = 'npo'
-                        """,
+            select column_name
+            from information_schema.columns
+            where table_schema = 'public'
+              and table_name = 'npo'
+            """,
                         String.class);
 
         assertThat(columns)
@@ -97,11 +97,11 @@ class SchemaValidationTest extends AbstractIntegrationTest {
         List<String> columns =
                 jdbcTemplate.queryForList(
                         """
-                        select column_name
-                        from information_schema.columns
-                        where table_schema = 'public'
-                          and table_name = 'company'
-                        """,
+            select column_name
+            from information_schema.columns
+            where table_schema = 'public'
+              and table_name = 'company'
+            """,
                         String.class);
 
         assertThat(columns)
@@ -118,19 +118,67 @@ class SchemaValidationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void testProjectTableStructure() {
+        List<String> columns =
+                jdbcTemplate.queryForList(
+                        """
+            select column_name
+            from information_schema.columns
+            where table_schema = 'public'
+              and table_name = 'project'
+            """,
+                        String.class);
+
+        assertThat(columns)
+                .contains(
+                        "id",
+                        "npo_id",
+                        "title",
+                        "description",
+                        "status",
+                        "budget_needed",
+                        "invested_amount");
+
+        String idType =
+                jdbcTemplate.queryForObject(
+                        """
+            select data_type
+            from information_schema.columns
+            where table_schema = 'public'
+              and table_name = 'project'
+              and column_name = 'id'
+            """,
+                        String.class);
+
+        String statusType =
+                jdbcTemplate.queryForObject(
+                        """
+            select data_type
+            from information_schema.columns
+            where table_schema = 'public'
+              and table_name = 'project'
+              and column_name = 'status'
+            """,
+                        String.class);
+
+        assertThat(idType).isEqualTo("bigint");
+        assertThat(statusType).isEqualTo("character varying");
+    }
+
+    @Test
     void testForeignKeyConstraints() {
         List<String> fkColumns =
                 jdbcTemplate.queryForList(
                         """
-                        select kcu.column_name
-                        from information_schema.table_constraints tc
-                        join information_schema.key_column_usage kcu
-                          on tc.constraint_name = kcu.constraint_name
-                         and tc.table_schema = kcu.table_schema
-                        where tc.constraint_type = 'FOREIGN KEY'
-                          and tc.table_schema = 'public'
-                          and tc.table_name = 'npo'
-                        """,
+            select kcu.column_name
+            from information_schema.table_constraints tc
+            join information_schema.key_column_usage kcu
+              on tc.constraint_name = kcu.constraint_name
+             and tc.table_schema = kcu.table_schema
+            where tc.constraint_type = 'FOREIGN KEY'
+              and tc.table_schema = 'public'
+              and tc.table_name = 'npo'
+            """,
                         String.class);
 
         assertThat(fkColumns).contains("user_id", "address_id");
@@ -141,11 +189,11 @@ class SchemaValidationTest extends AbstractIntegrationTest {
         List<String> indexNames =
                 jdbcTemplate.queryForList(
                         """
-                        select indexname
-                        from pg_indexes
-                        where schemaname = 'public'
-                          and tablename = 'npo'
-                        """,
+            select indexname
+            from pg_indexes
+            where schemaname = 'public'
+              and tablename = 'npo'
+            """,
                         String.class);
 
         assertThat(indexNames).isNotEmpty();
@@ -156,12 +204,12 @@ class SchemaValidationTest extends AbstractIntegrationTest {
         Map<String, List<String>> uniqueConstraints =
                 jdbcTemplate.query(
                         """
-                        select constraint_name, table_name
-                        from information_schema.table_constraints
-                        where constraint_type = 'UNIQUE'
-                          and table_schema = 'public'
-                        order by table_name
-                        """,
+        select constraint_name, table_name
+        from information_schema.table_constraints
+        where constraint_type = 'UNIQUE'
+          and table_schema = 'public'
+        order by table_name
+        """,
                         rs -> {
                             Map<String, List<String>> result = new java.util.HashMap<>();
                             while (rs.next()) {

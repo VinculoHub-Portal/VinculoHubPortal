@@ -1,10 +1,10 @@
 import { useState } from "react"
 import { Header } from "../../components/general/Header"
 import { BaseButton } from "../../components/general/BaseButton"
-import { Input } from "../../components/general/Input"
+import { Input } from "../../components/general/SimpleTextInput"
 import { WizardSteps } from "../../components/auth/WizardSteps"
 
-export function ComponentsPage() {
+export default function ComponentsPage() {
   const [currentStep, setCurrentStep] = useState(1)
 
   return (

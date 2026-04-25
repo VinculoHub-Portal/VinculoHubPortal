@@ -4,11 +4,9 @@ package com.vinculohub.backend.service;
 import com.vinculohub.backend.dto.CepRawResponseDTO;
 import com.vinculohub.backend.dto.CepResponseDTO;
 import com.vinculohub.backend.exception.CepNotFoundException;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-@Slf4j
 @Service
 public class CepValidationService {
 
