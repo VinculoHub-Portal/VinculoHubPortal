@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
+import { useWizardPersistence } from "../../../hooks/useWizardPersistence";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useNavigate } from "react-router-dom";
 import { logger, getApiErrorMessage } from "../../../utils/logger";
+import { useToast } from "../../../context/ToastContext";
+import { checkCnpjAvailable, checkEmailAvailable } from "../../../api/documentCheck";
 import { WizardSteps } from "../../../components/auth/WizardSteps";
 import { AuthRedirectModal } from "../../../components/auth/AuthRedirectModal";
 import { BackLink } from "../../../components/general/BackLink";
@@ -20,31 +23,102 @@ import type { CompanyRegistrationPayload } from "../../../api/company";
 
 const auth0Audience = import.meta.env.VITE_AUTH0_AUDIENCE;
 const companySignupDraftKey = "vinculohub:company-signup-draft";
+const companyWizardProgressKey = "vinculohub:company-wizard-progress";
 
 const LOG = "CompanyRegistration";
+
+type CompanyWizardProgress = {
+  currentStep: number;
+  basicInfo: {
+    name: string;
+    tradeName: string;
+    description: string;
+    cnpj: string;
+  };
+  contactInfo: {
+    zip_code: string;
+    street: string;
+    number: string;
+    complement: string;
+    city: string;
+    state: string;
+    state_code: string;
+    phone: string;
+  };
+  credentials: {
+    email: string;
+  };
+};
 
 export function CompanyRegistrationPage() {
   const { loginWithRedirect } = useAuth0();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
-  const [currentStep, _setCurrentStep] = useState(2);
-  const setCurrentStep = useCallback((step: number | ((prev: number) => number)) => {
-    _setCurrentStep((prev) => {
-      const next = typeof step === "function" ? step(prev) : step;
-      logger.info(LOG, `Step ${prev} → ${next}`);
-      return next;
+  const [wizardProgress, setWizardProgress, clearWizardProgress] =
+    useWizardPersistence<CompanyWizardProgress>(companyWizardProgressKey, {
+      currentStep: 2,
+      basicInfo: { name: "", tradeName: "", description: "", cnpj: "" },
+      contactInfo: {
+        zip_code: "",
+        street: "",
+        number: "",
+        complement: "",
+        city: "",
+        state: "",
+        state_code: "",
+        phone: "",
+      },
+      credentials: { email: "" },
     });
-  }, []);
+
+  const { basicInfo, contactInfo, credentials } = wizardProgress;
+  const currentStep = wizardProgress.currentStep;
+
+  const setCurrentStep = useCallback((step: number | ((prev: number) => number)) => {
+    setWizardProgress((prev) => {
+      const next = typeof step === "function" ? step(prev.currentStep) : step;
+      logger.info(LOG, `Step ${prev.currentStep} → ${next}`);
+      return { ...prev, currentStep: next };
+    });
+  }, [setWizardProgress]);
+
+  function setBasicInfo(
+    value:
+      | CompanyWizardProgress["basicInfo"]
+      | ((prev: CompanyWizardProgress["basicInfo"]) => CompanyWizardProgress["basicInfo"]),
+  ) {
+    setWizardProgress((prev) => ({
+      ...prev,
+      basicInfo: typeof value === "function" ? value(prev.basicInfo) : value,
+    }));
+  }
+
+  function setContactInfo(
+    value:
+      | CompanyWizardProgress["contactInfo"]
+      | ((prev: CompanyWizardProgress["contactInfo"]) => CompanyWizardProgress["contactInfo"]),
+  ) {
+    setWizardProgress((prev) => ({
+      ...prev,
+      contactInfo: typeof value === "function" ? value(prev.contactInfo) : value,
+    }));
+  }
+
+  function setCredentials(
+    value:
+      | CompanyWizardProgress["credentials"]
+      | ((prev: CompanyWizardProgress["credentials"]) => CompanyWizardProgress["credentials"]),
+  ) {
+    setWizardProgress((prev) => ({
+      ...prev,
+      credentials: typeof value === "function" ? value(prev.credentials) : value,
+    }));
+  }
+
   const [signupError, setSignupError] = useState("");
   const [isRedirectingToAuth0, setIsRedirectingToAuth0] = useState(false);
   const [isAuthRedirectModalOpen, setIsAuthRedirectModalOpen] = useState(false);
-
-  const [basicInfo, setBasicInfo] = useState({
-    name: "",
-    tradeName: "",
-    description: "",
-    cnpj: "",
-  });
 
   const [cnpjError, setCnpjError] = useState("");
 
@@ -70,10 +144,6 @@ export function CompanyRegistrationPage() {
     setContactErrors(errors);
     return valid;
   };
-
-  const [credentials, setCredentials] = useState({
-    email: "",
-  });
 
   const [credentialsErrors, setCredentialsErrors] = useState({
     email: "",
@@ -114,47 +184,30 @@ export function CompanyRegistrationPage() {
     }
   };
 
-  const [contactInfo, setContactInfo] = useState({
-    zip_code: "",
-    street: "",
-    number: "",
-    complement: "",
-    city: "",
-    state: "",
-    state_code: "",
-    phone: "",
-  });
-
   const resetCompanyWizard = () => {
     logger.warn(LOG, "Wizard reset triggered");
+    clearWizardProgress();
     sessionStorage.removeItem(companySignupDraftKey);
-    setCurrentStep(2);
+    setWizardProgress({
+      currentStep: 2,
+      basicInfo: { name: "", tradeName: "", description: "", cnpj: "" },
+      contactInfo: {
+        zip_code: "",
+        street: "",
+        number: "",
+        complement: "",
+        city: "",
+        state: "",
+        state_code: "",
+        phone: "",
+      },
+      credentials: { email: "" },
+    });
     setSignupError("");
     setIsRedirectingToAuth0(false);
-    setBasicInfo({
-      name: "",
-      tradeName: "",
-      description: "",
-      cnpj: "",
-    });
     setCnpjError("");
     setContactErrors({ zip_code: "", number: "" });
-    setCredentials({
-      email: "",
-    });
-    setCredentialsErrors({
-      email: "",
-    });
-    setContactInfo({
-      zip_code: "",
-      street: "",
-      number: "",
-      complement: "",
-      city: "",
-      state: "",
-      state_code: "",
-      phone: "",
-    });
+    setCredentialsErrors({ email: "" });
     navigate("/cadastro", { replace: true });
   };
 
@@ -276,6 +329,20 @@ export function CompanyRegistrationPage() {
     setIsRedirectingToAuth0(true);
 
     try {
+      const cnpjOk = await checkCnpjAvailable(basicInfo.cnpj);
+      if (!cnpjOk) {
+        setIsRedirectingToAuth0(false);
+        showToast("Este CNPJ já está cadastrado na plataforma.");
+        return;
+      }
+
+      const emailOk = await checkEmailAvailable(credentials.email);
+      if (!emailOk) {
+        setIsRedirectingToAuth0(false);
+        showToast("Este e-mail já está cadastrado na plataforma.");
+        return;
+      }
+
       const payload = buildCompanyPayload();
       logger.info(LOG, "Saving company draft to sessionStorage", { cnpj: payload.cnpj, email: payload.email });
       sessionStorage.setItem(
@@ -298,8 +365,9 @@ export function CompanyRegistrationPage() {
       });
     } catch (error) {
       logger.error(LOG, "Auth0 redirect failed", error);
+      sessionStorage.removeItem(companySignupDraftKey);
       setIsRedirectingToAuth0(false);
-      setSignupError("Não foi possível abrir a próxima etapa do cadastro. Tente novamente.");
+      showToast("Não foi possível iniciar o cadastro. Tente novamente.");
     }
   };
 
