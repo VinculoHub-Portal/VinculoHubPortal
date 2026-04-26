@@ -2,4 +2,4 @@
 package com.vinculohub.backend.dto;
 
 public record NpoInstitutionalSignupResponse(
-        Integer userId, Integer npoId, String email, boolean accessReleased) {}
+        Integer userId, Integer npoId, Long projectId, String email, boolean accessReleased) {}

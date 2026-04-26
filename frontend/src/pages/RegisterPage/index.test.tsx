@@ -1,10 +1,13 @@
-import { describe, it, beforeEach, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { RegisterPage } from "./index";
 
 const loginWithRedirectMock = vi.fn();
+const checkCpfAvailableMock = vi.fn();
+const checkCnpjAvailableMock = vi.fn();
+const showToastMock = vi.fn();
 
 vi.mock("@auth0/auth0-react", () => ({
   useAuth0: () => ({
@@ -17,8 +20,16 @@ vi.mock("@auth0/auth0-react", () => ({
   }),
 }));
 
+vi.mock("../../api/documentCheck", () => ({
+  checkCpfAvailable: (...args: unknown[]) => checkCpfAvailableMock(...args),
+  checkCnpjAvailable: (...args: unknown[]) => checkCnpjAvailableMock(...args),
+}));
 vi.mock("../../hooks/useZipCode", () => ({
   useZipCode: () => ({ data: undefined, isFetching: false, error: undefined }),
+}));
+
+vi.mock("../../context/ToastContext", () => ({
+  useToast: () => ({ showToast: showToastMock }),
 }));
 
 function renderPage() {
@@ -53,6 +64,8 @@ describe("RegisterPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     sessionStorage.clear();
+    checkCpfAvailableMock.mockResolvedValue(true);
+    checkCnpjAvailableMock.mockResolvedValue(true);
   });
 
   it("mostra o passo do primeiro projeto antes de finalizar o cadastro da ONG", async () => {
@@ -77,6 +90,7 @@ describe("RegisterPage", () => {
       screen.getByLabelText(/Descrição do projeto/i),
       "Projeto voltado para educação básica.",
     );
+    await user.type(screen.getByLabelText(/Meta de captação/i), "10000");
     await user.click(screen.getByRole("button", { name: /ODS 1 - Erradicação da Pobreza/i }));
     await user.click(screen.getByRole("button", { name: /Finalizar/i }));
 
@@ -84,5 +98,41 @@ describe("RegisterPage", () => {
       await screen.findByText(/Você será redirecionado para concluir o acesso/i),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Continuar/i })).toBeInTheDocument();
+  });
+
+  it("mostra loading no modal enquanto conclui o cadastro da ONG", async () => {
+    const user = userEvent.setup();
+    let resolveLogin: (() => void) | null = null;
+
+    loginWithRedirectMock.mockReturnValue(
+      new Promise<void>((resolve) => {
+        resolveLogin = resolve;
+      }),
+    );
+
+    renderPage();
+    await advanceToProjectStep(user);
+
+    await user.type(await screen.findByLabelText(/Nome do projeto/i), "Projeto Escola");
+    await user.type(
+      screen.getByLabelText(/Descrição do projeto/i),
+      "Projeto voltado para educação básica.",
+    );
+    await user.type(screen.getByLabelText(/Meta de captação/i), "10000");
+    await user.click(screen.getByRole("button", { name: /ODS 1 - Erradicação da Pobreza/i }));
+    await user.click(screen.getByRole("button", { name: /Finalizar/i }));
+    await user.click(screen.getByRole("button", { name: /Continuar/i }));
+
+    expect(
+      await screen.findByRole("button", { name: /Redirecionando.../i }),
+    ).toBeDisabled();
+
+    resolveLogin?.();
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("button", { name: /Redirecionando.../i }),
+      ).not.toBeInTheDocument();
+    });
   });
 });

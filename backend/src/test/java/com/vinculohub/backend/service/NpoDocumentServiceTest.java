@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import com.vinculohub.backend.exception.DuplicateDocumentException;
 import com.vinculohub.backend.exception.InvalidDocumentException;
+import com.vinculohub.backend.repository.CompanyRepository;
 import com.vinculohub.backend.repository.NpoRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -19,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class NpoDocumentServiceTest {
 
     @Mock private NpoRepository npoRepository;
+    @Mock private CompanyRepository companyRepository;
 
     @InjectMocks private NpoDocumentService npoDocumentService;
 
@@ -94,6 +96,7 @@ class NpoDocumentServiceTest {
         @DisplayName("Deve aceitar CNPJ válido sem CPF")
         void shouldAcceptValidCnpjOnly() {
             when(npoRepository.existsByCnpj(VALID_CNPJ)).thenReturn(false);
+            when(companyRepository.existsByCnpj(VALID_CNPJ)).thenReturn(false);
 
             assertDoesNotThrow(() -> npoDocumentService.validateDocuments(null, VALID_CNPJ));
         }
@@ -103,6 +106,7 @@ class NpoDocumentServiceTest {
         void shouldAcceptBothValid() {
             when(npoRepository.existsByCpf(VALID_CPF)).thenReturn(false);
             when(npoRepository.existsByCnpj(VALID_CNPJ)).thenReturn(false);
+            when(companyRepository.existsByCnpj(VALID_CNPJ)).thenReturn(false);
 
             assertDoesNotThrow(() -> npoDocumentService.validateDocuments(VALID_CPF, VALID_CNPJ));
         }
