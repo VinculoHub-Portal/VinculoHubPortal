@@ -1,12 +1,13 @@
-
-import { BrowserRouter, Routes, Route } from "react-router-dom"
-import { LandingPage } from "../pages/LandingPage"
-import { ComponentsPage } from "../pages/ComponentsPage"
-import { RegisterPage } from "../pages/RegisterPage"
-import { AuthRoleRedirect } from "../components/auth/AuthRoleRedirect"
-import { ProtectedRoute } from "../components/auth/ProtectedRoute"
-import { RoleHomePage } from "../pages/RoleHomePage"
-import { CompanyRegistrationPage } from "../pages/CompanyRegistration/registration"
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { AuthRoleRedirect } from "../components/auth/AuthRoleRedirect";
+import { ProtectedRoute } from "../components/auth/ProtectedRoute";
+import { ComponentsPage } from "../pages/ComponentsPage";
+import { CompanyRegistrationPage } from "../pages/CompanyRegistration/registration";
+import { LandingPage } from "../pages/LandingPage";
+import { MyProjectsPage } from "../pages/MyProjectsPage";
+import { NpoDashboardPage } from "../pages/NpoDashboardPage";
+import { RegisterPage } from "../pages/RegisterPage";
+import { RoleHomePage } from "../pages/RoleHomePage";
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -32,10 +33,15 @@ export const AppRouter = () => (
         path="/ong/dashboard"
         element={
           <ProtectedRoute>
-            <RoleHomePage
-              title="Painel da ONG"
-              description="Acompanhe seu cadastro, projetos e oportunidades para sua organização."
-            />
+            <NpoDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/ong/projetos"
+        element={
+          <ProtectedRoute>
+            <MyProjectsPage />
           </ProtectedRoute>
         }
       />
