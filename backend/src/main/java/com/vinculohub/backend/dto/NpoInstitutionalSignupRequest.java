@@ -12,4 +12,5 @@ public record NpoInstitutionalSignupRequest(
         Boolean environmental,
         Boolean social,
         Boolean governance,
-        AddressSignupRequest address) {}
+        AddressSignupRequest address,
+        NpoFirstProjectSignupRequest firstProject) {}
