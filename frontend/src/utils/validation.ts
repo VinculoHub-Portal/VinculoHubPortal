@@ -25,7 +25,7 @@ function hasSameDigits(value: string): boolean {
   return /^(\d)\1+$/.test(value);
 }
 
-function isValidCpf(value: string): boolean {
+export function isValidCpf(value: string): boolean {
   const digits = onlyDigits(value);
 
   if (digits.length !== 11 || hasSameDigits(digits)) {
@@ -51,7 +51,7 @@ function isValidCpf(value: string): boolean {
   return (secondDigit === 10 ? 0 : secondDigit) === Number(digits[10]);
 }
 
-function isValidCnpj(value: string): boolean {
+export function isValidCnpj(value: string): boolean {
   const digits = onlyDigits(value);
 
   if (digits.length !== 14 || hasSameDigits(digits)) {
@@ -117,12 +117,23 @@ export const validatePasswordField: StepValidator = (data) => {
 export const validateConfirmPasswordField: StepValidator = (data) => {
   const errors: FieldErrors = {};
 
+  if (!data.confirmarSenha.trim()) {
+    errors.confirmarSenha = "Confirme a senha.";
+    return errors;
+  }
+
   if (data.confirmarSenha !== data.senha) {
     errors.confirmarSenha = "As senhas não coincidem.";
   }
 
   return errors;
 };
+
+export const validateNpoStepTwo = composeValidators(
+  validateEmailField,
+  validatePasswordField,
+  validateConfirmPasswordField,
+);
 
 export const validateCnpjField: StepValidator = (data) => {
   const errors: FieldErrors = {};
@@ -247,6 +258,64 @@ export const validateStreetNumberField: StepValidator = (data) => {
 export const validateNpoStepFour = composeValidators(
   validateZipCodeField,
   validateStreetNumberField,
+);
+
+function isValidOptionalCapital(value: string): boolean {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return true;
+  }
+
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) && parsed >= 0;
+}
+
+export const validateFirstProjectName: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+
+  if (!data.nomeProjeto.trim()) {
+    errors.nomeProjeto = "Informe o nome do projeto.";
+  }
+
+  return errors;
+};
+
+export const validateFirstProjectDescription: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+
+  if (!data.descricaoProjeto.trim()) {
+    errors.descricaoProjeto = "Informe a descrição do projeto.";
+  }
+
+  return errors;
+};
+
+export const validateFirstProjectCapital: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+
+  if (!isValidOptionalCapital(data.metaCaptacao)) {
+    errors.metaCaptacao = "Informe uma meta de captação válida.";
+  }
+
+  return errors;
+};
+
+export const validateFirstProjectOds: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+
+  if (!data.odsProjeto || data.odsProjeto.length === 0) {
+    errors.odsProjeto = "Selecione ao menos um ODS.";
+  }
+
+  return errors;
+};
+
+export const validateNpoStepFive = composeValidators(
+  validateFirstProjectName,
+  validateFirstProjectDescription,
+  validateFirstProjectCapital,
+  validateFirstProjectOds,
 );
 
 export const validateEnterpriseStepTwo = composeValidators(

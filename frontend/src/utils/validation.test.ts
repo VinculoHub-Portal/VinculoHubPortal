@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
+  validateNpoStepTwo,
   validateNpoStepThree,
   validateNpoStepFour,
+  validateNpoStepFive,
   validateCpfOrCnpjField,
 } from "./validation";
 import type { WizardFormData } from "../types/wizard.types";
@@ -25,6 +27,10 @@ const baseFormData: WizardFormData = {
   state: "",
   stateCode: "",
   phone: "",
+  nomeProjeto: "",
+  descricaoProjeto: "",
+  metaCaptacao: "",
+  odsProjeto: [],
 };
 
 const ctx = { organizationType: "npo" as const };
@@ -52,6 +58,38 @@ describe("validateNpoStepThree", () => {
     };
     const errors = validateNpoStepThree(data, ctx);
     expect(errors.esg).toBeUndefined();
+  });
+});
+
+describe("validateNpoStepTwo", () => {
+  it("retorna erro quando email e senha estão vazios", () => {
+    const data: WizardFormData = {
+      ...baseFormData,
+      email: "",
+      senha: "",
+      confirmarSenha: "",
+    };
+
+    const errors = validateNpoStepTwo(data, ctx);
+
+    expect(errors.email).toBeDefined();
+    expect(errors.senha).toBeDefined();
+    expect(errors.confirmarSenha).toBeDefined();
+  });
+
+  it("não retorna erro quando credenciais estão válidas", () => {
+    const data: WizardFormData = {
+      ...baseFormData,
+      email: "test@example.com",
+      senha: "Abcd1234",
+      confirmarSenha: "Abcd1234",
+    };
+
+    const errors = validateNpoStepTwo(data, ctx);
+
+    expect(errors.email).toBeUndefined();
+    expect(errors.senha).toBeUndefined();
+    expect(errors.confirmarSenha).toBeUndefined();
   });
 });
 
@@ -113,5 +151,40 @@ describe("validateNpoStepFour", () => {
     const errors = validateNpoStepFour(data, ctx);
     expect(errors.zipCode).toBeUndefined();
     expect(errors.streetNumber).toBeUndefined();
+  });
+});
+
+describe("validateNpoStepFive", () => {
+  it("retorna erro quando os campos obrigatórios do projeto estão vazios", () => {
+    const data: WizardFormData = {
+      ...baseFormData,
+      nomeProjeto: "",
+      descricaoProjeto: "",
+      metaCaptacao: "",
+      odsProjeto: [],
+    };
+
+    const errors = validateNpoStepFive(data, ctx);
+
+    expect(errors.nomeProjeto).toBeDefined();
+    expect(errors.descricaoProjeto).toBeDefined();
+    expect(errors.odsProjeto).toBeDefined();
+  });
+
+  it("não retorna erro quando o projeto inicial está completo", () => {
+    const data: WizardFormData = {
+      ...baseFormData,
+      nomeProjeto: "Projeto Escola",
+      descricaoProjeto: "Iniciativa para educação básica.",
+      metaCaptacao: "15000",
+      odsProjeto: ["1", "3"],
+    };
+
+    const errors = validateNpoStepFive(data, ctx);
+
+    expect(errors.nomeProjeto).toBeUndefined();
+    expect(errors.descricaoProjeto).toBeUndefined();
+    expect(errors.metaCaptacao).toBeUndefined();
+    expect(errors.odsProjeto).toBeUndefined();
   });
 });

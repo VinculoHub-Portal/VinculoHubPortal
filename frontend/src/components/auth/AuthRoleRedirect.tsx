@@ -187,6 +187,12 @@ async function submitNpoSignupDraft(token: string, user: unknown) {
             zipCode: formData.zipCode,
           }
         : null,
+      firstProject: {
+        name: formData.nomeProjeto,
+        description: formData.descricaoProjeto,
+        capital: formData.metaCaptacao.trim() ? Number(formData.metaCaptacao) : null,
+        ods: formData.odsProjeto,
+      },
     },
     {
       headers: {
