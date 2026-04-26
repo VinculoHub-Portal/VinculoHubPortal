@@ -76,9 +76,13 @@ export function AuthRoleRedirect() {
             logger.info("AuthRedirect", "NPO draft submitted successfully");
           } catch (error) {
             logger.error("AuthRedirect", "NPO draft submission failed", getErrorMessage(error));
-            sessionStorage.removeItem(npoSignupDraftKey);
-            sessionStorage.removeItem(npoWizardProgressKey);
-            showToast("Não foi possível concluir o cadastro. Tente novamente.");
+            if (isServiceUnavailableError(error)) {
+              showToast("Serviço indisponível");
+            } else {
+              sessionStorage.removeItem(npoSignupDraftKey);
+              sessionStorage.removeItem(npoWizardProgressKey);
+              showToast("Não foi possível concluir o cadastro. Tente novamente.");
+            }
             navigate("/cadastro", { replace: true });
             return;
           }
@@ -146,6 +150,18 @@ function getErrorMessage(error: unknown) {
   }
 
   return String(error);
+}
+
+function isServiceUnavailableError(error: unknown) {
+  if (!axios.isAxiosError(error)) {
+    return false;
+  }
+
+  if (!error.response) {
+    return true;
+  }
+
+  return error.response.status >= 500 && error.response.status < 600;
 }
 
 async function getAuthenticatedProfile(token: string) {

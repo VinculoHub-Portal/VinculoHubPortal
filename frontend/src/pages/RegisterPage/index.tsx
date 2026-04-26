@@ -161,6 +161,7 @@ export function RegisterPage() {
 
   const [errors, setErrors] = useState<FieldErrors>({});
   const [isAuthRedirectModalOpen, setIsAuthRedirectModalOpen] = useState(false);
+  const [isSubmittingNpo, setIsSubmittingNpo] = useState(false);
 
   const steps = useMemo(
     () =>
@@ -217,6 +218,17 @@ export function RegisterPage() {
     } catch {
       sessionStorage.removeItem(npoSignupDraftKey);
       showToast("Não foi possível iniciar o cadastro. Tente novamente.");
+    }
+  }
+
+  async function handleConfirmNpoSignup() {
+    setIsSubmittingNpo(true);
+
+    try {
+      await handleNpoSignup();
+    } finally {
+      setIsSubmittingNpo(false);
+      setIsAuthRedirectModalOpen(false);
     }
   }
 
@@ -292,10 +304,10 @@ export function RegisterPage() {
         title="Você será redirecionado para concluir o acesso"
         description="Na próxima etapa, abriremos o ambiente seguro de autenticação para criar sua conta e concluir a entrada no VinculoHubPortal."
         confirmLabel="Continuar"
+        isLoading={isSubmittingNpo}
         onCancel={() => setIsAuthRedirectModalOpen(false)}
         onConfirm={() => {
-          setIsAuthRedirectModalOpen(false);
-          void handleNpoSignup();
+          void handleConfirmNpoSignup();
         }}
       />
     </div>
