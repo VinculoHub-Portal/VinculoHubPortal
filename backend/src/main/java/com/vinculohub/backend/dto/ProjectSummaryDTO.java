@@ -9,7 +9,7 @@ import lombok.Builder;
 
 @Builder
 public record ProjectSummaryDTO(
-        Integer id,
+        Long id,
         String title,
         String description,
         ProjectStatus status,

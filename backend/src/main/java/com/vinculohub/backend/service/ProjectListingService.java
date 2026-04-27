@@ -62,10 +62,10 @@ public class ProjectListingService {
             if (npoOpt.isEmpty()) {
                 return List.of();
             }
-            Integer npoId = npoOpt.get().getId();
+            Long npoId = Long.valueOf(npoOpt.get().getId());
             return statusFilter
-                    .map(status -> projectRepository.findByNpoIdAndStatus(npoId, status))
-                    .orElseGet(() -> projectRepository.findByNpoId(npoId));
+                    .map(status -> projectRepository.findAllByNpoIdAndStatus(npoId, status))
+                    .orElseGet(() -> projectRepository.findAllByNpoId(npoId));
         }
 
         if (user.getUserType() == UserType.company) {

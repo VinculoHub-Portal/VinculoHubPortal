@@ -31,15 +31,15 @@ ALTER TABLE "project"
         WHEN "status"::text = 'active' THEN 'ACTIVE'
         WHEN "status"::text = 'completed' THEN 'COMPLETED'
         WHEN "status"::text = 'cancelled' THEN 'CANCELLED'
-        ELSE 'DRAFT'
+        ELSE 'ACTIVE'
     END;
 
 UPDATE "project"
-SET "status" = 'DRAFT'
+SET "status" = 'ACTIVE'
 WHERE "status" IS NULL;
 
 ALTER TABLE "project"
-    ALTER COLUMN "status" SET DEFAULT 'DRAFT',
+    ALTER COLUMN "status" SET DEFAULT 'ACTIVE',
     ALTER COLUMN "status" SET NOT NULL;
 
 -- Colunas que referenciam project.id agora precisam acompanhar BIGINT

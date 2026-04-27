@@ -40,7 +40,7 @@ public class Project {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @Builder.Default
-    private ProjectStatus status = ProjectStatus.DRAFT;
+    private ProjectStatus status = ProjectStatus.ACTIVE;
 
     @Column(name = "budget_needed", precision = 15, scale = 2)
     private BigDecimal budgetNeeded;

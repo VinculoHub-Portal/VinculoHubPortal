@@ -6,9 +6,9 @@ import java.util.Optional;
 
 public enum ProjectStatusFilter {
     TODOS(null),
-    ATIVOS(ProjectStatus.active),
-    COMPLETADOS(ProjectStatus.completed),
-    CANCELADOS(ProjectStatus.cancelled);
+    ATIVOS(ProjectStatus.ACTIVE),
+    COMPLETADOS(ProjectStatus.COMPLETED),
+    CANCELADOS(ProjectStatus.CANCELLED);
 
     private final ProjectStatus projectStatus;
 

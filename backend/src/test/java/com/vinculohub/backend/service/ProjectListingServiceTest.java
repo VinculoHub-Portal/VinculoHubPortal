@@ -31,6 +31,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ProjectListingServiceTest {
 
     private static final String AUTH0_ID = "auth0|user-123";
+    private static final Long NPO_ID = 10L;
 
     @Mock private UserRepository userRepository;
     @Mock private NpoRepository npoRepository;
@@ -47,10 +48,20 @@ class ProjectListingServiceTest {
         return User.builder().id(userId).auth0Id(AUTH0_ID).userType(UserType.company).build();
     }
 
-    private Project sampleProject(Integer id, ProjectStatus status) {
+    private Npo sampleNpo() {
+        return Npo.builder().id(NPO_ID.intValue()).userId(1).build();
+    }
+
+    private Company company(Integer id) {
+        Company c = new Company();
+        c.setId(id);
+        return c;
+    }
+
+    private Project sampleProject(Long id, ProjectStatus status) {
         return Project.builder()
                 .id(id)
-                .npoId(10)
+                .npo(sampleNpo())
                 .title("p" + id)
                 .description("d")
                 .status(status)
@@ -65,72 +76,68 @@ class ProjectListingServiceTest {
     @DisplayName("NPO autenticado com filtro TODOS retorna todos os projetos da ONG")
     void npoListsAllProjectsWhenFilterTodos() {
         User user = npoUser(1);
-        Npo npo = Npo.builder().id(10).userId(1).build();
-        Project p1 = sampleProject(1, ProjectStatus.active);
-        Project p2 = sampleProject(2, ProjectStatus.completed);
+        Project p1 = sampleProject(1L, ProjectStatus.ACTIVE);
+        Project p2 = sampleProject(2L, ProjectStatus.COMPLETED);
 
         when(userRepository.findByAuth0Id(AUTH0_ID)).thenReturn(Optional.of(user));
-        when(npoRepository.findByUserId(1)).thenReturn(Optional.of(npo));
-        when(projectRepository.findByNpoId(10)).thenReturn(List.of(p1, p2));
+        when(npoRepository.findByUserId(1)).thenReturn(Optional.of(sampleNpo()));
+        when(projectRepository.findAllByNpoId(NPO_ID)).thenReturn(List.of(p1, p2));
 
         List<ProjectSummaryDTO> result =
                 service.listProjectsForCurrentUser(AUTH0_ID, ProjectStatusFilter.TODOS);
 
-        assertThat(result).extracting(ProjectSummaryDTO::id).containsExactly(1, 2);
-        verify(projectRepository).findByNpoId(10);
-        verify(projectRepository, never()).findByNpoIdAndStatus(anyInt(), any());
+        assertThat(result).extracting(ProjectSummaryDTO::id).containsExactly(1L, 2L);
+        verify(projectRepository).findAllByNpoId(NPO_ID);
+        verify(projectRepository, never()).findAllByNpoIdAndStatus(anyLong(), any());
     }
 
     @Test
-    @DisplayName("NPO autenticado com filtro ATIVOS chama repository com ProjectStatus.active")
+    @DisplayName("NPO autenticado com filtro ATIVOS chama repository com ProjectStatus.ACTIVE")
     void npoListsActiveOnly() {
         User user = npoUser(1);
-        Npo npo = Npo.builder().id(10).userId(1).build();
 
         when(userRepository.findByAuth0Id(AUTH0_ID)).thenReturn(Optional.of(user));
-        when(npoRepository.findByUserId(1)).thenReturn(Optional.of(npo));
-        when(projectRepository.findByNpoIdAndStatus(10, ProjectStatus.active))
-                .thenReturn(List.of(sampleProject(1, ProjectStatus.active)));
+        when(npoRepository.findByUserId(1)).thenReturn(Optional.of(sampleNpo()));
+        when(projectRepository.findAllByNpoIdAndStatus(NPO_ID, ProjectStatus.ACTIVE))
+                .thenReturn(List.of(sampleProject(1L, ProjectStatus.ACTIVE)));
 
         List<ProjectSummaryDTO> result =
                 service.listProjectsForCurrentUser(AUTH0_ID, ProjectStatusFilter.ATIVOS);
 
         assertThat(result).hasSize(1);
-        verify(projectRepository).findByNpoIdAndStatus(10, ProjectStatus.active);
+        verify(projectRepository).findAllByNpoIdAndStatus(NPO_ID, ProjectStatus.ACTIVE);
     }
 
     @Test
     @DisplayName(
-            "NPO autenticado com filtro COMPLETADOS chama repository com ProjectStatus.completed")
+            "NPO autenticado com filtro COMPLETADOS chama repository com ProjectStatus.COMPLETED")
     void npoListsCompletedOnly() {
         User user = npoUser(1);
-        Npo npo = Npo.builder().id(10).userId(1).build();
 
         when(userRepository.findByAuth0Id(AUTH0_ID)).thenReturn(Optional.of(user));
-        when(npoRepository.findByUserId(1)).thenReturn(Optional.of(npo));
-        when(projectRepository.findByNpoIdAndStatus(10, ProjectStatus.completed))
+        when(npoRepository.findByUserId(1)).thenReturn(Optional.of(sampleNpo()));
+        when(projectRepository.findAllByNpoIdAndStatus(NPO_ID, ProjectStatus.COMPLETED))
                 .thenReturn(List.of());
 
         service.listProjectsForCurrentUser(AUTH0_ID, ProjectStatusFilter.COMPLETADOS);
 
-        verify(projectRepository).findByNpoIdAndStatus(10, ProjectStatus.completed);
+        verify(projectRepository).findAllByNpoIdAndStatus(NPO_ID, ProjectStatus.COMPLETED);
     }
 
     @Test
     @DisplayName(
-            "NPO autenticado com filtro CANCELADOS chama repository com ProjectStatus.cancelled")
+            "NPO autenticado com filtro CANCELADOS chama repository com ProjectStatus.CANCELLED")
     void npoListsCancelledOnly() {
         User user = npoUser(1);
-        Npo npo = Npo.builder().id(10).userId(1).build();
 
         when(userRepository.findByAuth0Id(AUTH0_ID)).thenReturn(Optional.of(user));
-        when(npoRepository.findByUserId(1)).thenReturn(Optional.of(npo));
-        when(projectRepository.findByNpoIdAndStatus(10, ProjectStatus.cancelled))
+        when(npoRepository.findByUserId(1)).thenReturn(Optional.of(sampleNpo()));
+        when(projectRepository.findAllByNpoIdAndStatus(NPO_ID, ProjectStatus.CANCELLED))
                 .thenReturn(List.of());
 
         service.listProjectsForCurrentUser(AUTH0_ID, ProjectStatusFilter.CANCELADOS);
 
-        verify(projectRepository).findByNpoIdAndStatus(10, ProjectStatus.cancelled);
+        verify(projectRepository).findAllByNpoIdAndStatus(NPO_ID, ProjectStatus.CANCELLED);
     }
 
     @Test
@@ -153,11 +160,10 @@ class ProjectListingServiceTest {
     @DisplayName("NPO autenticado com ONG mas sem projetos retorna lista vazia")
     void npoWithNoProjectsReturnsEmpty() {
         User user = npoUser(1);
-        Npo npo = Npo.builder().id(10).userId(1).build();
 
         when(userRepository.findByAuth0Id(AUTH0_ID)).thenReturn(Optional.of(user));
-        when(npoRepository.findByUserId(1)).thenReturn(Optional.of(npo));
-        when(projectRepository.findByNpoId(10)).thenReturn(List.of());
+        when(npoRepository.findByUserId(1)).thenReturn(Optional.of(sampleNpo()));
+        when(projectRepository.findAllByNpoId(NPO_ID)).thenReturn(List.of());
 
         List<ProjectSummaryDTO> result =
                 service.listProjectsForCurrentUser(AUTH0_ID, ProjectStatusFilter.TODOS);
@@ -169,23 +175,16 @@ class ProjectListingServiceTest {
     @DisplayName("Filtro sem match retorna lista vazia")
     void filterWithNoMatchReturnsEmpty() {
         User user = npoUser(1);
-        Npo npo = Npo.builder().id(10).userId(1).build();
 
         when(userRepository.findByAuth0Id(AUTH0_ID)).thenReturn(Optional.of(user));
-        when(npoRepository.findByUserId(1)).thenReturn(Optional.of(npo));
-        when(projectRepository.findByNpoIdAndStatus(10, ProjectStatus.cancelled))
+        when(npoRepository.findByUserId(1)).thenReturn(Optional.of(sampleNpo()));
+        when(projectRepository.findAllByNpoIdAndStatus(NPO_ID, ProjectStatus.CANCELLED))
                 .thenReturn(List.of());
 
         List<ProjectSummaryDTO> result =
                 service.listProjectsForCurrentUser(AUTH0_ID, ProjectStatusFilter.CANCELADOS);
 
         assertThat(result).isEmpty();
-    }
-
-    private Company company(Integer id) {
-        Company c = new Company();
-        c.setId(id);
-        return c;
     }
 
     @Test
@@ -197,33 +196,32 @@ class ProjectListingServiceTest {
         when(userRepository.findByAuth0Id(AUTH0_ID)).thenReturn(Optional.of(user));
         when(companyRepository.findByUserId(2)).thenReturn(Optional.of(company));
         when(projectRepository.findAllByCompanyId(20))
-                .thenReturn(List.of(sampleProject(5, ProjectStatus.active)));
+                .thenReturn(List.of(sampleProject(5L, ProjectStatus.ACTIVE)));
 
         List<ProjectSummaryDTO> result =
                 service.listProjectsForCurrentUser(AUTH0_ID, ProjectStatusFilter.TODOS);
 
-        assertThat(result).extracting(ProjectSummaryDTO::id).containsExactly(5);
+        assertThat(result).extracting(ProjectSummaryDTO::id).containsExactly(5L);
         verify(projectRepository).findAllByCompanyId(20);
         verify(projectRepository, never()).findAllByCompanyIdAndStatus(anyInt(), anyString());
     }
 
     @Test
-    @DisplayName(
-            "Company autenticada com filtro ATIVOS chama findAllByCompanyIdAndStatus com 'active'")
+    @DisplayName("Company autenticada com filtro ATIVOS chama findAllByCompanyIdAndStatus com 'ACTIVE'")
     void companyListsActiveOnly() {
         User user = companyUser(2);
         Company company = company(20);
 
         when(userRepository.findByAuth0Id(AUTH0_ID)).thenReturn(Optional.of(user));
         when(companyRepository.findByUserId(2)).thenReturn(Optional.of(company));
-        when(projectRepository.findAllByCompanyIdAndStatus(20, "active"))
-                .thenReturn(List.of(sampleProject(5, ProjectStatus.active)));
+        when(projectRepository.findAllByCompanyIdAndStatus(20, "ACTIVE"))
+                .thenReturn(List.of(sampleProject(5L, ProjectStatus.ACTIVE)));
 
         List<ProjectSummaryDTO> result =
                 service.listProjectsForCurrentUser(AUTH0_ID, ProjectStatusFilter.ATIVOS);
 
         assertThat(result).hasSize(1);
-        verify(projectRepository).findAllByCompanyIdAndStatus(20, "active");
+        verify(projectRepository).findAllByCompanyIdAndStatus(20, "ACTIVE");
     }
 
     @Test

@@ -10,13 +10,11 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ProjectRepository extends JpaRepository<Project, Integer> {
+public interface ProjectRepository extends JpaRepository<Project, Long> {
 
     List<Project> findAllByNpoId(Long npoId);
 
-    List<Project> findByNpoId(Integer npoId);
-
-    List<Project> findByNpoIdAndStatus(Integer npoId, ProjectStatus status);
+    List<Project> findAllByNpoIdAndStatus(Long npoId, ProjectStatus status);
 
     @Query(
             value =
@@ -38,7 +36,7 @@ public interface ProjectRepository extends JpaRepository<Project, Integer> {
                     WHERE cp.company_id = :companyId
                       AND cp.deleted_at IS NULL
                       AND p.deleted_at IS NULL
-                      AND p.status = CAST(:status AS project_status)
+                      AND p.status = :status
                     """,
             nativeQuery = true)
     List<Project> findAllByCompanyIdAndStatus(
