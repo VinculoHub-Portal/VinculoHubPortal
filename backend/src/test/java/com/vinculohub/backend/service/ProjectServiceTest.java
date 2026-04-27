@@ -23,37 +23,32 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ProjectServiceTest {
 
-    @Mock
-    private ProjectRepository projectRepository;
+    @Mock private ProjectRepository projectRepository;
 
-    @Mock
-    private OdsMapper odsMapper;
+    @Mock private OdsMapper odsMapper;
 
-    @InjectMocks
-    private ProjectService projectService;
+    @InjectMocks private ProjectService projectService;
 
     @Test
     void shouldCreateFirstProjectWithMappedFields() {
         Npo npo = Npo.builder().id(20).name("ONG Exemplo").build();
 
-        NpoFirstProjectSignupRequest request = new NpoFirstProjectSignupRequest(
-            "Projeto Inicial",
-            "Descrição do projeto inicial",
-            new BigDecimal("1000.00"),
-            List.of("1", "2")
-        );
+        NpoFirstProjectSignupRequest request =
+                new NpoFirstProjectSignupRequest(
+                        "Projeto Inicial",
+                        "Descrição do projeto inicial",
+                        new BigDecimal("1000.00"),
+                        List.of("1", "2"));
 
-        when(odsMapper.normalizeCodes(List.of("1", "2"))).thenReturn(
-            Set.of(1, 2)
-        );
+        when(odsMapper.normalizeCodes(List.of("1", "2"))).thenReturn(Set.of(1, 2));
 
-        when(projectRepository.save(any(Project.class))).thenAnswer(
-            invocation -> {
-                Project project = invocation.getArgument(0);
-                project.setId(30L);
-                return project;
-            }
-        );
+        when(projectRepository.save(any(Project.class)))
+                .thenAnswer(
+                        invocation -> {
+                            Project project = invocation.getArgument(0);
+                            project.setId(30L);
+                            return project;
+                        });
 
         Project savedProject = projectService.createFirstProject(npo, request);
 
@@ -61,10 +56,7 @@ class ProjectServiceTest {
         assertNotNull(savedProject.getNpo());
         assertEquals(20, savedProject.getNpo().getId());
         assertEquals("Projeto Inicial", savedProject.getTitle());
-        assertEquals(
-            "Descrição do projeto inicial",
-            savedProject.getDescription()
-        );
+        assertEquals("Descrição do projeto inicial", savedProject.getDescription());
         assertEquals(new BigDecimal("1000.00"), savedProject.getBudgetNeeded());
         assertEquals(Set.of(1, 2), savedProject.getOdsCodes());
 
