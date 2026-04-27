@@ -1,3 +1,4 @@
+/* (C)2026 */
 package com.vinculohub.backend.model;
 
 import jakarta.persistence.*;
@@ -12,12 +13,11 @@ import org.hibernate.annotations.UpdateTimestamp;
 @Setter
 @Entity
 @Table(
-    name = "document",
-    indexes = {
-        @Index(name = "idx_document_npo", columnList = "npo_id"),
-        @Index(name = "idx_document_project", columnList = "project_id")
-    }
-)
+        name = "document",
+        indexes = {
+            @Index(name = "idx_document_npo", columnList = "npo_id"),
+            @Index(name = "idx_document_project", columnList = "project_id")
+        })
 @SQLRestriction("deleted_at IS NULL")
 public class Document {
 
