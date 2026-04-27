@@ -20,3 +20,6 @@ backend/.settings/
 .env.*
 !.env.example
 node_modules
+
+# Outros
+.ai_log
