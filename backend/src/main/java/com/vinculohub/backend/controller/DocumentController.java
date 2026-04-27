@@ -51,8 +51,8 @@ public class DocumentController {
             @RequestParam(required = false) Integer projectId) {
         // FUTURAMENTE: validar combinação de filtros
 
-        //REESCREVER O RETORNO
-        List<DocumentResponseDTO> documents = null; //documentService.findAll(npoId, projectId);
+        // REESCREVER O RETORNO
+        List<DocumentResponseDTO> documents = null; // documentService.findAll(npoId, projectId);
 
         return ResponseEntity.ok(documents);
     }
