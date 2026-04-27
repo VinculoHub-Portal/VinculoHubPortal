@@ -49,9 +49,10 @@ public class DocumentController {
     public ResponseEntity<List<DocumentResponseDTO>> getDocuments(
             @RequestParam(required = false) Integer npoId,
             @RequestParam(required = false) Integer projectId) {
-        // ⚠️ FUTURO: validar combinação de filtros
+        // FUTURAMENTE: validar combinação de filtros
 
-        List<DocumentResponseDTO> documents = documentService.findAll(npoId, projectId);
+        //REESCREVER O RETORNO
+        List<DocumentResponseDTO> documents = null; //documentService.findAll(npoId, projectId);
 
         return ResponseEntity.ok(documents);
     }
