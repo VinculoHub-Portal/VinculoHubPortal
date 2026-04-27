@@ -1,20 +1,20 @@
 import { useEffect } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import { Input } from "../general/Input";
-import { AddressIcon, StateIcon, PhoneIcon } from "../icons";
-import { useZipCode } from "../../hooks/useZipCode";
-import { formatZipCode } from "../../utils/formatZipCode";
-import { InfoBox } from "../general/InfoBox";
-import type { FieldErrors, WizardFormData } from "../../types/wizard.types";
-import { getApiErrorMessage } from "../../utils/logger";
+import { Input } from "../../../components/general/Input";
+import { AddressIcon, StateIcon, PhoneIcon } from "../../../components/icons";
+import { useZipCode } from "../../../hooks/useZipCode";
+import { formatZipCode } from "../../../utils/formatZipCode";
+import { InfoBox } from "../../../components/general/InfoBox";
+import type { FieldErrors, WizardFormData } from "../../../types/wizard.types";
+import { getApiErrorMessage } from "../../../utils/logger";
 
-type NpoStepFourProps = {
+type Step4Props = {
   formData: WizardFormData;
   setFormData: Dispatch<SetStateAction<WizardFormData>>;
   errors: FieldErrors;
 };
 
-export function NpoStepFour({ formData, setFormData, errors }: NpoStepFourProps) {
+export function Step4({ formData, setFormData, errors }: Step4Props) {
   const {
     data: zipCodeData,
     isFetching: loadingZipCode,
@@ -57,7 +57,9 @@ export function NpoStepFour({ formData, setFormData, errors }: NpoStepFourProps)
     <div className="flex flex-col gap-6">
       <div>
         <h2 className="text-vinculo-dark font-semibold text-lg">Endereço</h2>
-        <p className="text-sm text-slate-500 mt-1">Preencha os dados de localização da sua ONG.</p>
+        <p className="text-sm text-slate-500 mt-1">
+          Preencha os dados de localização da sua ONG.
+        </p>
       </div>
 
       <div className="flex flex-col gap-4">
@@ -74,9 +76,7 @@ export function NpoStepFour({ formData, setFormData, errors }: NpoStepFourProps)
             iconPosition="left"
             isRequired
           />
-          {loadingZipCode && (
-            <span className="text-sm text-slate-400">Consultando CEP...</span>
-          )}
+          {loadingZipCode && <span className="text-sm text-slate-400">Consultando CEP...</span>}
           {zipCodeQueryError && (
             <span className="text-sm text-error">
               {getApiErrorMessage(zipCodeQueryError, "CEP não encontrado. Verifique e tente novamente.")}

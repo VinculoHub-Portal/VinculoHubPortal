@@ -1,10 +1,18 @@
+import { useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import { Input } from "../general/Input";
-import { TextArea } from "../general/TextArea";
-import { CnpjIcon, DescriptionIcon } from "../icons";
-import type { FieldErrors, WizardEsgOption, WizardFormData } from "../../types/wizard.types";
+import { Input } from "../../../components/general/Input";
+import { TextArea } from "../../../components/general/TextArea";
+import { CnpjIcon, DescriptionIcon } from "../../../components/icons";
+import type {
+  FieldErrors,
+  WizardEsgOption,
+  WizardFormData,
+} from "../../../types/wizard.types";
+import { formatCpf } from "../../../utils/formatCpf";
+import { formatCnpj } from "../../../utils/formatCnpj";
+import { isValidCpf, isValidCnpj } from "../../../utils/validation";
 
-type NpoStepThreeProps = {
+type Step3Props = {
   formData: WizardFormData;
   setFormData: Dispatch<SetStateAction<WizardFormData>>;
   errors: FieldErrors;
@@ -16,27 +24,68 @@ const PORTE_LABELS: Record<Exclude<WizardFormData["porteOng"], "">, string> = {
   grande: "Grande",
 };
 
-const ESG_OPTIONS: Array<{ value: WizardEsgOption; label: string; description: string }> = [
-  { value: "ambiental", label: "Ambiental", description: "Práticas de preservação e sustentabilidade" },
-  { value: "social", label: "Social", description: "Impacto na comunidade e bem-estar social" },
-  { value: "governanca", label: "Governança", description: "Transparência e gestão responsável" },
+const ESG_OPTIONS: Array<{
+  value: WizardEsgOption;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: "ambiental",
+    label: "Ambiental",
+    description: "Práticas de preservação e sustentabilidade",
+  },
+  {
+    value: "social",
+    label: "Social",
+    description: "Impacto na comunidade e bem-estar social",
+  },
+  {
+    value: "governanca",
+    label: "Governança",
+    description: "Transparência e gestão responsável",
+  },
 ];
 
-export function NpoStepThree({ formData, setFormData, errors }: NpoStepThreeProps) {
+export function Step3({ formData, setFormData, errors }: Step3Props) {
+  const [cpfError, setCpfError] = useState("");
+  const [cnpjError, setCnpjError] = useState("");
+
   function toggleEsg(value: WizardEsgOption) {
     setFormData((prev) => ({
       ...prev,
       esg: prev.esg.includes(value)
-        ? prev.esg.filter((o) => o !== value)
+        ? prev.esg.filter((item) => item !== value)
         : [...prev.esg, value],
     }));
+  }
+
+  function handleCpfBlur() {
+    if (!formData.cpf.trim()) {
+      setCpfError("");
+      return;
+    }
+
+    setCpfError(isValidCpf(formData.cpf) ? "" : "CPF inválido.");
+  }
+
+  function handleCnpjBlur() {
+    if (!formData.cnpj.trim()) {
+      setCnpjError("");
+      return;
+    }
+
+    setCnpjError(isValidCnpj(formData.cnpj) ? "" : "CNPJ inválido.");
   }
 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h2 className="text-vinculo-dark font-semibold text-lg">Informações Básicas</h2>
-        <p className="text-sm text-slate-500 mt-1">Preencha os dados principais da sua ONG.</p>
+        <h2 className="text-vinculo-dark font-semibold text-lg">
+          Informações Básicas
+        </h2>
+        <p className="text-sm text-slate-500 mt-1">
+          Preencha os dados principais da sua ONG.
+        </p>
       </div>
 
       <div className="flex flex-col gap-4">
@@ -47,7 +96,9 @@ export function NpoStepThree({ formData, setFormData, errors }: NpoStepThreeProp
           placeholder="Ex: Instituto Esperança"
           maxLength={200}
           value={formData.nomeInstituicao}
-          onChange={(e) => setFormData((prev) => ({ ...prev, nomeInstituicao: e.target.value }))}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, nomeInstituicao: e.target.value }))
+          }
           error={errors.nomeInstituicao}
         />
 
@@ -61,8 +112,12 @@ export function NpoStepThree({ formData, setFormData, errors }: NpoStepThreeProp
               placeholder="000.000.000-00"
               maxLength={14}
               value={formData.cpf}
-              onChange={(e) => setFormData((prev) => ({ ...prev, cpf: e.target.value }))}
-              error={errors.cpf}
+              onChange={(e) => {
+                setCpfError("");
+                setFormData((prev) => ({ ...prev, cpf: formatCpf(e.target.value) }));
+              }}
+              onBlur={handleCpfBlur}
+              error={errors.cpf || cpfError}
             />
 
             <Input
@@ -73,13 +128,19 @@ export function NpoStepThree({ formData, setFormData, errors }: NpoStepThreeProp
               placeholder="00.000.000/0000-00"
               maxLength={18}
               value={formData.cnpj}
-              onChange={(e) => setFormData((prev) => ({ ...prev, cnpj: e.target.value }))}
-              error={errors.cnpj}
+              onChange={(e) => {
+                setCnpjError("");
+                setFormData((prev) => ({ ...prev, cnpj: formatCnpj(e.target.value) }));
+              }}
+              onBlur={handleCnpjBlur}
+              error={errors.cnpj || cnpjError}
               icon={<CnpjIcon />}
               iconPosition="left"
             />
           </div>
-          <p className="text-xs text-slate-500">Informe o CPF, o CNPJ ou ambos. Ao menos um é obrigatório.</p>
+          <p className="text-xs text-slate-500">
+            Informe o CPF, o CNPJ ou ambos. Ao menos um é obrigatório.
+          </p>
         </div>
 
         <div className="flex flex-col gap-1 w-full text-left">
@@ -102,13 +163,19 @@ export function NpoStepThree({ formData, setFormData, errors }: NpoStepThreeProp
               focus:border-vinculo-dark focus:ring-1 focus:ring-vinculo-dark
               ${errors.porteOng ? "!border !border-error focus:!border-error focus:!ring-error" : ""}`}
           >
-            <option value="" disabled hidden>Selecione</option>
+            <option value="" disabled hidden>
+              Selecione
+            </option>
             {(Object.keys(PORTE_LABELS) as Array<keyof typeof PORTE_LABELS>).map((key) => (
-              <option key={key} value={key}>{PORTE_LABELS[key]}</option>
+              <option key={key} value={key}>
+                {PORTE_LABELS[key]}
+              </option>
             ))}
           </select>
           {errors.porteOng && (
-            <p className="text-sm text-error" role="alert">{errors.porteOng}</p>
+            <p className="text-sm text-error" role="alert">
+              {errors.porteOng}
+            </p>
           )}
         </div>
 
@@ -118,7 +185,9 @@ export function NpoStepThree({ formData, setFormData, errors }: NpoStepThreeProp
           placeholder="Descreva brevemente a missão e atuação da ONG..."
           maxLength={500}
           value={formData.resumoInstitucional}
-          onChange={(e) => setFormData((prev) => ({ ...prev, resumoInstitucional: e.target.value }))}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, resumoInstitucional: e.target.value }))
+          }
           icon={<DescriptionIcon />}
         />
       </div>
@@ -127,7 +196,9 @@ export function NpoStepThree({ formData, setFormData, errors }: NpoStepThreeProp
         <legend className="text-vinculo-dark font-semibold text-base mb-1">
           Pilares ESG <span className="text-red-500" aria-hidden="true">*</span>
         </legend>
-        <p className="text-sm text-slate-500 mb-4">Selecione os pilares em que a ONG atua.</p>
+        <p className="text-sm text-slate-500 mb-4">
+          Selecione os pilares em que a ONG atua.
+        </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {ESG_OPTIONS.map((option) => {
@@ -139,9 +210,10 @@ export function NpoStepThree({ formData, setFormData, errors }: NpoStepThreeProp
                 aria-pressed={selected}
                 onClick={() => toggleEsg(option.value)}
                 className={`flex flex-col gap-1 rounded-xl border-2 px-4 py-3 text-left transition-all
-                  ${selected
-                    ? "border-vinculo-green bg-vinculo-green/10 text-vinculo-dark"
-                    : "border-vinculo-gray bg-white text-slate-600 hover:border-slate-300"
+                  ${
+                    selected
+                      ? "border-vinculo-green bg-vinculo-green/10 text-vinculo-dark"
+                      : "border-vinculo-gray bg-white text-slate-600 hover:border-slate-300"
                   }`}
               >
                 <span className="font-semibold text-sm">{option.label}</span>
@@ -152,7 +224,9 @@ export function NpoStepThree({ formData, setFormData, errors }: NpoStepThreeProp
         </div>
 
         {errors.esg && (
-          <p className="text-sm text-error mt-2" role="alert">{errors.esg}</p>
+          <p className="text-sm text-error mt-2" role="alert">
+            {errors.esg}
+          </p>
         )}
       </fieldset>
     </div>
