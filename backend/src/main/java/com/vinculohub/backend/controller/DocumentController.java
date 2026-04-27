@@ -28,13 +28,11 @@ public class DocumentController {
 
             // FUTURAMENTE: validar tamanho máximo do arquivo
             // if (file.getSize() > MAX_SIZE) throw new IllegalArgumentException("Arquivo muito
-            // grande");
-
-            DocumentRequestDTO dto = objectMapper.readValue(data, DocumentRequestDTO.class);
-
+            // grande");            
             // FUTURAMENTE: validar mimeType vs conteúdo real do arquivo
             // (evitar spoof de extensão)
-
+            
+            //DocumentRequestDTO dto = objectMapper.readValue(data, DocumentRequestDTO.class);
             // REESCREVER O RETORNO
             DocumentResponseDTO response = null; // documentService.upload(file, dto);
             return ResponseEntity.ok(response);
