@@ -68,6 +68,10 @@ describe("AuthRoleRedirect", () => {
           state: "",
           stateCode: "",
           phone: "",
+          nomeProjeto: "Projeto Escola",
+          descricaoProjeto: "Projeto voltado para educação básica.",
+          metaCaptacao: "10000",
+          odsProjeto: ["1"],
         },
       }),
     );
