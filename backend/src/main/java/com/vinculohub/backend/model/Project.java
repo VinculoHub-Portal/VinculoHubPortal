@@ -6,12 +6,12 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
 @Entity
 @Table(name = "project")
@@ -25,27 +25,34 @@ public class Project {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
-    @Column(name = "npo_id")
-    private Integer npoId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "npo_id", nullable = false)
+    private Npo npo;
 
-    @Column(length = 255)
+    @Column(nullable = false, length = 255)
     private String title;
 
-    @Column(length = 3000)
+    @Column(nullable = false, length = 3000)
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @JdbcType(PostgreSQLEnumJdbcType.class)
-    @Column(columnDefinition = "project_status")
-    private ProjectStatus status;
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private ProjectStatus status = ProjectStatus.DRAFT;
 
     @Column(name = "budget_needed", precision = 15, scale = 2)
     private BigDecimal budgetNeeded;
 
     @Column(name = "invested_amount", precision = 15, scale = 2)
     private BigDecimal investedAmount;
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "project_ods", joinColumns = @JoinColumn(name = "project_id"))
+    @Column(name = "ods_code", nullable = false)
+    @Builder.Default
+    private Set<Integer> odsCodes = new LinkedHashSet<>();
 
     @Column(name = "start_date")
     private LocalDate startDate;

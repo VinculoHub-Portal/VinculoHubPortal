@@ -12,6 +12,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, Integer> {
 
+    List<Project> findAllByNpoId(Long npoId);
+
     List<Project> findByNpoId(Integer npoId);
 
     List<Project> findByNpoIdAndStatus(Integer npoId, ProjectStatus status);

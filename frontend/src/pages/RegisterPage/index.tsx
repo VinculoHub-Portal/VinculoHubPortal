@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../../context/ToastContext";
+import { checkCnpjAvailable, checkCpfAvailable } from "../../api/documentCheck";
 import { Header } from "../../components/general/Header";
 import { BackLink } from "../../components/general/BackLink";
 import { BaseButton } from "../../components/general/BaseButton";
@@ -10,6 +12,7 @@ import { WizardSignUp } from "../../components/wizard/WizardSignUp";
 import { NpoStepThree } from "../../components/ong/NpoStepThree";
 import { NpoStepFour } from "../../components/ong/NpoStepFour";
 import { stepValidators } from "../../config/wizard.config";
+import { useWizardPersistence } from "../../hooks/useWizardPersistence";
 import type {
   FieldErrors,
   OrganizationType,
@@ -18,6 +21,13 @@ import type {
 
 const auth0Audience = import.meta.env.VITE_AUTH0_AUDIENCE;
 const npoSignupDraftKey = "vinculohub:npo-signup-draft";
+const npoWizardProgressKey = "vinculohub:npo-wizard-progress";
+
+type NpoWizardProgress = {
+  currentStep: number;
+  organizationType: OrganizationType | null;
+  formData: WizardFormData;
+};
 
 const emptyFormData: WizardFormData = {
   nomeInstituicao: "",
@@ -112,12 +122,46 @@ function getSteps({
 export function RegisterPage() {
   const { loginWithRedirect } = useAuth0();
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
-  const [organizationType, setOrganizationType] =
-    useState<OrganizationType | null>(null);
-  const [formData, setFormData] = useState<WizardFormData>({ ...emptyFormData });
+  const { showToast } = useToast();
+  const [wizardProgress, setWizardProgress, clearWizardProgress] =
+    useWizardPersistence<NpoWizardProgress>(npoWizardProgressKey, {
+      currentStep: 1,
+      organizationType: null,
+      formData: { ...emptyFormData },
+    });
+
+  const { currentStep, organizationType, formData } = wizardProgress;
+
+  const setCurrentStep = useCallback(
+    (step: number | ((prev: number) => number)) => {
+      setWizardProgress((prev) => ({
+        ...prev,
+        currentStep: typeof step === "function" ? step(prev.currentStep) : step,
+      }));
+    },
+    [setWizardProgress],
+  );
+
+  const setOrganizationType = useCallback(
+    (type: OrganizationType | null) => {
+      setWizardProgress((prev) => ({ ...prev, organizationType: type }));
+    },
+    [setWizardProgress],
+  );
+
+  const setFormData = useCallback(
+    (data: WizardFormData | ((prev: WizardFormData) => WizardFormData)) => {
+      setWizardProgress((prev) => ({
+        ...prev,
+        formData: typeof data === "function" ? data(prev.formData) : data,
+      }));
+    },
+    [setWizardProgress],
+  );
+
   const [errors, setErrors] = useState<FieldErrors>({});
   const [isAuthRedirectModalOpen, setIsAuthRedirectModalOpen] = useState(false);
+  const [isSubmittingNpo, setIsSubmittingNpo] = useState(false);
 
   const steps = useMemo(
     () =>
@@ -128,7 +172,7 @@ export function RegisterPage() {
         setFormData,
         errors,
       }),
-    [organizationType, formData, errors],
+    [organizationType, formData, errors, setOrganizationType, setFormData],
   );
 
   const totalSteps = steps.length;
@@ -141,20 +185,51 @@ export function RegisterPage() {
   }, [currentStep, navigate, organizationType]);
 
   async function handleNpoSignup() {
-    sessionStorage.setItem(
-      npoSignupDraftKey,
-      JSON.stringify({ currentStep, organizationType, formData }),
-    );
+    try {
+      if (formData.cnpj) {
+        const cnpjOk = await checkCnpjAvailable(formData.cnpj);
+        if (!cnpjOk) {
+          showToast("Este CNPJ já está cadastrado na plataforma.");
+          return;
+        }
+      }
+      if (formData.cpf) {
+        const cpfOk = await checkCpfAvailable(formData.cpf);
+        if (!cpfOk) {
+          showToast("Este CPF já está cadastrado na plataforma.");
+          return;
+        }
+      }
 
-    await loginWithRedirect({
-      appState: { returnTo: "/ong/dashboard" },
-      authorizationParams: {
-        audience: auth0Audience,
-        role: "NPO",
-        screen_hint: "signup",
-        ui_locales: "pt-BR",
-      },
-    });
+      sessionStorage.setItem(
+        npoSignupDraftKey,
+        JSON.stringify({ currentStep, organizationType, formData }),
+      );
+
+      await loginWithRedirect({
+        appState: { returnTo: "/ong/dashboard" },
+        authorizationParams: {
+          audience: auth0Audience,
+          role: "NPO",
+          screen_hint: "signup",
+          ui_locales: "pt-BR",
+        },
+      });
+    } catch {
+      sessionStorage.removeItem(npoSignupDraftKey);
+      showToast("Não foi possível iniciar o cadastro. Tente novamente.");
+    }
+  }
+
+  async function handleConfirmNpoSignup() {
+    setIsSubmittingNpo(true);
+
+    try {
+      await handleNpoSignup();
+    } finally {
+      setIsSubmittingNpo(false);
+      setIsAuthRedirectModalOpen(false);
+    }
   }
 
   function openNpoSignupRedirectNotice() {
@@ -192,10 +267,9 @@ export function RegisterPage() {
   }
 
   function handleResetToFirstStep() {
+    clearWizardProgress();
     sessionStorage.removeItem(npoSignupDraftKey);
-    setCurrentStep(1);
-    setOrganizationType(null);
-    setFormData({ ...emptyFormData });
+    setWizardProgress({ currentStep: 1, organizationType: null, formData: { ...emptyFormData } });
     setErrors({});
     navigate("/cadastro", { replace: true });
   }
@@ -230,10 +304,10 @@ export function RegisterPage() {
         title="Você será redirecionado para concluir o acesso"
         description="Na próxima etapa, abriremos o ambiente seguro de autenticação para criar sua conta e concluir a entrada no VinculoHubPortal."
         confirmLabel="Continuar"
+        isLoading={isSubmittingNpo}
         onCancel={() => setIsAuthRedirectModalOpen(false)}
         onConfirm={() => {
-          setIsAuthRedirectModalOpen(false);
-          void handleNpoSignup();
+          void handleConfirmNpoSignup();
         }}
       />
     </div>
