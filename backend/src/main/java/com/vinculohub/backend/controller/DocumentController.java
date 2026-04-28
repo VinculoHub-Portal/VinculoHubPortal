@@ -5,8 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vinculohub.backend.dto.DocumentRequestDTO;
 import com.vinculohub.backend.dto.DocumentResponseDTO;
 import com.vinculohub.backend.service.DocumentService;
-
-// import com.vinculohub.backend.service.DocumentService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -51,7 +49,7 @@ public class DocumentController {
             @RequestParam(required = false) Integer projectId) {
         // FUTURAMENTE: validar combinação de filtros
 
-        List<DocumentResponseDTO> documents = documentService.findAll(npoId, projectId); 
+        List<DocumentResponseDTO> documents = documentService.findAll(npoId, projectId);
 
         return ResponseEntity.ok(documents);
     }
