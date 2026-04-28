@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { RegisterPage } from "./index";
+import { formatCurrencyValue } from "../../utils/formatCurrency";
 
 const loginWithRedirectMock = vi.fn();
 const checkCpfAvailableMock = vi.fn();
@@ -112,13 +113,18 @@ describe("RegisterPage", () => {
     );
     expect(screen.getByLabelText(/Meta de captação/i)).toBeInTheDocument();
     await user.type(screen.getByLabelText(/Meta de captação/i), "10000");
+    expect(screen.getByLabelText(/Meta de captação/i)).toHaveValue(
+      formatCurrencyValue("10000"),
+    );
     await user.click(screen.getByRole("button", { name: /ODS 1 - Erradicação da Pobreza/i }));
     await user.click(screen.getByRole("button", { name: /Finalizar/i }));
-
     expect(
       await screen.findByText(/Você será redirecionado para concluir o acesso/i),
-      ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Continuar/i })).toBeInTheDocument();
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Continuar/i }));
+    expect(sessionStorage.getItem("vinculohub:npo-signup-draft")).toContain(
+      '"metaCaptacao":"10000"',
+    );
   });
 
   it("mostra loading no modal enquanto conclui o cadastro da ONG", async () => {
