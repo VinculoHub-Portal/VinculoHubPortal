@@ -7,6 +7,7 @@ import { AuthRoleRedirect } from "../components/auth/AuthRoleRedirect"
 import { ProtectedRoute } from "../components/auth/ProtectedRoute"
 import { RoleHomePage } from "../pages/RoleHomePage"
 import { CompanyRegistrationPage } from "../pages/CompanyRegistration/registration"
+import { ProjectsVitrine } from "../pages/ProjectsVitrine";
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -50,6 +51,7 @@ export const AppRouter = () => (
           </ProtectedRoute>
         }
       />
+      <Route path="/vitrine" element={<ProjectsVitrine />} />
     </Routes>
   </BrowserRouter>
 );
