@@ -44,11 +44,6 @@ async function advanceToProjectStep(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: /Cadastro como ONG/i }));
   await user.click(screen.getByRole("button", { name: /Próximo/i }));
 
-  await user.type(await screen.findByLabelText(/E-mail/i), "test@example.com");
-  await user.type(screen.getByLabelText(/^Senha\s*\*?$/i), "Abcd1234");
-  await user.type(screen.getByLabelText(/Confirmar senha/i), "Abcd1234");
-  await user.click(screen.getByRole("button", { name: /Próximo/i }));
-
   await user.type(await screen.findByLabelText(/Nome da Instituição/i), "Instituto Teste");
   await user.type(screen.getByLabelText(/CPF do Responsável/i), "529.982.247-25");
   await user.selectOptions(screen.getByLabelText(/Porte da ONG/i), "pequena");
@@ -76,10 +71,11 @@ describe("RegisterPage", () => {
 
     expect(await screen.findByLabelText(/Nome do projeto/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Descrição do projeto/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Meta de captação/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Tipo do projeto/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Meta de captação/i)).not.toBeInTheDocument();
   });
 
-  it("abre o modal de redirecionamento ao finalizar o passo do projeto", async () => {
+  it("oculta a meta de captação quando o projeto é social", async () => {
     const user = userEvent.setup();
     renderPage();
 
@@ -90,13 +86,38 @@ describe("RegisterPage", () => {
       screen.getByLabelText(/Descrição do projeto/i),
       "Projeto voltado para educação básica.",
     );
+    await user.selectOptions(screen.getByLabelText(/Tipo do projeto/i), "social");
+    await user.click(screen.getByRole("button", { name: /ODS 1 - Erradicação da Pobreza/i }));
+    expect(screen.queryByLabelText(/Meta de captação/i)).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Finalizar/i }));
+    expect(
+      await screen.findByText(/Você será redirecionado para concluir o acesso/i),
+    ).toBeInTheDocument();
+  });
+
+  it("exibe a meta de captação quando o projeto é governamental", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await advanceToProjectStep(user);
+
+    await user.type(await screen.findByLabelText(/Nome do projeto/i), "Projeto Escola");
+    await user.type(
+      screen.getByLabelText(/Descrição do projeto/i),
+      "Projeto voltado para educação básica.",
+    );
+    await user.selectOptions(
+      screen.getByLabelText(/Tipo do projeto/i),
+      "governamental",
+    );
+    expect(screen.getByLabelText(/Meta de captação/i)).toBeInTheDocument();
     await user.type(screen.getByLabelText(/Meta de captação/i), "10000");
     await user.click(screen.getByRole("button", { name: /ODS 1 - Erradicação da Pobreza/i }));
     await user.click(screen.getByRole("button", { name: /Finalizar/i }));
 
     expect(
       await screen.findByText(/Você será redirecionado para concluir o acesso/i),
-    ).toBeInTheDocument();
+      ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Continuar/i })).toBeInTheDocument();
   });
 
@@ -118,6 +139,10 @@ describe("RegisterPage", () => {
       screen.getByLabelText(/Descrição do projeto/i),
       "Projeto voltado para educação básica.",
     );
+    await user.selectOptions(
+      screen.getByLabelText(/Tipo do projeto/i),
+      "governamental",
+    );
     await user.type(screen.getByLabelText(/Meta de captação/i), "10000");
     await user.click(screen.getByRole("button", { name: /ODS 1 - Erradicação da Pobreza/i }));
     await user.click(screen.getByRole("button", { name: /Finalizar/i }));
@@ -134,5 +159,51 @@ describe("RegisterPage", () => {
         screen.queryByRole("button", { name: /Redirecionando.../i }),
       ).not.toBeInTheDocument();
     });
+  });
+
+  it("não envia tipoProjeto para o Auth0 e mantém o fluxo no draft", async () => {
+    const user = userEvent.setup();
+    let resolveLogin: (() => void) | null = null;
+
+    loginWithRedirectMock.mockReturnValue(
+      new Promise<void>((resolve) => {
+        resolveLogin = resolve;
+      }),
+    );
+
+    renderPage();
+    await advanceToProjectStep(user);
+
+    await user.type(await screen.findByLabelText(/Nome do projeto/i), "Projeto Escola");
+    await user.type(
+      screen.getByLabelText(/Descrição do projeto/i),
+      "Projeto voltado para educação básica.",
+    );
+    await user.selectOptions(
+      screen.getByLabelText(/Tipo do projeto/i),
+      "governamental",
+    );
+    await user.type(screen.getByLabelText(/Meta de captação/i), "10000");
+    await user.click(screen.getByRole("button", { name: /ODS 1 - Erradicação da Pobreza/i }));
+    await user.click(screen.getByRole("button", { name: /Finalizar/i }));
+    await user.click(screen.getByRole("button", { name: /Continuar/i }));
+
+    expect(loginWithRedirectMock).toHaveBeenCalledTimes(1);
+    expect(loginWithRedirectMock.mock.calls[0][0]).toEqual(
+      expect.objectContaining({
+        appState: { returnTo: "/ong/dashboard" },
+        authorizationParams: expect.objectContaining({
+          projectType: "governamental",
+          role: "NPO",
+          screen_hint: "signup",
+          ui_locales: "pt-BR",
+        }),
+      }),
+    );
+    expect(sessionStorage.getItem("vinculohub:npo-signup-draft")).toContain(
+      '"tipoProjeto":"governamental"',
+    );
+
+    resolveLogin?.();
   });
 });

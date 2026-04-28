@@ -1,16 +1,12 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { Input } from "../../../components/general/Input";
-import { TextArea } from "../../../components/general/TextArea";
-import { CnpjIcon, DescriptionIcon } from "../../../components/icons";
-import type {
-  FieldErrors,
-  WizardEsgOption,
-  WizardFormData,
-} from "../../../types/wizard.types";
-import { formatCpf } from "../../../utils/formatCpf";
-import { formatCnpj } from "../../../utils/formatCnpj";
-import { isValidCpf, isValidCnpj } from "../../../utils/validation";
+import { AddressIcon, StateIcon, PhoneIcon } from "../../../components/icons";
+import { useZipCode } from "../../../hooks/useZipCode";
+import { formatZipCode } from "../../../utils/formatZipCode";
+import { InfoBox } from "../../../components/general/InfoBox";
+import type { FieldErrors, WizardFormData } from "../../../types/wizard.types";
+import { getApiErrorMessage } from "../../../utils/logger";
 
 type Step3Props = {
   formData: WizardFormData;
@@ -18,217 +14,175 @@ type Step3Props = {
   errors: FieldErrors;
 };
 
-const PORTE_LABELS: Record<Exclude<WizardFormData["porteOng"], "">, string> = {
-  pequena: "Pequena",
-  media: "Média",
-  grande: "Grande",
-};
-
-const ESG_OPTIONS: Array<{
-  value: WizardEsgOption;
-  label: string;
-  description: string;
-}> = [
-  {
-    value: "ambiental",
-    label: "Ambiental",
-    description: "Práticas de preservação e sustentabilidade",
-  },
-  {
-    value: "social",
-    label: "Social",
-    description: "Impacto na comunidade e bem-estar social",
-  },
-  {
-    value: "governanca",
-    label: "Governança",
-    description: "Transparência e gestão responsável",
-  },
-];
-
 export function Step3({ formData, setFormData, errors }: Step3Props) {
-  const [cpfError, setCpfError] = useState("");
-  const [cnpjError, setCnpjError] = useState("");
+  const {
+    data: zipCodeData,
+    isFetching: loadingZipCode,
+    error: zipCodeQueryError,
+  } = useZipCode(formData.zipCode);
 
-  function toggleEsg(value: WizardEsgOption) {
-    setFormData((prev) => ({
-      ...prev,
-      esg: prev.esg.includes(value)
-        ? prev.esg.filter((item) => item !== value)
-        : [...prev.esg, value],
-    }));
-  }
+  useEffect(() => {
+    if (zipCodeData) {
+      setFormData((prev) => ({
+        ...prev,
+        street: zipCodeData.street || prev.street,
+        streetNumber:
+          (zipCodeData.complement ?? "").slice(0, 20) || prev.streetNumber,
+        city: zipCodeData.city || prev.city,
+        state: zipCodeData.state || prev.state,
+        stateCode: zipCodeData.stateCode || prev.stateCode,
+      }));
+    }
+  }, [zipCodeData, setFormData]);
 
-  function handleCpfBlur() {
-    if (!formData.cpf.trim()) {
-      setCpfError("");
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const { id, value } = e.target;
+    const formatted = id === "zipCode" ? formatZipCode(value) : value;
+
+    if (id === "zipCode") {
+      setFormData((prev) => ({
+        ...prev,
+        zipCode: formatted,
+        street: "",
+        city: "",
+        state: "",
+        stateCode: "",
+      }));
       return;
     }
 
-    setCpfError(isValidCpf(formData.cpf) ? "" : "CPF inválido.");
-  }
-
-  function handleCnpjBlur() {
-    if (!formData.cnpj.trim()) {
-      setCnpjError("");
-      return;
-    }
-
-    setCnpjError(isValidCnpj(formData.cnpj) ? "" : "CNPJ inválido.");
+    setFormData((prev) => ({ ...prev, [id]: formatted }));
   }
 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h2 className="text-vinculo-dark font-semibold text-lg">
-          Informações Básicas
-        </h2>
+        <h2 className="text-vinculo-dark font-semibold text-lg">Endereço</h2>
         <p className="text-sm text-slate-500 mt-1">
-          Preencha os dados principais da sua ONG.
+          Preencha os dados de localização da sua ONG.
         </p>
       </div>
 
       <div className="flex flex-col gap-4">
-        <Input
-          id="nomeInstituicao"
-          label="Nome da Instituição"
-          isRequired
-          placeholder="Ex: Instituto Esperança"
-          maxLength={200}
-          value={formData.nomeInstituicao}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, nomeInstituicao: e.target.value }))
-          }
-          error={errors.nomeInstituicao}
-        />
-
-        <div className="flex flex-col gap-2">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              id="cpf"
-              label="CPF do Responsável"
-              inputMode="numeric"
-              autoComplete="off"
-              placeholder="000.000.000-00"
-              maxLength={14}
-              value={formData.cpf}
-              onChange={(e) => {
-                setCpfError("");
-                setFormData((prev) => ({ ...prev, cpf: formatCpf(e.target.value) }));
-              }}
-              onBlur={handleCpfBlur}
-              error={errors.cpf || cpfError}
-            />
-
-            <Input
-              id="cnpj"
-              label="CNPJ"
-              inputMode="numeric"
-              autoComplete="off"
-              placeholder="00.000.000/0000-00"
-              maxLength={18}
-              value={formData.cnpj}
-              onChange={(e) => {
-                setCnpjError("");
-                setFormData((prev) => ({ ...prev, cnpj: formatCnpj(e.target.value) }));
-              }}
-              onBlur={handleCnpjBlur}
-              error={errors.cnpj || cnpjError}
-              icon={<CnpjIcon />}
-              iconPosition="left"
-            />
-          </div>
-          <p className="text-xs text-slate-500">
-            Informe o CPF, o CNPJ ou ambos. Ao menos um é obrigatório.
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-1 w-full text-left">
-          <label htmlFor="porteOng" className="text-slate-700 font-semibold text-sm flex gap-1">
-            Porte da ONG
-            <span className="text-red-500">*</span>
-          </label>
-          <select
-            id="porteOng"
-            required
-            value={formData.porteOng}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                porteOng: e.target.value as WizardFormData["porteOng"],
-              }))
-            }
-            className={`w-full rounded-xl px-4 py-3 outline-none transition-all text-slate-900
-              border border-vinculo-gray bg-white
-              focus:border-vinculo-dark focus:ring-1 focus:ring-vinculo-dark
-              ${errors.porteOng ? "!border !border-error focus:!border-error focus:!ring-error" : ""}`}
-          >
-            <option value="" disabled hidden>
-              Selecione
-            </option>
-            {(Object.keys(PORTE_LABELS) as Array<keyof typeof PORTE_LABELS>).map((key) => (
-              <option key={key} value={key}>
-                {PORTE_LABELS[key]}
-              </option>
-            ))}
-          </select>
-          {errors.porteOng && (
-            <p className="text-sm text-error" role="alert">
-              {errors.porteOng}
-            </p>
+        <div className="flex flex-col gap-1">
+          <Input
+            label="CEP"
+            id="zipCode"
+            placeholder="00000-000"
+            maxLength={9}
+            value={formData.zipCode}
+            onChange={handleChange}
+            error={errors.zipCode}
+            icon={<AddressIcon />}
+            iconPosition="left"
+            isRequired
+          />
+          {loadingZipCode && (
+            <span className="text-sm text-slate-400">Consultando CEP...</span>
+          )}
+          {zipCodeQueryError && (
+            <span className="text-sm text-error">
+              {getApiErrorMessage(
+                zipCodeQueryError,
+                "CEP não encontrado. Verifique e tente novamente.",
+              )}
+            </span>
           )}
         </div>
 
-        <TextArea
-          id="resumoInstitucional"
-          label="Resumo Institucional (opcional)"
-          placeholder="Descreva brevemente a missão e atuação da ONG..."
-          maxLength={500}
-          value={formData.resumoInstitucional}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, resumoInstitucional: e.target.value }))
-          }
-          icon={<DescriptionIcon />}
-        />
-      </div>
-
-      <fieldset className="border-t border-slate-100 pt-5 border-x-0 border-b-0">
-        <legend className="text-vinculo-dark font-semibold text-base mb-1">
-          Pilares ESG <span className="text-red-500" aria-hidden="true">*</span>
-        </legend>
-        <p className="text-sm text-slate-500 mb-4">
-          Selecione os pilares em que a ONG atua.
-        </p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {ESG_OPTIONS.map((option) => {
-            const selected = formData.esg.includes(option.value);
-            return (
-              <button
-                key={option.value}
-                type="button"
-                aria-pressed={selected}
-                onClick={() => toggleEsg(option.value)}
-                className={`flex flex-col gap-1 rounded-xl border-2 px-4 py-3 text-left transition-all
-                  ${
-                    selected
-                      ? "border-vinculo-green bg-vinculo-green/10 text-vinculo-dark"
-                      : "border-vinculo-gray bg-white text-slate-600 hover:border-slate-300"
-                  }`}
-              >
-                <span className="font-semibold text-sm">{option.label}</span>
-                <span className="text-xs text-slate-500">{option.description}</span>
-              </button>
-            );
-          })}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-2">
+            <Input
+              label="Logradouro"
+              id="street"
+              placeholder="Rua, Avenida..."
+              maxLength={100}
+              value={formData.street}
+              onChange={handleChange}
+              icon={<AddressIcon />}
+              iconPosition="left"
+              disabled={!!zipCodeData}
+            />
+          </div>
+          <Input
+            label="Número"
+            id="streetNumber"
+            placeholder="Ex: 123"
+            maxLength={20}
+            value={formData.streetNumber}
+            onChange={handleChange}
+            error={errors.streetNumber}
+            icon={<AddressIcon />}
+            iconPosition="left"
+            isRequired
+          />
         </div>
 
-        {errors.esg && (
-          <p className="text-sm text-error mt-2" role="alert">
-            {errors.esg}
-          </p>
-        )}
-      </fieldset>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            label="Complemento"
+            id="complement"
+            placeholder="Apto, Sala..."
+            maxLength={100}
+            value={formData.complement}
+            onChange={handleChange}
+            icon={<AddressIcon />}
+            iconPosition="left"
+          />
+          <Input
+            label="Cidade"
+            id="city"
+            placeholder="Ex: São Paulo"
+            maxLength={50}
+            value={formData.city}
+            onChange={handleChange}
+            icon={<StateIcon />}
+            iconPosition="left"
+            disabled={!!zipCodeData}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            label="Estado"
+            id="state"
+            placeholder="Ex: São Paulo"
+            maxLength={50}
+            value={formData.state}
+            onChange={handleChange}
+            icon={<StateIcon />}
+            iconPosition="left"
+            disabled={!!zipCodeData}
+          />
+          <Input
+            label="UF"
+            id="stateCode"
+            placeholder="Ex: SP"
+            maxLength={2}
+            value={formData.stateCode}
+            onChange={handleChange}
+            icon={<StateIcon />}
+            iconPosition="left"
+            disabled={!!zipCodeData}
+          />
+        </div>
+
+        <Input
+          label="Telefone"
+          id="phone"
+          placeholder="(00) 00000-0000"
+          maxLength={30}
+          value={formData.phone}
+          onChange={handleChange}
+          icon={<PhoneIcon />}
+          iconPosition="left"
+        />
+
+        <InfoBox
+          title="Importante"
+          message="Essas informações serão visíveis no seu perfil público e utilizadas por empresas para entrar em contato com a sua ONG."
+        />
+      </div>
     </div>
   );
 }
