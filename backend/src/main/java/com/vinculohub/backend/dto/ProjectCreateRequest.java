@@ -13,9 +13,19 @@ import lombok.Builder;
 
 @Builder
 public record ProjectCreateRequest(
-        @NotBlank @Size(max = 255) String title,
-        @NotBlank @Size(min = 50, max = 500) String description,
-        @NotNull @DecimalMin("0.00") BigDecimal budgetNeeded,
+        @NotBlank(message = "Título é obrigatório")
+        @Size(max = 255, message = "Título deve ter no máximo 255 caracteres") 
+        String title,
+
+        @NotBlank(message = "Resumo é obrigatório")
+        @Size(min = 50, max = 500, message = "Resumo deve ter entre 50 e 500 caracteres") 
+        String description,
+
+        @NotNull(message = "Valor necessário é obrigatório") 
+        @DecimalMin(value = "0.00", message = "Valor necessário não pode ser negativo") 
+        BigDecimal budgetNeeded,
         LocalDate startDate,
         LocalDate endDate,
-        @NotEmpty List<Integer> odsIds) {}
+
+        @NotEmpty(message = "ODS é obrigatório") 
+        List<Integer> odsIds) {}
