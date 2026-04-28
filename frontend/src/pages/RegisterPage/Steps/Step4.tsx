@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { Input } from "../../../components/general/Input";
 import { TextArea } from "../../../components/general/TextArea";
@@ -6,6 +7,10 @@ import type {
   ProjectOdsOption,
   WizardFormData,
 } from "../../../types/wizard.types";
+import {
+  formatCurrencyValue,
+  normalizeCurrencyValue,
+} from "../../../utils/formatCurrency";
 
 type Step4Props = {
   formData: WizardFormData;
@@ -54,6 +59,13 @@ const PROJECT_TYPE_OPTIONS: Array<{
 ];
 
 export function Step4({ formData, setFormData, errors }: Step4Props) {
+  const metaCaptacaoInputRef = useRef<HTMLInputElement | null>(null);
+
+  function moveCaretToEnd(input: HTMLInputElement) {
+    const end = input.value.length;
+    input.setSelectionRange(end, end);
+  }
+
   function toggleOds(value: ProjectOdsOption) {
     setFormData((prev) => ({
       ...prev,
@@ -163,17 +175,80 @@ export function Step4({ formData, setFormData, errors }: Step4Props) {
         <Input
           id="metaCaptacao"
           label="Meta de captação"
-          type="number"
-          min="0"
-          step="0.01"
-          placeholder="0,00"
-          value={formData.metaCaptacao}
+          type="text"
+          inputMode="numeric"
+          autoComplete="off"
+          placeholder="R$ 0,00"
+          value={formatCurrencyValue(formData.metaCaptacao)}
           onChange={(e) =>
             setFormData((prev) => ({
               ...prev,
-              metaCaptacao: e.target.value,
+              metaCaptacao: normalizeCurrencyValue(e.target.value),
             }))
           }
+          onKeyDown={(event) => {
+            const key = event.key;
+
+            if (/^\d$/.test(key)) {
+              event.preventDefault();
+              setFormData((prev) => ({
+                ...prev,
+                metaCaptacao: normalizeCurrencyValue(`${prev.metaCaptacao}${key}`),
+              }));
+              return;
+            }
+
+            if (key === "Backspace" || key === "Delete") {
+              event.preventDefault();
+              setFormData((prev) => ({
+                ...prev,
+                metaCaptacao: prev.metaCaptacao.slice(0, -1),
+              }));
+              return;
+            }
+
+            if (key === "ArrowLeft" || key === "ArrowRight" || key === "Home" || key === "End") {
+              requestAnimationFrame(() => {
+                const input = metaCaptacaoInputRef.current;
+                if (!input) {
+                  return;
+                }
+
+                moveCaretToEnd(input);
+              });
+            }
+          }}
+          onPaste={(event) => {
+            event.preventDefault();
+            const pastedDigits = event.clipboardData.getData("text").replace(/\D/g, "");
+
+            if (!pastedDigits) {
+              return;
+            }
+
+            setFormData((prev) => ({
+              ...prev,
+              metaCaptacao: normalizeCurrencyValue(
+                `${prev.metaCaptacao}${pastedDigits}`,
+              ),
+            }));
+          }}
+          onClick={() => {
+            const input = metaCaptacaoInputRef.current;
+
+            if (!input) {
+              return;
+            }
+
+            moveCaretToEnd(input);
+          }}
+          onFocus={(event) => {
+            moveCaretToEnd(event.currentTarget);
+          }}
+          onMouseUp={(event) => {
+            moveCaretToEnd(event.currentTarget);
+          }}
+          inputRef={metaCaptacaoInputRef}
           error={errors.metaCaptacao}
           isRequired
         />
