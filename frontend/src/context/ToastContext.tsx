@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { Alert, Snackbar } from "@mui/material";
 import { createContext, useCallback, useContext, useState } from "react";
 
@@ -22,9 +23,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     severity: "error",
   });
 
-  const showToast = useCallback((message: string, severity: ToastSeverity = "error") => {
-    setToast({ open: true, message, severity });
-  }, []);
+  const showToast = useCallback(
+    (message: string, severity: ToastSeverity = "error") => {
+      setToast({ open: true, message, severity });
+    },
+    [],
+  );
 
   function handleClose(_: React.SyntheticEvent | Event, reason?: string) {
     if (reason === "clickaway") return;

@@ -31,7 +31,10 @@ public class NpoAccountController {
     @PreAuthorize("!hasRole('COMPANY') && !hasRole('ADMIN')")
     public ResponseEntity<NpoInstitutionalSignupResponse> create(
             @AuthenticationPrincipal Jwt jwt, @RequestBody NpoInstitutionalSignupRequest request) {
-        log.info("POST /api/npo-accounts | sub={} email={}", jwt.getSubject(), jwt.getClaimAsString("email"));
+        log.info(
+                "POST /api/npo-accounts | sub={} email={}",
+                jwt.getSubject(),
+                jwt.getClaimAsString("email"));
         NpoInstitutionalSignupResponse response =
                 npoAccountService.registerInstitutionalAccount(
                         jwt.getSubject(), jwt.getClaimAsString("email"), request);
