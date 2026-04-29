@@ -1,6 +1,7 @@
 import type { OrganizationType, StepValidator } from "../types/wizard.types";
 import {
   validateSignupStep,
+  validateNpoStepTwo,
   validateNpoStepThree,
   validateNpoStepFour,
   validateEnterpriseStepTwo,
@@ -9,6 +10,7 @@ import {
 export const stepValidators: Record<OrganizationType, StepValidator[]> = {
   npo: [
     validateSignupStep,
+    validateNpoStepTwo,
     validateNpoStepThree,
     validateNpoStepFour,
   ],

@@ -3,20 +3,20 @@ package com.vinculohub.backend.service;
 
 import com.vinculohub.backend.exception.DuplicateDocumentException;
 import com.vinculohub.backend.exception.InvalidDocumentException;
+import com.vinculohub.backend.repository.CompanyRepository;
 import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.utils.DocumentValidator;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class NpoDocumentService {
 
     private final NpoRepository npoRepository;
-
-    public NpoDocumentService(NpoRepository npoRepository) {
-        this.npoRepository = npoRepository;
-    }
+    private final CompanyRepository companyRepository;
 
     /**
      * Valida os documentos (CPF e/ou CNPJ) de uma ONG antes do cadastro.
@@ -59,12 +59,13 @@ public class NpoDocumentService {
             }
         }
 
-        // Validar formato e unicidade do CNPJ
+        // Validar formato e unicidade do CNPJ (entre ONG e empresas)
         if (hasCnpj) {
             if (!DocumentValidator.isValidCnpj(sanitizedCnpj)) {
                 throw new InvalidDocumentException("CNPJ informado é inválido.");
             }
-            if (npoRepository.existsByCnpj(sanitizedCnpj)) {
+            if (npoRepository.existsByCnpj(sanitizedCnpj)
+                    || companyRepository.existsByCnpj(sanitizedCnpj)) {
                 throw new DuplicateDocumentException(
                         "Já existe uma instituição cadastrada com este CNPJ.");
             }
