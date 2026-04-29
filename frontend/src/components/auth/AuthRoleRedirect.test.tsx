@@ -69,6 +69,7 @@ describe("AuthRoleRedirect", () => {
           stateCode: "",
           phone: "",
           nomeProjeto: "Projeto Escola",
+          tipoProjeto: "governamental",
           descricaoProjeto: "Projeto voltado para educação básica.",
           metaCaptacao: "10000",
           odsProjeto: ["1"],
@@ -94,5 +95,52 @@ describe("AuthRoleRedirect", () => {
     await waitFor(() => {
       expect(mocks.showToastMock).toHaveBeenCalledWith("Serviço indisponível");
     });
+  });
+
+  it("envia capital nulo quando o projeto é social", async () => {
+    mocks.apiPostMock.mockResolvedValueOnce({ data: {} });
+    sessionStorage.setItem(
+      "vinculohub:npo-signup-draft",
+      JSON.stringify({
+        formData: {
+          nomeInstituicao: "Instituto Teste",
+          email: "teste@exemplo.com",
+          senha: "Abcd1234",
+          confirmarSenha: "Abcd1234",
+          cnpj: "",
+          razaoSocial: "",
+          cpf: "529.982.247-25",
+          porteOng: "pequena",
+          resumoInstitucional: "",
+          esg: ["ambiental"],
+          zipCode: "",
+          street: "",
+          streetNumber: "",
+          complement: "",
+          city: "",
+          state: "",
+          stateCode: "",
+          phone: "",
+          nomeProjeto: "Projeto Escola",
+          tipoProjeto: "social",
+          descricaoProjeto: "Projeto voltado para educação básica.",
+          metaCaptacao: "10000",
+          odsProjeto: ["1"],
+        },
+      }),
+    );
+
+    render(
+      <MemoryRouter initialEntries={["/cadastro"]}>
+        <AuthRoleRedirect />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(mocks.apiPostMock).toHaveBeenCalled();
+    });
+
+    const [, payload] = mocks.apiPostMock.mock.calls[0];
+    expect(payload.firstProject.capital).toBeNull();
   });
 });
