@@ -6,9 +6,9 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import com.vinculohub.backend.dto.AddressSignupRequest;
+import com.vinculohub.backend.dto.NpoFirstProjectSignupRequest;
 import com.vinculohub.backend.dto.NpoInstitutionalSignupRequest;
 import com.vinculohub.backend.dto.NpoInstitutionalSignupResponse;
-import com.vinculohub.backend.dto.NpoFirstProjectSignupRequest;
 import com.vinculohub.backend.exception.DuplicateLoginException;
 import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.model.Npo;
@@ -68,7 +68,8 @@ class NpoAccountServiceTest {
                             npo.setId(20);
                             return npo;
                         });
-        when(projectService.createFirstProject(any(Npo.class), any(NpoFirstProjectSignupRequest.class)))
+        when(projectService.createFirstProject(
+                        any(Npo.class), any(NpoFirstProjectSignupRequest.class)))
                 .thenAnswer(
                         invocation -> {
                             Project project = new Project();
@@ -89,7 +90,8 @@ class NpoAccountServiceTest {
         verify(userRepository).save(userCaptor.capture());
         verify(npoService).saveWithAddress(npoCaptor.capture(), addressCaptor.capture());
         verify(projectValidationService).validateFirstProject(projectRequestCaptor.capture());
-        verify(projectService).createFirstProject(eq(npoCaptor.getValue()), eq(request.firstProject()));
+        verify(projectService)
+                .createFirstProject(eq(npoCaptor.getValue()), eq(request.firstProject()));
         verify(npoDocumentService).validateDocuments("529.982.247-25", null);
         verify(npoEsgService).validateEsgSelection(true, false, false);
 
