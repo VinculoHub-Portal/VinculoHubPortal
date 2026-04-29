@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { LandingPage } from "../pages/LandingPage"
 import { ComponentsPage } from "../pages/ComponentsPage"
@@ -7,7 +6,6 @@ import { AuthRoleRedirect } from "../components/auth/AuthRoleRedirect"
 import { ProtectedRoute } from "../components/auth/ProtectedRoute"
 import { RoleHomePage } from "../pages/RoleHomePage"
 import { CompanyRegistrationPage } from "../pages/CompanyRegistration/registration"
-import { ProjectsVitrine } from "../pages/ProjectsVitrine";
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -51,7 +49,6 @@ export const AppRouter = () => (
           </ProtectedRoute>
         }
       />
-      <Route path="/vitrine" element={<ProjectsVitrine />} />
     </Routes>
   </BrowserRouter>
 );

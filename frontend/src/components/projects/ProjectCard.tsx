@@ -3,6 +3,7 @@ export type ProjectCardProps = {
   title: string;
   description: string;
   type: string; // modalidade (Lei Rouanet, Investimento Social, etc)
+  fundingType?: "lei-incentivo" | "investimento-social-privado";
   targetAmount: number; // em centavos ou reais, front will format
   progressPercent: number; // 0-100
   location?: string;
@@ -22,12 +23,17 @@ export function ProjectCard({
   title,
   description,
   type,
+  fundingType = "lei-incentivo",
   targetAmount,
   progressPercent,
   location,
   onDetails,
 }: ProjectCardProps) {
   const percent = Math.max(0, Math.min(100, Math.round(progressPercent)));
+  const typeBadgeClassName =
+    fundingType === "investimento-social-privado"
+      ? "bg-vinculo-dark text-white"
+      : "bg-vinculo-green text-white";
 
   return (
     <div
@@ -41,7 +47,7 @@ export function ProjectCard({
     >
       <div className="flex justify-between items-start mb-4">
         <div className="flex gap-2 items-center">
-          <span className="bg-vinculo-green text-white px-3 py-1 rounded-full text-sm font-semibold">{type}</span>
+          <span className={`${typeBadgeClassName} px-3 py-1 rounded-full text-sm font-semibold`}>{type}</span>
           <span className="bg-amber-300 text-neutral-900 px-3 py-1 rounded-full text-sm font-semibold">{formatCurrency(targetAmount)}</span>
         </div>
       </div>

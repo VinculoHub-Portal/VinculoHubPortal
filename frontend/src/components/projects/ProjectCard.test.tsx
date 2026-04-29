@@ -8,10 +8,10 @@ describe('ProjectCard', () => {
     title: 'Projeto Teste',
     description: 'Descrição do projeto de teste',
     type: 'Lei Rouanet',
+    fundingType: 'lei-incentivo' as const,
     targetAmount: 10000,
     progressPercent: 42,
     location: 'Curitiba, PR',
-    ods: ['4'],
   }
 
   it('renders content and progress', () => {
