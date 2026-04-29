@@ -4,3 +4,7 @@ target/
 *.md
 .idea
 *.iml
+.DS_Store
+*.log
+HELP.md
+.vscode/
