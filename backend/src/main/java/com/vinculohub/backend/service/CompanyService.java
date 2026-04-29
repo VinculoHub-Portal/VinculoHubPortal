@@ -30,7 +30,11 @@ public class CompanyService {
 
     @Transactional
     public CompanyDTO createCompany(String auth0Id, String auth0Email, CompanyDTO companyDTO) {
-        log.info("Creating company | auth0Id={} email={} cnpj={}", auth0Id, auth0Email, companyDTO.cnpj());
+        log.info(
+                "Creating company | auth0Id={} email={} cnpj={}",
+                auth0Id,
+                auth0Email,
+                companyDTO.cnpj());
 
         if (auth0Id == null || auth0Id.isBlank()) {
             log.error("Auth0 ID is blank");
@@ -38,14 +42,17 @@ public class CompanyService {
         }
 
         String sanitizedCnpj = DocumentValidator.sanitize(companyDTO.cnpj());
-        if (companyRepository.existsByCnpj(sanitizedCnpj) || npoRepository.existsByCnpj(sanitizedCnpj)) {
+        if (companyRepository.existsByCnpj(sanitizedCnpj)
+                || npoRepository.existsByCnpj(sanitizedCnpj)) {
             log.warn("Duplicate CNPJ: {}", sanitizedCnpj);
-            throw new CompanyAlreadyExistsException("Já existe uma instituição cadastrada com este CNPJ.");
+            throw new CompanyAlreadyExistsException(
+                    "Já existe uma instituição cadastrada com este CNPJ.");
         }
 
         if (userRepository.existsByAuth0Id(auth0Id)) {
             log.warn("Duplicate Auth0 ID: {}", auth0Id);
-            throw new CompanyAlreadyExistsException("Já existe uma conta cadastrada para este login.");
+            throw new CompanyAlreadyExistsException(
+                    "Já existe uma conta cadastrada para este login.");
         }
 
         String email =
@@ -59,7 +66,8 @@ public class CompanyService {
 
         if (userRepository.existsByEmailIgnoreCase(email)) {
             log.warn("Duplicate email: {}", email);
-            throw new CompanyAlreadyExistsException("Já existe uma conta cadastrada com este e-mail.");
+            throw new CompanyAlreadyExistsException(
+                    "Já existe uma conta cadastrada com este e-mail.");
         }
 
         Company company = new Company();
