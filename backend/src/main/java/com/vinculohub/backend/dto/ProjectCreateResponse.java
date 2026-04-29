@@ -10,7 +10,7 @@ import lombok.Builder;
 
 @Builder
 public record ProjectCreateResponse(
-        Integer id,
+        Long id,
         Integer npoId,
         String title,
         String description,

@@ -40,11 +40,6 @@ public class ProjectService {
     private final NpoRepository npoRepository;
     private final UserRepository userRepository;
 
-    public ProjectService(ProjectRepository projectRepository, OdsMapper odsMapper) {
-        this.projectRepository = projectRepository;
-        this.odsMapper = odsMapper;
-    }
-
     public Project save(Project project) {
         if (project == null) {
             throw new IllegalArgumentException("O projeto não pode ser nulo.");
@@ -112,7 +107,7 @@ public class ProjectService {
                         .description(request.description())
                         .budgetNeeded(request.budgetNeeded())
                         .investedAmount(BigDecimal.ZERO)
-                        .status(ProjectStatus.active)
+                        .status(ProjectStatus.ACTIVE)
                         .startDate(request.startDate())
                         .endDate(request.endDate())
                         .sdgs(new LinkedHashSet<>(sdgs))
