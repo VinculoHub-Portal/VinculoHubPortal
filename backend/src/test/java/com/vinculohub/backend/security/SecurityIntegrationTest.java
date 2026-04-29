@@ -12,6 +12,7 @@ import com.vinculohub.backend.database.AbstractIntegrationTest;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 
 class SecurityIntegrationTest extends AbstractIntegrationTest {
@@ -35,7 +36,10 @@ class SecurityIntegrationTest extends AbstractIntegrationTest {
         mockMvc.perform(
                         get("/api/me")
                                 .with(
-                                        jwt().jwt(
+                                        jwt().authorities(
+                                                        new SimpleGrantedAuthority("ROLE_ADMIN"),
+                                                        new SimpleGrantedAuthority("ROLE_USER"))
+                                                .jwt(
                                                         jwt ->
                                                                 jwt.subject("auth0|123")
                                                                         .issuer(
