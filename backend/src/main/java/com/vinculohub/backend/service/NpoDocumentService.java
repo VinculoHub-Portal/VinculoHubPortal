@@ -64,7 +64,8 @@ public class NpoDocumentService {
             if (!DocumentValidator.isValidCnpj(sanitizedCnpj)) {
                 throw new InvalidDocumentException("CNPJ informado é inválido.");
             }
-            if (npoRepository.existsByCnpj(sanitizedCnpj) || companyRepository.existsByCnpj(sanitizedCnpj)) {
+            if (npoRepository.existsByCnpj(sanitizedCnpj)
+                    || companyRepository.existsByCnpj(sanitizedCnpj)) {
                 throw new DuplicateDocumentException(
                         "Já existe uma instituição cadastrada com este CNPJ.");
             }
