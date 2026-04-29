@@ -4,6 +4,7 @@ package com.vinculohub.backend.controller;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,6 +29,7 @@ public class AuthTestController {
     }
 
     @GetMapping("/api/me")
+    @PreAuthorize("hasRole('ADMIN')")
     public Map<String, Object> me(@AuthenticationPrincipal Jwt jwt) {
         List<String> authorities =
                 jwt.getClaimAsStringList("scope") == null

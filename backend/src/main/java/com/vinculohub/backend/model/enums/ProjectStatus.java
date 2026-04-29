@@ -2,7 +2,7 @@
 package com.vinculohub.backend.model.enums;
 
 public enum ProjectStatus {
-    active,
-    completed,
-    cancelled
+    ACTIVE,
+    COMPLETED,
+    CANCELLED
 }

@@ -6,15 +6,19 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import com.vinculohub.backend.dto.AddressSignupRequest;
+import com.vinculohub.backend.dto.NpoFirstProjectSignupRequest;
 import com.vinculohub.backend.dto.NpoInstitutionalSignupRequest;
 import com.vinculohub.backend.dto.NpoInstitutionalSignupResponse;
 import com.vinculohub.backend.exception.DuplicateLoginException;
 import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.model.Npo;
+import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.model.enums.NpoSize;
 import com.vinculohub.backend.model.enums.UserType;
 import com.vinculohub.backend.repository.UserRepository;
+import java.math.BigDecimal;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +34,10 @@ class NpoAccountServiceTest {
     @Mock private UserRepository userRepository;
 
     @Mock private NpoService npoService;
+
+    @Mock private ProjectValidationService projectValidationService;
+
+    @Mock private ProjectService projectService;
 
     @Mock private NpoDocumentService npoDocumentService;
 
@@ -60,6 +68,14 @@ class NpoAccountServiceTest {
                             npo.setId(20);
                             return npo;
                         });
+        when(projectService.createFirstProject(
+                        any(Npo.class), any(NpoFirstProjectSignupRequest.class)))
+                .thenAnswer(
+                        invocation -> {
+                            Project project = new Project();
+                            project.setId(30L);
+                            return project;
+                        });
 
         NpoInstitutionalSignupResponse response =
                 npoAccountService.registerInstitutionalAccount(
@@ -68,9 +84,14 @@ class NpoAccountServiceTest {
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         ArgumentCaptor<Npo> npoCaptor = ArgumentCaptor.forClass(Npo.class);
         ArgumentCaptor<Address> addressCaptor = ArgumentCaptor.forClass(Address.class);
+        ArgumentCaptor<NpoFirstProjectSignupRequest> projectRequestCaptor =
+                ArgumentCaptor.forClass(NpoFirstProjectSignupRequest.class);
 
         verify(userRepository).save(userCaptor.capture());
         verify(npoService).saveWithAddress(npoCaptor.capture(), addressCaptor.capture());
+        verify(projectValidationService).validateFirstProject(projectRequestCaptor.capture());
+        verify(projectService)
+                .createFirstProject(eq(npoCaptor.getValue()), eq(request.firstProject()));
         verify(npoDocumentService).validateDocuments("529.982.247-25", null);
         verify(npoEsgService).validateEsgSelection(true, false, false);
 
@@ -94,8 +115,15 @@ class NpoAccountServiceTest {
 
         assertEquals(10, response.userId());
         assertEquals(20, response.npoId());
+        assertEquals(30L, response.projectId());
         assertEquals("contato@ong.org", response.email());
         assertTrue(response.accessReleased());
+
+        NpoFirstProjectSignupRequest savedProjectRequest = projectRequestCaptor.getValue();
+        assertEquals("Projeto Inicial", savedProjectRequest.name());
+        assertEquals("Projeto piloto", savedProjectRequest.description());
+        assertEquals(new BigDecimal("1000.00"), savedProjectRequest.capital());
+        assertEquals(List.of("1", "2"), savedProjectRequest.ods());
     }
 
     @Test
@@ -142,6 +170,11 @@ class NpoAccountServiceTest {
                 false,
                 false,
                 new AddressSignupRequest(
-                        "São Paulo", "SP", "São Paulo", "Rua A", "123", "Sala 1", "01000-000"));
+                        "São Paulo", "SP", "São Paulo", "Rua A", "123", "Sala 1", "01000-000"),
+                new NpoFirstProjectSignupRequest(
+                        "Projeto Inicial",
+                        "Projeto piloto",
+                        new BigDecimal("1000.00"),
+                        List.of("1", "2")));
     }
 }

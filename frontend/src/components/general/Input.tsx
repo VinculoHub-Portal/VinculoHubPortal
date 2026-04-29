@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
@@ -6,6 +6,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: string;
   icon?: ReactNode;
   iconPosition?: "left" | "right";
+  inputRef?: Ref<HTMLInputElement>;
 }
 
 export function Input({
@@ -15,6 +16,7 @@ export function Input({
   error,
   icon,
   iconPosition = "left",
+  inputRef,
   className = "",
   ...props
 }: InputProps) {
@@ -41,6 +43,7 @@ export function Input({
         )}
         <input
           id={id}
+          ref={inputRef}
           required={isRequired}
           aria-invalid={invalid}
           className={`w-full rounded-xl py-3 outline-none transition-all placeholder:text-slate-400

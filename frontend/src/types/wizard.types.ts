@@ -1,28 +1,16 @@
 export type OrganizationType = "npo" | "enterprise";
-
+export type ProjectType = "" | "social" | "governamental";
 export type WizardEsgOption = "ambiental" | "social" | "governanca";
-
-/* Se precisar de campos opcionais utilize "pick". EXs:
-type SignupFields = Pick<
-  WizardFormData,
-  "nomeInstituicao" | "email" | "senha" | "confirmarSenha"
->;
-type NpoFields = Pick<WizardFormData, "cnpj">;
-type EnterpriseFields = Pick<WizardFormData, "razaoSocial">;
-*/
+export type ProjectOdsOption = "1" | "2" | "3";
 
 export type WizardFormData = {
   nomeInstituicao: string;
-  email: string;
-  senha: string;
-  confirmarSenha: string;
   cnpj: string;
   razaoSocial: string;
   cpf: string;
   porteOng: "" | "pequena" | "media" | "grande";
   resumoInstitucional: string;
   esg: WizardEsgOption[];
-  // address
   zipCode: string;
   street: string;
   streetNumber: string;
@@ -31,6 +19,11 @@ export type WizardFormData = {
   state: string;
   stateCode: string;
   phone: string;
+  nomeProjeto: string;
+  tipoProjeto: ProjectType;
+  descricaoProjeto: string;
+  metaCaptacao: string;
+  odsProjeto: ProjectOdsOption[];
 };
 
 export type FieldErrors = Partial<

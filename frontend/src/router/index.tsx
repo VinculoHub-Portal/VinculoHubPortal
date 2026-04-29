@@ -20,7 +20,7 @@ export const AppRouter = () => (
       <Route
         path="/admin/dashboard"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole="ADMIN">
             <RoleHomePage
               title="Painel administrativo"
               description="Gerencie usuários, organizações e configurações da plataforma."
@@ -31,7 +31,7 @@ export const AppRouter = () => (
       <Route
         path="/ong/dashboard"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole="NPO">
             <RoleHomePage
               title="Painel da ONG"
               description="Acompanhe seu cadastro, projetos e oportunidades para sua organização."
@@ -42,7 +42,7 @@ export const AppRouter = () => (
       <Route
         path="/empresa/dashboard"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole="COMPANY">
             <RoleHomePage
               title="Painel da empresa"
               description="Encontre projetos, acompanhe parcerias e gerencie seu perfil institucional."
