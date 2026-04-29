@@ -18,37 +18,33 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("test")
 class ProjectRepositoryTest extends AbstractIntegrationTest {
 
-    @Autowired
-    private NpoRepository npoRepository;
+    @Autowired private NpoRepository npoRepository;
 
-    @Autowired
-    private ProjectRepository projectRepository;
+    @Autowired private ProjectRepository projectRepository;
 
     @Test
     @DisplayName("Deve persistir projeto vinculado a uma ONG")
     void shouldPersistProjectWithNpoRelationship() {
-        Npo npo = npoRepository.save(
-            Npo.builder()
-                .name("ONG Exemplo")
-                .npoSize(NpoSize.small)
-                .environmental(true)
-                .build()
-        );
+        Npo npo =
+                npoRepository.save(
+                        Npo.builder()
+                                .name("ONG Exemplo")
+                                .npoSize(NpoSize.small)
+                                .environmental(true)
+                                .build());
 
-        Project project = projectRepository.save(
-            Project.builder()
-                .npo(npo)
-                .title("Projeto Exemplo")
-                .description("Projeto piloto para validar o mapeamento.")
-                .build()
-        );
+        Project project =
+                projectRepository.save(
+                        Project.builder()
+                                .npo(npo)
+                                .title("Projeto Exemplo")
+                                .description("Projeto piloto para validar o mapeamento.")
+                                .build());
 
         assertNotNull(project.getId());
         assertEquals(ProjectStatus.ACTIVE, project.getStatus());
 
-        List<Project> projects = projectRepository.findAllByNpoId(
-            Long.valueOf(npo.getId())
-        );
+        List<Project> projects = projectRepository.findAllByNpoId(Long.valueOf(npo.getId()));
 
         assertEquals(1, projects.size());
         assertEquals(npo.getId(), projects.get(0).getNpo().getId());

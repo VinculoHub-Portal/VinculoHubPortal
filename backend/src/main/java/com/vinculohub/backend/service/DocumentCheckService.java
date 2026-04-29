@@ -23,7 +23,8 @@ public class DocumentCheckService {
         if (sanitized == null || sanitized.isBlank()) {
             return true;
         }
-        boolean inUse = npoRepository.existsByCnpj(sanitized) || companyRepository.existsByCnpj(sanitized);
+        boolean inUse =
+                npoRepository.existsByCnpj(sanitized) || companyRepository.existsByCnpj(sanitized);
         log.info("Verificação de CNPJ {}: {}", sanitized, inUse ? "em uso" : "disponível");
         return !inUse;
     }
