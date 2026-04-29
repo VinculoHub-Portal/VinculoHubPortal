@@ -127,7 +127,7 @@ describe("RegisterPage", () => {
       await screen.findByRole("button", { name: /Redirecionando.../i }),
     ).toBeDisabled();
 
-    resolveLogin?.();
+    (resolveLogin as (() => void) | null)?.();
 
     await waitFor(() => {
       expect(
