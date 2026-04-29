@@ -2,13 +2,16 @@
 package com.vinculohub.backend.exception;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @Slf4j
 @RestControllerAdvice
@@ -49,6 +52,35 @@ public class GlobalExceptionHandler {
                 .map(e -> e.getField() + ": " + e.getDefaultMessage())
                 .collect(Collectors.joining(", "));
         log.warn("400 Validation failed: {}", message);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), message));
+    }
+
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<ErrorResponse> handleDataAccess(DataAccessException ex) {
+        log.error("503 Data access error", ex);
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(new ErrorResponse(
+                        HttpStatus.SERVICE_UNAVAILABLE.value(),
+                        "Serviço temporariamente indisponível. Tente novamente em instantes."));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        Class<?> requiredType = ex.getRequiredType();
+        String message;
+        if (requiredType != null && requiredType.isEnum()) {
+            String values =
+                    Arrays.stream(requiredType.getEnumConstants())
+                            .map(Object::toString)
+                            .collect(Collectors.joining(", "));
+            message =
+                    String.format(
+                            "Valor inválido: '%s'. Valores aceitos: %s", ex.getValue(), values);
+        } else {
+            message = String.format("Parâmetro inválido: '%s'", ex.getValue());
+        }
+        log.warn("400 Type mismatch: {}", message);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), message));
     }
