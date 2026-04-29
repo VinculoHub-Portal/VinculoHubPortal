@@ -9,8 +9,10 @@ import { BaseButton } from "../../components/general/BaseButton";
 import { AuthRedirectModal } from "../../components/auth/AuthRedirectModal";
 import { WizardSteps } from "../../components/auth/WizardSteps";
 import { WizardSignUp } from "../../components/wizard/WizardSignUp";
-import { NpoStepThree } from "../../components/ong/NpoStepThree";
-import { NpoStepFour } from "../../components/ong/NpoStepFour";
+import { Step2 } from "./Steps/Step2";
+import { Step3 } from "./Steps/Step3";
+import { Step4 } from "./Steps/Step4";
+import { Step5 } from "./Steps/Step5";
 import { stepValidators } from "../../config/wizard.config";
 import { useWizardPersistence } from "../../hooks/useWizardPersistence";
 import type {
@@ -48,6 +50,10 @@ const emptyFormData: WizardFormData = {
   state: "",
   stateCode: "",
   phone: "",
+  nomeProjeto: "",
+  descricaoProjeto: "",
+  metaCaptacao: "",
+  odsProjeto: [],
 };
 
 function EnterpriseStepTwo() {
@@ -95,14 +101,26 @@ function getSteps({
   if (organizationType === "npo") {
     return [
       commonFirstStep,
-      <NpoStepThree
+      <Step2
+        key="npo-step-2"
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+      />,
+      <Step3
         key="npo-step-3"
         formData={formData}
         setFormData={setFormData}
         errors={errors}
       />,
-      <NpoStepFour
+      <Step4
         key="npo-step-4"
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+      />,
+      <Step5
+        key="npo-step-5"
         formData={formData}
         setFormData={setFormData}
         errors={errors}
