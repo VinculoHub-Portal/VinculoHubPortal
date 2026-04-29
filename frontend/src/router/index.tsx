@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { LandingPage } from "../pages/LandingPage"
 import { ComponentsPage } from "../pages/ComponentsPage"
@@ -51,4 +52,5 @@ export const AppRouter = () => (
       />
     </Routes>
   </BrowserRouter>
+
 );
