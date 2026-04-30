@@ -4,7 +4,6 @@ import {
   validateNpoStepTwo,
   validateNpoStepThree,
   validateNpoStepFour,
-  validateNpoStepFive,
   validateEnterpriseStepTwo,
 } from "../utils/validation";
 
@@ -14,7 +13,6 @@ export const stepValidators: Record<OrganizationType, StepValidator[]> = {
     validateNpoStepTwo,
     validateNpoStepThree,
     validateNpoStepFour,
-    validateNpoStepFive,
   ],
   enterprise: [
     validateSignupStep,
