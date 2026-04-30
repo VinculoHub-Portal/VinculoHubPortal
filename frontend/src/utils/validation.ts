@@ -1,17 +1,5 @@
 import type { FieldErrors, StepValidator } from "../types/wizard.types";
 
-export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-export const PASSWORD_REGEX = /^(?=.*[A-Za-zÀ-ÿ])(?=.*\d).{8,}$/;
-
-export function isValidEmail(value: string): boolean {
-  const t = value.trim();
-  return t.length > 0 && EMAIL_REGEX.test(t);
-}
-
-export function isValidPassword(value: string): boolean {
-  return PASSWORD_REGEX.test(value);
-}
-
 export function isValidInstitutionName(value: string): boolean {
   const t = value.trim();
   return t.length >= 2 && t.length <= 200;
@@ -70,14 +58,18 @@ export function isValidCnpj(value: string): boolean {
   const firstDigit = calculateDigit([5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
   const secondDigit = calculateDigit([6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
 
-  return firstDigit === Number(digits[12]) && secondDigit === Number(digits[13]);
+  return (
+    firstDigit === Number(digits[12]) && secondDigit === Number(digits[13])
+  );
 }
 
 function mergeErrors(...errorsList: FieldErrors[]): FieldErrors {
   return errorsList.reduce((acc, current) => ({ ...acc, ...current }), {});
 }
 
-export function composeValidators(...validators: StepValidator[]): StepValidator {
+export function composeValidators(
+  ...validators: StepValidator[]
+): StepValidator {
   return (data, context) =>
     mergeErrors(...validators.map((validator) => validator(data, context)));
 }
@@ -92,48 +84,6 @@ export const validateInstitutionName: StepValidator = (data) => {
 
   return errors;
 };
-
-export const validateEmailField: StepValidator = (data) => {
-  const errors: FieldErrors = {};
-
-  if (!isValidEmail(data.email)) {
-    errors.email = "Informe um e-mail válido.";
-  }
-
-  return errors;
-};
-
-export const validatePasswordField: StepValidator = (data) => {
-  const errors: FieldErrors = {};
-
-  if (!isValidPassword(data.senha)) {
-    errors.senha =
-      "A senha deve ter no mínimo 8 caracteres, com letras e números.";
-  }
-
-  return errors;
-};
-
-export const validateConfirmPasswordField: StepValidator = (data) => {
-  const errors: FieldErrors = {};
-
-  if (!data.confirmarSenha.trim()) {
-    errors.confirmarSenha = "Confirme a senha.";
-    return errors;
-  }
-
-  if (data.confirmarSenha !== data.senha) {
-    errors.confirmarSenha = "As senhas não coincidem.";
-  }
-
-  return errors;
-};
-
-export const validateNpoStepTwo = composeValidators(
-  validateEmailField,
-  validatePasswordField,
-  validateConfirmPasswordField,
-);
 
 export const validateCnpjField: StepValidator = (data) => {
   const errors: FieldErrors = {};
@@ -231,13 +181,6 @@ export const validateCpfOrCnpjField: StepValidator = (data) => {
   return errors;
 };
 
-export const validateNpoStepThree = composeValidators(
-  validateInstitutionName,
-  validateCpfOrCnpjField,
-  validatePorteOngField,
-  validateEsgField,
-);
-
 export const validateZipCodeField: StepValidator = (data) => {
   const errors: FieldErrors = {};
   const digits = data.zipCode.replace(/\D/g, "");
@@ -254,11 +197,6 @@ export const validateStreetNumberField: StepValidator = (data) => {
   if (!data.streetNumber.trim()) errors.streetNumber = "Informe o número.";
   return errors;
 };
-
-export const validateNpoStepFour = composeValidators(
-  validateZipCodeField,
-  validateStreetNumberField,
-);
 
 function isValidOptionalCapital(value: string): boolean {
   const trimmed = value.trim();
@@ -294,6 +232,15 @@ export const validateFirstProjectDescription: StepValidator = (data) => {
 export const validateFirstProjectCapital: StepValidator = (data) => {
   const errors: FieldErrors = {};
 
+  if (data.tipoProjeto === "social") {
+    return errors;
+  }
+
+  if (data.tipoProjeto === "governamental" && !data.metaCaptacao.trim()) {
+    errors.metaCaptacao = "Informe a meta de captação.";
+    return errors;
+  }
+
   if (!isValidOptionalCapital(data.metaCaptacao)) {
     errors.metaCaptacao = "Informe uma meta de captação válida.";
   }
@@ -311,8 +258,31 @@ export const validateFirstProjectOds: StepValidator = (data) => {
   return errors;
 };
 
-export const validateNpoStepFive = composeValidators(
+export const validateProjectType: StepValidator = (data) => {
+  const errors: FieldErrors = {};
+
+  if (!data.tipoProjeto) {
+    errors.tipoProjeto = "Selecione o tipo do projeto.";
+  }
+
+  return errors;
+};
+
+export const validateNpoStepTwo = composeValidators(
+  validateInstitutionName,
+  validateCpfOrCnpjField,
+  validatePorteOngField,
+  validateEsgField,
+);
+
+export const validateNpoStepThree = composeValidators(
+  validateZipCodeField,
+  validateStreetNumberField,
+);
+
+export const validateNpoStepFour = composeValidators(
   validateFirstProjectName,
+  validateProjectType,
   validateFirstProjectDescription,
   validateFirstProjectCapital,
   validateFirstProjectOds,

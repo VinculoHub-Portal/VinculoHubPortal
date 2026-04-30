@@ -12,7 +12,6 @@ import { WizardSignUp } from "../../components/wizard/WizardSignUp";
 import { Step2 } from "./Steps/Step2";
 import { Step3 } from "./Steps/Step3";
 import { Step4 } from "./Steps/Step4";
-import { Step5 } from "./Steps/Step5";
 import { stepValidators } from "../../config/wizard.config";
 import { useWizardPersistence } from "../../hooks/useWizardPersistence";
 import type {
@@ -33,9 +32,6 @@ type NpoWizardProgress = {
 
 const emptyFormData: WizardFormData = {
   nomeInstituicao: "",
-  email: "",
-  senha: "",
-  confirmarSenha: "",
   cnpj: "",
   razaoSocial: "",
   cpf: "",
@@ -51,6 +47,7 @@ const emptyFormData: WizardFormData = {
   stateCode: "",
   phone: "",
   nomeProjeto: "",
+  tipoProjeto: "",
   descricaoProjeto: "",
   metaCaptacao: "",
   odsProjeto: [],
@@ -115,12 +112,6 @@ function getSteps({
       />,
       <Step4
         key="npo-step-4"
-        formData={formData}
-        setFormData={setFormData}
-        errors={errors}
-      />,
-      <Step5
-        key="npo-step-5"
         formData={formData}
         setFormData={setFormData}
         errors={errors}
@@ -228,6 +219,7 @@ export function RegisterPage() {
         appState: { returnTo: "/ong/dashboard" },
         authorizationParams: {
           audience: auth0Audience,
+          projectType: formData.tipoProjeto,
           role: "NPO",
           screen_hint: "signup",
           ui_locales: "pt-BR",
@@ -261,7 +253,9 @@ export function RegisterPage() {
     }
 
     const validator = stepValidators[organizationType][currentStep - 1];
-    const nextErrors = validator ? validator(formData, { organizationType }) : {};
+    const nextErrors = validator
+      ? validator(formData, { organizationType })
+      : {};
 
     setErrors(nextErrors);
 
@@ -287,7 +281,11 @@ export function RegisterPage() {
   function handleResetToFirstStep() {
     clearWizardProgress();
     sessionStorage.removeItem(npoSignupDraftKey);
-    setWizardProgress({ currentStep: 1, organizationType: null, formData: { ...emptyFormData } });
+    setWizardProgress({
+      currentStep: 1,
+      organizationType: null,
+      formData: { ...emptyFormData },
+    });
     setErrors({});
     navigate("/cadastro", { replace: true });
   }
@@ -310,7 +308,11 @@ export function RegisterPage() {
                 Voltar
               </BaseButton>
             )}
-            <BaseButton variant="secondary" className="w-32" onClick={handleNext}>
+            <BaseButton
+              variant="secondary"
+              className="w-32"
+              onClick={handleNext}
+            >
               {currentStep === totalSteps ? "Finalizar" : "Próximo"}
             </BaseButton>
           </div>
