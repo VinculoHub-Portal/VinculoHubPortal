@@ -48,11 +48,13 @@ public class Project {
     @Column(name = "invested_amount", precision = 15, scale = 2)
     private BigDecimal investedAmount;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "project_ods", joinColumns = @JoinColumn(name = "project_id"))
-    @Column(name = "ods_code", nullable = false)
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "project_ods",
+            joinColumns = @JoinColumn(name = "project_id"),
+            inverseJoinColumns = @JoinColumn(name = "ods_id"))
     @Builder.Default
-    private Set<Integer> odsCodes = new LinkedHashSet<>();
+    private Set<Ods> ods = new LinkedHashSet<>();
 
     @Column(name = "start_date")
     private LocalDate startDate;
