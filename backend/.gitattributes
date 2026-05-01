@@ -1,2 +1,5 @@
-/mvnw text eol=lf
+* text=auto eol=lf
+
 *.cmd text eol=crlf
+*.bat text eol=crlf
+*.sql text eol=crlf
