@@ -19,11 +19,9 @@ public class DocumentController {
 
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<?> uploadDocument(
-            @RequestPart("file") MultipartFile file,
-            @RequestPart("data") DocumentRequestDTO dto) {
-            // 🔥 DTO já vem desserializado automaticamente pelo Spring
-            DocumentResponseDTO response = documentService.upload(file, dto);
-            return ResponseEntity.ok(response);
+            @RequestPart("file") MultipartFile file, @RequestPart("data") DocumentRequestDTO dto) {
+        DocumentResponseDTO response = documentService.upload(file, dto);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
