@@ -18,8 +18,7 @@ public class ProjectSpecification {
     }
 
     public static Specification<Project> hasStatus(ProjectStatus status) {
-        return (root, query, cb) ->
-                status == null ? null : cb.equal(root.get("status"), status);
+        return (root, query, cb) -> status == null ? null : cb.equal(root.get("status"), status);
     }
 
     public static Specification<Project> titleContains(String title) {

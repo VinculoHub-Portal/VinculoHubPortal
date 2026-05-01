@@ -48,9 +48,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
-        String message = ex.getBindingResult().getFieldErrors().stream()
-                .map(e -> e.getField() + ": " + e.getDefaultMessage())
-                .collect(Collectors.joining(", "));
+        String message =
+                ex.getBindingResult().getFieldErrors().stream()
+                        .map(e -> e.getField() + ": " + e.getDefaultMessage())
+                        .collect(Collectors.joining(", "));
         log.warn("400 Validation failed: {}", message);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), message));
@@ -60,13 +61,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleDataAccess(DataAccessException ex) {
         log.error("503 Data access error", ex);
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(new ErrorResponse(
-                        HttpStatus.SERVICE_UNAVAILABLE.value(),
-                        "Serviço temporariamente indisponível. Tente novamente em instantes."));
+                .body(
+                        new ErrorResponse(
+                                HttpStatus.SERVICE_UNAVAILABLE.value(),
+                                "Serviço temporariamente indisponível. Tente novamente em"
+                                        + " instantes."));
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex) {
         Class<?> requiredType = ex.getRequiredType();
         String message;
         if (requiredType != null && requiredType.isEnum()) {
@@ -89,8 +93,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception ex) {
         log.error("500 Unexpected error", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                        "Erro interno do servidor"));
+                .body(
+                        new ErrorResponse(
+                                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                                "Erro interno do servidor"));
     }
 
     public record ErrorResponse(int status, String message, LocalDateTime timestamp) {
