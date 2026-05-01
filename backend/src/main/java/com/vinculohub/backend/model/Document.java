@@ -60,4 +60,7 @@ public class Document {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    @Column(name = "expired_at")
+    private LocalDateTime expiredAt;
 }
