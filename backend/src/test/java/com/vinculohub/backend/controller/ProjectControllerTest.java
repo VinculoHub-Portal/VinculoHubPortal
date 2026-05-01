@@ -14,6 +14,7 @@ import com.vinculohub.backend.model.enums.ProjectStatus;
 import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.ProjectRepository;
 import java.time.LocalDate;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -184,6 +185,35 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                                                                 "ROLE_COMPANY"))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    @DisplayName("GET /api/projects?odsCodes=1,3 filtra por códigos ODS")
+    void shouldFilterByOdsCodes() throws Exception {
+        projectRepository.save(
+                Project.builder()
+                        .npo(npo)
+                        .title("Projeto ODS 1 e 3")
+                        .description("D")
+                        .odsCodes(Set.of(1, 3))
+                        .build());
+        projectRepository.save(
+                Project.builder()
+                        .npo(npo)
+                        .title("Projeto ODS 5")
+                        .description("D")
+                        .odsCodes(Set.of(5))
+                        .build());
+
+        mockMvc.perform(
+                        get("/api/projects?odsCodes=1&odsCodes=3")
+                                .with(
+                                        jwt().authorities(
+                                                        new SimpleGrantedAuthority(
+                                                                "ROLE_COMPANY"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].title").value("Projeto ODS 1 e 3"));
     }
 
     @Test

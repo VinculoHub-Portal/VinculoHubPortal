@@ -1,9 +1,11 @@
 /* (C)2026 */
-package com.vinculohub.backend.repository;
+package com.vinculohub.backend.repository.specification;
 
 import com.vinculohub.backend.dto.ProjectFilterParams;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.enums.ProjectStatus;
+import jakarta.persistence.criteria.JoinType;
+import java.util.Set;
 import org.springframework.data.jpa.domain.Specification;
 
 public class ProjectSpecification {
@@ -27,9 +29,18 @@ public class ProjectSpecification {
                         : cb.like(cb.lower(root.get("title")), "%" + title.toLowerCase() + "%");
     }
 
+    public static Specification<Project> hasAnyOdsCode(Set<Integer> odsCodes) {
+        return (root, query, cb) -> {
+            if (odsCodes == null || odsCodes.isEmpty()) return null;
+            query.distinct(true);
+            return root.join("odsCodes", JoinType.INNER).in(odsCodes);
+        };
+    }
+
     public static Specification<Project> from(ProjectFilterParams params) {
         return Specification.where(hasNpoId(params.npoId()))
                 .and(hasStatus(params.status()))
-                .and(titleContains(params.title()));
+                .and(titleContains(params.title()))
+                .and(hasAnyOdsCode(params.odsCodes()));
     }
 }
