@@ -220,7 +220,10 @@ async function submitNpoSignupDraft(token: string, user: unknown) {
       firstProject: {
         name: formData.nomeProjeto,
         description: formData.descricaoProjeto,
-        capital: formData.metaCaptacao.trim() ? Number(formData.metaCaptacao) : null,
+        capital:
+          formData.tipoProjeto === "governamental" && formData.metaCaptacao.trim()
+            ? Number(formData.metaCaptacao)
+            : null,
         ods: formData.odsProjeto,
       },
     },
