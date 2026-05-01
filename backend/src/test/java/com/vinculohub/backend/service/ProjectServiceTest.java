@@ -101,7 +101,7 @@ class ProjectServiceTest {
                 .thenReturn(projectPage);
 
         Page<ProjectListItemDTO> result =
-                projectService.listProjects(new ProjectFilterParams(null, null, null), pageable);
+                projectService.listProjects(new ProjectFilterParams(null, null, null, null), pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Projeto Teste", result.getContent().get(0).title());
@@ -118,7 +118,7 @@ class ProjectServiceTest {
                 .thenReturn(emptyPage);
 
         Page<ProjectListItemDTO> result =
-                projectService.listProjects(new ProjectFilterParams(999L, null, null), pageable);
+                projectService.listProjects(new ProjectFilterParams(999L, null, null, null), pageable);
 
         assertEquals(0, result.getTotalElements());
         assertTrue(result.getContent().isEmpty());
@@ -135,6 +135,6 @@ class ProjectServiceTest {
                 DataAccessException.class,
                 () ->
                         projectService.listProjects(
-                                new ProjectFilterParams(null, null, null), pageable));
+                                new ProjectFilterParams(null, null, null, null), pageable));
     }
 }
