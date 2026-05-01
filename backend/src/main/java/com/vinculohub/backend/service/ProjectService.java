@@ -11,11 +11,11 @@ import org.springframework.stereotype.Service;
 public class ProjectService {
 
     private final ProjectRepository projectRepository;
-    private final OdsMapper odsMapper;
+    private final OdsService odsService;
 
-    public ProjectService(ProjectRepository projectRepository, OdsMapper odsMapper) {
+    public ProjectService(ProjectRepository projectRepository, OdsService odsService) {
         this.projectRepository = projectRepository;
-        this.odsMapper = odsMapper;
+        this.odsService = odsService;
     }
 
     public Project save(Project project) {
@@ -43,7 +43,7 @@ public class ProjectService {
                                         request.description(),
                                         "Descrição do projeto é obrigatória."))
                         .budgetNeeded(request.capital())
-                        .odsCodes(odsMapper.normalizeCodes(request.ods()))
+                        .ods(odsService.resolveSelection(request.ods()))
                         .build();
 
         return save(project);

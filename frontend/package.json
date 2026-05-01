@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:payload": "vitest run src/components/auth/AuthRoleRedirect.payload.test.tsx --reporter=verbose",
     "preview": "vite preview",
     "prepare": "husky"
   },

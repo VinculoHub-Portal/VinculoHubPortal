@@ -93,6 +93,37 @@ class SchemaValidationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void testOdsTableStructure() {
+        List<String> columns =
+                jdbcTemplate.queryForList(
+                        """
+                        select column_name
+                        from information_schema.columns
+                        where table_schema = 'public'
+                          and table_name = 'ods'
+                        """,
+                        String.class);
+
+        assertThat(columns).contains("id", "name");
+        assertThat(columns).contains("description");
+    }
+
+    @Test
+    void testProjectOdsTableStructure() {
+        List<String> columns =
+                jdbcTemplate.queryForList(
+                        """
+                        select column_name
+                        from information_schema.columns
+                        where table_schema = 'public'
+                          and table_name = 'project_ods'
+                        """,
+                        String.class);
+
+        assertThat(columns).contains("project_id", "ods_id");
+    }
+
+    @Test
     void testCompanyTableStructure() {
         List<String> columns =
                 jdbcTemplate.queryForList(
@@ -134,6 +165,25 @@ class SchemaValidationTest extends AbstractIntegrationTest {
                         String.class);
 
         assertThat(fkColumns).contains("user_id", "address_id");
+    }
+
+    @Test
+    void testProjectOdsForeignKeyConstraints() {
+        List<String> fkColumns =
+                jdbcTemplate.queryForList(
+                        """
+                        select kcu.column_name
+                        from information_schema.table_constraints tc
+                        join information_schema.key_column_usage kcu
+                          on tc.constraint_name = kcu.constraint_name
+                         and tc.table_schema = kcu.table_schema
+                        where tc.constraint_type = 'FOREIGN KEY'
+                          and tc.table_schema = 'public'
+                          and tc.table_name = 'project_ods'
+                        """,
+                        String.class);
+
+        assertThat(fkColumns).contains("project_id", "ods_id");
     }
 
     @Test
