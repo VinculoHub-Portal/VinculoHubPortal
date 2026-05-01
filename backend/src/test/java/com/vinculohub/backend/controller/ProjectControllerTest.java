@@ -11,6 +11,7 @@ import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.enums.NpoSize;
 import com.vinculohub.backend.model.enums.ProjectStatus;
+import com.vinculohub.backend.model.enums.ProjectType;
 import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.ProjectRepository;
 import java.time.LocalDate;
@@ -198,6 +199,55 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.content[0].title").value("Projeto ODS 1 e 3"));
+    }
+
+    @Test
+    @DisplayName("GET /api/projects?type=TAX_INCENTIVE_LAW filtra por tipo de projeto")
+    void shouldFilterByProjectType() throws Exception {
+        projectRepository.save(
+                Project.builder()
+                        .npo(npo)
+                        .title("Projeto Lei de Incentivo Fiscal")
+                        .description("D")
+                        .type(ProjectType.TAX_INCENTIVE_LAW)
+                        .build());
+        projectRepository.save(
+                Project.builder()
+                        .npo(npo)
+                        .title("Projeto Lei de Investimento Social")
+                        .description("D")
+                        .type(ProjectType.SOCIAL_INVESTMENT_LAW)
+                        .build());
+        projectRepository.save(
+                Project.builder()
+                        .npo(npo)
+                        .title("Projeto Sem Tipo")
+                        .description("D")
+                        .build());
+
+        mockMvc.perform(
+                        get("/api/projects?type=TAX_INCENTIVE_LAW")
+                                .with(
+                                        jwt().authorities(
+                                                        new SimpleGrantedAuthority(
+                                                                "ROLE_COMPANY"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(
+                        jsonPath("$.content[0].title").value("Projeto Lei de Incentivo Fiscal"));
+    }
+
+    @Test
+    @DisplayName("GET /api/projects?type=INVALIDO retorna 400")
+    void shouldReturn400ForInvalidType() throws Exception {
+        mockMvc.perform(
+                        get("/api/projects?type=INVALIDO")
+                                .with(
+                                        jwt().authorities(
+                                                        new SimpleGrantedAuthority(
+                                                                "ROLE_COMPANY"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
     }
 
     @Test
