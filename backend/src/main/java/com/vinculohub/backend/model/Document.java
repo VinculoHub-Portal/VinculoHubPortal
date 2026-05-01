@@ -45,7 +45,7 @@ public class Document {
     private String fileName;
 
     @Column(name = "file_size")
-    private Integer fileSize; // considere Long se arquivos grandes
+    private Integer fileSize;
 
     @Column(name = "mime_type")
     private String mimeType;
