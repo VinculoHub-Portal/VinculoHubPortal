@@ -7,12 +7,12 @@ COPY .mvn .mvn
 COPY mvnw .
 
 RUN --mount=type=cache,target=/root/.m2 \
-    ./mvnw dependency:resolve dependency:resolve-plugins -B
+    ./mvnw -B -ntp dependency:go-offline -Dmaven.test.skip=true
 
 COPY src src
 
 RUN --mount=type=cache,target=/root/.m2 \
-    ./mvnw package -DskipTests -Djacoco.skip=true -B
+    ./mvnw -B -ntp package -Dmaven.test.skip=true -Djacoco.skip=true
 
 FROM eclipse-temurin:17-jre-jammy
 
