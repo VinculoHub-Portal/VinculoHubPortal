@@ -16,6 +16,7 @@ import com.vinculohub.backend.dto.ProjectListItemDTO;
 import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.enums.ProjectStatus;
+import com.vinculohub.backend.model.enums.ProjectType;
 import com.vinculohub.backend.repository.ProjectRepository;
 import java.math.BigDecimal;
 import java.util.List;
@@ -94,7 +95,7 @@ class ProjectServiceTest {
 
         Page<ProjectListItemDTO> result =
                 projectService.listProjects(
-                        new ProjectFilterParams(null, null, null, null), pageable);
+                        new ProjectFilterParams(null, null, null, null, null), pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Projeto Teste", result.getContent().get(0).title());
@@ -112,10 +113,36 @@ class ProjectServiceTest {
 
         Page<ProjectListItemDTO> result =
                 projectService.listProjects(
-                        new ProjectFilterParams(999L, null, null, null), pageable);
+                        new ProjectFilterParams(999L, null, null, null, null), pageable);
 
         assertEquals(0, result.getTotalElements());
         assertTrue(result.getContent().isEmpty());
+    }
+
+    @Test
+    void shouldFilterByProjectType() {
+        Npo npo = Npo.builder().id(1).name("ONG Teste").phone("(11) 9999-0000").build();
+        Project project =
+                Project.builder()
+                        .id(1L)
+                        .title("Projeto Lei de Incentivo")
+                        .status(ProjectStatus.ACTIVE)
+                        .type(ProjectType.TAX_INCENTIVE_LAW)
+                        .npo(npo)
+                        .build();
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<Project> projectPage = new PageImpl<>(List.of(project), pageable, 1);
+
+        when(projectRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(projectPage);
+
+        Page<ProjectListItemDTO> result =
+                projectService.listProjects(
+                        new ProjectFilterParams(null, null, null, null, ProjectType.TAX_INCENTIVE_LAW),
+                        pageable);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals("Projeto Lei de Incentivo", result.getContent().get(0).title());
     }
 
     @Test
@@ -129,6 +156,6 @@ class ProjectServiceTest {
                 DataAccessException.class,
                 () ->
                         projectService.listProjects(
-                                new ProjectFilterParams(null, null, null, null), pageable));
+                                new ProjectFilterParams(null, null, null, null, null), pageable));
     }
 }

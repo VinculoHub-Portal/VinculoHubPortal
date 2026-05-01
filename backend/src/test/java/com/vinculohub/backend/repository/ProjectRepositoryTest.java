@@ -91,7 +91,7 @@ class ProjectRepositoryTest extends AbstractIntegrationTest {
 
         Specification<Project> spec =
                 ProjectSpecification.from(
-                        new ProjectFilterParams(null, ProjectStatus.ACTIVE, null, null));
+                        new ProjectFilterParams(null, ProjectStatus.ACTIVE, null, null, null));
         Page<Project> result = projectRepository.findAll(spec, PageRequest.of(0, 20));
 
         assertEquals(1, result.getTotalElements());
@@ -114,7 +114,7 @@ class ProjectRepositoryTest extends AbstractIntegrationTest {
                 Project.builder().npo(npo).title("Horta Comunitária").description("D").build());
 
         Specification<Project> spec =
-                ProjectSpecification.from(new ProjectFilterParams(null, null, "BIBLIO", null));
+                ProjectSpecification.from(new ProjectFilterParams(null, null, "BIBLIO", null, null));
         Page<Project> result = projectRepository.findAll(spec, PageRequest.of(0, 20));
 
         assertEquals(1, result.getTotalElements());
@@ -126,7 +126,7 @@ class ProjectRepositoryTest extends AbstractIntegrationTest {
     void shouldReturnEmptyPageWhenNoMatch() {
         Specification<Project> spec =
                 ProjectSpecification.from(
-                        new ProjectFilterParams(null, null, "titulo-que-nao-existe", null));
+                        new ProjectFilterParams(null, null, "titulo-que-nao-existe", null, null));
         Page<Project> result = projectRepository.findAll(spec, PageRequest.of(0, 20));
 
         assertEquals(0, result.getTotalElements());
