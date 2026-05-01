@@ -23,7 +23,7 @@ public class ProjectSpecification {
 
     public static Specification<Project> titleContains(String title) {
         return (root, query, cb) ->
-                (title == null || title.isBlank())
+                title == null || title.isBlank()
                         ? null
                         : cb.like(cb.lower(root.get("title")), "%" + title.toLowerCase() + "%");
     }
