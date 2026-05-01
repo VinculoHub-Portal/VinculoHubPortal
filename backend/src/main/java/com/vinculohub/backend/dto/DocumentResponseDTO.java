@@ -25,6 +25,6 @@ public class DocumentResponseDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;
-    
+
     private LocalDateTime expiredAt;
 }
