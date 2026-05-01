@@ -33,9 +33,10 @@ jobs:
         run: npm ci --prefix ./frontend
 
       - name: Run Frontend Lint & Typecheck
+        working-directory: ./frontend
         run: |
-          npm run lint --prefix ./frontend
-          npx tsc --project ./frontend/tsconfig.json --noEmit
+          npm run lint
+          npx -p typescript tsc --project tsconfig.json --noEmit
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
