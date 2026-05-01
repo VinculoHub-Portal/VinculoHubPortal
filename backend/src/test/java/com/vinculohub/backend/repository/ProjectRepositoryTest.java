@@ -114,7 +114,8 @@ class ProjectRepositoryTest extends AbstractIntegrationTest {
                 Project.builder().npo(npo).title("Horta Comunitária").description("D").build());
 
         Specification<Project> spec =
-                ProjectSpecification.from(new ProjectFilterParams(null, null, "BIBLIO", null, null));
+                ProjectSpecification.from(
+                        new ProjectFilterParams(null, null, "BIBLIO", null, null));
         Page<Project> result = projectRepository.findAll(spec, PageRequest.of(0, 20));
 
         assertEquals(1, result.getTotalElements());

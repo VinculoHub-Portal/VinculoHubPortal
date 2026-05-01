@@ -138,7 +138,8 @@ class ProjectServiceTest {
 
         Page<ProjectListItemDTO> result =
                 projectService.listProjects(
-                        new ProjectFilterParams(null, null, null, null, ProjectType.TAX_INCENTIVE_LAW),
+                        new ProjectFilterParams(
+                                null, null, null, null, ProjectType.TAX_INCENTIVE_LAW),
                         pageable);
 
         assertEquals(1, result.getTotalElements());

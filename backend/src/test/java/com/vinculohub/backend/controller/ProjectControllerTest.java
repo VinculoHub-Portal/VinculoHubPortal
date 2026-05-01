@@ -219,11 +219,7 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                         .type(ProjectType.SOCIAL_INVESTMENT_LAW)
                         .build());
         projectRepository.save(
-                Project.builder()
-                        .npo(npo)
-                        .title("Projeto Sem Tipo")
-                        .description("D")
-                        .build());
+                Project.builder().npo(npo).title("Projeto Sem Tipo").description("D").build());
 
         mockMvc.perform(
                         get("/api/projects?type=TAX_INCENTIVE_LAW")
@@ -233,8 +229,7 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                                                                 "ROLE_COMPANY"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(1))
-                .andExpect(
-                        jsonPath("$.content[0].title").value("Projeto Lei de Incentivo Fiscal"));
+                .andExpect(jsonPath("$.content[0].title").value("Projeto Lei de Incentivo Fiscal"));
     }
 
     @Test
