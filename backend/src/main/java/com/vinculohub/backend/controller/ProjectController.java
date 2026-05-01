@@ -5,6 +5,7 @@ import com.vinculohub.backend.dto.ProjectFilterParams;
 import com.vinculohub.backend.dto.ProjectListItemDTO;
 import com.vinculohub.backend.model.enums.ProjectStatus;
 import com.vinculohub.backend.service.ProjectService;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,16 +31,19 @@ public class ProjectController {
             @RequestParam(required = false) Long npoId,
             @RequestParam(required = false) ProjectStatus status,
             @RequestParam(required = false) String title,
+            @RequestParam(required = false) Set<Integer> odsCodes,
             Pageable pageable) {
         log.info(
-                "GET /api/projects | npoId={} status={} title={} page={} size={}",
+                "GET /api/projects | npoId={} status={} title={} odsCodes={} page={} size={}",
                 npoId,
                 status,
                 title,
+                odsCodes,
                 pageable.getPageNumber(),
                 pageable.getPageSize());
         Page<ProjectListItemDTO> page =
-                projectService.listProjects(new ProjectFilterParams(npoId, status, title), pageable);
+                projectService.listProjects(
+                        new ProjectFilterParams(npoId, status, title, odsCodes), pageable);
         return ResponseEntity.ok(page);
     }
 }

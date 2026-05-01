@@ -4,7 +4,6 @@ package com.vinculohub.backend.dto;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.enums.ProjectStatus;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 public record ProjectListItemDTO(
         Long id,
@@ -13,8 +12,7 @@ public record ProjectListItemDTO(
         Integer npoId,
         String npoName,
         String npoPhone,
-        LocalDate startDate,
-        LocalDateTime createdAt) {
+        LocalDate startDate) {
 
     public static ProjectListItemDTO from(Project project) {
         return new ProjectListItemDTO(
@@ -24,7 +22,6 @@ public record ProjectListItemDTO(
                 project.getNpo().getId(),
                 project.getNpo().getName(),
                 project.getNpo().getPhone(),
-                project.getStartDate(),
-                project.getCreatedAt());
+                project.getStartDate());
     }
 }

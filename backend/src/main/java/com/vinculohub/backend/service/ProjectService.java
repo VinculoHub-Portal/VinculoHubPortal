@@ -7,7 +7,7 @@ import com.vinculohub.backend.dto.ProjectListItemDTO;
 import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.repository.ProjectRepository;
-import com.vinculohub.backend.repository.ProjectSpecification;
+import com.vinculohub.backend.repository.specification.ProjectSpecification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
