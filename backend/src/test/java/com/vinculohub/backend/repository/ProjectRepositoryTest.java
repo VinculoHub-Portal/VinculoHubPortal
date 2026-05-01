@@ -8,10 +8,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.vinculohub.backend.database.AbstractIntegrationTest;
 import com.vinculohub.backend.dto.ProjectFilterParams;
 import com.vinculohub.backend.model.Npo;
-import com.vinculohub.backend.repository.specification.ProjectSpecification;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.enums.NpoSize;
 import com.vinculohub.backend.model.enums.ProjectStatus;
+import com.vinculohub.backend.repository.specification.ProjectSpecification;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -90,7 +90,8 @@ class ProjectRepositoryTest extends AbstractIntegrationTest {
                         .build());
 
         Specification<Project> spec =
-                ProjectSpecification.from(new ProjectFilterParams(null, ProjectStatus.ACTIVE, null, null));
+                ProjectSpecification.from(
+                        new ProjectFilterParams(null, ProjectStatus.ACTIVE, null, null));
         Page<Project> result = projectRepository.findAll(spec, PageRequest.of(0, 20));
 
         assertEquals(1, result.getTotalElements());

@@ -117,17 +117,9 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     @DisplayName("GET /api/projects?title=alpha filtra por título (case-insensitive)")
     void shouldFilterByTitle() throws Exception {
         projectRepository.save(
-                Project.builder()
-                        .npo(npo)
-                        .title("Projeto Alpha")
-                        .description("D")
-                        .build());
+                Project.builder().npo(npo).title("Projeto Alpha").description("D").build());
         projectRepository.save(
-                Project.builder()
-                        .npo(npo)
-                        .title("Outro Projeto")
-                        .description("D")
-                        .build());
+                Project.builder().npo(npo).title("Outro Projeto").description("D").build());
 
         mockMvc.perform(
                         get("/api/projects?title=ALPHA")
@@ -151,17 +143,9 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                                 .environmental(false)
                                 .build());
         projectRepository.save(
-                Project.builder()
-                        .npo(npo)
-                        .title("Meu Projeto")
-                        .description("D")
-                        .build());
+                Project.builder().npo(npo).title("Meu Projeto").description("D").build());
         projectRepository.save(
-                Project.builder()
-                        .npo(outraNpo)
-                        .title("Outro Projeto")
-                        .description("D")
-                        .build());
+                Project.builder().npo(outraNpo).title("Outro Projeto").description("D").build());
 
         mockMvc.perform(
                         get("/api/projects?npoId=" + npo.getId())
