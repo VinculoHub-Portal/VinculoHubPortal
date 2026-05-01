@@ -6,10 +6,13 @@ COPY pom.xml .
 COPY .mvn .mvn
 COPY mvnw .
 
-RUN ./mvnw dependency:go-offline -B
+RUN --mount=type=cache,target=/root/.m2 \
+    ./mvnw -B -ntp dependency:go-offline -Dmaven.test.skip=true
 
 COPY src src
-RUN ./mvnw package -DskipTests -B 
+
+RUN --mount=type=cache,target=/root/.m2 \
+    ./mvnw -B -ntp package -Dmaven.test.skip=true -Djacoco.skip=true
 
 FROM eclipse-temurin:17-jre-jammy
 
