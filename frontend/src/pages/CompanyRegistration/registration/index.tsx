@@ -261,7 +261,7 @@ export function CompanyRegistrationPage() {
 
       return () => window.clearTimeout(timeoutId);
     }
-  }, [cnpjData]);
+  }, [cnpjData, setBasicInfo]);
 
   useEffect(() => {
     if (zipCodeData) {
@@ -282,7 +282,7 @@ export function CompanyRegistrationPage() {
 
       return () => window.clearTimeout(timeoutId);
     }
-  }, [zipCodeData]);
+  }, [zipCodeData, setContactInfo]);
 
   const handleCnpjBlur = () => {
     if (!basicInfo.cnpj) return;
