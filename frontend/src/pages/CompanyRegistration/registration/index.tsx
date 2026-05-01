@@ -4,7 +4,10 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { useNavigate } from "react-router-dom";
 import { logger, getApiErrorMessage } from "../../../utils/logger";
 import { useToast } from "../../../context/ToastContext";
-import { checkCnpjAvailable, checkEmailAvailable } from "../../../api/documentCheck";
+import {
+  checkCnpjAvailable,
+  checkEmailAvailable,
+} from "../../../api/documentCheck";
 import { WizardSteps } from "../../../components/auth/WizardSteps";
 import { AuthRedirectModal } from "../../../components/auth/AuthRedirectModal";
 import { BackLink } from "../../../components/general/BackLink";
@@ -14,7 +17,15 @@ import { BaseButton } from "../../../components/general/BaseButton";
 import { InfoBox } from "../../../components/general/InfoBox";
 import { useZipCode } from "../../../hooks/useZipCode";
 import { useCnpj } from "../../../hooks/useCnpj";
-import { CompanyIcon, DescriptionIcon, CnpjIcon, AddressIcon, StateIcon, PhoneIcon, EmailIcon } from "../../../components/icons";
+import {
+  CompanyIcon,
+  DescriptionIcon,
+  CnpjIcon,
+  AddressIcon,
+  StateIcon,
+  PhoneIcon,
+  EmailIcon,
+} from "../../../components/icons";
 import { RegistrationSummary } from "../../../components/register/RegistrationSummary";
 import { validateCnpj } from "../../../utils/validateCnpj";
 import { formatCnpj } from "../../../utils/formatCnpj";
@@ -75,18 +86,23 @@ export function CompanyRegistrationPage() {
   const { basicInfo, contactInfo, credentials } = wizardProgress;
   const currentStep = wizardProgress.currentStep;
 
-  const setCurrentStep = useCallback((step: number | ((prev: number) => number)) => {
-    setWizardProgress((prev) => {
-      const next = typeof step === "function" ? step(prev.currentStep) : step;
-      logger.info(LOG, `Step ${prev.currentStep} → ${next}`);
-      return { ...prev, currentStep: next };
-    });
-  }, [setWizardProgress]);
+  const setCurrentStep = useCallback(
+    (step: number | ((prev: number) => number)) => {
+      setWizardProgress((prev) => {
+        const next = typeof step === "function" ? step(prev.currentStep) : step;
+        logger.info(LOG, `Step ${prev.currentStep} → ${next}`);
+        return { ...prev, currentStep: next };
+      });
+    },
+    [setWizardProgress],
+  );
 
   function setBasicInfo(
     value:
       | CompanyWizardProgress["basicInfo"]
-      | ((prev: CompanyWizardProgress["basicInfo"]) => CompanyWizardProgress["basicInfo"]),
+      | ((
+          prev: CompanyWizardProgress["basicInfo"],
+        ) => CompanyWizardProgress["basicInfo"]),
   ) {
     setWizardProgress((prev) => ({
       ...prev,
@@ -97,22 +113,28 @@ export function CompanyRegistrationPage() {
   function setContactInfo(
     value:
       | CompanyWizardProgress["contactInfo"]
-      | ((prev: CompanyWizardProgress["contactInfo"]) => CompanyWizardProgress["contactInfo"]),
+      | ((
+          prev: CompanyWizardProgress["contactInfo"],
+        ) => CompanyWizardProgress["contactInfo"]),
   ) {
     setWizardProgress((prev) => ({
       ...prev,
-      contactInfo: typeof value === "function" ? value(prev.contactInfo) : value,
+      contactInfo:
+        typeof value === "function" ? value(prev.contactInfo) : value,
     }));
   }
 
   function setCredentials(
     value:
       | CompanyWizardProgress["credentials"]
-      | ((prev: CompanyWizardProgress["credentials"]) => CompanyWizardProgress["credentials"]),
+      | ((
+          prev: CompanyWizardProgress["credentials"],
+        ) => CompanyWizardProgress["credentials"]),
   ) {
     setWizardProgress((prev) => ({
       ...prev,
-      credentials: typeof value === "function" ? value(prev.credentials) : value,
+      credentials:
+        typeof value === "function" ? value(prev.credentials) : value,
     }));
   }
 
@@ -225,7 +247,10 @@ export function CompanyRegistrationPage() {
 
   useEffect(() => {
     if (cnpjData) {
-      logger.info(LOG, "CNPJ data received", { razao: cnpjData.razao_social, fantasia: cnpjData.nome_fantasia });
+      logger.info(LOG, "CNPJ data received", {
+        razao: cnpjData.razao_social,
+        fantasia: cnpjData.nome_fantasia,
+      });
       const timeoutId = window.setTimeout(() => {
         setBasicInfo((prev) => ({
           ...prev,
@@ -236,11 +261,14 @@ export function CompanyRegistrationPage() {
 
       return () => window.clearTimeout(timeoutId);
     }
-  }, [cnpjData]);
+  }, [cnpjData, setBasicInfo]);
 
   useEffect(() => {
     if (zipCodeData) {
-      logger.info(LOG, "ZIP code data received", { city: zipCodeData.city, state: zipCodeData.stateCode });
+      logger.info(LOG, "ZIP code data received", {
+        city: zipCodeData.city,
+        state: zipCodeData.stateCode,
+      });
       const timeoutId = window.setTimeout(() => {
         setContactInfo((prev) => ({
           ...prev,
@@ -254,7 +282,7 @@ export function CompanyRegistrationPage() {
 
       return () => window.clearTimeout(timeoutId);
     }
-  }, [zipCodeData]);
+  }, [zipCodeData, setContactInfo]);
 
   const handleCnpjBlur = () => {
     if (!basicInfo.cnpj) return;
@@ -266,7 +294,7 @@ export function CompanyRegistrationPage() {
   };
 
   const handleBasicChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { id, value } = e.target;
     const formatted = id === "cnpj" ? formatCnpj(value) : value;
@@ -281,7 +309,10 @@ export function CompanyRegistrationPage() {
 
   const handleStepTwoSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    logger.info(LOG, "Step 2 submit", { cnpj: basicInfo.cnpj, name: basicInfo.name });
+    logger.info(LOG, "Step 2 submit", {
+      cnpj: basicInfo.cnpj,
+      name: basicInfo.name,
+    });
 
     if (!basicInfo.cnpj) {
       setCnpjError("Informe o CNPJ");
@@ -314,7 +345,10 @@ export function CompanyRegistrationPage() {
   });
 
   const handleCompanySignup = async () => {
-    logger.info(LOG, "handleCompanySignup called", { email: credentials.email, hasError: !!credentialsErrors.email });
+    logger.info(LOG, "handleCompanySignup called", {
+      email: credentials.email,
+      hasError: !!credentialsErrors.email,
+    });
 
     if (!credentials.email || credentialsErrors.email) {
       logger.warn(LOG, "Signup blocked: email missing or has error");
@@ -344,7 +378,10 @@ export function CompanyRegistrationPage() {
       }
 
       const payload = buildCompanyPayload();
-      logger.info(LOG, "Saving company draft to sessionStorage", { cnpj: payload.cnpj, email: payload.email });
+      logger.info(LOG, "Saving company draft to sessionStorage", {
+        cnpj: payload.cnpj,
+        email: payload.email,
+      });
       sessionStorage.setItem(
         companySignupDraftKey,
         JSON.stringify({ payload }),
@@ -360,7 +397,7 @@ export function CompanyRegistrationPage() {
           login_hint: credentials.email,
           role: "COMPANY",
           screen_hint: "signup",
-          ui_locales: 'pt-BR',
+          ui_locales: "pt-BR",
         },
       });
     } catch (error) {
@@ -426,7 +463,15 @@ export function CompanyRegistrationPage() {
                 value={basicInfo.cnpj}
                 onChange={handleBasicChange}
                 onBlur={handleCnpjBlur}
-                error={cnpjError || (cnpjQueryError ? getApiErrorMessage(cnpjQueryError, "CNPJ não encontrado. Verifique e tente novamente.") : "")}
+                error={
+                  cnpjError ||
+                  (cnpjQueryError
+                    ? getApiErrorMessage(
+                        cnpjQueryError,
+                        "CNPJ não encontrado. Verifique e tente novamente.",
+                      )
+                    : "")
+                }
                 icon={<CnpjIcon />}
                 iconPosition="left"
                 isRequired
@@ -482,11 +527,7 @@ export function CompanyRegistrationPage() {
               >
                 Voltar
               </BaseButton>
-              <BaseButton
-                type="submit"
-                variant="secondary"
-                className="w-28"
-              >
+              <BaseButton type="submit" variant="secondary" className="w-28">
                 Próximo
               </BaseButton>
             </div>
@@ -494,7 +535,10 @@ export function CompanyRegistrationPage() {
         )}
 
         {currentStep === 3 && (
-          <form className="flex flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={(e) => e.preventDefault()}
+          >
             <div className="flex flex-col gap-1">
               <Input
                 label="CEP"
@@ -518,7 +562,10 @@ export function CompanyRegistrationPage() {
               )}
               {zipCodeQueryError && (
                 <span className="text-sm text-error">
-                  {getApiErrorMessage(zipCodeQueryError, "CEP não encontrado. Verifique e tente novamente.")}
+                  {getApiErrorMessage(
+                    zipCodeQueryError,
+                    "CEP não encontrado. Verifique e tente novamente.",
+                  )}
                 </span>
               )}
             </div>
@@ -644,7 +691,10 @@ export function CompanyRegistrationPage() {
         )}
 
         {currentStep === 4 && (
-          <form className="flex flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={(e) => e.preventDefault()}
+          >
             <Input
               label="E-mail"
               id="email"
@@ -659,8 +709,6 @@ export function CompanyRegistrationPage() {
               iconPosition="left"
               isRequired
             />
-
-
 
             <InfoBox
               title="Importante"
@@ -701,26 +749,75 @@ export function CompanyRegistrationPage() {
               {
                 title: "Informações Básicas",
                 fields: [
-                  { label: "CNPJ", value: basicInfo.cnpj, icon: <CnpjIcon fontSize="small" />, required: true },
-                  { label: "Razão Social", value: basicInfo.name, icon: <CompanyIcon fontSize="small" />, required: true },
-                  { label: "Nome Fantasia", value: basicInfo.tradeName, icon: <CompanyIcon fontSize="small" /> },
-                  { label: "Descrição", value: basicInfo.description, icon: <DescriptionIcon fontSize="small" /> },
+                  {
+                    label: "CNPJ",
+                    value: basicInfo.cnpj,
+                    icon: <CnpjIcon fontSize="small" />,
+                    required: true,
+                  },
+                  {
+                    label: "Razão Social",
+                    value: basicInfo.name,
+                    icon: <CompanyIcon fontSize="small" />,
+                    required: true,
+                  },
+                  {
+                    label: "Nome Fantasia",
+                    value: basicInfo.tradeName,
+                    icon: <CompanyIcon fontSize="small" />,
+                  },
+                  {
+                    label: "Descrição",
+                    value: basicInfo.description,
+                    icon: <DescriptionIcon fontSize="small" />,
+                  },
                 ],
               },
               {
                 title: "Informações de Contato",
                 fields: [
-                  { label: "CEP", value: contactInfo.zip_code, icon: <AddressIcon fontSize="small" />, required: true },
-                  { label: "Endereço", value: [contactInfo.street, contactInfo.number].filter(Boolean).join(", "), icon: <AddressIcon fontSize="small" />, required: true },
-                  { label: "Complemento", value: contactInfo.complement, icon: <AddressIcon fontSize="small" /> },
-                  { label: "Cidade / UF", value: [contactInfo.city, contactInfo.state_code].filter(Boolean).join(" - "), icon: <StateIcon fontSize="small" /> },
-                  { label: "Telefone", value: contactInfo.phone, icon: <PhoneIcon fontSize="small" /> },
+                  {
+                    label: "CEP",
+                    value: contactInfo.zip_code,
+                    icon: <AddressIcon fontSize="small" />,
+                    required: true,
+                  },
+                  {
+                    label: "Endereço",
+                    value: [contactInfo.street, contactInfo.number]
+                      .filter(Boolean)
+                      .join(", "),
+                    icon: <AddressIcon fontSize="small" />,
+                    required: true,
+                  },
+                  {
+                    label: "Complemento",
+                    value: contactInfo.complement,
+                    icon: <AddressIcon fontSize="small" />,
+                  },
+                  {
+                    label: "Cidade / UF",
+                    value: [contactInfo.city, contactInfo.state_code]
+                      .filter(Boolean)
+                      .join(" - "),
+                    icon: <StateIcon fontSize="small" />,
+                  },
+                  {
+                    label: "Telefone",
+                    value: contactInfo.phone,
+                    icon: <PhoneIcon fontSize="small" />,
+                  },
                 ],
               },
               {
                 title: "Acesso à Conta",
                 fields: [
-                  { label: "E-mail", value: credentials.email, icon: <EmailIcon fontSize="small" />, required: true },
+                  {
+                    label: "E-mail",
+                    value: credentials.email,
+                    icon: <EmailIcon fontSize="small" />,
+                    required: true,
+                  },
                 ],
               },
             ]}
