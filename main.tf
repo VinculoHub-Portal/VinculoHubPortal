@@ -4,8 +4,6 @@ provider "aws" {
 
 
 # Segurança(Security Groups)
-
-
 # Security Group para o Backend e Docker Swarm
 resource "aws_security_group" "backend_sg" {
   name        = "vinculohub-backend-sg"
@@ -27,7 +25,7 @@ resource "aws_security_group" "backend_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Saída liberada para a internet (necessário para baixar pacotes e Docker images)
+  # Saída liberada para a internet
   egress {
     from_port   = 0
     to_port     = 0
