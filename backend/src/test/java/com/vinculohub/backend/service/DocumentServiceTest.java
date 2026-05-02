@@ -1,4 +1,8 @@
+/* (C)2026 */
 package com.vinculohub.backend.service;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import com.vinculohub.backend.dto.DocumentRequestDTO;
 import com.vinculohub.backend.dto.DocumentResponseDTO;
@@ -21,26 +25,18 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 class DocumentServiceTest {
 
-    @Mock
-    private DocumentRepository documentRepository;
+    @Mock private DocumentRepository documentRepository;
 
-    @Mock
-    private NpoRepository npoRepository;
+    @Mock private NpoRepository npoRepository;
 
-    @Mock
-    private ProjectRepository projectRepository;
+    @Mock private ProjectRepository projectRepository;
 
-    @Mock
-    private S3Uploader s3Uploader;
+    @Mock private S3Uploader s3Uploader;
 
-    @InjectMocks
-    private DocumentService documentService;
+    @InjectMocks private DocumentService documentService;
 
     @Test
     void shouldUploadDocumentSuccessfully() throws Exception {
@@ -99,8 +95,7 @@ class DocumentServiceTest {
 
         DocumentRequestDTO dto = new DocumentRequestDTO();
 
-        assertThrows(FileSizeValidationException.class,
-                () -> documentService.upload(file, dto));
+        assertThrows(FileSizeValidationException.class, () -> documentService.upload(file, dto));
     }
 
     @Test
@@ -112,8 +107,7 @@ class DocumentServiceTest {
 
         DocumentRequestDTO dto = new DocumentRequestDTO();
 
-        assertThrows(FileFormatValidationException.class,
-                () -> documentService.upload(file, dto));
+        assertThrows(FileFormatValidationException.class, () -> documentService.upload(file, dto));
     }
 
     @Test
@@ -129,8 +123,7 @@ class DocumentServiceTest {
 
         when(npoRepository.findById(1)).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class,
-                () -> documentService.upload(file, dto));
+        assertThrows(NotFoundException.class, () -> documentService.upload(file, dto));
     }
 
     @Test
@@ -150,8 +143,7 @@ class DocumentServiceTest {
         when(npoRepository.findById(1)).thenReturn(Optional.of(npo));
         when(projectRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class,
-                () -> documentService.upload(file, dto));
+        assertThrows(NotFoundException.class, () -> documentService.upload(file, dto));
     }
 
     @Test
@@ -176,7 +168,6 @@ class DocumentServiceTest {
 
         when(s3Uploader.uploadFile(any(), any())).thenThrow(IOException.class);
 
-        assertThrows(RuntimeException.class,
-                () -> documentService.upload(file, dto));
+        assertThrows(RuntimeException.class, () -> documentService.upload(file, dto));
     }
 }
