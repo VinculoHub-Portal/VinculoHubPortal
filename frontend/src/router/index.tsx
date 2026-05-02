@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { LandingPage } from "../pages/LandingPage"
 import { ComponentsPage } from "../pages/ComponentsPage"
@@ -35,6 +34,7 @@ export const AppRouter = () => (
             <RoleHomePage
               title="Painel da ONG"
               description="Acompanhe seu cadastro, projetos e oportunidades para sua organização."
+              showCreateProjectAction
             />
           </ProtectedRoute>
         }
