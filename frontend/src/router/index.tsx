@@ -7,6 +7,7 @@ import { AuthRoleRedirect } from "../components/auth/AuthRoleRedirect"
 import { ProtectedRoute } from "../components/auth/ProtectedRoute"
 import { RoleHomePage } from "../pages/RoleHomePage"
 import { CompanyRegistrationPage } from "../pages/CompanyRegistration/registration"
+import { CompanyDashboard } from "../pages/CompanyDashboard"
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -43,10 +44,7 @@ export const AppRouter = () => (
         path="/empresa/dashboard"
         element={
           <ProtectedRoute requiredRole="COMPANY">
-            <RoleHomePage
-              title="Painel da empresa"
-              description="Encontre projetos, acompanhe parcerias e gerencie seu perfil institucional."
-            />
+            <CompanyDashboard />
           </ProtectedRoute>
         }
       />
