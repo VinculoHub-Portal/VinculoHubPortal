@@ -1,4 +1,2 @@
-* text=auto eol=lf
-
+/mvnw text eol=lf
 *.cmd text eol=crlf
-*.bat text eol=crlf
