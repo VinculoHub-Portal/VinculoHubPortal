@@ -4,7 +4,6 @@ package com.vinculohub.backend.dto;
 import com.vinculohub.backend.model.enums.ProjectStatus;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import lombok.Builder;
 
@@ -19,5 +18,4 @@ public record ProjectCreateResponse(
         BigDecimal investedAmount,
         LocalDate startDate,
         LocalDate endDate,
-        List<OdsResponse> ods,
-        LocalDateTime createdAt) {}
+        List<OdsResponse> ods) {}
