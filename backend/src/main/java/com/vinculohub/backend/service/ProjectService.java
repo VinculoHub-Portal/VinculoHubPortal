@@ -74,8 +74,8 @@ public class ProjectService {
     @Transactional
     public ProjectCreateResponse createProject(String auth0Id, ProjectCreateRequest request) {
         if (auth0Id == null || auth0Id.isBlank()) {
-            log.error("Auth0 ID is blank");
-            throw new BadRequestException("Auth0 ID é obrigatório.");
+            log.error("Usuário autenticado não identificado");
+            throw new BadRequestException("Não foi possível identificar o usuário autenticado.");
         }
 
         if (request == null) {
