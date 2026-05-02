@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { AuthRoleRedirect } from "./AuthRoleRedirect";
+import { api } from "../../services/api";
 
 const mocks = vi.hoisted(() => ({
   showToastMock: vi.fn(),
@@ -142,5 +143,54 @@ describe("AuthRoleRedirect", () => {
 
     const [, payload] = mocks.apiPostMock.mock.calls[0];
     expect(payload.firstProject.capital).toBeNull();
+    expect(payload.firstProject.ods).toEqual(["1"]);
+  });
+});
+
+describe("AuthRoleRedirect — fix de deep-link (returnTo)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    sessionStorage.clear();
+    sessionStorage.setItem("auth0-login-completed", "true");
+    mocks.getAccessTokenSilentlyMock.mockResolvedValue("token");
+    vi.mocked(api.get).mockResolvedValue({
+      data: { userType: "company", companyId: 1, registrationCompleted: true },
+    });
+  });
+
+  it("navega para o returnTo salvo quando não há draft pendente", async () => {
+    sessionStorage.setItem("auth0-return-to", "/empresa/leis-de-incentivo");
+
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <AuthRoleRedirect />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(mocks.navigateMock).toHaveBeenCalledWith(
+        "/empresa/leis-de-incentivo",
+        { replace: true },
+      );
+    });
+  });
+
+  it("não usa o returnTo quando há draft de company pendente", async () => {
+    sessionStorage.setItem("auth0-return-to", "/empresa/leis-de-incentivo");
+    sessionStorage.setItem("vinculohub:company-signup-draft", JSON.stringify({ payload: null }));
+    mocks.apiPostMock.mockResolvedValue({ data: {} });
+
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <AuthRoleRedirect />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      const navigatedToReturnTo = mocks.navigateMock.mock.calls.some(
+        ([path]) => path === "/empresa/leis-de-incentivo",
+      );
+      expect(navigatedToReturnTo).toBe(false);
+    });
   });
 });

@@ -2,6 +2,7 @@
 package com.vinculohub.backend.model;
 
 import com.vinculohub.backend.model.enums.ProjectStatus;
+import com.vinculohub.backend.model.enums.ProjectType;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -42,17 +43,23 @@ public class Project {
     @Builder.Default
     private ProjectStatus status = ProjectStatus.ACTIVE;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "project_type", length = 30)
+    private ProjectType type;
+
     @Column(name = "budget_needed", precision = 15, scale = 2)
     private BigDecimal budgetNeeded;
 
     @Column(name = "invested_amount", precision = 15, scale = 2)
     private BigDecimal investedAmount;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "project_ods", joinColumns = @JoinColumn(name = "project_id"))
-    @Column(name = "ods_code", nullable = false)
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "project_ods",
+            joinColumns = @JoinColumn(name = "project_id"),
+            inverseJoinColumns = @JoinColumn(name = "ods_id"))
     @Builder.Default
-    private Set<Integer> odsCodes = new LinkedHashSet<>();
+    private Set<Ods> ods = new LinkedHashSet<>();
 
     @Column(name = "start_date")
     private LocalDate startDate;
