@@ -12,7 +12,9 @@ import { WizardSignUp } from "../../components/wizard/WizardSignUp";
 import { Step2 } from "./Steps/Step2";
 import { Step3 } from "./Steps/Step3";
 import { Step4 } from "./Steps/Step4";
+import type { OdsCatalogItem } from "../../api/ods";
 import { stepValidators } from "../../config/wizard.config";
+import { useOdsCatalog } from "../../hooks/useOdsCatalog";
 import { useWizardPersistence } from "../../hooks/useWizardPersistence";
 import type {
   FieldErrors,
@@ -75,6 +77,9 @@ type GetStepsParams = {
   formData: WizardFormData;
   setFormData: React.Dispatch<React.SetStateAction<WizardFormData>>;
   errors: FieldErrors;
+  odsOptions: OdsCatalogItem[];
+  isOdsLoading: boolean;
+  isOdsError: boolean;
 };
 
 function getSteps({
@@ -83,6 +88,9 @@ function getSteps({
   formData,
   setFormData,
   errors,
+  odsOptions,
+  isOdsLoading,
+  isOdsError,
 }: GetStepsParams) {
   const commonFirstStep = (
     <WizardSignUp
@@ -115,6 +123,9 @@ function getSteps({
         formData={formData}
         setFormData={setFormData}
         errors={errors}
+        odsOptions={odsOptions}
+        isOdsLoading={isOdsLoading}
+        isOdsError={isOdsError}
       />,
     ];
   }
@@ -140,6 +151,11 @@ export function RegisterPage() {
     });
 
   const { currentStep, organizationType, formData } = wizardProgress;
+  const {
+    data: odsOptions = [],
+    isLoading: isOdsLoading,
+    isError: isOdsError,
+  } = useOdsCatalog(organizationType === "npo");
 
   const setCurrentStep = useCallback(
     (step: number | ((prev: number) => number)) => {
@@ -180,12 +196,28 @@ export function RegisterPage() {
         formData,
         setFormData,
         errors,
+        odsOptions,
+        isOdsLoading,
+        isOdsError,
       }),
-    [organizationType, formData, errors, setOrganizationType, setFormData],
+    [
+      organizationType,
+      formData,
+      errors,
+      odsOptions,
+      isOdsLoading,
+      isOdsError,
+      setOrganizationType,
+      setFormData,
+    ],
   );
 
   const totalSteps = steps.length;
   const currentStepContent = steps[currentStep - 1];
+  const isOdsCatalogBlocking =
+    organizationType === "npo" &&
+    currentStep === totalSteps &&
+    (isOdsLoading || isOdsError || odsOptions.length === 0);
 
   useEffect(() => {
     if (organizationType === "enterprise" && currentStep > 1) {
@@ -312,6 +344,7 @@ export function RegisterPage() {
               variant="secondary"
               className="w-32"
               onClick={handleNext}
+              disabled={isOdsCatalogBlocking}
             >
               {currentStep === totalSteps ? "Finalizar" : "Próximo"}
             </BaseButton>

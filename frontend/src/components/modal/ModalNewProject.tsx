@@ -3,18 +3,36 @@ import type { Dispatch, SetStateAction } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import { BaseButton } from "../general/BaseButton";
 import { Input } from "../general/Input";
+import { OdsCards } from "../register/OdsCards";
 import { TextArea } from "../general/TextArea";
-import type { FieldErrors, ProjectOdsOption, WizardFormData } from "../../types/wizard.types";
+import type { OdsCatalogItem } from "../../api/ods";
+import type { FieldErrors, WizardFormData } from "../../types/wizard.types";
+import {
+  formatCurrencyValue,
+  normalizeCurrencyValue,
+} from "../../utils/formatCurrency";
 
 type ModalNewProjectProps = {
   open: boolean;
-  formData: Pick<WizardFormData, "nomeProjeto" | "descricaoProjeto" | "metaCaptacao" | "odsProjeto">;
+  formData: Pick<
+    WizardFormData,
+    "nomeProjeto" | "tipoProjeto" | "descricaoProjeto" | "metaCaptacao" | "odsProjeto"
+  >;
   setFormData: Dispatch<
     SetStateAction<
-      Pick<WizardFormData, "nomeProjeto" | "descricaoProjeto" | "metaCaptacao" | "odsProjeto">
+      Pick<
+        WizardFormData,
+        "nomeProjeto" | "tipoProjeto" | "descricaoProjeto" | "metaCaptacao" | "odsProjeto"
+      >
     >
   >;
-  errors: Pick<FieldErrors, "nomeProjeto" | "descricaoProjeto" | "metaCaptacao" | "odsProjeto">;
+  errors: Pick<
+    FieldErrors,
+    "nomeProjeto" | "tipoProjeto" | "descricaoProjeto" | "metaCaptacao" | "odsProjeto"
+  >;
+  odsOptions: OdsCatalogItem[];
+  isOdsLoading: boolean;
+  isOdsError: boolean;
   onClose: () => void;
   onConfirm: () => void;
   isLoading?: boolean;
@@ -22,25 +40,20 @@ type ModalNewProjectProps = {
   cancelLabel?: string;
 };
 
-const ODS_OPTIONS: Array<{
-  value: ProjectOdsOption;
+const PROJECT_TYPE_OPTIONS: Array<{
+  value: Exclude<WizardFormData["tipoProjeto"], "">;
   label: string;
   description: string;
 }> = [
   {
-    value: "1",
-    label: "ODS 1 - Erradicação da Pobreza",
-    description: "Projetos de redução de desigualdades e vulnerabilidade.",
+    value: "social",
+    label: "Social",
+    description: "Não exige meta de captação.",
   },
   {
-    value: "2",
-    label: "ODS 2 - Fome Zero",
-    description: "Iniciativas de segurança alimentar e agricultura sustentável.",
-  },
-  {
-    value: "3",
-    label: "ODS 3 - Saúde e Bem-Estar",
-    description: "Ações voltadas à saúde, prevenção e qualidade de vida.",
+    value: "governamental",
+    label: "Governamental",
+    description: "Exige meta de captação.",
   },
 ];
 
@@ -49,6 +62,9 @@ export function ModalNewProject({
   formData,
   setFormData,
   errors,
+  odsOptions,
+  isOdsLoading,
+  isOdsError,
   onClose,
   onConfirm,
   isLoading = false,
@@ -56,6 +72,15 @@ export function ModalNewProject({
   cancelLabel = "Cancelar",
 }: ModalNewProjectProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  const metaCaptacaoInputRef = useRef<HTMLInputElement | null>(null);
+  const isOdsCatalogUnavailable =
+    isOdsLoading || isOdsError || odsOptions.length === 0;
+  const isConfirmDisabled = isLoading || isOdsCatalogUnavailable;
+
+  function moveCaretToEnd(input: HTMLInputElement) {
+    const end = input.value.length;
+    input.setSelectionRange(end, end);
+  }
 
   useEffect(() => {
     if (!open) {
@@ -87,7 +112,7 @@ export function ModalNewProject({
     };
   }, [open, onClose]);
 
-  function toggleOds(value: ProjectOdsOption) {
+  function toggleOds(value: string) {
     setFormData((prev) => ({
       ...prev,
       odsProjeto: prev.odsProjeto.includes(value)
@@ -144,6 +169,9 @@ export function ModalNewProject({
           className="max-h-[calc(100vh-12rem)] overflow-y-auto px-6 py-6"
           onSubmit={(event) => {
             event.preventDefault();
+            if (isConfirmDisabled) {
+              return;
+            }
             onConfirm();
           }}
         >
@@ -184,62 +212,170 @@ export function ModalNewProject({
               </p>
             )}
 
-            <Input
-              id="metaCaptacao"
-              label="Meta de captação"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="0,00"
-              value={formData.metaCaptacao}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  metaCaptacao: e.target.value,
-                }))
-              }
-              error={errors.metaCaptacao}
-            />
+            <div className="flex flex-col gap-1 w-full text-left">
+              <label
+                htmlFor="tipoProjeto"
+                className="text-slate-700 font-semibold text-sm flex gap-1"
+              >
+                Tipo do projeto
+                <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="tipoProjeto"
+                required
+                value={formData.tipoProjeto}
+                onChange={(e) => {
+                  const nextType = e.target.value as WizardFormData["tipoProjeto"];
 
-            <fieldset className="border-t border-slate-100 pt-5 border-x-0 border-b-0">
-              <legend className="text-vinculo-dark font-semibold text-base mb-1">
-                ODS <span className="text-red-500" aria-hidden="true">*</span>
-              </legend>
-              <p className="text-sm text-slate-500 mb-4">
-                Selecione um ou mais ODS relacionados ao primeiro projeto.
+                  setFormData((prev) => ({
+                    ...prev,
+                    tipoProjeto: nextType,
+                    metaCaptacao:
+                      nextType === "governamental" ? prev.metaCaptacao : "",
+                  }));
+                }}
+                className={`w-full rounded-xl px-4 py-3 outline-none transition-all text-slate-900
+                  border border-vinculo-gray bg-white
+                  focus:border-vinculo-dark focus:ring-1 focus:ring-vinculo-dark
+                  ${errors.tipoProjeto ? "!border !border-error focus:!border-error focus:!ring-error" : ""}`}
+              >
+                <option value="" disabled hidden>
+                  Selecione
+                </option>
+                {PROJECT_TYPE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-slate-500">
+                {formData.tipoProjeto
+                  ? PROJECT_TYPE_OPTIONS.find(
+                      (option) => option.value === formData.tipoProjeto,
+                    )?.description
+                  : "Escolha se o projeto terá ou não meta de captação."}
               </p>
-
-              <div className="grid grid-cols-1 gap-3">
-                {ODS_OPTIONS.map((option) => {
-                  const selected = formData.odsProjeto.includes(option.value);
-
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      aria-pressed={selected}
-                      onClick={() => toggleOds(option.value)}
-                      className={`flex flex-col gap-1 rounded-xl border-2 px-4 py-3 text-left transition-all ${
-                        selected
-                          ? "border-vinculo-green bg-vinculo-green/10 text-vinculo-dark"
-                          : "border-vinculo-gray bg-white text-slate-600 hover:border-slate-300"
-                      }`}
-                    >
-                      <span className="font-semibold text-sm">{option.label}</span>
-                      <span className="text-xs text-slate-500">
-                        {option.description}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {errors.odsProjeto && (
-                <p className="text-sm text-error mt-2" role="alert">
-                  {errors.odsProjeto}
+              {errors.tipoProjeto && (
+                <p className="text-sm text-error" role="alert">
+                  {errors.tipoProjeto}
                 </p>
               )}
-            </fieldset>
+            </div>
+
+            {formData.tipoProjeto === "governamental" && (
+              <Input
+                id="metaCaptacao"
+                label="Meta de captação"
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                placeholder="R$ 0,00"
+                value={formatCurrencyValue(formData.metaCaptacao)}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    metaCaptacao: normalizeCurrencyValue(e.target.value),
+                  }))
+                }
+                onKeyDown={(event) => {
+                  const key = event.key;
+
+                  if (/^\d$/.test(key)) {
+                    event.preventDefault();
+                    setFormData((prev) => ({
+                      ...prev,
+                      metaCaptacao: normalizeCurrencyValue(
+                        `${prev.metaCaptacao}${key}`,
+                      ),
+                    }));
+                    return;
+                  }
+
+                  if (key === "Backspace" || key === "Delete") {
+                    event.preventDefault();
+                    setFormData((prev) => ({
+                      ...prev,
+                      metaCaptacao: prev.metaCaptacao.slice(0, -1),
+                    }));
+                    return;
+                  }
+
+                  if (
+                    key === "ArrowLeft" ||
+                    key === "ArrowRight" ||
+                    key === "Home" ||
+                    key === "End"
+                  ) {
+                    requestAnimationFrame(() => {
+                      const input = metaCaptacaoInputRef.current;
+                      if (!input) {
+                        return;
+                      }
+
+                      moveCaretToEnd(input);
+                    });
+                  }
+                }}
+                onPaste={(event) => {
+                  event.preventDefault();
+                  const pastedDigits = event.clipboardData
+                    .getData("text")
+                    .replace(/\D/g, "");
+
+                  if (!pastedDigits) {
+                    return;
+                  }
+
+                  setFormData((prev) => ({
+                    ...prev,
+                    metaCaptacao: normalizeCurrencyValue(
+                      `${prev.metaCaptacao}${pastedDigits}`,
+                    ),
+                  }));
+                }}
+                onClick={() => {
+                  const input = metaCaptacaoInputRef.current;
+
+                  if (!input) {
+                    return;
+                  }
+
+                  moveCaretToEnd(input);
+                }}
+                onFocus={(event) => {
+                  moveCaretToEnd(event.currentTarget);
+                }}
+                onMouseUp={(event) => {
+                  moveCaretToEnd(event.currentTarget);
+                }}
+                inputRef={metaCaptacaoInputRef}
+                error={errors.metaCaptacao}
+                isRequired
+              />
+            )}
+
+            {isOdsLoading && (
+              <p className="text-sm text-slate-500" role="status">
+                Carregando os ODS do catálogo...
+              </p>
+            )}
+
+            {isOdsError && (
+              <p className="text-sm text-error" role="alert">
+                Não foi possível carregar os ODS do catálogo.
+              </p>
+            )}
+
+            {!isOdsLoading && !isOdsError && (
+              <OdsCards
+                options={odsOptions}
+                selectedIds={formData.odsProjeto}
+                onToggle={toggleOds}
+                error={errors.odsProjeto}
+                legend="ODS do projeto"
+                description="Selecione um ou mais ODS relacionados ao projeto."
+              />
+            )}
 
             <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
               <BaseButton variant="ghost" type="button" onClick={onClose} disabled={isLoading}>
@@ -248,7 +384,7 @@ export function ModalNewProject({
               <BaseButton
                 variant="secondary"
                 type="submit"
-                disabled={isLoading}
+                disabled={isConfirmDisabled}
               >
                 {isLoading ? "Finalizando..." : confirmLabel}
               </BaseButton>
