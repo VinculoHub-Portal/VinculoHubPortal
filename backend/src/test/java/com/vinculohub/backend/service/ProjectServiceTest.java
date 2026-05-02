@@ -93,8 +93,7 @@ class ProjectServiceTest {
         assertEquals(new BigDecimal("1000.00"), response.budgetNeeded());
         assertEquals(BigDecimal.ZERO, response.investedAmount());
         assertEquals(
-                List.of(new OdsResponse(1, "ODS 1"), new OdsResponse(2, "ODS 2")),
-                response.ods());
+                List.of(new OdsResponse(1, "ODS 1"), new OdsResponse(2, "ODS 2")), response.ods());
 
         ArgumentCaptor<Project> projectCaptor = ArgumentCaptor.forClass(Project.class);
         verify(projectRepository).save(projectCaptor.capture());
