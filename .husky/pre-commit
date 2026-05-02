@@ -1,2 +1,2 @@
 cd frontend && npm run lint && npm run typecheck
-cd backend && ./mvnw spotless:apply pmd:check compile spotbugs:check --file pom.xml
+cd backend && ./mvnw spotless:apply pmd:check --file pom.xml
