@@ -50,11 +50,11 @@ const PROJECT_TYPE_OPTIONS = [
 ];
 
 const AREA_OPTIONS = [
-  { value: "educacao", label: "Educacao" },
-  { value: "saude", label: "Saude" },
+  { value: "educacao", label: "Educação" },
+  { value: "saude", label: "Saúde" },
   { value: "cultura", label: "Cultura" },
   { value: "meio-ambiente", label: "Meio ambiente" },
-  { value: "assistencia-social", label: "Assistencia social" },
+  { value: "assistencia-social", label: "Assistência social" },
 ];
 
 function validateProject(data: CreateProjectFormData) {
@@ -65,7 +65,7 @@ function validateProject(data: CreateProjectFormData) {
   }
 
   if (!data.descricaoProjeto.trim()) {
-    errors.descricaoProjeto = "Informe a descricao do projeto.";
+    errors.descricaoProjeto = "Informe a descrição do projeto.";
   }
 
   if (!data.tipoProjeto) {
@@ -73,7 +73,7 @@ function validateProject(data: CreateProjectFormData) {
   }
 
   if (!data.areaAtuacao) {
-    errors.areaAtuacao = "Selecione a area de atuacao.";
+    errors.areaAtuacao = "Selecione a área de atuação.";
   }
 
   return errors;
@@ -170,7 +170,7 @@ export function CreateProjectModal({
                   id="nomeProjeto"
                   label="Nome do Projeto"
                   isRequired
-                  placeholder="Ex: Educacao para o Futuro"
+                  placeholder="Ex: Educação para o Futuro"
                   maxLength={255}
                   value={formData.nomeProjeto}
                   onChange={(event) =>
@@ -183,9 +183,9 @@ export function CreateProjectModal({
               <div className="md:col-span-2">
                 <TextArea
                   id="descricaoProjeto"
-                  label="Descricao do Projeto"
+                  label="Descrição do Projeto"
                   isRequired
-                  placeholder="Descreva os objetivos e publico-alvo do projeto..."
+                  placeholder="Descreva os objetivos e público-alvo do projeto..."
                   maxLength={1000}
                   value={formData.descricaoProjeto}
                   onChange={(event) =>
@@ -211,7 +211,7 @@ export function CreateProjectModal({
 
               <FormSelect
                 id="areaAtuacao"
-                label="Area de Atuacao"
+                label="Área de Atuação"
                 value={formData.areaAtuacao}
                 options={AREA_OPTIONS}
                 error={errors.areaAtuacao}
@@ -220,7 +220,7 @@ export function CreateProjectModal({
 
               <Input
                 id="valorNecessario"
-                label="Valor Necessario (R$)"
+                label="Valor Necessário (R$)"
                 inputMode="decimal"
                 placeholder="Ex: 150.000,00"
                 value={formData.valorNecessario}
@@ -231,7 +231,7 @@ export function CreateProjectModal({
 
               <Input
                 id="prazoCaptacao"
-                label="Prazo de Captacao"
+                label="Prazo de Captação"
                 placeholder="Ex: 6 meses"
                 value={formData.prazoCaptacao}
                 onChange={(event) =>
@@ -241,7 +241,7 @@ export function CreateProjectModal({
 
               <Input
                 id="numeroBeneficiados"
-                label="Numero de Beneficiados"
+                label="Número de Beneficiados"
                 inputMode="numeric"
                 placeholder="Ex: 120"
                 value={formData.numeroBeneficiados}
@@ -253,7 +253,7 @@ export function CreateProjectModal({
               <Input
                 id="localidade"
                 label="Localidade"
-                placeholder="Ex: Sao Paulo, SP"
+                placeholder="Ex: São Paulo, SP"
                 value={formData.localidade}
                 onChange={(event) =>
                   updateField("localidade", event.target.value)
@@ -262,7 +262,7 @@ export function CreateProjectModal({
 
               <fieldset className="md:col-span-2">
                 <legend className="mb-3 text-sm font-semibold text-vinculo-dark">
-                  Objetivos de Desenvolvimento Sustentavel (ODS)
+                  Objetivos de Desenvolvimento Sustentável (ODS)
                 </legend>
                 <ProjectOdsChips
                   selectedValues={formData.odsProjeto}
@@ -274,7 +274,7 @@ export function CreateProjectModal({
                 <TextArea
                   id="objetivoPrincipal"
                   label="Objetivo Principal"
-                  placeholder="Descreva o principal objetivo que este projeto pretende alcancar..."
+                  placeholder="Descreva o principal objetivo que este projeto pretende alcançar..."
                   maxLength={600}
                   value={formData.objetivoPrincipal}
                   onChange={(event) =>

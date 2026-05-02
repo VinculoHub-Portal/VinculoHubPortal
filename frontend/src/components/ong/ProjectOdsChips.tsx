@@ -16,11 +16,11 @@ type ProjectOdsChipsProps = {
 };
 
 const ODS_OPTIONS: OdsOption[] = [
-  { value: "educacao-qualidade", label: "Educacao de Qualidade" },
-  { value: "saude-bem-estar", label: "Saude e Bem-Estar" },
-  { value: "igualdade-genero", label: "Igualdade de Genero" },
-  { value: "reducao-desigualdades", label: "Reducao das Desigualdades" },
-  { value: "cidades-sustentaveis", label: "Cidades Sustentaveis" },
+  { value: "educacao-qualidade", label: "Educação de Qualidade" },
+  { value: "saude-bem-estar", label: "Saúde e Bem-Estar" },
+  { value: "igualdade-genero", label: "Igualdade de Gênero" },
+  { value: "reducao-desigualdades", label: "Redução das Desigualdades" },
+  { value: "cidades-sustentaveis", label: "Cidades Sustentáveis" },
 ];
 
 export function ProjectOdsChips({
