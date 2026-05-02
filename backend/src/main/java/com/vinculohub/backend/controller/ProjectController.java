@@ -53,7 +53,8 @@ public class ProjectController {
             @RequestParam(required = false) ProjectType type,
             Pageable pageable) {
         log.info(
-                "GET /api/projects | npoId={} status={} title={} odsCodes={} type={} page={} size={}",
+                "GET /api/projects | npoId={} status={} title={} odsCodes={} type={} page={}"
+                        + " size={}",
                 npoId,
                 status,
                 title,
