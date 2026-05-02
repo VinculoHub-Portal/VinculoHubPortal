@@ -5,12 +5,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.vinculohub.backend.dto.NpoFirstProjectSignupRequest;
+import com.vinculohub.backend.exception.NotFoundException;
 import com.vinculohub.backend.dto.ProjectFilterParams;
 import com.vinculohub.backend.dto.ProjectListItemDTO;
 import com.vinculohub.backend.model.Npo;
@@ -20,6 +22,7 @@ import com.vinculohub.backend.model.enums.ProjectType;
 import com.vinculohub.backend.repository.ProjectRepository;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -158,5 +161,23 @@ class ProjectServiceTest {
                 () ->
                         projectService.listProjects(
                                 new ProjectFilterParams(null, null, null, null, null), pageable));
+    }
+
+    @Test
+    void shouldReturnProjectWhenFoundById() {
+        Project project = Project.builder().id(1L).title("Projeto Teste").build();
+        when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
+
+        Project result = projectService.findById(1L);
+
+        assertEquals(1L, result.getId());
+        assertEquals("Projeto Teste", result.getTitle());
+    }
+
+    @Test
+    void shouldThrowNotFoundExceptionWhenProjectDoesNotExist() {
+        when(projectRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> projectService.findById(99L));
     }
 }
