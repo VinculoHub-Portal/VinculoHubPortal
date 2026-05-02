@@ -6,7 +6,6 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import lombok.*;
@@ -60,14 +59,6 @@ public class Project {
 
     @Column(name = "end_date")
     private LocalDate endDate;
-
-    @ManyToMany
-    @JoinTable(
-            name = "project_sdg",
-            joinColumns = @JoinColumn(name = "project_id"),
-            inverseJoinColumns = @JoinColumn(name = "sdg_id"))
-    @Builder.Default
-    private Set<Sdg> sdgs = new HashSet<>();
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
