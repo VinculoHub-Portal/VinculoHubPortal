@@ -181,6 +181,7 @@
                 <version>3.4.0</version>
                 <configuration>
                     <ratchetFrom>origin/main</ratchetFrom>
+					<lineEndings>UNIX</lineEndings>
                     <formats>
                         <format>
                             <includes>
