@@ -8,11 +8,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.vinculohub.backend.database.AbstractIntegrationTest;
 import com.vinculohub.backend.model.Npo;
+import com.vinculohub.backend.model.Ods;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.enums.NpoSize;
 import com.vinculohub.backend.model.enums.ProjectStatus;
 import com.vinculohub.backend.model.enums.ProjectType;
 import com.vinculohub.backend.repository.NpoRepository;
+import com.vinculohub.backend.repository.OdsRepository;
 import com.vinculohub.backend.repository.ProjectRepository;
 import java.time.LocalDate;
 import java.util.Set;
@@ -30,8 +32,12 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ProjectRepository projectRepository;
     @Autowired private NpoRepository npoRepository;
+    @Autowired private OdsRepository odsRepository;
 
     private Npo npo;
+    private Ods ods1;
+    private Ods ods3;
+    private Ods ods5;
 
     @BeforeEach
     void setup() {
@@ -45,6 +51,9 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                                 .phone("(11) 9999-0000")
                                 .environmental(true)
                                 .build());
+        ods1 = odsRepository.findById(1).orElseThrow();
+        ods3 = odsRepository.findById(3).orElseThrow();
+        ods5 = odsRepository.findById(5).orElseThrow();
     }
 
     @Test
@@ -180,14 +189,14 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                         .npo(npo)
                         .title("Projeto ODS 1 e 3")
                         .description("D")
-                        .odsCodes(Set.of(1, 3))
+                        .ods(Set.of(ods1, ods3))
                         .build());
         projectRepository.save(
                 Project.builder()
                         .npo(npo)
                         .title("Projeto ODS 5")
                         .description("D")
-                        .odsCodes(Set.of(5))
+                        .ods(Set.of(ods5))
                         .build());
 
         mockMvc.perform(

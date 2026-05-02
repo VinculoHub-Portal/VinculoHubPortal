@@ -142,5 +142,6 @@ describe("AuthRoleRedirect", () => {
 
     const [, payload] = mocks.apiPostMock.mock.calls[0];
     expect(payload.firstProject.capital).toBeNull();
+    expect(payload.firstProject.ods).toEqual(["1"]);
   });
 });
