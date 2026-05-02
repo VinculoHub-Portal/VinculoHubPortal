@@ -3,7 +3,7 @@ package com.vinculohub.backend.exception;
 
 public class FileFormatValidationException extends RuntimeException {
 
-    public FileFormatValidationException() {
-        super("Formato de arquivo indevido.");
+    public FileFormatValidationException(String message) {
+        super(message);
     }
 }

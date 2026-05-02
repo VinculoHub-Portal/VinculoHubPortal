@@ -15,6 +15,7 @@ import com.vinculohub.backend.repository.ProjectRepository;
 import com.vinculohub.backend.service.storage.S3Uploader;
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,17 +30,22 @@ public class DocumentService {
     private final ProjectRepository projectRepository;
     private final S3Uploader s3Uploader;
 
-    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
+    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
+
     private static final List<String> ALLOWED_TYPES =
-            List.of("application/pdf", "image/png", "image/jpeg");
+            List.of(
+                    "application/pdf",
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "application/vnd.ms-excel");
 
     public DocumentResponseDTO upload(MultipartFile file, DocumentRequestDTO docReq) {
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new FileSizeValidationException();
+            throw new FileSizeValidationException("File exceeds 5MB limit");
         }
 
         if (!ALLOWED_TYPES.contains(file.getContentType())) {
-            throw new FileFormatValidationException();
+            throw new FileFormatValidationException("Unsupported file type");
         }
 
         Npo npo =
@@ -54,10 +60,13 @@ public class DocumentService {
 
         String fileUrl;
         try {
-            fileUrl = s3Uploader.uploadFile(file, "npo-" + npo.getId());
+            String folder = "npo/" + npo.getId();
+            fileUrl = s3Uploader.uploadFile(file, folder);
         } catch (IOException e) {
-            throw new RuntimeException("Error uploading file to storage", e);
+            throw new RuntimeException("Storage upload failed: ", e);
         }
+
+        String safeFileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
 
         Document document = new Document();
         document.setNpo(npo);
@@ -65,7 +74,7 @@ public class DocumentService {
         document.setTitle(docReq.getTitle());
         document.setDescription(docReq.getDescription());
         document.setFileUrl(fileUrl);
-        document.setFileName(file.getOriginalFilename());
+        document.setFileName(safeFileName);
         document.setFileSize((int) file.getSize());
         document.setMimeType(file.getContentType());
 
