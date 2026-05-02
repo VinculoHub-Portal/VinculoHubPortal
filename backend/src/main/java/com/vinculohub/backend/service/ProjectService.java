@@ -4,6 +4,7 @@ package com.vinculohub.backend.service;
 import com.vinculohub.backend.dto.NpoFirstProjectSignupRequest;
 import com.vinculohub.backend.dto.ProjectFilterParams;
 import com.vinculohub.backend.dto.ProjectListItemDTO;
+import com.vinculohub.backend.exception.NotFoundException;
 import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.repository.ProjectRepository;
@@ -60,6 +61,12 @@ public class ProjectService {
     public Page<ProjectListItemDTO> listProjects(ProjectFilterParams params, Pageable pageable) {
         Specification<Project> spec = ProjectSpecification.from(params);
         return projectRepository.findAll(spec, pageable).map(ProjectListItemDTO::from);
+    }
+
+    public Project findById(Long id) {
+        return projectRepository
+                .findById(id)
+                .orElseThrow(() -> new NotFoundException("Projeto não encontrado."));
     }
 
     private static String requireText(String value, String message) {
