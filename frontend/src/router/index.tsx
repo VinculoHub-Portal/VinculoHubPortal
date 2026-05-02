@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { LandingPage } from "../pages/LandingPage"
 import { ComponentsPage } from "../pages/ComponentsPage"
@@ -23,7 +22,7 @@ export const AppRouter = () => (
           <ProtectedRoute requiredRole="ADMIN">
             <RoleHomePage
               title="Painel administrativo"
-              description="Gerencie usuários, organizações e configurações da plataforma."
+              description="Gerencie usuarios, organizacoes e configuracoes da plataforma."
             />
           </ProtectedRoute>
         }
@@ -34,7 +33,8 @@ export const AppRouter = () => (
           <ProtectedRoute requiredRole="NPO">
             <RoleHomePage
               title="Painel da ONG"
-              description="Acompanhe seu cadastro, projetos e oportunidades para sua organização."
+              description="Acompanhe seu cadastro, projetos e oportunidades para sua organizacao."
+              showCreateProjectAction
             />
           </ProtectedRoute>
         }
