@@ -148,7 +148,6 @@ public class ProjectService {
                 .startDate(project.getStartDate())
                 .endDate(project.getEndDate())
                 .ods(odsResponses)
-                .createdAt(project.getCreatedAt())
                 .build();
     }
 }
