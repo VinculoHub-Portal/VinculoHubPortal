@@ -8,6 +8,7 @@ import { ProtectedRoute } from "../components/auth/ProtectedRoute"
 import { RoleHomePage } from "../pages/RoleHomePage"
 import { CompanyRegistrationPage } from "../pages/CompanyRegistration/registration"
 import { CompanyDashboard } from "../pages/CompanyDashboard"
+import { CompanyIncentiveLawsPage } from "../pages/CompanyIncentiveLawsPage"
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -45,6 +46,14 @@ export const AppRouter = () => (
         element={
           <ProtectedRoute requiredRole="COMPANY">
             <CompanyDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/empresa/leis-de-incentivo"
+        element={
+          <ProtectedRoute requiredRole="COMPANY">
+            <CompanyIncentiveLawsPage />
           </ProtectedRoute>
         }
       />
