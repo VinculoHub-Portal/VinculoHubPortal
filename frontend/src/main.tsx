@@ -29,6 +29,9 @@ createRoot(document.getElementById("root")!).render(
       }}
       onRedirectCallback={(appState) => {
         sessionStorage.setItem("auth0-login-completed", "true")
+        if (appState?.returnTo && appState.returnTo !== "/") {
+          sessionStorage.setItem("auth0-return-to", appState.returnTo)
+        }
         window.history.replaceState(
           {},
           document.title,
