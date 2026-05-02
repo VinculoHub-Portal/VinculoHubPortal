@@ -14,6 +14,7 @@ import com.vinculohub.backend.dto.NpoFirstProjectSignupRequest;
 import com.vinculohub.backend.dto.ProjectFilterParams;
 import com.vinculohub.backend.dto.ProjectListItemDTO;
 import com.vinculohub.backend.model.Npo;
+import com.vinculohub.backend.model.Ods;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.enums.ProjectStatus;
 import com.vinculohub.backend.model.enums.ProjectType;
@@ -39,7 +40,7 @@ class ProjectServiceTest {
 
     @Mock private ProjectRepository projectRepository;
 
-    @Mock private OdsMapper odsMapper;
+    @Mock private OdsService odsService;
 
     @InjectMocks private ProjectService projectService;
 
@@ -54,7 +55,14 @@ class ProjectServiceTest {
                         new BigDecimal("1000.00"),
                         List.of("1", "2"));
 
-        when(odsMapper.normalizeCodes(List.of("1", "2"))).thenReturn(Set.of(1, 2));
+        when(odsService.resolveSelection(List.of("1", "2")))
+                .thenReturn(
+                        Set.of(
+                                Ods.builder().id(1).name("Erradicação da Pobreza").build(),
+                                Ods.builder()
+                                        .id(2)
+                                        .name("Fome Zero e Agricultura Sustentável")
+                                        .build()));
 
         when(projectRepository.save(any(Project.class)))
                 .thenAnswer(
@@ -72,9 +80,8 @@ class ProjectServiceTest {
         assertEquals("Projeto Inicial", savedProject.getTitle());
         assertEquals("Descrição do projeto inicial", savedProject.getDescription());
         assertEquals(new BigDecimal("1000.00"), savedProject.getBudgetNeeded());
-        assertEquals(Set.of(1, 2), savedProject.getOdsCodes());
-
-        verify(odsMapper).normalizeCodes(List.of("1", "2"));
+        assertEquals(2, savedProject.getOds().size());
+        verify(odsService).resolveSelection(List.of("1", "2"));
     }
 
     @Test
