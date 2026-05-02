@@ -5,6 +5,8 @@ import com.vinculohub.backend.dto.NpoFirstProjectSignupRequest;
 import com.vinculohub.backend.dto.OdsResponse;
 import com.vinculohub.backend.dto.ProjectCreateRequest;
 import com.vinculohub.backend.dto.ProjectCreateResponse;
+import com.vinculohub.backend.dto.ProjectFilterParams;
+import com.vinculohub.backend.dto.ProjectListItemDTO;
 import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.NotFoundException;
 import com.vinculohub.backend.exception.UserNotFoundException;
@@ -15,11 +17,15 @@ import com.vinculohub.backend.model.enums.ProjectStatus;
 import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.ProjectRepository;
 import com.vinculohub.backend.repository.UserRepository;
+import com.vinculohub.backend.repository.specification.ProjectSpecification;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -69,19 +75,19 @@ public class ProjectService {
             log.error("Usuário autenticado não identificado");
             throw new BadRequestException("Não foi possível identificar o usuário autenticado.");
         }
-
+    
         if (request == null) {
             throw new BadRequestException("Dados do projeto são obrigatórios.");
         }
-
+    
         log.info("Creating project | auth0Id={} title={}", auth0Id, request.title());
-
+    
         User user = userRepository.findByAuth0Id(auth0Id).orElseThrow(UserNotFoundException::new);
         Npo npo =
                 npoRepository
                         .findByUserId(user.getId())
                         .orElseThrow(() -> new NotFoundException("ONG não encontrada"));
-
+    
         Set<Integer> odsCodes;
         try {
             List<String> odsIds =
@@ -92,7 +98,7 @@ public class ProjectService {
         } catch (IllegalArgumentException e) {
             throw new BadRequestException("ODS inválido");
         }
-
+    
         Project project =
                 Project.builder()
                         .npo(npo)
@@ -105,11 +111,17 @@ public class ProjectService {
                         .endDate(request.endDate())
                         .odsCodes(odsCodes)
                         .build();
-
+    
         Project saved = projectRepository.save(project);
         log.info("Project persisted | id={} npoId={}", saved.getId(), npo.getId());
-
+    
         return toCreateResponse(saved);
+    }
+    
+    @Transactional(readOnly = true)
+    public Page<ProjectListItemDTO> listProjects(ProjectFilterParams params, Pageable pageable) {
+        Specification<Project> spec = ProjectSpecification.from(params);
+        return projectRepository.findAll(spec, pageable).map(ProjectListItemDTO::from);
     }
 
     private static String requireText(String value, String message) {
