@@ -59,8 +59,13 @@ public class MeController {
                                 .orElse(null)
                         : null;
 
-        log.info("Profile loaded | userId={} type={} npoId={} companyId={} complete={}",
-                savedUser.getId(), savedUser.getUserType(), npoId, companyId, npoId != null || companyId != null);
+        log.info(
+                "Profile loaded | userId={} type={} npoId={} companyId={} complete={}",
+                savedUser.getId(),
+                savedUser.getUserType(),
+                npoId,
+                companyId,
+                npoId != null || companyId != null);
 
         return new AuthenticatedProfileResponse(
                 savedUser.getAuth0Id(),
