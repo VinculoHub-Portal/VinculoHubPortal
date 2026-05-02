@@ -18,8 +18,6 @@ public class OdsController {
 
     @GetMapping
     public List<OdsResponse> list() {
-        return odsService.findAll().stream()
-                .map(ods -> new OdsResponse(ods.getId(), ods.getName(), ods.getDescription()))
-                .toList();
+        return odsService.listResponses();
     }
 }
