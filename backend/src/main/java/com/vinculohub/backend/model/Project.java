@@ -2,6 +2,7 @@
 package com.vinculohub.backend.model;
 
 import com.vinculohub.backend.model.enums.ProjectStatus;
+import com.vinculohub.backend.model.enums.ProjectType;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -41,6 +42,10 @@ public class Project {
     @Column(nullable = false, length = 20)
     @Builder.Default
     private ProjectStatus status = ProjectStatus.ACTIVE;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "project_type", length = 30)
+    private ProjectType type;
 
     @Column(name = "budget_needed", precision = 15, scale = 2)
     private BigDecimal budgetNeeded;
