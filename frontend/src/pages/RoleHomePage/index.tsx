@@ -1,19 +1,73 @@
+import { useState } from "react";
+import AddIcon from "@mui/icons-material/Add";
+import { BaseButton } from "../../components/general/BaseButton";
 import { Header } from "../../components/general/Header";
+import {
+  CreateProjectModal,
+  type CreateProjectFormData,
+} from "../../components/ong/CreateProjectModal";
 
 type RoleHomePageProps = {
   title: string;
   description: string;
+  showCreateProjectAction?: boolean;
 };
 
-export function RoleHomePage({ title, description }: RoleHomePageProps) {
+export function RoleHomePage({
+  title,
+  description,
+  showCreateProjectAction = false,
+}: RoleHomePageProps) {
+  const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] =
+    useState(false);
+  const [lastCreatedProject, setLastCreatedProject] =
+    useState<CreateProjectFormData | null>(null);
+
+  function handleCreateProject(data: CreateProjectFormData) {
+    setLastCreatedProject(data);
+    setIsCreateProjectModalOpen(false);
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
       <Header />
 
       <main className="max-w-4xl mx-auto w-full px-6">
-        <h1 className="text-3xl font-bold text-vinculo-dark">{title}</h1>
-        <p className="mt-4 text-slate-700">{description}</p>
+        <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-vinculo-dark">{title}</h1>
+            <p className="mt-4 text-slate-700">{description}</p>
+          </div>
+
+          {showCreateProjectAction && (
+            <BaseButton
+              type="button"
+              variant="secondary"
+              className="w-full py-3 md:w-fit"
+              onClick={() => setIsCreateProjectModalOpen(true)}
+            >
+              <AddIcon fontSize="small" />
+              Cadastrar Novo Projeto
+            </BaseButton>
+          )}
+        </div>
+
+        {lastCreatedProject && (
+          <div
+            className="mt-6 rounded-lg border border-vinculo-green/40 bg-vinculo-green/10 px-4 py-3 text-sm text-vinculo-dark"
+            role="status"
+          >
+            Projeto "{lastCreatedProject.nomeProjeto}" validado no frontend e
+            pronto para integracao com a API.
+          </div>
+        )}
       </main>
+
+      <CreateProjectModal
+        open={isCreateProjectModalOpen}
+        onClose={() => setIsCreateProjectModalOpen(false)}
+        onSubmit={handleCreateProject}
+      />
     </div>
   );
 }
