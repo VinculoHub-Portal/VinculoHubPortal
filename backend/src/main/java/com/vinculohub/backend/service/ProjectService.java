@@ -64,7 +64,8 @@ public class ProjectService {
     }
 
     public Project findById(Long id) {
-        return projectRepository.findById(id)
+        return projectRepository
+                .findById(id)
                 .orElseThrow(() -> new NotFoundException("Projeto não encontrado."));
     }
 
