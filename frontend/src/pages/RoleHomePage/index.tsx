@@ -20,11 +20,9 @@ export function RoleHomePage({
 }: RoleHomePageProps) {
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] =
     useState(false);
-  const [lastCreatedProject, setLastCreatedProject] =
-    useState<CreateProjectFormData | null>(null);
 
   function handleCreateProject(data: CreateProjectFormData) {
-    setLastCreatedProject(data);
+    void data;
     setIsCreateProjectModalOpen(false);
   }
 
@@ -52,15 +50,6 @@ export function RoleHomePage({
           )}
         </div>
 
-        {lastCreatedProject && (
-          <div
-            className="mt-6 rounded-lg border border-vinculo-green/40 bg-vinculo-green/10 px-4 py-3 text-sm text-vinculo-dark"
-            role="status"
-          >
-            Projeto "{lastCreatedProject.nomeProjeto}" validado no frontend e
-            pronto para integracao com a API.
-          </div>
-        )}
       </main>
 
       <CreateProjectModal
