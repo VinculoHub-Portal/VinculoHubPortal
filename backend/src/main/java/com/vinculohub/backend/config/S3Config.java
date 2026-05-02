@@ -1,3 +1,4 @@
+/* (C)2026 */
 package com.vinculohub.backend.config;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +24,7 @@ public class S3Config {
     @Bean
     public S3Client s3Client() {
         AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
-        
+
         return S3Client.builder()
                 .region(Region.of(region))
                 .credentialsProvider(StaticCredentialsProvider.create(credentials))
