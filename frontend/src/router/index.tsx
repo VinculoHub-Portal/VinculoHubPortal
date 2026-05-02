@@ -9,6 +9,7 @@ import { RoleHomePage } from "../pages/RoleHomePage"
 import { CompanyRegistrationPage } from "../pages/CompanyRegistration/registration"
 import { CompanyDashboard } from "../pages/CompanyDashboard"
 import { CompanyIncentiveLawsPage } from "../pages/CompanyIncentiveLawsPage"
+import { CompanyPrivateInvestmentPage } from "../pages/CompanyPrivateInvestmentPage"
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -54,6 +55,14 @@ export const AppRouter = () => (
         element={
           <ProtectedRoute requiredRole="COMPANY">
             <CompanyIncentiveLawsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/empresa/investimento-social-privado"
+        element={
+          <ProtectedRoute requiredRole="COMPANY">
+            <CompanyPrivateInvestmentPage />
           </ProtectedRoute>
         }
       />
