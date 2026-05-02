@@ -3,6 +3,7 @@ package com.vinculohub.backend.controller;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -10,18 +11,25 @@ import com.vinculohub.backend.database.AbstractIntegrationTest;
 import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.model.Ods;
 import com.vinculohub.backend.model.Project;
+import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.model.enums.NpoSize;
 import com.vinculohub.backend.model.enums.ProjectStatus;
 import com.vinculohub.backend.model.enums.ProjectType;
+import com.vinculohub.backend.model.enums.UserType;
 import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.OdsRepository;
 import com.vinculohub.backend.repository.ProjectRepository;
+import com.vinculohub.backend.repository.UserRepository;
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -33,6 +41,8 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     @Autowired private ProjectRepository projectRepository;
     @Autowired private NpoRepository npoRepository;
     @Autowired private OdsRepository odsRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
     private Npo npo;
     private Ods ods1;
@@ -43,6 +53,7 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     void setup() {
         projectRepository.deleteAll();
         npoRepository.deleteAll();
+        userRepository.deleteAll();
         npo =
                 npoRepository.save(
                         Npo.builder()
@@ -258,5 +269,133 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     @DisplayName("GET /api/projects sem autenticação retorna 401")
     void shouldReturn401WithoutAuth() throws Exception {
         mockMvc.perform(get("/api/projects")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("POST /api/projects cria projeto para ONG autenticada")
+    void shouldCreateProjectForAuthenticatedNpo() throws Exception {
+        User user =
+                userRepository.save(
+                        User.builder()
+                                .name("Usuário ONG")
+                                .email("npo@teste.com")
+                                .auth0Id("auth0|npo")
+                                .userType(UserType.npo)
+                                .build());
+        Npo authenticatedNpo =
+                npoRepository.save(
+                        Npo.builder()
+                                .name("ONG Autenticada")
+                                .userId(user.getId())
+                                .npoSize(NpoSize.small)
+                                .environmental(true)
+                                .build());
+
+        String body =
+                """
+                {
+                  "name": "Projeto Novo",
+                  "description": "Descrição do projeto novo",
+                  "type": "TAX_INCENTIVE_LAW",
+                  "capital": 25000,
+                  "ods": ["4", "10"]
+                }
+                """;
+
+        mockMvc.perform(
+                        post("/api/projects")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body)
+                                .with(
+                                        jwt().jwt(jwt -> jwt.subject("auth0|npo"))
+                                                .authorities(
+                                                        new SimpleGrantedAuthority("ROLE_NPO"))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name").value("Projeto Novo"))
+                .andExpect(jsonPath("$.description").value("Descrição do projeto novo"))
+                .andExpect(jsonPath("$.type").value("TAX_INCENTIVE_LAW"))
+                .andExpect(jsonPath("$.capital").value(25000))
+                .andExpect(jsonPath("$.npoId").value(authenticatedNpo.getId()));
+
+        List<Project> savedProjects = projectRepository.findAll();
+        Project savedProject =
+                savedProjects.stream()
+                        .filter(project -> project.getTitle().equals("Projeto Novo"))
+                        .findFirst()
+                        .orElseThrow();
+
+        org.assertj.core.api.Assertions.assertThat(savedProject.getNpo().getId())
+                .isEqualTo(authenticatedNpo.getId());
+        org.assertj.core.api.Assertions.assertThat(savedProject.getType())
+                .isEqualTo(ProjectType.TAX_INCENTIVE_LAW);
+        org.assertj.core.api.Assertions.assertThat(savedProject.getBudgetNeeded())
+                .isEqualByComparingTo(new BigDecimal("25000"));
+
+        Integer odsCount =
+                jdbcTemplate.queryForObject(
+                        "select count(*) from project_ods where project_id = ?",
+                        Integer.class,
+                        savedProject.getId());
+        org.assertj.core.api.Assertions.assertThat(odsCount).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("POST /api/projects retorna 404 quando usuário não possui ONG")
+    void shouldReturn404WhenAuthenticatedUserHasNoNpo() throws Exception {
+        userRepository.save(
+                User.builder()
+                        .name("Usuário ONG")
+                        .email("npo-sem-ong@teste.com")
+                        .auth0Id("auth0|npo-sem-ong")
+                        .userType(UserType.npo)
+                        .build());
+
+        String body =
+                """
+                {
+                  "name": "Projeto Novo",
+                  "description": "Descrição do projeto novo",
+                  "type": "SOCIAL_INVESTMENT_LAW",
+                  "capital": null,
+                  "ods": ["1"]
+                }
+                """;
+
+        mockMvc.perform(
+                        post("/api/projects")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body)
+                                .with(
+                                        jwt().jwt(jwt -> jwt.subject("auth0|npo-sem-ong"))
+                                                .authorities(
+                                                        new SimpleGrantedAuthority("ROLE_NPO"))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404));
+    }
+
+    @Test
+    @DisplayName("POST /api/projects sem papel NPO retorna 403")
+    void shouldReturn403WhenCreatingProjectWithoutNpoRole() throws Exception {
+        String body =
+                """
+                {
+                  "name": "Projeto Novo",
+                  "description": "Descrição do projeto novo",
+                  "type": "SOCIAL_INVESTMENT_LAW",
+                  "capital": null,
+                  "ods": ["1"]
+                }
+                """;
+
+        mockMvc.perform(
+                        post("/api/projects")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body)
+                                .with(
+                                        jwt().jwt(jwt -> jwt.subject("auth0|company"))
+                                                .authorities(
+                                                        new SimpleGrantedAuthority(
+                                                                "ROLE_COMPANY"))))
+                .andExpect(status().isForbidden());
     }
 }
