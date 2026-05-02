@@ -1,12 +1,10 @@
 import { useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
+import type { OdsCatalogItem } from "../../../api/ods";
 import { Input } from "../../../components/general/Input";
 import { TextArea } from "../../../components/general/TextArea";
-import type {
-  FieldErrors,
-  ProjectOdsOption,
-  WizardFormData,
-} from "../../../types/wizard.types";
+import { OdsCards } from "../../../components/register/OdsCards";
+import type { FieldErrors, WizardFormData } from "../../../types/wizard.types";
 import {
   formatCurrencyValue,
   normalizeCurrencyValue,
@@ -16,30 +14,10 @@ type Step4Props = {
   formData: WizardFormData;
   setFormData: Dispatch<SetStateAction<WizardFormData>>;
   errors: FieldErrors;
+  odsOptions: OdsCatalogItem[];
+  isOdsLoading: boolean;
+  isOdsError: boolean;
 };
-
-const ODS_OPTIONS: Array<{
-  value: ProjectOdsOption;
-  label: string;
-  description: string;
-}> = [
-  {
-    value: "1",
-    label: "ODS 1 - Erradicação da Pobreza",
-    description: "Projetos de redução de desigualdades e vulnerabilidade.",
-  },
-  {
-    value: "2",
-    label: "ODS 2 - Fome Zero",
-    description:
-      "Iniciativas de segurança alimentar e agricultura sustentável.",
-  },
-  {
-    value: "3",
-    label: "ODS 3 - Saúde e Bem-Estar",
-    description: "Ações voltadas à saúde, prevenção e qualidade de vida.",
-  },
-];
 
 const PROJECT_TYPE_OPTIONS: Array<{
   value: Exclude<WizardFormData["tipoProjeto"], "">;
@@ -58,7 +36,14 @@ const PROJECT_TYPE_OPTIONS: Array<{
   },
 ];
 
-export function Step4({ formData, setFormData, errors }: Step4Props) {
+export function Step4({
+  formData,
+  setFormData,
+  errors,
+  odsOptions,
+  isOdsLoading,
+  isOdsError,
+}: Step4Props) {
   const metaCaptacaoInputRef = useRef<HTMLInputElement | null>(null);
 
   function moveCaretToEnd(input: HTMLInputElement) {
@@ -66,7 +51,7 @@ export function Step4({ formData, setFormData, errors }: Step4Props) {
     input.setSelectionRange(end, end);
   }
 
-  function toggleOds(value: ProjectOdsOption) {
+  function toggleOds(value: string) {
     setFormData((prev) => ({
       ...prev,
       odsProjeto: prev.odsProjeto.includes(value)
@@ -254,48 +239,29 @@ export function Step4({ formData, setFormData, errors }: Step4Props) {
         />
       )}
 
-      <fieldset className="border-t border-slate-100 pt-5 border-x-0 border-b-0">
-        <legend className="text-vinculo-dark font-semibold text-base mb-1">
-          ODS{" "}
-          <span className="text-red-500" aria-hidden="true">
-            *
-          </span>
-        </legend>
-        <p className="text-sm text-slate-500 mb-4">
-          Selecione um ou mais ODS relacionados ao primeiro projeto.
+      {isOdsLoading && (
+        <p className="text-sm text-slate-500" role="status">
+          Carregando os ODS do catálogo...
         </p>
+      )}
 
-        <div className="grid grid-cols-1 gap-3">
-          {ODS_OPTIONS.map((option) => {
-            const selected = formData.odsProjeto.includes(option.value);
+      {isOdsError && (
+        <p className="text-sm text-error" role="alert">
+          Não foi possível carregar os ODS do catálogo.
+        </p>
+      )}
 
-            return (
-              <button
-                key={option.value}
-                type="button"
-                aria-pressed={selected}
-                onClick={() => toggleOds(option.value)}
-                className={`flex flex-col gap-1 rounded-xl border-2 px-4 py-3 text-left transition-all ${
-                  selected
-                    ? "border-vinculo-green bg-vinculo-green/10 text-vinculo-dark"
-                    : "border-vinculo-gray bg-white text-slate-600 hover:border-slate-300"
-                }`}
-              >
-                <span className="font-semibold text-sm">{option.label}</span>
-                <span className="text-xs text-slate-500">
-                  {option.description}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+      {!isOdsLoading && !isOdsError && (
+        <OdsCards
+          options={odsOptions}
+          selectedIds={formData.odsProjeto}
+          onToggle={toggleOds}
+          error={errors.odsProjeto}
+          legend="ODS do projeto"
+          description="Selecione um ou mais ODS relacionados ao primeiro projeto."
+        />
+      )}
 
-        {errors.odsProjeto && (
-          <p className="text-sm text-error mt-2" role="alert">
-            {errors.odsProjeto}
-          </p>
-        )}
-      </fieldset>
     </div>
   );
 }
