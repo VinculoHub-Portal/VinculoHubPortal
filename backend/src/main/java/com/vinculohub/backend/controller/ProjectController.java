@@ -1,9 +1,9 @@
 /* (C)2026 */
 package com.vinculohub.backend.controller;
 
+import com.vinculohub.backend.dto.ProjectDetailResponse;
 import com.vinculohub.backend.dto.ProjectFilterParams;
 import com.vinculohub.backend.dto.ProjectListItemDTO;
-import com.vinculohub.backend.dto.ProjectDetailResponse;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.enums.ProjectStatus;
 import com.vinculohub.backend.model.enums.ProjectType;
