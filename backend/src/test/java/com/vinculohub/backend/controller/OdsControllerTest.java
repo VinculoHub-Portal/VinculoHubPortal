@@ -6,7 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.vinculohub.backend.model.Ods;
+import com.vinculohub.backend.dto.OdsResponse;
 import com.vinculohub.backend.service.OdsService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -35,16 +35,14 @@ class OdsControllerTest {
 
     @Test
     void shouldListOdsCatalogWithDescriptions() throws Exception {
-        when(odsService.findAll())
+        when(odsService.listResponses())
                 .thenReturn(
                         List.of(
-                                Ods.builder()
-                                        .id(1)
-                                        .name("ODS 1 - Erradicação da Pobreza")
-                                        .description(
-                                                "Erradicar a pobreza em todas as formas, em todos"
-                                                        + " os lugares.")
-                                        .build()));
+                                new OdsResponse(
+                                        1,
+                                        "ODS 1 - Erradicação da Pobreza",
+                                        "Erradicar a pobreza em todas as formas, em todos os"
+                                                + " lugares.")));
 
         mockMvc.perform(get("/public/ods"))
                 .andExpect(status().isOk())

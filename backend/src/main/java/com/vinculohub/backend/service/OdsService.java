@@ -1,6 +1,7 @@
 /* (C)2026 */
 package com.vinculohub.backend.service;
 
+import com.vinculohub.backend.dto.OdsResponse;
 import com.vinculohub.backend.model.Ods;
 import com.vinculohub.backend.repository.OdsRepository;
 import java.util.LinkedHashMap;
@@ -24,6 +25,12 @@ public class OdsService {
 
     public List<Ods> findAll() {
         return odsRepository.findAll(Sort.by("id"));
+    }
+
+    public List<OdsResponse> listResponses() {
+        return findAll().stream()
+                .map(ods -> new OdsResponse(ods.getId(), ods.getName(), ods.getDescription()))
+                .toList();
     }
 
     public Set<Ods> resolveSelection(List<String> selectedIds) {
