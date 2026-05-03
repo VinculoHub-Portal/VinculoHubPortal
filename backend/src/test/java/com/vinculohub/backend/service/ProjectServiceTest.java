@@ -20,6 +20,7 @@ import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.NotFoundException;
 import com.vinculohub.backend.exception.UserNotFoundException;
 import com.vinculohub.backend.model.Npo;
+import com.vinculohub.backend.model.Ods;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.model.enums.ProjectStatus;
@@ -53,7 +54,7 @@ class ProjectServiceTest {
 
     @Mock private ProjectRepository projectRepository;
 
-    @Mock private OdsMapper odsMapper;
+    @Mock private OdsService odsService;
 
     @Mock private NpoRepository npoRepository;
 
@@ -68,11 +69,23 @@ class ProjectServiceTest {
         User user = User.builder().id(10).auth0Id(auth0Id).build();
         Npo npo = Npo.builder().id(20).name("ONG Exemplo").build();
         ProjectCreateRequest request = validCreateRequest();
-        Set<Integer> odsCodes = new LinkedHashSet<>(List.of(1, 2));
+        Set<Ods> ods =
+                new LinkedHashSet<>(
+                        List.of(
+                                Ods.builder()
+                                        .id(1)
+                                        .name("ODS 1")
+                                        .description("Descrição 1")
+                                        .build(),
+                                Ods.builder()
+                                        .id(2)
+                                        .name("ODS 2")
+                                        .description("Descrição 2")
+                                        .build()));
 
         when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
         when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
-        when(odsMapper.normalizeCodes(List.of("1", "2"))).thenReturn(odsCodes);
+        when(odsService.resolveSelection(List.of("1", "2"))).thenReturn(ods);
         when(projectRepository.save(any(Project.class)))
                 .thenAnswer(
                         invocation -> {
@@ -93,7 +106,10 @@ class ProjectServiceTest {
         assertEquals(new BigDecimal("1000.00"), response.budgetNeeded());
         assertEquals(BigDecimal.ZERO, response.investedAmount());
         assertEquals(
-                List.of(new OdsResponse(1, "ODS 1"), new OdsResponse(2, "ODS 2")), response.ods());
+                List.of(
+                        new OdsResponse(1, "ODS 1", "Descrição 1"),
+                        new OdsResponse(2, "ODS 2", "Descrição 2")),
+                response.ods());
 
         ArgumentCaptor<Project> projectCaptor = ArgumentCaptor.forClass(Project.class);
         verify(projectRepository).save(projectCaptor.capture());
@@ -109,11 +125,11 @@ class ProjectServiceTest {
         assertEquals(ProjectStatus.ACTIVE, savedProject.getStatus());
         assertEquals(LocalDate.of(2026, 5, 10), savedProject.getStartDate());
         assertEquals(LocalDate.of(2026, 12, 20), savedProject.getEndDate());
-        assertEquals(odsCodes, savedProject.getOdsCodes());
+        assertEquals(ods, savedProject.getOds());
 
         verify(userRepository).findByAuth0Id(auth0Id);
         verify(npoRepository).findByUserId(10);
-        verify(odsMapper).normalizeCodes(List.of("1", "2"));
+        verify(odsService).resolveSelection(List.of("1", "2"));
     }
 
     @Test
@@ -155,13 +171,13 @@ class ProjectServiceTest {
 
     @Test
     @DisplayName("Deve rejeitar ODS inválido")
-    void shouldThrowBadRequestExceptionWhenOdsMapperRejectsInvalidOds() {
+    void shouldThrowBadRequestExceptionWhenOdsServiceRejectsInvalidOds() {
         User user = User.builder().id(10).auth0Id("auth0|npo").build();
         Npo npo = Npo.builder().id(20).name("ONG Exemplo").build();
 
         when(userRepository.findByAuth0Id("auth0|npo")).thenReturn(Optional.of(user));
         when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
-        when(odsMapper.normalizeCodes(List.of("1", "99")))
+        when(odsService.resolveSelection(List.of("1", "99")))
                 .thenThrow(new IllegalArgumentException("ODS inválido."));
 
         BadRequestException exception =
@@ -183,7 +199,14 @@ class ProjectServiceTest {
                         new BigDecimal("1000.00"),
                         List.of("1", "2"));
 
-        when(odsMapper.normalizeCodes(List.of("1", "2"))).thenReturn(Set.of(1, 2));
+        when(odsService.resolveSelection(List.of("1", "2")))
+                .thenReturn(
+                        Set.of(
+                                Ods.builder().id(1).name("Erradicação da Pobreza").build(),
+                                Ods.builder()
+                                        .id(2)
+                                        .name("Fome Zero e Agricultura Sustentável")
+                                        .build()));
 
         when(projectRepository.save(any(Project.class)))
                 .thenAnswer(
@@ -201,9 +224,8 @@ class ProjectServiceTest {
         assertEquals("Projeto Inicial", savedProject.getTitle());
         assertEquals("Descrição do projeto inicial", savedProject.getDescription());
         assertEquals(new BigDecimal("1000.00"), savedProject.getBudgetNeeded());
-        assertEquals(Set.of(1, 2), savedProject.getOdsCodes());
-
-        verify(odsMapper).normalizeCodes(List.of("1", "2"));
+        assertEquals(2, savedProject.getOds().size());
+        verify(odsService).resolveSelection(List.of("1", "2"));
     }
 
     @Test

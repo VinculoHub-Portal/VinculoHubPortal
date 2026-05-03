@@ -34,6 +34,7 @@ type AuthenticatedProfile = {
 };
 
 const loginCompletedKey = "auth0-login-completed";
+const returnToKey = "auth0-return-to";
 const npoSignupDraftKey = "vinculohub:npo-signup-draft";
 const companySignupDraftKey = "vinculohub:company-signup-draft";
 const npoWizardProgressKey = "vinculohub:npo-wizard-progress";
@@ -127,7 +128,16 @@ export function AuthRoleRedirect() {
           redirectPath,
         });
 
-        if (redirectPath !== location.pathname) {
+        const returnTo = sessionStorage.getItem(returnToKey)
+        sessionStorage.removeItem(returnToKey)
+
+        const justSubmittedDraft =
+          npoDraftSubmitted || companyDraftSubmitted || hasNpoDraft || hasCompanyDraft
+
+        if (returnTo && !justSubmittedDraft) {
+          logger.info("AuthRedirect", `Restoring deep-link to ${returnTo}`);
+          navigate(returnTo, { replace: true });
+        } else if (redirectPath !== location.pathname) {
           logger.info("AuthRedirect", `Navigating to ${redirectPath}`);
           navigate(redirectPath, { replace: true });
         }

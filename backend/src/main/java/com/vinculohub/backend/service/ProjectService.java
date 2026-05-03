@@ -11,6 +11,7 @@ import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.NotFoundException;
 import com.vinculohub.backend.exception.UserNotFoundException;
 import com.vinculohub.backend.model.Npo;
+import com.vinculohub.backend.model.Ods;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.model.enums.ProjectStatus;
@@ -34,9 +35,9 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ProjectService {
     private final ProjectRepository projectRepository;
-    private final OdsMapper odsMapper;
     private final NpoRepository npoRepository;
     private final UserRepository userRepository;
+    private final OdsService odsService;
 
     public Project save(Project project) {
         if (project == null) {
@@ -63,7 +64,7 @@ public class ProjectService {
                                         request.description(),
                                         "Descrição do projeto é obrigatória."))
                         .budgetNeeded(request.capital())
-                        .odsCodes(odsMapper.normalizeCodes(request.ods()))
+                        .ods(odsService.resolveSelection(request.ods()))
                         .build();
 
         return save(project);
@@ -88,7 +89,7 @@ public class ProjectService {
                         .findByUserId(user.getId())
                         .orElseThrow(() -> new NotFoundException("ONG não encontrada"));
 
-        Set<Integer> odsCodes;
+        Set<Ods> ods;
         try {
             List<String> odsIds =
                     request.odsIds() == null
@@ -96,7 +97,7 @@ public class ProjectService {
                             : request.odsIds().stream()
                                     .map(odsId -> String.valueOf(odsId))
                                     .toList();
-            odsCodes = odsMapper.normalizeCodes(odsIds);
+            ods = odsService.resolveSelection(odsIds);
         } catch (IllegalArgumentException e) {
             throw new BadRequestException("ODS inválido");
         }
@@ -111,7 +112,7 @@ public class ProjectService {
                         .status(ProjectStatus.ACTIVE)
                         .startDate(request.startDate())
                         .endDate(request.endDate())
-                        .odsCodes(odsCodes)
+                        .ods(ods)
                         .build();
 
         Project saved = projectRepository.save(project);
@@ -134,9 +135,14 @@ public class ProjectService {
     }
 
     private ProjectCreateResponse toCreateResponse(Project project) {
-        Set<Integer> odsCodes = project.getOdsCodes() == null ? Set.of() : project.getOdsCodes();
+        Set<Ods> ods = project.getOds() == null ? Set.of() : project.getOds();
         List<OdsResponse> odsResponses =
-                odsCodes.stream().map(code -> new OdsResponse(code, "ODS " + code)).toList();
+                ods.stream()
+                        .map(
+                                item ->
+                                        new OdsResponse(
+                                                item.getId(), item.getName(), item.getDescription()))
+                        .toList();
 
         return ProjectCreateResponse.builder()
                 .id(project.getId())
