@@ -114,7 +114,6 @@ public class DocumentService {
         dto.setCreatedAt(document.getCreatedAt());
         dto.setUpdatedAt(document.getUpdatedAt());
         dto.setDeletedAt(document.getDeletedAt());
-        dto.setExpiredAt(document.getExpiredAt());
 
         return dto;
     }
