@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { LandingPage } from "../pages/LandingPage"
 import { ComponentsPage } from "../pages/ComponentsPage"
@@ -8,6 +7,9 @@ import { ProtectedRoute } from "../components/auth/ProtectedRoute"
 import { RoleHomePage } from "../pages/RoleHomePage"
 import { CompanyRegistrationPage } from "../pages/CompanyRegistration/registration"
 import { ProjectDetailsPage } from "../pages/ProjectDetailsPage"
+import { CompanyDashboard } from "../pages/CompanyDashboard"
+import { CompanyIncentiveLawsPage } from "../pages/CompanyIncentiveLawsPage"
+import { CompanyPrivateInvestmentPage } from "../pages/CompanyPrivateInvestmentPage"
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -44,6 +46,7 @@ export const AppRouter = () => (
             <RoleHomePage
               title="Painel da ONG"
               description="Acompanhe seu cadastro, projetos e oportunidades para sua organização."
+              showCreateProjectAction
             />
           </ProtectedRoute>
         }
@@ -52,10 +55,23 @@ export const AppRouter = () => (
         path="/empresa/dashboard"
         element={
           <ProtectedRoute requiredRole="COMPANY">
-            <RoleHomePage
-              title="Painel da empresa"
-              description="Encontre projetos, acompanhe parcerias e gerencie seu perfil institucional."
-            />
+            <CompanyDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/empresa/leis-de-incentivo"
+        element={
+          <ProtectedRoute requiredRole="COMPANY">
+            <CompanyIncentiveLawsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/empresa/investimento-social-privado"
+        element={
+          <ProtectedRoute requiredRole="COMPANY">
+            <CompanyPrivateInvestmentPage />
           </ProtectedRoute>
         }
       />
