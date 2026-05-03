@@ -19,6 +19,7 @@ type OngDashboardFilter = "all" | "active" | "fundraising"
 
 interface OngDashboardMockProps {
   onCreateProject: () => void
+  successMessage?: string | null
 }
 
 const FILTERS: Array<{ id: OngDashboardFilter; label: string }> = [
@@ -36,7 +37,10 @@ function statusMatchesFilter(
   return status === "Em captação"
 }
 
-export function OngDashboardMock({ onCreateProject }: OngDashboardMockProps) {
+export function OngDashboardMock({
+  onCreateProject,
+  successMessage = null,
+}: OngDashboardMockProps) {
   const navigate = useNavigate()
   const [selectedFilter, setSelectedFilter] = useState<OngDashboardFilter>("all")
 
@@ -87,6 +91,12 @@ export function OngDashboardMock({ onCreateProject }: OngDashboardMockProps) {
             </BaseButton>
           </div>
         </section>
+
+        {successMessage && (
+          <div className="rounded-xl border border-green-200 bg-green-50 px-5 py-3 text-sm font-medium text-green-800">
+            {successMessage}
+          </div>
+        )}
 
         <section className="grid grid-cols-1 gap-5 xl:grid-cols-[448px_minmax(0,1fr)]">
           <ProjectsByTypeCard onDetails={() => navigate("/ong/projetos")} />

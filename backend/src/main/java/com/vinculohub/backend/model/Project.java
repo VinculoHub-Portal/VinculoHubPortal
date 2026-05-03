@@ -67,6 +67,21 @@ public class Project {
     @Column(name = "end_date")
     private LocalDate endDate;
 
+    @Column(name = "focus_area", nullable = false, length = 50)
+    private String focusArea;
+
+    @Column(name = "fundraising_deadline", length = 50)
+    private String fundraisingDeadline;
+
+    @Column(name = "beneficiaries_count")
+    private Integer beneficiariesCount;
+
+    @Column(name = "location", length = 255)
+    private String location;
+
+    @Column(name = "main_objective", length = 600)
+    private String mainObjective;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

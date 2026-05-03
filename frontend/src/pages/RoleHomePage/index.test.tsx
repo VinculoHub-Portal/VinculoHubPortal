@@ -1,8 +1,28 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
-import { describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { RoleHomePage } from "."
+
+const mocks = vi.hoisted(() => ({
+  getAccessTokenSilentlyMock: vi.fn(),
+  fetchOdsCatalogMock: vi.fn(),
+  createProjectMock: vi.fn(),
+}))
+
+vi.mock("@auth0/auth0-react", () => ({
+  useAuth0: () => ({
+    getAccessTokenSilently: mocks.getAccessTokenSilentlyMock,
+  }),
+}))
+
+vi.mock("../../api/ods", () => ({
+  fetchOdsCatalog: mocks.fetchOdsCatalogMock,
+}))
+
+vi.mock("../../api/projects", () => ({
+  createProject: mocks.createProjectMock,
+}))
 
 function renderOngDashboard() {
   return render(
@@ -25,6 +45,15 @@ function renderOngDashboard() {
 }
 
 describe("RoleHomePage - dashboard da ONG", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.getAccessTokenSilentlyMock.mockResolvedValue("token")
+    mocks.fetchOdsCatalogMock.mockResolvedValue([
+      { id: 1, name: "ODS 1", description: "Erradicação da pobreza" },
+    ])
+    mocks.createProjectMock.mockResolvedValue({ id: 1 })
+  })
+
   it("renderiza o mock do dashboard da ONG", () => {
     renderOngDashboard()
 
