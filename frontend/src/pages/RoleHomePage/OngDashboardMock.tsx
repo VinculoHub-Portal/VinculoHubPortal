@@ -7,7 +7,7 @@ import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined"
 import { useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { BaseButton } from "../../components/general/BaseButton"
-import { PortalTopbar } from "../../components/general/PortalTopbar"
+import { Header } from "../../components/general/Header"
 import { ProgressBar } from "../../components/general/ProgressBar"
 import {
   ongDashboardProjects,
@@ -53,14 +53,10 @@ export function OngDashboardMock({
   )
 
   return (
-    <div className="min-h-screen bg-surface pb-20">
-      <PortalTopbar
-        userLabel="ONG Exemplo"
-        avatarVariant="icon"
-        vinculosCount={6}
-      />
+    <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
+      <Header />
 
-      <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 pt-10 sm:px-6">
+      <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 sm:px-6">
         <section className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h1 className="text-4xl font-semibold leading-tight text-vinculo-dark">

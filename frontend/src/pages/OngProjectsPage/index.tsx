@@ -3,7 +3,7 @@ import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined"
 import { useMemo, type ReactNode } from "react"
 import { useNavigate } from "react-router-dom"
 import { BackLink } from "../../components/general/BackLink"
-import { PortalTopbar } from "../../components/general/PortalTopbar"
+import { Header } from "../../components/general/Header"
 import { OngProjectCard } from "../../components/projects/OngProjectCard"
 import { getOngProjectSummary } from "./mockData"
 import { SummaryCard } from "./SummaryCard"
@@ -15,10 +15,10 @@ export function OngProjectsPage() {
   const summary = useMemo(() => getOngProjectSummary(projects), [projects])
 
   return (
-    <div className="min-h-screen bg-surface pb-20">
-      <PortalTopbar />
+    <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
+      <Header />
 
-      <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 pt-8 sm:px-6">
+      <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 sm:px-6">
         <BackLink
           label="Voltar ao Dashboard"
           onClick={() => navigate("/ong/dashboard")}
