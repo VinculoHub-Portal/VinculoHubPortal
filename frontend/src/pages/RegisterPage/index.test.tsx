@@ -244,6 +244,6 @@ describe("RegisterPage", () => {
       '"tipoProjeto":"governamental"',
     );
 
-    resolveLogin?.();
+    (resolveLogin as (() => void) | null)?.();
   });
 });
