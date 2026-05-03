@@ -78,7 +78,9 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content[0].title").value("Projeto Alpha"))
+                .andExpect(jsonPath("$.content[0].description").value("Descrição do projeto"))
                 .andExpect(jsonPath("$.content[0].status").value("ACTIVE"))
+                .andExpect(jsonPath("$.content[0].focusArea").value("educacao"))
                 .andExpect(jsonPath("$.content[0].npoName").value("ONG Teste"))
                 .andExpect(jsonPath("$.totalElements").value(1));
     }
@@ -271,6 +273,77 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.content[0].title").value("Projeto Cultural"));
+    }
+
+    @Test
+    @DisplayName(
+            "GET /api/projects?type=TAX_INCENTIVE_LAW mantém compatibilidade com tipos antigos")
+    void shouldFilterByLegacyProjectType() throws Exception {
+        projectRepository.save(
+                Project.builder()
+                        .npo(npo)
+                        .title("Projeto Lei de Incentivo")
+                        .description("D")
+                        .focusArea("educacao")
+                        .type(ProjectType.TAX_INCENTIVE_LAW)
+                        .build());
+        projectRepository.save(
+                Project.builder()
+                        .npo(npo)
+                        .title("Projeto Social")
+                        .description("D")
+                        .focusArea("educacao")
+                        .type(ProjectType.SOCIAL)
+                        .build());
+
+        mockMvc.perform(
+                        get("/api/projects?type=TAX_INCENTIVE_LAW")
+                                .with(
+                                        jwt().authorities(
+                                                        new SimpleGrantedAuthority(
+                                                                "ROLE_COMPANY"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].title").value("Projeto Lei de Incentivo"));
+    }
+
+    @Test
+    @DisplayName("GET /api/projects/{id} retorna detalhe com os novos campos do projeto")
+    void shouldReturnProjectDetailWithNewFields() throws Exception {
+        Project project =
+                projectRepository.save(
+                        Project.builder()
+                                .npo(npo)
+                                .title("Projeto Detalhado")
+                                .description("Descrição detalhada do projeto")
+                                .status(ProjectStatus.ACTIVE)
+                                .type(ProjectType.CULTURAL)
+                                .budgetNeeded(java.math.BigDecimal.valueOf(120000))
+                                .investedAmount(java.math.BigDecimal.valueOf(15000))
+                                .focusArea("cultura")
+                                .fundraisingDeadline("6 meses")
+                                .beneficiariesCount(300)
+                                .location("Porto Alegre, RS")
+                                .mainObjective("Ampliar acesso à cultura.")
+                                .ods(Set.of(ods1, ods3))
+                                .startDate(LocalDate.of(2026, 1, 15))
+                                .endDate(LocalDate.of(2026, 12, 15))
+                                .build());
+
+        mockMvc.perform(
+                        get("/api/projects/" + project.getId())
+                                .with(
+                                        jwt().authorities(
+                                                        new SimpleGrantedAuthority(
+                                                                "ROLE_COMPANY"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Projeto Detalhado"))
+                .andExpect(jsonPath("$.type").value("CULTURAL"))
+                .andExpect(jsonPath("$.focusArea").value("cultura"))
+                .andExpect(jsonPath("$.fundraisingDeadline").value("6 meses"))
+                .andExpect(jsonPath("$.beneficiariesCount").value(300))
+                .andExpect(jsonPath("$.location").value("Porto Alegre, RS"))
+                .andExpect(jsonPath("$.mainObjective").value("Ampliar acesso à cultura."));
     }
 
     @Test
