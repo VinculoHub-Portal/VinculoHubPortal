@@ -19,18 +19,21 @@ export interface ProjectOdsItem {
 export interface ProjectListItem {
   id: number
   title: string
+  description?: string
   status: ProjectStatus
+  type?: ProjectType | null
   npoId: number
   npoName: string
   npoPhone: string
   startDate: string
-  description?: string
-  type?: ProjectType
   budgetNeeded?: number | null
   investedAmount?: number | null
   progressPercent?: number | null
-  location?: string | null
   focusArea?: string | null
+  fundraisingDeadline?: string | null
+  beneficiariesCount?: number | null
+  location?: string | null
+  mainObjective?: string | null
   ods?: ProjectOdsItem[]
 }
 
@@ -95,10 +98,17 @@ export interface CreateProjectResponse {
   title: string
   description: string
   status: ProjectStatus
+  type?: ProjectType | null
   budgetNeeded: number | null
   investedAmount: number | null
   startDate: string | null
   endDate: string | null
+  ods?: ProjectOdsItem[]
+  focusArea?: string | null
+  fundraisingDeadline?: string | null
+  beneficiariesCount?: number | null
+  location?: string | null
+  mainObjective?: string | null
 }
 
 export async function createProject(

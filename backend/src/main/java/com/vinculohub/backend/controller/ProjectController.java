@@ -97,10 +97,16 @@ public class ProjectController {
                 project.getTitle(),
                 project.getDescription(),
                 project.getStatus().name(),
+                project.getType(),
                 project.getBudgetNeeded(),
                 project.getInvestedAmount(),
                 ods,
                 project.getStartDate(),
-                project.getEndDate());
+                project.getEndDate(),
+                project.getFocusArea(),
+                project.getFundraisingDeadline(),
+                project.getBeneficiariesCount(),
+                project.getLocation(),
+                project.getMainObjective());
     }
 }
