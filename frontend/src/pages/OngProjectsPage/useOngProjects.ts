@@ -102,7 +102,7 @@ function projectStatusLabel(status: ProjectStatus) {
   return labels[status] ?? status
 }
 
-function fundingModelFromType(type?: ProjectType): OngProjectFundingModel {
+function fundingModelFromType(type?: ProjectType | null): OngProjectFundingModel {
   if (type === "SOCIAL") return "privateInvestment"
   if (type === "GOVERNMENTAL") return "incentiveLaw"
 
