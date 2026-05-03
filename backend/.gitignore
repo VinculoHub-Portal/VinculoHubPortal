@@ -32,3 +32,15 @@ build/
 ### VS Code ###
 .vscode/
 .m2/**
+
+### Terraform ###
+# Pasta de plugins e módulos (muito pesada)
+.terraform/
+
+# Arquivos de estado (contêm segredos e o mapa da sua infra)
+*.tfstate
+*.tfstate.backup
+
+# Arquivos de log e travas
+.terraform.lock.hcl
+*.log
