@@ -1,6 +1,7 @@
 /* (C)2026 */
 package com.vinculohub.backend.dto;
 
+import com.vinculohub.backend.model.enums.ProjectType;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -24,4 +25,11 @@ public record ProjectCreateRequest(
                 BigDecimal budgetNeeded,
         LocalDate startDate,
         LocalDate endDate,
-        @NotEmpty(message = "ODS é obrigatório") List<Integer> odsIds) {}
+        @NotEmpty(message = "ODS é obrigatório") List<Integer> odsIds,
+        @NotNull(message = "Tipo de projeto é obrigatório") ProjectType type,
+        @NotBlank(message = "Área de atuação é obrigatória") String focusArea,
+        String fundraisingDeadline,
+        Integer beneficiariesCount,
+        String location,
+        @Size(max = 600, message = "Objetivo principal deve ter no máximo 600 caracteres")
+                String mainObjective) {}

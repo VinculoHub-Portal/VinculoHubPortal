@@ -1,45 +1,46 @@
 import CloseIcon from "@mui/icons-material/Close";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BaseButton } from "../general/BaseButton";
 import { Input } from "../general/Input";
 import { TextArea } from "../general/TextArea";
-import {
-  ProjectOdsChips,
-  type ProjectOdsOption,
-} from "./ProjectOdsChips";
+import { ProjectOdsChips } from "./ProjectOdsChips";
+import type { OdsCatalogItem } from "../../api/ods";
 
 export type CreateProjectFormData = {
-  nomeProjeto: string;
-  descricaoProjeto: string;
-  tipoProjeto: string;
-  areaAtuacao: string;
-  valorNecessario: string;
-  prazoCaptacao: string;
-  numeroBeneficiados: string;
-  localidade: string;
-  odsProjeto: ProjectOdsOption[];
-  objetivoPrincipal: string;
+  projectName: string;
+  projectDescription: string;
+  projectType: string;
+  focusArea: string;
+  budgetNeeded: string;
+  fundraisingDeadline: string;
+  beneficiariesCount: string;
+  location: string;
+  odsSelection: number[];
+  mainObjective: string;
 };
 
 type CreateProjectModalProps = {
   open: boolean;
   onClose: () => void;
   onSubmit: (data: CreateProjectFormData) => void;
+  isSubmitting?: boolean;
+  submitError?: string | null;
+  odsOptions: OdsCatalogItem[];
 };
 
 type FormErrors = Partial<Record<keyof CreateProjectFormData, string>>;
 
 const INITIAL_FORM_DATA: CreateProjectFormData = {
-  nomeProjeto: "",
-  descricaoProjeto: "",
-  tipoProjeto: "",
-  areaAtuacao: "",
-  valorNecessario: "",
-  prazoCaptacao: "",
-  numeroBeneficiados: "",
-  localidade: "",
-  odsProjeto: [],
-  objetivoPrincipal: "",
+  projectName: "",
+  projectDescription: "",
+  projectType: "",
+  focusArea: "",
+  budgetNeeded: "",
+  fundraisingDeadline: "",
+  beneficiariesCount: "",
+  location: "",
+  odsSelection: [],
+  mainObjective: "",
 };
 
 const PROJECT_TYPE_OPTIONS = [
@@ -60,20 +61,30 @@ const AREA_OPTIONS = [
 function validateProject(data: CreateProjectFormData) {
   const errors: FormErrors = {};
 
-  if (!data.nomeProjeto.trim()) {
-    errors.nomeProjeto = "Informe o nome do projeto.";
+  if (!data.projectName.trim()) {
+    errors.projectName = "Informe o nome do projeto.";
   }
 
-  if (!data.descricaoProjeto.trim()) {
-    errors.descricaoProjeto = "Informe a descrição do projeto.";
+  if (!data.projectDescription.trim()) {
+    errors.projectDescription = "Informe a descrição do projeto.";
+  } else if (data.projectDescription.trim().length < 50) {
+    errors.projectDescription = "A descrição deve ter no mínimo 50 caracteres.";
   }
 
-  if (!data.tipoProjeto) {
-    errors.tipoProjeto = "Selecione o tipo de projeto.";
+  if (!data.projectType) {
+    errors.projectType = "Selecione o tipo de projeto.";
   }
 
-  if (!data.areaAtuacao) {
-    errors.areaAtuacao = "Selecione a área de atuação.";
+  if (!data.focusArea) {
+    errors.focusArea = "Selecione a área de atuação.";
+  }
+
+  if (!data.budgetNeeded.trim()) {
+    errors.budgetNeeded = "Informe o valor necessário.";
+  }
+
+  if (data.odsSelection.length === 0) {
+    errors.odsSelection = "Selecione ao menos um ODS.";
   }
 
   return errors;
@@ -83,10 +94,20 @@ export function CreateProjectModal({
   open,
   onClose,
   onSubmit,
+  isSubmitting = false,
+  submitError = null,
+  odsOptions,
 }: CreateProjectModalProps) {
   const [formData, setFormData] =
     useState<CreateProjectFormData>(INITIAL_FORM_DATA);
   const [errors, setErrors] = useState<FormErrors>({});
+
+  useEffect(() => {
+    if (!open) {
+      setFormData(INITIAL_FORM_DATA);
+      setErrors({});
+    }
+  }, [open]);
 
   if (!open) return null;
 
@@ -98,12 +119,12 @@ export function CreateProjectModal({
     setErrors((current) => ({ ...current, [field]: undefined }));
   }
 
-  function toggleOds(value: ProjectOdsOption) {
+  function toggleOds(id: number) {
     updateField(
-      "odsProjeto",
-      formData.odsProjeto.includes(value)
-        ? formData.odsProjeto.filter((item) => item !== value)
-        : [...formData.odsProjeto, value],
+      "odsSelection",
+      formData.odsSelection.includes(id)
+        ? formData.odsSelection.filter((item) => item !== id)
+        : [...formData.odsSelection, id],
     );
   }
 
@@ -128,7 +149,6 @@ export function CreateProjectModal({
     }
 
     onSubmit(formData);
-    resetForm();
   }
 
   return (
@@ -167,118 +187,125 @@ export function CreateProjectModal({
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="md:col-span-2">
                 <Input
-                  id="nomeProjeto"
+                  id="projectName"
                   label="Nome do Projeto"
                   isRequired
                   placeholder="Ex: Educação para o Futuro"
                   maxLength={255}
-                  value={formData.nomeProjeto}
+                  value={formData.projectName}
                   onChange={(event) =>
-                    updateField("nomeProjeto", event.target.value)
+                    updateField("projectName", event.target.value)
                   }
-                  error={errors.nomeProjeto}
+                  error={errors.projectName}
                 />
               </div>
 
               <div className="md:col-span-2">
                 <TextArea
-                  id="descricaoProjeto"
+                  id="projectDescription"
                   label="Descrição do Projeto"
                   isRequired
                   placeholder="Descreva os objetivos e público-alvo do projeto..."
-                  maxLength={1000}
-                  value={formData.descricaoProjeto}
+                  maxLength={500}
+                  value={formData.projectDescription}
                   onChange={(event) =>
-                    updateField("descricaoProjeto", event.target.value)
+                    updateField("projectDescription", event.target.value)
                   }
                   className="min-h-40"
                 />
-                {errors.descricaoProjeto && (
+                {errors.projectDescription && (
                   <p className="mt-1 text-sm text-error" role="alert">
-                    {errors.descricaoProjeto}
+                    {errors.projectDescription}
                   </p>
                 )}
               </div>
 
               <FormSelect
-                id="tipoProjeto"
+                id="projectType"
                 label="Tipo de Projeto"
-                value={formData.tipoProjeto}
+                value={formData.projectType}
                 options={PROJECT_TYPE_OPTIONS}
-                error={errors.tipoProjeto}
-                onChange={(value) => updateField("tipoProjeto", value)}
+                error={errors.projectType}
+                onChange={(value) => updateField("projectType", value)}
               />
 
               <FormSelect
-                id="areaAtuacao"
+                id="focusArea"
                 label="Área de Atuação"
-                value={formData.areaAtuacao}
+                value={formData.focusArea}
                 options={AREA_OPTIONS}
-                error={errors.areaAtuacao}
-                onChange={(value) => updateField("areaAtuacao", value)}
+                error={errors.focusArea}
+                onChange={(value) => updateField("focusArea", value)}
               />
 
               <Input
-                id="valorNecessario"
+                id="budgetNeeded"
                 label="Valor Necessário (R$)"
                 inputMode="decimal"
                 placeholder="Ex: 150.000,00"
-                value={formData.valorNecessario}
+                value={formData.budgetNeeded}
                 onChange={(event) =>
-                  updateField("valorNecessario", event.target.value)
+                  updateField("budgetNeeded", event.target.value)
                 }
               />
 
               <Input
-                id="prazoCaptacao"
+                id="fundraisingDeadline"
                 label="Prazo de Captação"
                 placeholder="Ex: 6 meses"
-                value={formData.prazoCaptacao}
+                value={formData.fundraisingDeadline}
                 onChange={(event) =>
-                  updateField("prazoCaptacao", event.target.value)
+                  updateField("fundraisingDeadline", event.target.value)
                 }
               />
 
               <Input
-                id="numeroBeneficiados"
+                id="beneficiariesCount"
                 label="Número de Beneficiados"
                 inputMode="numeric"
                 placeholder="Ex: 120"
-                value={formData.numeroBeneficiados}
+                value={formData.beneficiariesCount}
                 onChange={(event) =>
-                  updateField("numeroBeneficiados", event.target.value)
+                  updateField("beneficiariesCount", event.target.value)
                 }
               />
 
               <Input
-                id="localidade"
+                id="location"
                 label="Localidade"
                 placeholder="Ex: São Paulo, SP"
-                value={formData.localidade}
+                value={formData.location}
                 onChange={(event) =>
-                  updateField("localidade", event.target.value)
+                  updateField("location", event.target.value)
                 }
               />
 
               <fieldset className="md:col-span-2">
                 <legend className="mb-3 text-sm font-semibold text-vinculo-dark">
                   Objetivos de Desenvolvimento Sustentável (ODS)
+                  <span className="text-red-500"> *</span>
                 </legend>
                 <ProjectOdsChips
-                  selectedValues={formData.odsProjeto}
+                  options={odsOptions}
+                  selectedIds={formData.odsSelection}
                   onToggle={toggleOds}
                 />
+                {errors.odsSelection && (
+                  <p className="mt-2 text-sm text-error" role="alert">
+                    {errors.odsSelection}
+                  </p>
+                )}
               </fieldset>
 
               <div className="md:col-span-2">
                 <TextArea
-                  id="objetivoPrincipal"
+                  id="mainObjective"
                   label="Objetivo Principal"
                   placeholder="Descreva o principal objetivo que este projeto pretende alcançar..."
                   maxLength={600}
-                  value={formData.objetivoPrincipal}
+                  value={formData.mainObjective}
                   onChange={(event) =>
-                    updateField("objetivoPrincipal", event.target.value)
+                    updateField("mainObjective", event.target.value)
                   }
                   className="min-h-36"
                 />
@@ -287,11 +314,17 @@ export function CreateProjectModal({
           </div>
 
           <footer className="flex flex-col-reverse gap-3 border-t border-slate-200 px-5 py-5 sm:flex-row sm:justify-end md:px-8">
+            {submitError && (
+              <p className="self-center text-sm text-error" role="alert">
+                {submitError}
+              </p>
+            )}
             <BaseButton
               type="button"
               variant="ghost"
               className="w-full bg-transparent! text-slate-600! hover:bg-slate-100! sm:w-fit"
               onClick={handleClose}
+              disabled={isSubmitting}
             >
               Cancelar
             </BaseButton>
@@ -299,8 +332,9 @@ export function CreateProjectModal({
               type="submit"
               variant="secondary"
               className="w-full px-8 py-3 shadow-sm sm:w-fit"
+              disabled={isSubmitting}
             >
-              Cadastrar Projeto
+              {isSubmitting ? "Cadastrando..." : "Cadastrar Projeto"}
             </BaseButton>
           </footer>
         </form>
