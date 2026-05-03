@@ -118,7 +118,8 @@ CREATE TABLE "document" (
   "mime_type" varchar(100),
   "created_at" timestamp,
   "updated_at" timestamp,
-  "deleted_at" timestamp
+  "deleted_at" timestamp,
+  "expired_at" timestamp
 );
 
 CREATE TABLE "edital" (
