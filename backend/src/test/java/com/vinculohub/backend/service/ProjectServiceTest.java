@@ -334,4 +334,22 @@ class ProjectServiceTest {
                 .odsIds(List.of(1, 99))
                 .build();
     }
+
+    @Test
+    void shouldReturnProjectWhenFoundById() {
+        Project project = Project.builder().id(1L).title("Projeto Teste").build();
+        when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
+
+        Project result = projectService.findById(1L);
+
+        assertEquals(1L, result.getId());
+        assertEquals("Projeto Teste", result.getTitle());
+    }
+
+    @Test
+    void shouldThrowNotFoundExceptionWhenProjectDoesNotExist() {
+        when(projectRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> projectService.findById(99L));
+    }
 }

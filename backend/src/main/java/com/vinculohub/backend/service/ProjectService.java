@@ -127,6 +127,13 @@ public class ProjectService {
         return projectRepository.findAll(spec, pageable).map(ProjectListItemDTO::from);
     }
 
+    @Transactional(readOnly = true)
+    public Project findById(Long id) {
+        return projectRepository
+                .findById(id)
+                .orElseThrow(() -> new NotFoundException("Projeto não encontrado."));
+    }
+
     private static String requireText(String value, String message) {
         if (value == null || value.trim().isEmpty()) {
             throw new IllegalArgumentException(message);
