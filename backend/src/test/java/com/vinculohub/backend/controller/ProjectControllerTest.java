@@ -66,6 +66,7 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                         .description("Descrição do projeto")
                         .status(ProjectStatus.ACTIVE)
                         .startDate(LocalDate.of(2026, 1, 15))
+                        .focusArea("educacao")
                         .build());
 
         mockMvc.perform(
@@ -105,6 +106,7 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                         .npo(npo)
                         .title("Ativo")
                         .description("D")
+                        .focusArea("educacao")
                         .status(ProjectStatus.ACTIVE)
                         .build());
         projectRepository.save(
@@ -112,6 +114,7 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                         .npo(npo)
                         .title("Completo")
                         .description("D")
+                        .focusArea("educacao")
                         .status(ProjectStatus.COMPLETED)
                         .build());
 
@@ -127,9 +130,9 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     @DisplayName("GET /api/projects?title=alpha filtra por título (case-insensitive)")
     void shouldFilterByTitle() throws Exception {
         projectRepository.save(
-                Project.builder().npo(npo).title("Projeto Alpha").description("D").build());
+                Project.builder().npo(npo).title("Projeto Alpha").description("D").focusArea("educacao").build());
         projectRepository.save(
-                Project.builder().npo(npo).title("Outro Projeto").description("D").build());
+                Project.builder().npo(npo).title("Outro Projeto").description("D").focusArea("educacao").build());
 
         mockMvc.perform(
                         get("/api/projects?title=ALPHA")
@@ -153,9 +156,9 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                                 .environmental(false)
                                 .build());
         projectRepository.save(
-                Project.builder().npo(npo).title("Meu Projeto").description("D").build());
+                Project.builder().npo(npo).title("Meu Projeto").description("D").focusArea("educacao").build());
         projectRepository.save(
-                Project.builder().npo(outraNpo).title("Outro Projeto").description("D").build());
+                Project.builder().npo(outraNpo).title("Outro Projeto").description("D").focusArea("educacao").build());
 
         mockMvc.perform(
                         get("/api/projects?npoId=" + npo.getId())
@@ -190,6 +193,7 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                         .title("Projeto ODS 1 e 3")
                         .description("D")
                         .ods(Set.of(ods1, ods3))
+                        .focusArea("educacao")
                         .build());
         projectRepository.save(
                 Project.builder()
@@ -197,6 +201,7 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                         .title("Projeto ODS 5")
                         .description("D")
                         .ods(Set.of(ods5))
+                        .focusArea("educacao")
                         .build());
 
         mockMvc.perform(
@@ -211,34 +216,36 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/projects?type=TAX_INCENTIVE_LAW filtra por tipo de projeto")
+    @DisplayName("GET /api/projects?type=CULTURAL filtra por tipo de projeto")
     void shouldFilterByProjectType() throws Exception {
         projectRepository.save(
                 Project.builder()
                         .npo(npo)
-                        .title("Projeto Lei de Incentivo Fiscal")
+                        .title("Projeto Cultural")
                         .description("D")
-                        .type(ProjectType.TAX_INCENTIVE_LAW)
+                        .focusArea("educacao")
+                        .type(ProjectType.CULTURAL)
                         .build());
         projectRepository.save(
                 Project.builder()
                         .npo(npo)
-                        .title("Projeto Lei de Investimento Social")
+                        .title("Projeto Social")
                         .description("D")
-                        .type(ProjectType.SOCIAL_INVESTMENT_LAW)
+                        .focusArea("educacao")
+                        .type(ProjectType.SOCIAL)
                         .build());
         projectRepository.save(
-                Project.builder().npo(npo).title("Projeto Sem Tipo").description("D").build());
+                Project.builder().npo(npo).title("Projeto Sem Tipo").description("D").focusArea("educacao").build());
 
         mockMvc.perform(
-                        get("/api/projects?type=TAX_INCENTIVE_LAW")
+                        get("/api/projects?type=CULTURAL")
                                 .with(
                                         jwt().authorities(
                                                         new SimpleGrantedAuthority(
                                                                 "ROLE_COMPANY"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(1))
-                .andExpect(jsonPath("$.content[0].title").value("Projeto Lei de Incentivo Fiscal"));
+                .andExpect(jsonPath("$.content[0].title").value("Projeto Cultural"));
     }
 
     @Test
