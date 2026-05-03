@@ -24,6 +24,7 @@ export function RoleHomePage({
   const { getAccessTokenSilently } = useAuth0();
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] =
     useState(false);
+  const [modalKey, setModalKey] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -61,6 +62,7 @@ export function RoleHomePage({
         token,
       );
       setIsCreateProjectModalOpen(false);
+      setModalKey((k) => k + 1);
       setSuccessMessage("Projeto cadastrado com sucesso!");
       setTimeout(() => setSuccessMessage(null), 5000);
     } catch {
@@ -105,8 +107,12 @@ export function RoleHomePage({
       </main>
 
       <CreateProjectModal
+        key={modalKey}
         open={isCreateProjectModalOpen}
-        onClose={() => setIsCreateProjectModalOpen(false)}
+        onClose={() => {
+          setIsCreateProjectModalOpen(false);
+          setModalKey((k) => k + 1);
+        }}
         onSubmit={handleCreateProject}
         isSubmitting={isSubmitting}
         submitError={submitError}
