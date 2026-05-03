@@ -141,7 +141,9 @@ public class ProjectService {
                         .map(
                                 item ->
                                         new OdsResponse(
-                                                item.getId(), item.getName(), item.getDescription()))
+                                                item.getId(),
+                                                item.getName(),
+                                                item.getDescription()))
                         .toList();
 
         return ProjectCreateResponse.builder()
