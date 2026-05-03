@@ -278,7 +278,7 @@ class ProjectServiceTest {
                         .id(1L)
                         .title("Projeto Lei de Incentivo")
                         .status(ProjectStatus.ACTIVE)
-                        .type(ProjectType.TAX_INCENTIVE_LAW)
+                        .type(ProjectType.CULTURAL)
                         .npo(npo)
                         .build();
         Pageable pageable = PageRequest.of(0, 20);
@@ -289,8 +289,7 @@ class ProjectServiceTest {
 
         Page<ProjectListItemDTO> result =
                 projectService.listProjects(
-                        new ProjectFilterParams(
-                                null, null, null, null, ProjectType.TAX_INCENTIVE_LAW),
+                        new ProjectFilterParams(null, null, null, null, ProjectType.CULTURAL),
                         pageable);
 
         assertEquals(1, result.getTotalElements());
