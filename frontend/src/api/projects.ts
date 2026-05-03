@@ -53,3 +53,47 @@ export async function fetchProjects(
     throw error
   }
 }
+
+export interface CreateProjectPayload {
+  title: string
+  description: string
+  budgetNeeded: number | null
+  startDate?: string | null
+  endDate?: string | null
+  odsIds: number[]
+  type: "SOCIAL" | "GOVERNMENTAL" | "CULTURAL" | "ENVIRONMENTAL"
+  focusArea: string
+  fundraisingDeadline?: string | null
+  beneficiariesCount?: number | null
+  location?: string | null
+  mainObjective?: string | null
+}
+
+export interface CreateProjectResponse {
+  id: number
+  npoId: number
+  title: string
+  description: string
+  status: ProjectStatus
+  budgetNeeded: number | null
+  investedAmount: number | null
+  startDate: string | null
+  endDate: string | null
+}
+
+export async function createProject(
+  payload: CreateProjectPayload,
+  token: string,
+): Promise<CreateProjectResponse> {
+  logger.info("ProjectsAPI", "Creating project", { title: payload.title })
+  try {
+    const { data } = await api.post<CreateProjectResponse>("/api/projects", payload, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    logger.info("ProjectsAPI", "Project created", { id: data.id })
+    return data
+  } catch (error) {
+    logger.error("ProjectsAPI", "Failed to create project", error)
+    throw error
+  }
+}

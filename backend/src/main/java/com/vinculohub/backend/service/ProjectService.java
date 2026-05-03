@@ -110,9 +110,15 @@ public class ProjectService {
                         .budgetNeeded(request.budgetNeeded())
                         .investedAmount(BigDecimal.ZERO)
                         .status(ProjectStatus.ACTIVE)
+                        .type(request.type())
                         .startDate(request.startDate())
                         .endDate(request.endDate())
                         .ods(ods)
+                        .focusArea(request.focusArea())
+                        .fundraisingDeadline(request.fundraisingDeadline())
+                        .beneficiariesCount(request.beneficiariesCount())
+                        .location(request.location())
+                        .mainObjective(request.mainObjective())
                         .build();
 
         Project saved = projectRepository.save(project);
@@ -159,11 +165,17 @@ public class ProjectService {
                 .title(project.getTitle())
                 .description(project.getDescription())
                 .status(project.getStatus())
+                .type(project.getType())
                 .budgetNeeded(project.getBudgetNeeded())
                 .investedAmount(project.getInvestedAmount())
                 .startDate(project.getStartDate())
                 .endDate(project.getEndDate())
                 .ods(odsResponses)
+                .focusArea(project.getFocusArea())
+                .fundraisingDeadline(project.getFundraisingDeadline())
+                .beneficiariesCount(project.getBeneficiariesCount())
+                .location(project.getLocation())
+                .mainObjective(project.getMainObjective())
                 .build();
     }
 }
