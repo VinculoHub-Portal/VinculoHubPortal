@@ -9,6 +9,7 @@ import { CompanyRegistrationPage } from "../pages/CompanyRegistration/registrati
 import { CompanyDashboard } from "../pages/CompanyDashboard"
 import { CompanyIncentiveLawsPage } from "../pages/CompanyIncentiveLawsPage"
 import { CompanyPrivateInvestmentPage } from "../pages/CompanyPrivateInvestmentPage"
+import { OngProjectsPage } from "../pages/OngProjectsPage"
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -39,6 +40,14 @@ export const AppRouter = () => (
               description="Acompanhe seu cadastro, projetos e oportunidades para sua organização."
               showCreateProjectAction
             />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/ong/projetos"
+        element={
+          <ProtectedRoute requiredRole="NPO">
+            <OngProjectsPage />
           </ProtectedRoute>
         }
       />

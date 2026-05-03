@@ -1,11 +1,10 @@
 import { useState } from "react";
-import AddIcon from "@mui/icons-material/Add";
-import { BaseButton } from "../../components/general/BaseButton";
 import { Header } from "../../components/general/Header";
 import {
   CreateProjectModal,
   type CreateProjectFormData,
 } from "../../components/ong/CreateProjectModal";
+import { OngDashboardMock } from "./OngDashboardMock";
 
 type RoleHomePageProps = {
   title: string;
@@ -26,6 +25,21 @@ export function RoleHomePage({
     setIsCreateProjectModalOpen(false);
   }
 
+  if (showCreateProjectAction) {
+    return (
+      <>
+        <OngDashboardMock
+          onCreateProject={() => setIsCreateProjectModalOpen(true)}
+        />
+        <CreateProjectModal
+          open={isCreateProjectModalOpen}
+          onClose={() => setIsCreateProjectModalOpen(false)}
+          onSubmit={handleCreateProject}
+        />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
       <Header />
@@ -36,27 +50,9 @@ export function RoleHomePage({
             <h1 className="text-3xl font-bold text-vinculo-dark">{title}</h1>
             <p className="mt-4 text-slate-700">{description}</p>
           </div>
-
-          {showCreateProjectAction && (
-            <BaseButton
-              type="button"
-              variant="secondary"
-              className="w-full py-3 md:w-fit"
-              onClick={() => setIsCreateProjectModalOpen(true)}
-            >
-              <AddIcon fontSize="small" />
-              Cadastrar Novo Projeto
-            </BaseButton>
-          )}
         </div>
 
       </main>
-
-      <CreateProjectModal
-        open={isCreateProjectModalOpen}
-        onClose={() => setIsCreateProjectModalOpen(false)}
-        onSubmit={handleCreateProject}
-      />
     </div>
   );
 }
