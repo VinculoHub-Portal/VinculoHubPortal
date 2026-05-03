@@ -2,6 +2,7 @@
 package com.vinculohub.backend.dto;
 
 import com.vinculohub.backend.model.enums.ProjectStatus;
+import com.vinculohub.backend.model.enums.ProjectType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -14,8 +15,14 @@ public record ProjectCreateResponse(
         String title,
         String description,
         ProjectStatus status,
+        ProjectType type,
         BigDecimal budgetNeeded,
         BigDecimal investedAmount,
         LocalDate startDate,
         LocalDate endDate,
-        List<OdsResponse> ods) {}
+        List<OdsResponse> ods,
+        String focusArea,
+        String fundraisingDeadline,
+        Integer beneficiariesCount,
+        String location,
+        String mainObjective) {}
