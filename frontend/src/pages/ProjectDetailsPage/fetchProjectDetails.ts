@@ -45,7 +45,10 @@ const useProjectDetailsMock =
   import.meta.env.VITE_USE_PROJECT_DETAILS_MOCK === "true" ||
   import.meta.env.VITE_USE_PROJECT_DETAILS_MOCK === "1";
 
-export async function fetchProjectDetails(projectId: string): Promise<ProjectDetails | null> {
+export async function fetchProjectDetails(
+  projectId: string,
+  token?: string,
+): Promise<ProjectDetails | null> {
   if (!projectId) return null;
 
   if (useProjectDetailsMock) {
@@ -53,7 +56,9 @@ export async function fetchProjectDetails(projectId: string): Promise<ProjectDet
   }
 
   try {
-    const { data } = await api.get<unknown>(`/api/projects/${projectId}`);
+    const { data } = await api.get<unknown>(`/api/projects/${projectId}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
     return mapApiPayloadToProjectDetails(data, projectId);
   } catch (e) {
     if (axios.isAxiosError(e) && e.response?.status === 404) {

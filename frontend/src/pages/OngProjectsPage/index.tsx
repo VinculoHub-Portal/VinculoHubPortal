@@ -5,12 +5,14 @@ import { useNavigate } from "react-router-dom"
 import { BackLink } from "../../components/general/BackLink"
 import { Header } from "../../components/general/Header"
 import { OngProjectCard } from "../../components/projects/OngProjectCard"
+import { useProjectDetailsNavigation } from "../ProjectDetailsPage/projectDetailsNavigation"
 import { getOngProjectSummary } from "./mockData"
 import { SummaryCard } from "./SummaryCard"
 import { useOngProjects } from "./useOngProjects"
 
 export function OngProjectsPage() {
   const navigate = useNavigate()
+  const openProjectDetails = useProjectDetailsNavigation("/ong/projetos")
   const { projects, loading, error } = useOngProjects()
   const summary = useMemo(() => getOngProjectSummary(projects), [projects])
 
@@ -68,6 +70,7 @@ export function OngProjectsPage() {
                 description={project.description}
                 progress={project.progress}
                 tags={project.tags}
+                onDetails={openProjectDetails}
               />
             ))}
           </section>
