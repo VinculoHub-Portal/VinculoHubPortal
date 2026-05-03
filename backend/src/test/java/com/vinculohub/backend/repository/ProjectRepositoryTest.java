@@ -112,9 +112,19 @@ class ProjectRepositoryTest extends AbstractIntegrationTest {
                                 .environmental(false)
                                 .build());
         projectRepository.save(
-                Project.builder().npo(npo).title("Biblioteca Central").description("D").focusArea("educacao").build());
+                Project.builder()
+                        .npo(npo)
+                        .title("Biblioteca Central")
+                        .description("D")
+                        .focusArea("educacao")
+                        .build());
         projectRepository.save(
-                Project.builder().npo(npo).title("Horta Comunitária").description("D").focusArea("educacao").build());
+                Project.builder()
+                        .npo(npo)
+                        .title("Horta Comunitária")
+                        .description("D")
+                        .focusArea("educacao")
+                        .build());
 
         Specification<Project> spec =
                 ProjectSpecification.from(

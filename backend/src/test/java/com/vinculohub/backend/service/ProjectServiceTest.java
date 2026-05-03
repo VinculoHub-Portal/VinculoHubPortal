@@ -289,8 +289,7 @@ class ProjectServiceTest {
 
         Page<ProjectListItemDTO> result =
                 projectService.listProjects(
-                        new ProjectFilterParams(
-                                null, null, null, null, ProjectType.CULTURAL),
+                        new ProjectFilterParams(null, null, null, null, ProjectType.CULTURAL),
                         pageable);
 
         assertEquals(1, result.getTotalElements());
