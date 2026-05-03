@@ -66,6 +66,7 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                         .description("Descrição do projeto")
                         .status(ProjectStatus.ACTIVE)
                         .startDate(LocalDate.of(2026, 1, 15))
+                        .focusArea("educacao")
                         .build());
 
         mockMvc.perform(
@@ -77,7 +78,9 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content[0].title").value("Projeto Alpha"))
+                .andExpect(jsonPath("$.content[0].description").value("Descrição do projeto"))
                 .andExpect(jsonPath("$.content[0].status").value("ACTIVE"))
+                .andExpect(jsonPath("$.content[0].focusArea").value("educacao"))
                 .andExpect(jsonPath("$.content[0].npoName").value("ONG Teste"))
                 .andExpect(jsonPath("$.totalElements").value(1));
     }
@@ -105,6 +108,7 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                         .npo(npo)
                         .title("Ativo")
                         .description("D")
+                        .focusArea("educacao")
                         .status(ProjectStatus.ACTIVE)
                         .build());
         projectRepository.save(
@@ -112,6 +116,7 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                         .npo(npo)
                         .title("Completo")
                         .description("D")
+                        .focusArea("educacao")
                         .status(ProjectStatus.COMPLETED)
                         .build());
 
@@ -127,9 +132,19 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     @DisplayName("GET /api/projects?title=alpha filtra por título (case-insensitive)")
     void shouldFilterByTitle() throws Exception {
         projectRepository.save(
-                Project.builder().npo(npo).title("Projeto Alpha").description("D").build());
+                Project.builder()
+                        .npo(npo)
+                        .title("Projeto Alpha")
+                        .description("D")
+                        .focusArea("educacao")
+                        .build());
         projectRepository.save(
-                Project.builder().npo(npo).title("Outro Projeto").description("D").build());
+                Project.builder()
+                        .npo(npo)
+                        .title("Outro Projeto")
+                        .description("D")
+                        .focusArea("educacao")
+                        .build());
 
         mockMvc.perform(
                         get("/api/projects?title=ALPHA")
@@ -153,9 +168,19 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                                 .environmental(false)
                                 .build());
         projectRepository.save(
-                Project.builder().npo(npo).title("Meu Projeto").description("D").build());
+                Project.builder()
+                        .npo(npo)
+                        .title("Meu Projeto")
+                        .description("D")
+                        .focusArea("educacao")
+                        .build());
         projectRepository.save(
-                Project.builder().npo(outraNpo).title("Outro Projeto").description("D").build());
+                Project.builder()
+                        .npo(outraNpo)
+                        .title("Outro Projeto")
+                        .description("D")
+                        .focusArea("educacao")
+                        .build());
 
         mockMvc.perform(
                         get("/api/projects?npoId=" + npo.getId())
@@ -190,6 +215,7 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                         .title("Projeto ODS 1 e 3")
                         .description("D")
                         .ods(Set.of(ods1, ods3))
+                        .focusArea("educacao")
                         .build());
         projectRepository.save(
                 Project.builder()
@@ -197,6 +223,7 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                         .title("Projeto ODS 5")
                         .description("D")
                         .ods(Set.of(ods5))
+                        .focusArea("educacao")
                         .build());
 
         mockMvc.perform(
@@ -211,24 +238,63 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/projects?type=TAX_INCENTIVE_LAW filtra por tipo de projeto")
+    @DisplayName("GET /api/projects?type=CULTURAL filtra por tipo de projeto")
     void shouldFilterByProjectType() throws Exception {
         projectRepository.save(
                 Project.builder()
                         .npo(npo)
-                        .title("Projeto Lei de Incentivo Fiscal")
+                        .title("Projeto Cultural")
                         .description("D")
+                        .focusArea("educacao")
+                        .type(ProjectType.CULTURAL)
+                        .build());
+        projectRepository.save(
+                Project.builder()
+                        .npo(npo)
+                        .title("Projeto Social")
+                        .description("D")
+                        .focusArea("educacao")
+                        .type(ProjectType.SOCIAL)
+                        .build());
+        projectRepository.save(
+                Project.builder()
+                        .npo(npo)
+                        .title("Projeto Sem Tipo")
+                        .description("D")
+                        .focusArea("educacao")
+                        .build());
+
+        mockMvc.perform(
+                        get("/api/projects?type=CULTURAL")
+                                .with(
+                                        jwt().authorities(
+                                                        new SimpleGrantedAuthority(
+                                                                "ROLE_COMPANY"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].title").value("Projeto Cultural"));
+    }
+
+    @Test
+    @DisplayName(
+            "GET /api/projects?type=TAX_INCENTIVE_LAW mantém compatibilidade com tipos antigos")
+    void shouldFilterByLegacyProjectType() throws Exception {
+        projectRepository.save(
+                Project.builder()
+                        .npo(npo)
+                        .title("Projeto Lei de Incentivo")
+                        .description("D")
+                        .focusArea("educacao")
                         .type(ProjectType.TAX_INCENTIVE_LAW)
                         .build());
         projectRepository.save(
                 Project.builder()
                         .npo(npo)
-                        .title("Projeto Lei de Investimento Social")
+                        .title("Projeto Social")
                         .description("D")
-                        .type(ProjectType.SOCIAL_INVESTMENT_LAW)
+                        .focusArea("educacao")
+                        .type(ProjectType.SOCIAL)
                         .build());
-        projectRepository.save(
-                Project.builder().npo(npo).title("Projeto Sem Tipo").description("D").build());
 
         mockMvc.perform(
                         get("/api/projects?type=TAX_INCENTIVE_LAW")
@@ -238,7 +304,46 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                                                                 "ROLE_COMPANY"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(1))
-                .andExpect(jsonPath("$.content[0].title").value("Projeto Lei de Incentivo Fiscal"));
+                .andExpect(jsonPath("$.content[0].title").value("Projeto Lei de Incentivo"));
+    }
+
+    @Test
+    @DisplayName("GET /api/projects/{id} retorna detalhe com os novos campos do projeto")
+    void shouldReturnProjectDetailWithNewFields() throws Exception {
+        Project project =
+                projectRepository.save(
+                        Project.builder()
+                                .npo(npo)
+                                .title("Projeto Detalhado")
+                                .description("Descrição detalhada do projeto")
+                                .status(ProjectStatus.ACTIVE)
+                                .type(ProjectType.CULTURAL)
+                                .budgetNeeded(java.math.BigDecimal.valueOf(120000))
+                                .investedAmount(java.math.BigDecimal.valueOf(15000))
+                                .focusArea("cultura")
+                                .fundraisingDeadline("6 meses")
+                                .beneficiariesCount(300)
+                                .location("Porto Alegre, RS")
+                                .mainObjective("Ampliar acesso à cultura.")
+                                .ods(Set.of(ods1, ods3))
+                                .startDate(LocalDate.of(2026, 1, 15))
+                                .endDate(LocalDate.of(2026, 12, 15))
+                                .build());
+
+        mockMvc.perform(
+                        get("/api/projects/" + project.getId())
+                                .with(
+                                        jwt().authorities(
+                                                        new SimpleGrantedAuthority(
+                                                                "ROLE_COMPANY"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Projeto Detalhado"))
+                .andExpect(jsonPath("$.type").value("CULTURAL"))
+                .andExpect(jsonPath("$.focusArea").value("cultura"))
+                .andExpect(jsonPath("$.fundraisingDeadline").value("6 meses"))
+                .andExpect(jsonPath("$.beneficiariesCount").value(300))
+                .andExpect(jsonPath("$.location").value("Porto Alegre, RS"))
+                .andExpect(jsonPath("$.mainObjective").value("Ampliar acesso à cultura."));
     }
 
     @Test
