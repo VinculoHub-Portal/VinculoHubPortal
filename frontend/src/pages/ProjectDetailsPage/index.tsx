@@ -1,15 +1,20 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { useQuery } from "@tanstack/react-query";
+import { useCallback } from "react";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
-import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import TrackChangesOutlinedIcon from "@mui/icons-material/TrackChangesOutlined";
 import axios from "axios";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { Header } from "../../components/general/Header";
 import { api } from "../../services/api";
+import { FundingProgress } from "./FundingProgress";
+import { OdsTags } from "./OdsTags";
+import { ProjectDetailsNotFound } from "./ProjectDetailsNotFound";
+import { ProjectDetailsSkeleton } from "./ProjectDetailsSkeleton";
+import { ProjectHeader } from "./ProjectHeader";
+import { ProjectInfoGrid } from "./ProjectInfoGrid";
 
-type ProjectDetails = {
+export type ProjectDetails = {
   id: string;
   fundingType: string;
   category: string;
@@ -80,12 +85,15 @@ function computeProgress(invested: number | null, budget: number | null): number
   return Math.min(100, Math.round((invested / budget) * 100));
 }
 
-function mapApiPayloadToProjectDetails(raw: unknown, routeId: string): ProjectDetails {
+/** Maps API payload (camelCase or snake_case) to view model. Compatible with ProjectDetailResponse quando existir no backend. */
+export function mapApiPayloadToProjectDetails(raw: unknown, routeId: string): ProjectDetails {
   const o = raw && typeof raw === "object" ? (raw as UnknownRecord) : {};
 
   const title = str(o.title || o.name);
   const description = str(o.description);
-  const fundingType = str(o.fundingType || o.funding_type || o.captureType || o.capture_type);
+  const fundingType = str(
+    o.fundingType || o.funding_type || o.captureType || o.capture_type || o.projectType || o.project_type,
+  );
   const category = str(o.category || o.area || o.areaName || o.area_name);
   const city = str(o.city || o.locality);
   const stateUf = str(o.stateUf || o.state || o.uf);
@@ -130,7 +138,7 @@ function mapApiPayloadToProjectDetails(raw: unknown, routeId: string): ProjectDe
   };
 }
 
-/** Mock com `projectId` `1` quando `VITE_USE_PROJECT_DETAILS_MOCK=1`. */
+/** Mock por `projectId` quando `VITE_USE_PROJECT_DETAILS_MOCK=1`. */
 const PROJECT_DETAILS_MOCKS: Record<string, ProjectDetails> = {
   "1": {
     id: "1",
@@ -149,6 +157,23 @@ const PROJECT_DETAILS_MOCKS: Record<string, ProjectDetails> = {
     sdgLabels: ["Educação de Qualidade", "Redução das Desigualdades"],
     progressPercent: 75,
   },
+  "2": {
+    id: "2",
+    fundingType: "Investimento Social Privado",
+    category: "Saúde",
+    requiredAmount: 320_000,
+    name: "Saúde na Comunidade",
+    city: "Porto Alegre",
+    stateUf: "RS",
+    description:
+      "Texto longo de exemplo: ".repeat(12) +
+      "Atendimento multidisciplinar e campanhas de prevenção em comunidades periféricas.",
+    mainObjective: "Ampliar o acesso a consultas e vacinação para famílias em vulnerabilidade.",
+    targetAudience: "Famílias com renda per capita inferior a meio salário mínimo.",
+    scopeArea: "Saúde comunitária",
+    sdgLabels: ["Saúde e Bem-Estar", "Redução das Desigualdades", "Cidades e Comunidades Sustentáveis"],
+    progressPercent: 42,
+  },
 };
 
 const useProjectDetailsMock =
@@ -163,7 +188,7 @@ async function fetchProjectDetails(projectId: string): Promise<ProjectDetails | 
   }
 
   try {
-    const { data } = await api.get<unknown>(`/projects/${projectId}`);
+    const { data } = await api.get<unknown>(`/api/projects/${projectId}`);
     return mapApiPayloadToProjectDetails(data, projectId);
   } catch (e) {
     if (axios.isAxiosError(e) && e.response?.status === 404) {
@@ -173,9 +198,20 @@ async function fetchProjectDetails(projectId: string): Promise<ProjectDetails | 
   }
 }
 
-/** `<Link to={projectDetailsHref(id)}>`. Rota: `/projeto/:projectId`. */
-export function projectDetailsHref(projectId: string) {
-  return `/projeto/${encodeURIComponent(projectId)}`;
+
+export function projectDetailsHref(projectId: string | number) {
+  return `/projeto/${encodeURIComponent(String(projectId))}`;
+}
+
+
+export function useProjectDetailsNavigation() {
+  const navigate = useNavigate();
+  return useCallback( 
+    (projectId: string | number) => {
+      navigate(projectDetailsHref(projectId));
+    },
+    [navigate],
+  );
 }
 
 function formatBrl(amount: number) {
@@ -208,67 +244,63 @@ export function ProjectDetailsPage() {
 
   const project = query.data;
 
+  const showNotFound =
+    !projectId ||
+    (Boolean(projectId) && !query.isLoading && !query.isError && !project);
+
   return (
     <div className="min-h-screen bg-surface flex flex-col">
       <Header />
 
       <div className="flex-1 w-full px-4 sm:px-6 py-8 md:py-10">
         <div className="max-w-3xl mx-auto w-full">
-          <Link
-            to={dashboardPath}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-vinculo-dark hover:text-vinculo-dark-hover mb-6 transition-colors"
-          >
-            <ArrowBackIcon sx={{ fontSize: 18 }} aria-hidden />
-            Voltar ao Dashboard
-          </Link>
-
-          {!projectId && (
-            <p className="text-slate-600 text-center py-16">Projeto não encontrado.</p>
+          {!showNotFound && (
+            <Link
+              to={dashboardPath}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-vinculo-dark hover:text-vinculo-dark-hover mb-6 transition-colors"
+            >
+              <ArrowBackIcon sx={{ fontSize: 18 }} aria-hidden />
+              Voltar ao Dashboard
+            </Link>
           )}
 
-          {Boolean(projectId) && query.isLoading && (
-            <p className="text-slate-600 text-center py-16">Carregando...</p>
-          )}
+          {showNotFound && <ProjectDetailsNotFound dashboardPath={dashboardPath} />}
+
+          {Boolean(projectId) && query.isLoading && <ProjectDetailsSkeleton />}
 
           {Boolean(projectId) && query.isError && (
-            <p className="text-slate-600 text-center py-16">
-              Não foi possível carregar os dados do projeto. Tente novamente mais tarde.
-            </p>
-          )}
-
-          {Boolean(projectId) && !query.isLoading && !query.isError && !project && (
-            <p className="text-slate-600 text-center py-16">Projeto não encontrado.</p>
+            <div
+              className="bg-white rounded-2xl border border-slate-200 px-6 py-12 text-center shadow-sm"
+              role="alert"
+            >
+              <p className="text-slate-700 mb-4">
+                Não foi possível carregar os dados do projeto. Verifique sua conexão e tente novamente.
+              </p>
+              <button
+                type="button"
+                onClick={() => void query.refetch()}
+                className="inline-flex items-center justify-center rounded-lg bg-vinculo-dark px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
+              >
+                Tentar novamente
+              </button>
+            </div>
           )}
 
           {Boolean(projectId) && !query.isLoading && !query.isError && project && (
             <article className="bg-white rounded-2xl shadow-[var(--shadow-vinculo)] px-6 sm:px-10 py-8 sm:py-10 border border-slate-100">
-              <div className="flex flex-wrap gap-2 mb-5">
-                <span className="inline-flex items-center rounded-full bg-vinculo-green px-3 py-1 text-xs font-semibold text-white">
-                  {project.fundingType}
-                </span>
-                <span className="inline-flex items-center rounded-full bg-vinculo-dark px-3 py-1 text-xs font-semibold text-white">
-                  {project.category}
-                </span>
-                <span className="inline-flex items-center rounded-full bg-amber-300 px-3 py-1 text-xs font-semibold text-vinculo-dark">
-                  {formatBrl(project.requiredAmount)}
-                </span>
-              </div>
-
-              <h1 className="text-2xl sm:text-3xl font-bold text-vinculo-dark leading-tight">
-                {project.name}
-              </h1>
-
-              <p className="mt-3 flex items-center gap-1 text-slate-600 text-sm">
-                <LocationOnOutlinedIcon sx={{ fontSize: 18 }} className="text-slate-500" aria-hidden />
-                <span>
-                  {project.city}, {project.stateUf}
-                </span>
-              </p>
+              <ProjectHeader
+                fundingType={project.fundingType}
+                category={project.category}
+                requiredAmountFormatted={formatBrl(project.requiredAmount)}
+                name={project.name}
+                city={project.city}
+                stateUf={project.stateUf}
+              />
 
               <section className="mt-10">
                 <h2 className="text-base font-bold text-vinculo-dark mb-3">Sobre o Projeto</h2>
-                <p className="text-slate-600 text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words">
-                  {project.description}
+                <p className="text-slate-600 text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words overflow-hidden">
+                  {project.description || "—"}
                 </p>
               </section>
 
@@ -277,66 +309,16 @@ export function ProjectDetailsPage() {
                   <TrackChangesOutlinedIcon className="text-vinculo-dark" sx={{ fontSize: 22 }} aria-hidden />
                   Objetivo Principal
                 </h2>
-                <p className="text-slate-600 text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words">
-                  {project.mainObjective}
+                <p className="text-slate-600 text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words overflow-hidden">
+                  {project.mainObjective || "—"}
                 </p>
               </section>
 
-              <section className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-8">
-                <div>
-                  <h3 className="text-base font-bold text-vinculo-dark mb-2 flex items-center gap-2">
-                    <PersonOutlineOutlinedIcon sx={{ fontSize: 22 }} className="text-vinculo-dark" aria-hidden />
-                    Público-Alvo
-                  </h3>
-                  <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
-                    {project.targetAudience}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-vinculo-dark mb-2">Área de Atuação</h3>
-                  <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
-                    {project.scopeArea}
-                  </p>
-                </div>
-              </section>
+              <ProjectInfoGrid targetAudience={project.targetAudience} scopeArea={project.scopeArea} />
 
-              {project.sdgLabels.length > 0 && (
-                <section className="mt-10">
-                  <h2 className="text-base font-bold text-vinculo-dark mb-4">
-                    Objetivos de Desenvolvimento Sustentável (ODS)
-                  </h2>
-                  <div className="flex flex-wrap gap-2">
-                    {project.sdgLabels.map((label) => (
-                      <span
-                        key={label}
-                        className="inline-flex rounded-lg bg-vinculo-dark px-3 py-1.5 text-xs sm:text-sm font-medium text-white"
-                      >
-                        {label}
-                      </span>
-                    ))}
-                  </div>
-                </section>
-              )}
+              <OdsTags labels={project.sdgLabels} />
 
-              <section className="mt-10">
-                <h2 className="text-base font-bold text-vinculo-dark mb-4">Progresso do Projeto</h2>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 mb-3">
-                  <span className="text-slate-600 text-sm">Meta de investimento</span>
-                  <span className="text-vinculo-green font-semibold text-sm">
-                    {project.progressPercent}% alcançado
-                  </span>
-                </div>
-                <div className="h-3 w-full rounded-full bg-slate-200 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-vinculo-green min-w-0 transition-[width] duration-300"
-                    style={{ width: `${Math.min(100, Math.max(0, project.progressPercent))}%` }}
-                    role="progressbar"
-                    aria-valuenow={project.progressPercent}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                  />
-                </div>
-              </section>
+              <FundingProgress progressPercent={project.progressPercent} />
             </article>
           )}
         </div>
