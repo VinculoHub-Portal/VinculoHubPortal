@@ -1,7 +1,7 @@
 export type OrganizationType = "npo" | "enterprise";
 export type ProjectType = "" | "social" | "governamental";
 export type WizardEsgOption = "ambiental" | "social" | "governanca";
-export type ProjectOdsOption = "1" | "2" | "3";
+export type OdsOption = string;
 
 export type WizardFormData = {
   nomeInstituicao: string;
@@ -23,7 +23,7 @@ export type WizardFormData = {
   tipoProjeto: ProjectType;
   descricaoProjeto: string;
   metaCaptacao: string;
-  odsProjeto: ProjectOdsOption[];
+  odsProjeto: OdsOption[];
 };
 
 export type FieldErrors = Partial<
