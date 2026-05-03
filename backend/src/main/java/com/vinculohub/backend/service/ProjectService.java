@@ -7,7 +7,6 @@ import com.vinculohub.backend.dto.ProjectCreateRequest;
 import com.vinculohub.backend.dto.ProjectCreateResponse;
 import com.vinculohub.backend.dto.ProjectFilterParams;
 import com.vinculohub.backend.dto.ProjectListItemDTO;
-import com.vinculohub.backend.exception.NotFoundException;
 import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.NotFoundException;
 import com.vinculohub.backend.exception.UserNotFoundException;
@@ -128,6 +127,7 @@ public class ProjectService {
         return projectRepository.findAll(spec, pageable).map(ProjectListItemDTO::from);
     }
 
+    @Transactional(readOnly = true)
     public Project findById(Long id) {
         return projectRepository
                 .findById(id)

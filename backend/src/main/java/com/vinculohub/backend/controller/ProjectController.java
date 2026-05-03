@@ -1,9 +1,10 @@
 /* (C)2026 */
 package com.vinculohub.backend.controller;
 
-import com.vinculohub.backend.dto.ProjectDetailResponse;
+import com.vinculohub.backend.dto.OdsResponse;
 import com.vinculohub.backend.dto.ProjectCreateRequest;
 import com.vinculohub.backend.dto.ProjectCreateResponse;
+import com.vinculohub.backend.dto.ProjectDetailResponse;
 import com.vinculohub.backend.dto.ProjectFilterParams;
 import com.vinculohub.backend.dto.ProjectListItemDTO;
 import com.vinculohub.backend.model.Project;
@@ -11,6 +12,7 @@ import com.vinculohub.backend.model.enums.ProjectStatus;
 import com.vinculohub.backend.model.enums.ProjectType;
 import com.vinculohub.backend.service.ProjectService;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -81,6 +83,15 @@ public class ProjectController {
     }
 
     private static ProjectDetailResponse toResponse(Project project) {
+        List<OdsResponse> ods =
+                project.getOds() == null
+                        ? List.of()
+                        : project.getOds().stream()
+                                .map(
+                                        o ->
+                                                new OdsResponse(
+                                                        o.getId(), o.getName(), o.getDescription()))
+                                .toList();
         return new ProjectDetailResponse(
                 project.getId(),
                 project.getTitle(),
@@ -88,7 +99,7 @@ public class ProjectController {
                 project.getStatus().name(),
                 project.getBudgetNeeded(),
                 project.getInvestedAmount(),
-                project.getOdsCodes(),
+                ods,
                 project.getStartDate(),
                 project.getEndDate());
     }

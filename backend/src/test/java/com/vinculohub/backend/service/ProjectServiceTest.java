@@ -16,7 +16,6 @@ import com.vinculohub.backend.dto.ProjectCreateRequest;
 import com.vinculohub.backend.dto.ProjectCreateResponse;
 import com.vinculohub.backend.dto.ProjectFilterParams;
 import com.vinculohub.backend.dto.ProjectListItemDTO;
-import com.vinculohub.backend.exception.NotFoundException;
 import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.NotFoundException;
 import com.vinculohub.backend.exception.UserNotFoundException;

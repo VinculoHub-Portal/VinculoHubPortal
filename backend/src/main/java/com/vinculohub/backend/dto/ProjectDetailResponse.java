@@ -3,7 +3,7 @@ package com.vinculohub.backend.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Set;
+import java.util.List;
 
 public record ProjectDetailResponse(
         Long id,
@@ -12,6 +12,6 @@ public record ProjectDetailResponse(
         String status,
         BigDecimal budgetNeeded,
         BigDecimal investedAmount,
-        Set<Integer> odsCodes,
+        List<OdsResponse> ods,
         LocalDate startDate,
         LocalDate endDate) {}
