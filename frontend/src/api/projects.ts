@@ -2,16 +2,31 @@ import { api } from "../services/api"
 import { logger } from "../utils/logger"
 
 export type ProjectStatus = "ACTIVE" | "COMPLETED" | "CANCELLED"
-export type ProjectType = "SOCIAL_INVESTMENT_LAW" | "TAX_INCENTIVE_LAW"
+export type ProjectType =
+  | "SOCIAL_INVESTMENT_LAW"
+  | "TAX_INCENTIVE_LAW"
+  | "SOCIAL"
+  | "GOVERNMENTAL"
+  | "CULTURAL"
+  | "ENVIRONMENTAL"
 
 export interface ProjectListItem {
   id: number
   title: string
+  description?: string
   status: ProjectStatus
+  type?: ProjectType | null
   npoId: number
   npoName: string
   npoPhone: string
   startDate: string
+  budgetNeeded?: number | null
+  investedAmount?: number | null
+  focusArea?: string | null
+  fundraisingDeadline?: string | null
+  beneficiariesCount?: number | null
+  location?: string | null
+  mainObjective?: string | null
 }
 
 export interface PageResponse<T> {
@@ -75,10 +90,16 @@ export interface CreateProjectResponse {
   title: string
   description: string
   status: ProjectStatus
+  type?: ProjectType | null
   budgetNeeded: number | null
   investedAmount: number | null
   startDate: string | null
   endDate: string | null
+  focusArea?: string | null
+  fundraisingDeadline?: string | null
+  beneficiariesCount?: number | null
+  location?: string | null
+  mainObjective?: string | null
 }
 
 export async function createProject(
