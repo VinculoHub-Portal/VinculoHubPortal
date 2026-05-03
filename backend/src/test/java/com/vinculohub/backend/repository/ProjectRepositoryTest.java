@@ -52,6 +52,7 @@ class ProjectRepositoryTest extends AbstractIntegrationTest {
                                 .npo(npo)
                                 .title("Projeto Exemplo")
                                 .description("Projeto piloto para validar o mapeamento.")
+                                .focusArea("educacao")
                                 .build());
 
         assertNotNull(project.getId());
@@ -79,6 +80,7 @@ class ProjectRepositoryTest extends AbstractIntegrationTest {
                         .npo(npo)
                         .title("Ativo")
                         .description("D")
+                        .focusArea("educacao")
                         .status(ProjectStatus.ACTIVE)
                         .build());
         projectRepository.save(
@@ -86,6 +88,7 @@ class ProjectRepositoryTest extends AbstractIntegrationTest {
                         .npo(npo)
                         .title("Cancelado")
                         .description("D")
+                        .focusArea("educacao")
                         .status(ProjectStatus.CANCELLED)
                         .build());
 
@@ -109,9 +112,9 @@ class ProjectRepositoryTest extends AbstractIntegrationTest {
                                 .environmental(false)
                                 .build());
         projectRepository.save(
-                Project.builder().npo(npo).title("Biblioteca Central").description("D").build());
+                Project.builder().npo(npo).title("Biblioteca Central").description("D").focusArea("educacao").build());
         projectRepository.save(
-                Project.builder().npo(npo).title("Horta Comunitária").description("D").build());
+                Project.builder().npo(npo).title("Horta Comunitária").description("D").focusArea("educacao").build());
 
         Specification<Project> spec =
                 ProjectSpecification.from(
