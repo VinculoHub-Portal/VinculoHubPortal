@@ -2,7 +2,19 @@ import { api } from "../services/api"
 import { logger } from "../utils/logger"
 
 export type ProjectStatus = "ACTIVE" | "COMPLETED" | "CANCELLED"
-export type ProjectType = "SOCIAL_INVESTMENT_LAW" | "TAX_INCENTIVE_LAW"
+export type ProjectType =
+  | "SOCIAL"
+  | "GOVERNMENTAL"
+  | "CULTURAL"
+  | "ENVIRONMENTAL"
+  | "SOCIAL_INVESTMENT_LAW"
+  | "TAX_INCENTIVE_LAW"
+
+export interface ProjectOdsItem {
+  id: number
+  name: string
+  description: string
+}
 
 export interface ProjectListItem {
   id: number
@@ -12,6 +24,14 @@ export interface ProjectListItem {
   npoName: string
   npoPhone: string
   startDate: string
+  description?: string
+  type?: ProjectType
+  budgetNeeded?: number | null
+  investedAmount?: number | null
+  progressPercent?: number | null
+  location?: string | null
+  focusArea?: string | null
+  ods?: ProjectOdsItem[]
 }
 
 export interface PageResponse<T> {
