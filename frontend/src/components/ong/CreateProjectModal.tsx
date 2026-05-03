@@ -1,5 +1,5 @@
 import CloseIcon from "@mui/icons-material/Close";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BaseButton } from "../general/BaseButton";
 import { Input } from "../general/Input";
 import { TextArea } from "../general/TextArea";
@@ -101,13 +101,6 @@ export function CreateProjectModal({
   const [formData, setFormData] =
     useState<CreateProjectFormData>(INITIAL_FORM_DATA);
   const [errors, setErrors] = useState<FormErrors>({});
-
-  useEffect(() => {
-    if (!open) {
-      setFormData(INITIAL_FORM_DATA);
-      setErrors({});
-    }
-  }, [open]);
 
   if (!open) return null;
 
