@@ -30,9 +30,9 @@ describe("fetchProjects", () => {
   })
 
   it("chama GET /api/projects com os params corretos", async () => {
-    await fetchProjects({ type: "TAX_INCENTIVE_LAW", size: 50 })
+    await fetchProjects({ type: "SOCIAL", size: 50 })
     expect(mocks.apiGetMock).toHaveBeenCalledWith("/api/projects", {
-      params: { type: "TAX_INCENTIVE_LAW", size: 50 },
+      params: { type: "SOCIAL", size: 50 },
       headers: undefined,
     })
   })
