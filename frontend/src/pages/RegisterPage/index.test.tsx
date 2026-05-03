@@ -9,6 +9,13 @@ const loginWithRedirectMock = vi.fn();
 const checkCpfAvailableMock = vi.fn();
 const checkCnpjAvailableMock = vi.fn();
 const showToastMock = vi.fn();
+const odsCatalogMock = [
+  {
+    id: 1,
+    name: "ODS 1 - Erradicação da Pobreza",
+    description: "Erradicar a pobreza em todas as formas, em todos os lugares.",
+  },
+];
 
 vi.mock("@auth0/auth0-react", () => ({
   useAuth0: () => ({
@@ -27,6 +34,14 @@ vi.mock("../../api/documentCheck", () => ({
 }));
 vi.mock("../../hooks/useZipCode", () => ({
   useZipCode: () => ({ data: undefined, isFetching: false, error: undefined }),
+}));
+
+vi.mock("../../hooks/useOdsCatalog", () => ({
+  useOdsCatalog: () => ({
+    data: odsCatalogMock,
+    isLoading: false,
+    isError: false,
+  }),
 }));
 
 vi.mock("../../context/ToastContext", () => ({
@@ -88,8 +103,12 @@ describe("RegisterPage", () => {
       "Projeto voltado para educação básica.",
     );
     await user.selectOptions(screen.getByLabelText(/Tipo do projeto/i), "social");
-    await user.click(screen.getByRole("button", { name: /ODS 1 - Erradicação da Pobreza/i }));
     expect(screen.queryByLabelText(/Meta de captação/i)).not.toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", {
+        name: /ODS 1 - Erradicação da Pobreza/i,
+      }),
+    );
     await user.click(screen.getByRole("button", { name: /Finalizar/i }));
     expect(
       await screen.findByText(/Você será redirecionado para concluir o acesso/i),
@@ -116,7 +135,11 @@ describe("RegisterPage", () => {
     expect(screen.getByLabelText(/Meta de captação/i)).toHaveValue(
       formatCurrencyValue("10000"),
     );
-    await user.click(screen.getByRole("button", { name: /ODS 1 - Erradicação da Pobreza/i }));
+    await user.click(
+      screen.getByRole("button", {
+        name: /ODS 1 - Erradicação da Pobreza/i,
+      }),
+    );
     await user.click(screen.getByRole("button", { name: /Finalizar/i }));
     expect(
       await screen.findByText(/Você será redirecionado para concluir o acesso/i),
@@ -124,6 +147,9 @@ describe("RegisterPage", () => {
     await user.click(screen.getByRole("button", { name: /Continuar/i }));
     expect(sessionStorage.getItem("vinculohub:npo-signup-draft")).toContain(
       '"metaCaptacao":"10000"',
+    );
+    expect(sessionStorage.getItem("vinculohub:npo-signup-draft")).toContain(
+      '"odsProjeto":["1"]',
     );
   });
 
@@ -150,7 +176,11 @@ describe("RegisterPage", () => {
       "governamental",
     );
     await user.type(screen.getByLabelText(/Meta de captação/i), "10000");
-    await user.click(screen.getByRole("button", { name: /ODS 1 - Erradicação da Pobreza/i }));
+    await user.click(
+      screen.getByRole("button", {
+        name: /ODS 1 - Erradicação da Pobreza/i,
+      }),
+    );
     await user.click(screen.getByRole("button", { name: /Finalizar/i }));
     await user.click(screen.getByRole("button", { name: /Continuar/i }));
 
@@ -190,7 +220,11 @@ describe("RegisterPage", () => {
       "governamental",
     );
     await user.type(screen.getByLabelText(/Meta de captação/i), "10000");
-    await user.click(screen.getByRole("button", { name: /ODS 1 - Erradicação da Pobreza/i }));
+    await user.click(
+      screen.getByRole("button", {
+        name: /ODS 1 - Erradicação da Pobreza/i,
+      }),
+    );
     await user.click(screen.getByRole("button", { name: /Finalizar/i }));
     await user.click(screen.getByRole("button", { name: /Continuar/i }));
 
@@ -210,6 +244,6 @@ describe("RegisterPage", () => {
       '"tipoProjeto":"governamental"',
     );
 
-    resolveLogin?.();
+    (resolveLogin as (() => void) | null)?.();
   });
 });

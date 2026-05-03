@@ -43,13 +43,13 @@ class FlywayMigrationTest extends AbstractIntegrationTest {
                         "flyway_schema_history",
                         "users",
                         "address",
-                        "sdg",
+                        "ods",
                         "npo",
                         "company",
                         "project",
                         "document",
                         "edital",
-                        "project_sdg",
+                        "project_ods",
                         "company_project");
     }
 

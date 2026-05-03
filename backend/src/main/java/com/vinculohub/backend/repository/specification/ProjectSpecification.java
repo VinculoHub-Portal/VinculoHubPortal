@@ -33,7 +33,7 @@ public class ProjectSpecification {
         return (root, query, cb) -> {
             if (odsCodes == null || odsCodes.isEmpty()) return null;
             query.distinct(true);
-            return root.join("odsCodes", JoinType.INNER).in(odsCodes);
+            return root.join("ods", JoinType.INNER).get("id").in(odsCodes);
         };
     }
 
