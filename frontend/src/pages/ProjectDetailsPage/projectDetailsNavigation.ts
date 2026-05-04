@@ -10,12 +10,14 @@ export function projectDetailsHref(projectId: string | number) {
  * Para cards de projeto: `onDetails={openProjectDetails}`.
  * Mantém a navegação centralizada aqui para quando o dashboard/listagem for integrado por outros devs.
  */
-export function useProjectDetailsNavigation() {
+export function useProjectDetailsNavigation(returnTo?: string) {
   const navigate = useNavigate();
   return useCallback(
     (projectId: string | number) => {
-      navigate(projectDetailsHref(projectId));
+      navigate(projectDetailsHref(projectId), {
+        state: returnTo ? { returnTo } : undefined,
+      });
     },
-    [navigate],
+    [navigate, returnTo],
   );
 }

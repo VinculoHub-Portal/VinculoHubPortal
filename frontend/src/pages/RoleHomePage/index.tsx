@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import AddIcon from "@mui/icons-material/Add";
-import { BaseButton } from "../../components/general/BaseButton";
 import { Header } from "../../components/general/Header";
 import {
   CreateProjectModal,
   type CreateProjectFormData,
 } from "../../components/ong/CreateProjectModal";
+import { OngDashboardMock } from "./OngDashboardMock";
 import { createProject, type CreateProjectPayload } from "../../api/projects";
 import { fetchOdsCatalog, type OdsCatalogItem } from "../../api/ods";
 
@@ -31,8 +30,23 @@ export function RoleHomePage({
   const [odsOptions, setOdsOptions] = useState<OdsCatalogItem[]>([]);
 
   useEffect(() => {
+    if (!showCreateProjectAction) {
+      return;
+    }
+
     fetchOdsCatalog().then(setOdsOptions).catch(() => {});
-  }, []);
+  }, [showCreateProjectAction]);
+
+  function openCreateProjectModal() {
+    setSubmitError(null);
+    setIsCreateProjectModalOpen(true);
+  }
+
+  function closeCreateProjectModal() {
+    setIsCreateProjectModalOpen(false);
+    setSubmitError(null);
+    setModalKey((current) => current + 1);
+  }
 
   async function handleCreateProject(data: CreateProjectFormData) {
     setIsSubmitting(true);
@@ -72,6 +86,26 @@ export function RoleHomePage({
     }
   }
 
+  if (showCreateProjectAction) {
+    return (
+      <>
+        <OngDashboardMock
+          successMessage={successMessage}
+          onCreateProject={openCreateProjectModal}
+        />
+        <CreateProjectModal
+          key={modalKey}
+          open={isCreateProjectModalOpen}
+          onClose={closeCreateProjectModal}
+          onSubmit={handleCreateProject}
+          isSubmitting={isSubmitting}
+          submitError={submitError}
+          odsOptions={odsOptions}
+        />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
       <Header />
@@ -90,34 +124,9 @@ export function RoleHomePage({
             <h1 className="text-3xl font-bold text-vinculo-dark">{title}</h1>
             <p className="mt-4 text-slate-700">{description}</p>
           </div>
-
-          {showCreateProjectAction && (
-            <BaseButton
-              type="button"
-              variant="secondary"
-              className="w-full py-3 md:w-fit"
-              onClick={() => setIsCreateProjectModalOpen(true)}
-            >
-              <AddIcon fontSize="small" />
-              Cadastrar Novo Projeto
-            </BaseButton>
-          )}
         </div>
 
       </main>
-
-      <CreateProjectModal
-        key={modalKey}
-        open={isCreateProjectModalOpen}
-        onClose={() => {
-          setIsCreateProjectModalOpen(false);
-          setModalKey((k) => k + 1);
-        }}
-        onSubmit={handleCreateProject}
-        isSubmitting={isSubmitting}
-        submitError={submitError}
-        odsOptions={odsOptions}
-      />
     </div>
   );
 }

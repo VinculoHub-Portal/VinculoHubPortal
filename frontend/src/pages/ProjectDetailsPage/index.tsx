@@ -2,7 +2,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { useQuery } from "@tanstack/react-query";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import TrackChangesOutlinedIcon from "@mui/icons-material/TrackChangesOutlined";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { Header } from "../../components/general/Header";
 import { fetchProjectDetails } from "./fetchProjectDetails";
 import { FundingProgress } from "./FundingProgress";
@@ -33,12 +33,23 @@ function resolveDashboardPath(user: ReturnType<typeof useAuth0>["user"]) {
 
 export function ProjectDetailsPage() {
   const { projectId = "" } = useParams<{ projectId: string }>();
-  const { user } = useAuth0();
+  const { user, getAccessTokenSilently } = useAuth0();
+  const location = useLocation();
   const dashboardPath = resolveDashboardPath(user);
+  const locationState = location.state as { returnTo?: unknown } | null;
+  const returnTo =
+    typeof locationState?.returnTo === "string"
+      ? locationState.returnTo
+      : dashboardPath;
+  const returnLabel =
+    returnTo === "/ong/projetos" ? "Voltar aos Projetos" : "Voltar ao Dashboard";
 
   const query = useQuery({
     queryKey: ["project-details", projectId],
-    queryFn: () => fetchProjectDetails(projectId),
+    queryFn: async () => {
+      const token = await getAccessTokenSilently();
+      return fetchProjectDetails(projectId, token);
+    },
     enabled: Boolean(projectId),
   });
 
@@ -56,15 +67,15 @@ export function ProjectDetailsPage() {
         <div className="max-w-3xl mx-auto w-full">
           {!showNotFound && (
             <Link
-              to={dashboardPath}
+              to={returnTo}
               className="inline-flex items-center gap-1.5 text-sm font-medium text-vinculo-dark hover:text-vinculo-dark-hover mb-6 transition-colors"
             >
               <ArrowBackIcon sx={{ fontSize: 18 }} aria-hidden />
-              Voltar ao Dashboard
+              {returnLabel}
             </Link>
           )}
 
-          {showNotFound && <ProjectDetailsNotFound dashboardPath={dashboardPath} />}
+          {showNotFound && <ProjectDetailsNotFound dashboardPath={returnTo} />}
 
           {Boolean(projectId) && query.isLoading && <ProjectDetailsSkeleton />}
 
