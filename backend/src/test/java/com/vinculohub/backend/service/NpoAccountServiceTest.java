@@ -15,6 +15,7 @@ import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.model.enums.NpoSize;
+import com.vinculohub.backend.model.enums.ProjectType;
 import com.vinculohub.backend.model.enums.UserType;
 import com.vinculohub.backend.repository.UserRepository;
 import java.math.BigDecimal;
@@ -175,6 +176,7 @@ class NpoAccountServiceTest {
                         "Projeto Inicial",
                         "Projeto piloto",
                         new BigDecimal("1000.00"),
-                        List.of("1", "2")));
+                        List.of("1", "2"),
+                        ProjectType.SOCIAL_INVESTMENT_LAW));
     }
 }
