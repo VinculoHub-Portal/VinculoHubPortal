@@ -197,7 +197,8 @@ class ProjectServiceTest {
                         "Projeto Inicial",
                         "Descrição do projeto inicial",
                         new BigDecimal("1000.00"),
-                        List.of("1", "2"));
+                        List.of("1", "2"),
+                        ProjectType.SOCIAL_INVESTMENT_LAW);
 
         when(odsService.resolveSelection(List.of("1", "2")))
                 .thenReturn(
