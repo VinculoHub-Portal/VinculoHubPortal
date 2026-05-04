@@ -64,6 +64,7 @@ public class ProjectService {
                                         request.description(),
                                         "Descrição do projeto é obrigatória."))
                         .budgetNeeded(request.capital())
+                        .type(request.type())
                         .ods(odsService.resolveSelection(request.ods()))
                         .build();
 
