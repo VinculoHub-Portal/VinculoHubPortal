@@ -231,10 +231,13 @@ async function submitNpoSignupDraft(token: string, user: unknown) {
         name: formData.nomeProjeto,
         description: formData.descricaoProjeto,
         capital:
-          formData.tipoProjeto === "governamental" && formData.metaCaptacao.trim()
+          formData.tipoProjeto === "tax_incentive_law" && formData.metaCaptacao.trim()
             ? Number(formData.metaCaptacao)
             : null,
         ods: formData.odsProjeto,
+        type: formData.tipoProjeto === "tax_incentive_law"
+          ? "TAX_INCENTIVE_LAW"
+          : "SOCIAL_INVESTMENT_LAW",
       },
     },
     {

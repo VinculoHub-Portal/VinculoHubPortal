@@ -84,7 +84,7 @@ export interface CreateProjectPayload {
   startDate?: string | null
   endDate?: string | null
   odsIds: number[]
-  type: "SOCIAL" | "GOVERNMENTAL" | "CULTURAL" | "ENVIRONMENTAL"
+  type: "SOCIAL_INVESTMENT_LAW" | "TAX_INCENTIVE_LAW"
   focusArea: string
   fundraisingDeadline?: string | null
   beneficiariesCount?: number | null

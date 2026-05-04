@@ -55,10 +55,8 @@ export function RoleHomePage({
       const token = await getAccessTokenSilently();
       const budgetRaw = data.budgetNeeded.replace(/\./g, "").replace(",", ".");
       const typeMap: Record<string, CreateProjectPayload["type"]> = {
-        social: "SOCIAL",
-        governamental: "GOVERNMENTAL",
-        cultural: "CULTURAL",
-        ambiental: "ENVIRONMENTAL",
+        social_investment_law: "SOCIAL_INVESTMENT_LAW",
+        tax_incentive_law: "TAX_INCENTIVE_LAW",
       };
       await createProject(
         {
@@ -66,7 +64,7 @@ export function RoleHomePage({
           description: data.projectDescription,
           budgetNeeded: budgetRaw ? Number(budgetRaw) : null,
           odsIds: data.odsSelection,
-          type: typeMap[data.projectType] ?? "SOCIAL",
+          type: typeMap[data.projectType] ?? "SOCIAL_INVESTMENT_LAW",
           focusArea: data.focusArea,
           fundraisingDeadline: data.fundraisingDeadline || null,
           beneficiariesCount: data.beneficiariesCount ? Number(data.beneficiariesCount) : null,
