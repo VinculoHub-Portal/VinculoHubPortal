@@ -5,7 +5,7 @@ import com.vinculohub.backend.dto.NewProjectRequest;
 import com.vinculohub.backend.dto.NewProjectResponse;
 import com.vinculohub.backend.dto.NpoFirstProjectSignupRequest;
 import com.vinculohub.backend.dto.OdsResponse;
-import com.vinculohub.backend.dto.ProjectCreateResponse;
+import com.vinculohub.backend.dto.ProjectDetailResponse;
 import com.vinculohub.backend.dto.ProjectFilterParams;
 import com.vinculohub.backend.dto.ProjectListItemDTO;
 import com.vinculohub.backend.exception.NotFoundException;
@@ -25,8 +25,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
+import java.util.List;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProjectService {
@@ -34,19 +35,6 @@ public class ProjectService {
     private final NpoRepository npoRepository;
     private final UserRepository userRepository;
     private final OdsService odsService;
-    private final UserRepository userRepository;
-    private final NpoRepository npoRepository;
-
-    public ProjectService(
-            ProjectRepository projectRepository,
-            OdsService odsService,
-            UserRepository userRepository,
-            NpoRepository npoRepository) {
-        this.projectRepository = projectRepository;
-        this.odsService = odsService;
-        this.userRepository = userRepository;
-        this.npoRepository = npoRepository;
-    }
 
     public Project save(Project project) {
         if (project == null) {
@@ -73,6 +61,7 @@ public class ProjectService {
                                         request.description(),
                                         "Descrição do projeto é obrigatória."))
                         .budgetNeeded(request.capital())
+                        .focusArea("")
                         .ods(odsService.resolveSelection(request.ods()))
                         .build();
 
@@ -115,6 +104,7 @@ public class ProjectService {
                                         "Descrição do projeto é obrigatória."))
                         .type(type)
                         .budgetNeeded(capital)
+                        .focusArea("")
                         .ods(odsService.resolveSelection(request.ods()))
                         .build();
 
@@ -132,6 +122,23 @@ public class ProjectService {
     public Page<ProjectListItemDTO> listProjects(ProjectFilterParams params, Pageable pageable) {
         Specification<Project> spec = ProjectSpecification.from(params);
         return projectRepository.findAll(spec, pageable).map(ProjectListItemDTO::from);
+    }
+
+    @Transactional(readOnly = true)
+    public Project findById(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Identificador do projeto é obrigatório.");
+        }
+
+        return projectRepository
+                .findById(id)
+                .orElseThrow(() -> new NotFoundException("Projeto não encontrado."));
+    }
+
+    @Transactional(readOnly = true)
+    public ProjectDetailResponse getProjectDetail(Long id) {
+        Project project = findById(id);
+        return toDetailResponse(project);
     }
 
     private static ProjectType requireProjectType(ProjectType type) {
@@ -164,35 +171,27 @@ public class ProjectService {
         return value.trim();
     }
 
-    private ProjectCreateResponse toCreateResponse(Project project) {
-        Set<Ods> ods = project.getOds() == null ? Set.of() : project.getOds();
-        List<OdsResponse> odsResponses =
-                ods.stream()
-                        .map(
-                                item ->
-                                        new OdsResponse(
-                                                item.getId(),
-                                                item.getName(),
-                                                item.getDescription()))
+    private static ProjectDetailResponse toDetailResponse(Project project) {
+        List<OdsResponse> ods =
+                project.getOds().stream()
+                        .map(item -> new OdsResponse(item.getId(), item.getName(), item.getDescription()))
                         .toList();
 
-        return ProjectCreateResponse.builder()
-                .id(project.getId())
-                .npoId(project.getNpo().getId())
-                .title(project.getTitle())
-                .description(project.getDescription())
-                .status(project.getStatus())
-                .type(project.getType())
-                .budgetNeeded(project.getBudgetNeeded())
-                .investedAmount(project.getInvestedAmount())
-                .startDate(project.getStartDate())
-                .endDate(project.getEndDate())
-                .ods(odsResponses)
-                .focusArea(project.getFocusArea())
-                .fundraisingDeadline(project.getFundraisingDeadline())
-                .beneficiariesCount(project.getBeneficiariesCount())
-                .location(project.getLocation())
-                .mainObjective(project.getMainObjective())
-                .build();
+        return new ProjectDetailResponse(
+                project.getId(),
+                project.getTitle(),
+                project.getDescription(),
+                project.getStatus().name(),
+                project.getType(),
+                project.getBudgetNeeded(),
+                project.getInvestedAmount(),
+                ods,
+                project.getStartDate(),
+                project.getEndDate(),
+                project.getFocusArea(),
+                project.getFundraisingDeadline(),
+                project.getBeneficiariesCount(),
+                project.getLocation(),
+                project.getMainObjective());
     }
 }

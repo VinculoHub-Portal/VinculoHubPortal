@@ -36,6 +36,7 @@ type ModalNewProjectProps = {
   onClose: () => void;
   onConfirm: () => void;
   isLoading?: boolean;
+  submitError?: string | null;
   confirmLabel?: string;
   cancelLabel?: string;
 };
@@ -68,6 +69,7 @@ export function ModalNewProject({
   onClose,
   onConfirm,
   isLoading = false,
+  submitError = null,
   confirmLabel = "Finalizar",
   cancelLabel = "Cancelar",
 }: ModalNewProjectProps) {
@@ -176,6 +178,12 @@ export function ModalNewProject({
           }}
         >
           <div className="flex flex-col gap-6">
+            {submitError && (
+              <p className="rounded-xl border border-error/20 bg-error/10 px-4 py-3 text-sm text-error" role="alert">
+                {submitError}
+              </p>
+            )}
+
             <Input
               id="nomeProjeto"
               label="Nome do projeto"
