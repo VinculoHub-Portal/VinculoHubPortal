@@ -44,10 +44,8 @@ const INITIAL_FORM_DATA: CreateProjectFormData = {
 };
 
 const PROJECT_TYPE_OPTIONS = [
-  { value: "social", label: "Social" },
-  { value: "governamental", label: "Governamental" },
-  { value: "cultural", label: "Cultural" },
-  { value: "ambiental", label: "Ambiental" },
+  { value: "social_investment_law", label: "Lei do Investimento Social" },
+  { value: "tax_incentive_law", label: "Lei de Incentivo Fiscal" },
 ];
 
 const AREA_OPTIONS = [
