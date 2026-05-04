@@ -3,12 +3,18 @@ import { logger } from "../utils/logger"
 
 export type ProjectStatus = "ACTIVE" | "COMPLETED" | "CANCELLED"
 export type ProjectType =
-  | "SOCIAL_INVESTMENT_LAW"
-  | "TAX_INCENTIVE_LAW"
   | "SOCIAL"
   | "GOVERNMENTAL"
   | "CULTURAL"
   | "ENVIRONMENTAL"
+  | "SOCIAL_INVESTMENT_LAW"
+  | "TAX_INCENTIVE_LAW"
+
+export interface ProjectOdsItem {
+  id: number
+  name: string
+  description: string
+}
 
 export interface ProjectListItem {
   id: number
@@ -22,11 +28,13 @@ export interface ProjectListItem {
   startDate: string
   budgetNeeded?: number | null
   investedAmount?: number | null
+  progressPercent?: number | null
   focusArea?: string | null
   fundraisingDeadline?: string | null
   beneficiariesCount?: number | null
   location?: string | null
   mainObjective?: string | null
+  ods?: ProjectOdsItem[]
 }
 
 export interface PageResponse<T> {
@@ -95,6 +103,7 @@ export interface CreateProjectResponse {
   investedAmount: number | null
   startDate: string | null
   endDate: string | null
+  ods?: ProjectOdsItem[]
   focusArea?: string | null
   fundraisingDeadline?: string | null
   beneficiariesCount?: number | null
