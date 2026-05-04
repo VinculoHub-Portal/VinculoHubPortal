@@ -17,7 +17,7 @@ public class S3Uploader {
 
     private final S3Client s3Client;
 
-    @Value("${aws.bucket-name}")
+    @Value("${AWS_S3_BUCKET}")
     private String bucketName;
 
     public String uploadFile(MultipartFile file, String folder) throws IOException {
