@@ -1,5 +1,5 @@
 export type OrganizationType = "npo" | "enterprise";
-export type ProjectType = "" | "social" | "governamental";
+export type ProjectType = "" | "social_investment_law" | "tax_incentive_law";
 export type WizardEsgOption = "ambiental" | "social" | "governanca";
 export type OdsOption = string;
 

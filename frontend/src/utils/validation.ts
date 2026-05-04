@@ -232,11 +232,11 @@ export const validateFirstProjectDescription: StepValidator = (data) => {
 export const validateFirstProjectCapital: StepValidator = (data) => {
   const errors: FieldErrors = {};
 
-  if (data.tipoProjeto === "social") {
+  if (data.tipoProjeto === "social_investment_law") {
     return errors;
   }
 
-  if (data.tipoProjeto === "governamental" && !data.metaCaptacao.trim()) {
+  if (data.tipoProjeto === "tax_incentive_law" && !data.metaCaptacao.trim()) {
     errors.metaCaptacao = "Informe a meta de captação.";
     return errors;
   }
