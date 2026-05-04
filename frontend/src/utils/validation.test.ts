@@ -187,7 +187,7 @@ describe("validateProjectType", () => {
   it("não retorna erro quando tipoProjeto foi selecionado", () => {
     const data: WizardFormData = {
       ...baseFormData,
-      tipoProjeto: "social",
+      tipoProjeto: "social_investment_law",
     };
 
     const errors = validateProjectType(data, ctx);
@@ -218,7 +218,7 @@ describe("validateNpoStepFour", () => {
     const data: WizardFormData = {
       ...baseFormData,
       nomeProjeto: "Projeto Escola",
-      tipoProjeto: "social",
+      tipoProjeto: "social_investment_law",
       descricaoProjeto: "Iniciativa para educação básica.",
       metaCaptacao: "",
       odsProjeto: ["1", "3"],
@@ -237,7 +237,7 @@ describe("validateNpoStepFour", () => {
     const data: WizardFormData = {
       ...baseFormData,
       nomeProjeto: "Projeto Escola",
-      tipoProjeto: "governamental",
+      tipoProjeto: "tax_incentive_law",
       descricaoProjeto: "Iniciativa para educação básica.",
       metaCaptacao: "",
       odsProjeto: ["1", "3"],
@@ -252,7 +252,7 @@ describe("validateNpoStepFour", () => {
     const data: WizardFormData = {
       ...baseFormData,
       nomeProjeto: "Projeto Escola",
-      tipoProjeto: "governamental",
+      tipoProjeto: "tax_incentive_law",
       descricaoProjeto: "Iniciativa para educação básica.",
       metaCaptacao: "15000",
       odsProjeto: ["1", "3"],

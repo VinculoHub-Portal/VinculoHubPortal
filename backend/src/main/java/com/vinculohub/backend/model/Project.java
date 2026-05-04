@@ -67,7 +67,7 @@ public class Project {
     @Column(name = "end_date")
     private LocalDate endDate;
 
-    @Column(name = "focus_area", nullable = false, length = 50)
+    @Column(name = "focus_area", length = 50)
     private String focusArea;
 
     @Column(name = "fundraising_deadline", length = 50)

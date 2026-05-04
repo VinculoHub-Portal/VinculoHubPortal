@@ -20,6 +20,13 @@ public class ProjectValidationService {
         requireType(request.type());
         validateCapital(request.capital());
         validateOds(request.ods());
+        validateType(request.type());
+    }
+
+    private static void validateType(ProjectType type) {
+        if (type == null) {
+            throw new IllegalArgumentException("Tipo do projeto é obrigatório.");
+        }
     }
 
     private static void validateCapital(BigDecimal capital) {

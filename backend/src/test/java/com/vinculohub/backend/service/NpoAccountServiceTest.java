@@ -178,6 +178,7 @@ class NpoAccountServiceTest {
                         "Projeto piloto",
                         ProjectType.TAX_INCENTIVE_LAW,
                         new BigDecimal("1000.00"),
-                        List.of("1", "2")));
+                        List.of("1", "2"),
+                        ProjectType.SOCIAL_INVESTMENT_LAW));
     }
 }
