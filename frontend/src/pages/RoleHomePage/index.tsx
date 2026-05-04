@@ -5,7 +5,7 @@ import { fetchOdsCatalog, type OdsCatalogItem } from "../../api/ods"
 import { Header } from "../../components/general/Header"
 import { ModalNewProject } from "../../components/modal/ModalNewProject"
 import { OngDashboardMock } from "./OngDashboardMock"
-import type { FieldErrors, WizardFormData } from "../../types/wizard.types"
+import type { WizardFormData } from "../../types/wizard.types"
 
 type RoleHomePageProps = {
   title: string
@@ -18,6 +18,13 @@ type NewProjectFormData = Pick<
   "nomeProjeto" | "tipoProjeto" | "descricaoProjeto" | "metaCaptacao" | "odsProjeto"
 >
 
+type NewProjectErrorField =
+  | "nomeProjeto"
+  | "tipoProjeto"
+  | "descricaoProjeto"
+  | "metaCaptacao"
+  | "odsProjeto"
+
 const INITIAL_NEW_PROJECT_FORM_DATA: NewProjectFormData = {
   nomeProjeto: "",
   tipoProjeto: "",
@@ -25,14 +32,6 @@ const INITIAL_NEW_PROJECT_FORM_DATA: NewProjectFormData = {
   metaCaptacao: "",
   odsProjeto: [],
 }
-
-const NEW_PROJECT_ERROR_FIELDS = [
-  "nomeProjeto",
-  "tipoProjeto",
-  "descricaoProjeto",
-  "metaCaptacao",
-  "odsProjeto",
-] as const
 
 function createInitialNewProjectFormData(): NewProjectFormData {
   return {
@@ -42,7 +41,7 @@ function createInitialNewProjectFormData(): NewProjectFormData {
 }
 
 function validateNewProjectForm(data: NewProjectFormData) {
-  const errors: Pick<FieldErrors, (typeof NEW_PROJECT_ERROR_FIELDS)[number]> = {}
+  const errors: Partial<Record<NewProjectErrorField, string>> = {}
 
   if (!data.nomeProjeto.trim()) {
     errors.nomeProjeto = "Informe o nome do projeto."
@@ -83,7 +82,7 @@ export function RoleHomePage({
     createInitialNewProjectFormData,
   )
   const [projectFormErrors, setProjectFormErrors] = useState<
-    Pick<FieldErrors, (typeof NEW_PROJECT_ERROR_FIELDS)[number]>
+    Partial<Record<NewProjectErrorField, string>>
   >({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
