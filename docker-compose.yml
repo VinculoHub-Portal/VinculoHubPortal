@@ -11,6 +11,10 @@ services:
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-vinculohub}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-vinculohub}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173,http://localhost}
+      - AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      - AWS_S3_BUCKET: vinculohub-portal-storage
+      - AWS_REGION: us-east-2
       - AUTH0_ISSUER_URI=${AUTH0_ISSUER_URI}
       - AUTH0_AUDIENCE=${AUTH0_AUDIENCE}
       - AUTH0_ROLES_CLAIM=${AUTH0_ROLES_CLAIM:-https://vinculohub/roles}
