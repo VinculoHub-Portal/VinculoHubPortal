@@ -2,6 +2,7 @@
 package com.vinculohub.backend.service;
 
 import com.vinculohub.backend.dto.NpoFirstProjectSignupRequest;
+import com.vinculohub.backend.model.enums.ProjectType;
 import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ public class ProjectValidationService {
 
         requireText(request.name(), "Nome do projeto é obrigatório.");
         requireText(request.description(), "Descrição do projeto é obrigatória.");
+        requireType(request.type());
         validateCapital(request.capital());
         validateOds(request.ods());
     }
@@ -42,5 +44,12 @@ public class ProjectValidationService {
             throw new IllegalArgumentException(message);
         }
         return value.trim();
+    }
+
+    private static ProjectType requireType(ProjectType type) {
+        if (type == null) {
+            throw new IllegalArgumentException("Tipo do projeto é obrigatório.");
+        }
+        return type;
     }
 }

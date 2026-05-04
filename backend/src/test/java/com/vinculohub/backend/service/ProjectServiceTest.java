@@ -65,6 +65,7 @@ class ProjectServiceTest {
                 new NpoFirstProjectSignupRequest(
                         "Projeto Inicial",
                         "Descrição do projeto inicial",
+                        ProjectType.SOCIAL_INVESTMENT_LAW,
                         new BigDecimal("1000.00"),
                         List.of("1", "2"));
 
@@ -92,6 +93,7 @@ class ProjectServiceTest {
         assertEquals(20, savedProject.getNpo().getId());
         assertEquals("Projeto Inicial", savedProject.getTitle());
         assertEquals("Descrição do projeto inicial", savedProject.getDescription());
+        assertEquals(ProjectType.SOCIAL_INVESTMENT_LAW, savedProject.getType());
         assertEquals(new BigDecimal("1000.00"), savedProject.getBudgetNeeded());
         assertEquals(2, savedProject.getOds().size());
         verify(odsService).resolveSelection(List.of("1", "2"));

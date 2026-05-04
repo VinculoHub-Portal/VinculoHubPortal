@@ -59,6 +59,7 @@ public class ProjectService {
                                 requireText(
                                         request.description(),
                                         "Descrição do projeto é obrigatória."))
+                        .type(request.type())
                         .budgetNeeded(request.capital())
                         .focusArea("")
                         .ods(odsService.resolveSelection(request.ods()))

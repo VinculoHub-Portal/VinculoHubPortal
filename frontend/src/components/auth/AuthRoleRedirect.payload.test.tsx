@@ -136,6 +136,7 @@ describe("AuthRoleRedirect payload", () => {
       firstProject: {
         name: "Projeto Escola",
         description: "Projeto voltado para educação básica.",
+        type: "TAX_INCENTIVE_LAW",
         capital: 10000,
         ods: ["4", "10"],
       },

@@ -15,6 +15,7 @@ import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.model.enums.NpoSize;
+import com.vinculohub.backend.model.enums.ProjectType;
 import com.vinculohub.backend.model.enums.UserType;
 import com.vinculohub.backend.repository.UserRepository;
 import java.math.BigDecimal;
@@ -122,6 +123,7 @@ class NpoAccountServiceTest {
         NpoFirstProjectSignupRequest savedProjectRequest = projectRequestCaptor.getValue();
         assertEquals("Projeto Inicial", savedProjectRequest.name());
         assertEquals("Projeto piloto", savedProjectRequest.description());
+        assertEquals(ProjectType.TAX_INCENTIVE_LAW, savedProjectRequest.type());
         assertEquals(new BigDecimal("1000.00"), savedProjectRequest.capital());
         assertEquals(List.of("1", "2"), savedProjectRequest.ods());
     }
@@ -174,6 +176,7 @@ class NpoAccountServiceTest {
                 new NpoFirstProjectSignupRequest(
                         "Projeto Inicial",
                         "Projeto piloto",
+                        ProjectType.TAX_INCENTIVE_LAW,
                         new BigDecimal("1000.00"),
                         List.of("1", "2")));
     }

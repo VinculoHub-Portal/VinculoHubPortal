@@ -14,6 +14,14 @@ export type NewProjectRequest = {
   ods: string[];
 };
 
+export function mapWizardProjectType(
+  projectType: WizardFormData["tipoProjeto"],
+): NewProjectRequest["type"] {
+  return projectType === "governamental"
+    ? "TAX_INCENTIVE_LAW"
+    : "SOCIAL_INVESTMENT_LAW";
+}
+
 export type NewProjectResponse = {
   id: number;
   name: string;
@@ -26,10 +34,7 @@ export type NewProjectResponse = {
 export function toNewProjectRequest(
   formData: NewProjectFormPayload,
 ): NewProjectRequest {
-  const type =
-    formData.tipoProjeto === "governamental"
-      ? "TAX_INCENTIVE_LAW"
-      : "SOCIAL_INVESTMENT_LAW";
+  const type = mapWizardProjectType(formData.tipoProjeto);
 
   return {
     name: formData.nomeProjeto.trim(),

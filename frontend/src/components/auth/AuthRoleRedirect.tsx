@@ -3,6 +3,7 @@ import axios from "axios";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { registerCompany, type CompanyRegistrationPayload } from "../../api/company";
+import { mapWizardProjectType } from "../../api/newProject";
 import { api } from "../../services/api";
 import type { WizardFormData } from "../../types/wizard.types";
 import { logger } from "../../utils/logger";
@@ -230,6 +231,7 @@ async function submitNpoSignupDraft(token: string, user: unknown) {
       firstProject: {
         name: formData.nomeProjeto,
         description: formData.descricaoProjeto,
+        type: mapWizardProjectType(formData.tipoProjeto),
         capital:
           formData.tipoProjeto === "governamental" && formData.metaCaptacao.trim()
             ? Number(formData.metaCaptacao)
