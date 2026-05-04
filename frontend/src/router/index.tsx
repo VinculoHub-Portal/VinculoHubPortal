@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { LandingPage } from "../pages/LandingPage"
 import { ComponentsPage } from "../pages/ComponentsPage"
@@ -7,9 +6,11 @@ import { AuthRoleRedirect } from "../components/auth/AuthRoleRedirect"
 import { ProtectedRoute } from "../components/auth/ProtectedRoute"
 import { RoleHomePage } from "../pages/RoleHomePage"
 import { CompanyRegistrationPage } from "../pages/CompanyRegistration/registration"
+import { ProjectDetailsPage } from "../pages/ProjectDetailsPage"
 import { CompanyDashboard } from "../pages/CompanyDashboard"
 import { CompanyIncentiveLawsPage } from "../pages/CompanyIncentiveLawsPage"
 import { CompanyPrivateInvestmentPage } from "../pages/CompanyPrivateInvestmentPage"
+import { OngProjectsPage } from "../pages/OngProjectsPage"
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -20,6 +21,14 @@ export const AppRouter = () => (
       <Route path="/cadastro" element={<RegisterPage />} />
       <Route path="/cadastro/instituicao" element={<RegisterPage />} />
       <Route path="/company/register" element={<CompanyRegistrationPage />} />
+      <Route
+        path="/projeto/:projectId"
+        element={
+          <ProtectedRoute>
+            <ProjectDetailsPage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/admin/dashboard"
         element={
@@ -38,7 +47,16 @@ export const AppRouter = () => (
             <RoleHomePage
               title="Painel da ONG"
               description="Acompanhe seu cadastro, projetos e oportunidades para sua organização."
+              showCreateProjectAction
             />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/ong/projetos"
+        element={
+          <ProtectedRoute requiredRole="NPO">
+            <OngProjectsPage />
           </ProtectedRoute>
         }
       />

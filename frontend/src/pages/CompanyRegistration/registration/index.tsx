@@ -97,32 +97,38 @@ export function CompanyRegistrationPage() {
     [setWizardProgress],
   );
 
-  function setBasicInfo(
-    value:
-      | CompanyWizardProgress["basicInfo"]
-      | ((
-          prev: CompanyWizardProgress["basicInfo"],
-        ) => CompanyWizardProgress["basicInfo"]),
-  ) {
-    setWizardProgress((prev) => ({
-      ...prev,
-      basicInfo: typeof value === "function" ? value(prev.basicInfo) : value,
-    }));
-  }
+  const setBasicInfo = useCallback(
+    (
+      value:
+        | CompanyWizardProgress["basicInfo"]
+        | ((
+            prev: CompanyWizardProgress["basicInfo"],
+          ) => CompanyWizardProgress["basicInfo"]),
+    ) => {
+      setWizardProgress((prev) => ({
+        ...prev,
+        basicInfo: typeof value === "function" ? value(prev.basicInfo) : value,
+      }));
+    },
+    [setWizardProgress],
+  );
 
-  function setContactInfo(
-    value:
-      | CompanyWizardProgress["contactInfo"]
-      | ((
-          prev: CompanyWizardProgress["contactInfo"],
-        ) => CompanyWizardProgress["contactInfo"]),
-  ) {
-    setWizardProgress((prev) => ({
-      ...prev,
-      contactInfo:
-        typeof value === "function" ? value(prev.contactInfo) : value,
-    }));
-  }
+  const setContactInfo = useCallback(
+    (
+      value:
+        | CompanyWizardProgress["contactInfo"]
+        | ((
+            prev: CompanyWizardProgress["contactInfo"],
+          ) => CompanyWizardProgress["contactInfo"]),
+    ) => {
+      setWizardProgress((prev) => ({
+        ...prev,
+        contactInfo:
+          typeof value === "function" ? value(prev.contactInfo) : value,
+      }));
+    },
+    [setWizardProgress],
+  );
 
   function setCredentials(
     value:

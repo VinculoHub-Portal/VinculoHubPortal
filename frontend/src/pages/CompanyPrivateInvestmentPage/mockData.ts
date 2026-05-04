@@ -69,23 +69,22 @@ export const MOCK_PROJECTS: SocialEnrichedProject[] = [
 export function enrichProjectWithMocks(project: ProjectListItem): SocialEnrichedProject {
   const themeIndex = project.id % INVESTMENT_THEMES.length
   const theme = INVESTMENT_THEMES[themeIndex]
+  const targetAmount = project.budgetNeeded ?? 50000
+  const progressPercent =
+    project.budgetNeeded && project.budgetNeeded > 0 && project.investedAmount != null
+      ? Math.round((project.investedAmount / project.budgetNeeded) * 100)
+      : 50
   return {
     id: project.id,
     title: project.title,
-    // TODO(backend): description não existe em ProjectListItemDTO.
-    //   Adicionar campo 'description' ao DTO (já existe na entidade Project).
-    description: "Apoie este projeto investindo diretamente na causa, sem intermediários.",
+    description:
+      project.description ||
+      "Apoie este projeto investindo diretamente na causa, sem intermediários.",
     themes: [theme.id],
     primaryThemeLabel: theme.label,
-    // TODO(backend): targetAmount não existe em ProjectListItemDTO.
-    //   Adicionar campo 'budgetNeeded' ao DTO (já existe na entidade Project).
-    targetAmount: 50000,
-    // TODO(backend): progressPercent não existe em ProjectListItemDTO.
-    //   Backend deve calcular (investedAmount / budgetNeeded * 100) e expor no DTO.
-    progressPercent: 50,
-    // TODO(backend): location não existe em ProjectListItemDTO.
-    //   Project entity não tem cidade/estado — requer modelagem nova ou endereço da NPO.
-    location: "Brasil",
+    targetAmount,
+    progressPercent,
+    location: project.location || "Brasil",
   }
 }
 

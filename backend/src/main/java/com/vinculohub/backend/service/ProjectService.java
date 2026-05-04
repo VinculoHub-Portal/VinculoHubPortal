@@ -4,14 +4,22 @@ package com.vinculohub.backend.service;
 import com.vinculohub.backend.dto.NewProjectRequest;
 import com.vinculohub.backend.dto.NewProjectResponse;
 import com.vinculohub.backend.dto.NpoFirstProjectSignupRequest;
+import com.vinculohub.backend.dto.OdsResponse;
+import com.vinculohub.backend.dto.ProjectCreateRequest;
+import com.vinculohub.backend.dto.ProjectCreateResponse;
 import com.vinculohub.backend.dto.ProjectFilterParams;
 import com.vinculohub.backend.dto.ProjectListItemDTO;
 import com.vinculohub.backend.exception.NotFoundException;
+import com.vinculohub.backend.exception.BadRequestException;
+import com.vinculohub.backend.exception.NotFoundException;
+import com.vinculohub.backend.exception.UserNotFoundException;
 import com.vinculohub.backend.model.Npo;
+import com.vinculohub.backend.model.Ods;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.model.enums.ProjectType;
 import com.vinculohub.backend.model.enums.UserType;
+import com.vinculohub.backend.model.enums.ProjectStatus;
 import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.ProjectRepository;
 import com.vinculohub.backend.repository.UserRepository;
@@ -23,10 +31,13 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class ProjectService {
-
     private final ProjectRepository projectRepository;
+    private final NpoRepository npoRepository;
+    private final UserRepository userRepository;
     private final OdsService odsService;
     private final UserRepository userRepository;
     private final NpoRepository npoRepository;
@@ -156,5 +167,37 @@ public class ProjectService {
             throw new IllegalArgumentException(message);
         }
         return value.trim();
+    }
+
+    private ProjectCreateResponse toCreateResponse(Project project) {
+        Set<Ods> ods = project.getOds() == null ? Set.of() : project.getOds();
+        List<OdsResponse> odsResponses =
+                ods.stream()
+                        .map(
+                                item ->
+                                        new OdsResponse(
+                                                item.getId(),
+                                                item.getName(),
+                                                item.getDescription()))
+                        .toList();
+
+        return ProjectCreateResponse.builder()
+                .id(project.getId())
+                .npoId(project.getNpo().getId())
+                .title(project.getTitle())
+                .description(project.getDescription())
+                .status(project.getStatus())
+                .type(project.getType())
+                .budgetNeeded(project.getBudgetNeeded())
+                .investedAmount(project.getInvestedAmount())
+                .startDate(project.getStartDate())
+                .endDate(project.getEndDate())
+                .ods(odsResponses)
+                .focusArea(project.getFocusArea())
+                .fundraisingDeadline(project.getFundraisingDeadline())
+                .beneficiariesCount(project.getBeneficiariesCount())
+                .location(project.getLocation())
+                .mainObjective(project.getMainObjective())
+                .build();
     }
 }
