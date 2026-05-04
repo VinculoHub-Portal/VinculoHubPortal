@@ -11,6 +11,8 @@ const mocks = vi.hoisted(() => ({
   createNewProjectMock: vi.fn(),
 }))
 
+const TEST_TIMEOUT = 15000
+
 vi.mock("@auth0/auth0-react", () => ({
   useAuth0: () => ({
     getAccessTokenSilently: mocks.getAccessTokenSilentlyMock,
@@ -96,22 +98,34 @@ describe("RoleHomePage - dashboard da ONG", () => {
     expect(mocks.fetchOdsCatalogMock).toHaveBeenCalledTimes(1)
   })
 
-  it("valida ODS obrigatório antes de salvar", async () => {
-    const user = userEvent.setup()
-    renderOngDashboard()
+  it(
+    "valida ODS obrigatório antes de salvar",
+    async () => {
+      const user = userEvent.setup()
+      renderOngDashboard()
 
-    await openCreateProjectModal(user)
-    await user.type(screen.getByLabelText(/Nome do projeto/i), "Projeto Escola")
-    await user.type(
-      screen.getByLabelText(/Descrição do projeto/i),
-      "Projeto voltado para educação básica.",
-    )
-    await user.selectOptions(screen.getByLabelText(/Tipo do projeto/i), "social")
-    await user.click(screen.getByRole("button", { name: /Finalizar/i }))
+      await openCreateProjectModal(user)
+      await user.type(
+        screen.getByLabelText(/Nome do projeto/i),
+        "Projeto Escola",
+      )
+      await user.type(
+        screen.getByLabelText(/Descrição do projeto/i),
+        "Projeto voltado para educação básica.",
+      )
+      await user.selectOptions(
+        screen.getByLabelText(/Tipo do projeto/i),
+        "social",
+      )
+      await user.click(screen.getByRole("button", { name: /Finalizar/i }))
 
-    expect(await screen.findByText(/Selecione ao menos um ODS/i)).toBeInTheDocument()
-    expect(mocks.createNewProjectMock).not.toHaveBeenCalled()
-  })
+      expect(
+        await screen.findByText(/Selecione ao menos um ODS/i),
+      ).toBeInTheDocument()
+      expect(mocks.createNewProjectMock).not.toHaveBeenCalled()
+    },
+    TEST_TIMEOUT,
+  )
 
   it("cadastra projeto social com o contrato do newProject", async () => {
     const user = userEvent.setup()

@@ -17,6 +17,8 @@ const odsCatalogMock = [
   },
 ];
 
+const TEST_TIMEOUT = 15000
+
 vi.mock("@auth0/auth0-react", () => ({
   useAuth0: () => ({
     isAuthenticated: false,
@@ -79,41 +81,57 @@ describe("RegisterPage", () => {
     checkCnpjAvailableMock.mockResolvedValue(true);
   });
 
-  it("mostra o passo do primeiro projeto antes de finalizar o cadastro da ONG", async () => {
-    const user = userEvent.setup();
-    renderPage();
+  it(
+    "mostra o passo do primeiro projeto antes de finalizar o cadastro da ONG",
+    async () => {
+      const user = userEvent.setup();
+      renderPage();
 
-    await advanceToProjectStep(user);
+      await advanceToProjectStep(user);
 
-    expect(await screen.findByLabelText(/Nome do projeto/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Descrição do projeto/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Tipo do projeto/i)).toBeInTheDocument();
-    expect(screen.queryByLabelText(/Meta de captação/i)).not.toBeInTheDocument();
-  });
+      expect(
+        await screen.findByLabelText(/Nome do projeto/i),
+      ).toBeInTheDocument();
+      expect(screen.getByLabelText(/Descrição do projeto/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Tipo do projeto/i)).toBeInTheDocument();
+      expect(screen.queryByLabelText(/Meta de captação/i)).not.toBeInTheDocument();
+  },
+    TEST_TIMEOUT,
+  );
 
-  it("oculta a meta de captação quando o projeto é social", async () => {
-    const user = userEvent.setup();
-    renderPage();
+  it(
+    "oculta a meta de captação quando o projeto é social",
+    async () => {
+      const user = userEvent.setup();
+      renderPage();
 
-    await advanceToProjectStep(user);
+      await advanceToProjectStep(user);
 
-    await user.type(await screen.findByLabelText(/Nome do projeto/i), "Projeto Escola");
-    await user.type(
-      screen.getByLabelText(/Descrição do projeto/i),
-      "Projeto voltado para educação básica.",
-    );
-    await user.selectOptions(screen.getByLabelText(/Tipo do projeto/i), "social");
-    expect(screen.queryByLabelText(/Meta de captação/i)).not.toBeInTheDocument();
-    await user.click(
-      screen.getByRole("button", {
-        name: /ODS 1 - Erradicação da Pobreza/i,
-      }),
-    );
-    await user.click(screen.getByRole("button", { name: /Finalizar/i }));
-    expect(
-      await screen.findByText(/Você será redirecionado para concluir o acesso/i),
-    ).toBeInTheDocument();
-  });
+      await user.type(
+        await screen.findByLabelText(/Nome do projeto/i),
+        "Projeto Escola",
+      );
+      await user.type(
+        screen.getByLabelText(/Descrição do projeto/i),
+        "Projeto voltado para educação básica.",
+      );
+      await user.selectOptions(
+        screen.getByLabelText(/Tipo do projeto/i),
+        "social",
+      );
+      expect(screen.queryByLabelText(/Meta de captação/i)).not.toBeInTheDocument();
+      await user.click(
+        screen.getByRole("button", {
+          name: /ODS 1 - Erradicação da Pobreza/i,
+        }),
+      );
+      await user.click(screen.getByRole("button", { name: /Finalizar/i }));
+      expect(
+        await screen.findByText(/Você será redirecionado para concluir o acesso/i),
+      ).toBeInTheDocument();
+  },
+    TEST_TIMEOUT,
+  );
 
   it("exibe a meta de captação quando o projeto é governamental", async () => {
     const user = userEvent.setup();

@@ -10,7 +10,6 @@ import com.vinculohub.backend.dto.ProjectFilterParams;
 import com.vinculohub.backend.dto.ProjectListItemDTO;
 import com.vinculohub.backend.exception.NotFoundException;
 import com.vinculohub.backend.model.Npo;
-import com.vinculohub.backend.model.Ods;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.model.enums.ProjectType;
@@ -20,13 +19,13 @@ import com.vinculohub.backend.repository.ProjectRepository;
 import com.vinculohub.backend.repository.UserRepository;
 import com.vinculohub.backend.repository.specification.ProjectSpecification;
 import java.math.BigDecimal;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import lombok.RequiredArgsConstructor;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -174,7 +173,12 @@ public class ProjectService {
     private static ProjectDetailResponse toDetailResponse(Project project) {
         List<OdsResponse> ods =
                 project.getOds().stream()
-                        .map(item -> new OdsResponse(item.getId(), item.getName(), item.getDescription()))
+                        .map(
+                                item ->
+                                        new OdsResponse(
+                                                item.getId(),
+                                                item.getName(),
+                                                item.getDescription()))
                         .toList();
 
         return new ProjectDetailResponse(
