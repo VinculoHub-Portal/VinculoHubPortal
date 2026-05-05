@@ -20,14 +20,15 @@ describe("IncentiveCard", () => {
     expect(screen.getByText("Leis de Incentivo")).toBeInTheDocument()
   })
 
-  it("renderiza as 6 leis de incentivo", () => {
+  it("renderiza a descrição do card", () => {
     render(<MemoryRouter><IncentiveCard /></MemoryRouter>)
-    expect(screen.getByText("Lei Rouanet (Federal)")).toBeInTheDocument()
-    expect(screen.getByText("Lei do Audiovisual (Federal)")).toBeInTheDocument()
-    expect(screen.getByText("Lei de Incentivo ao Esporte (Federal)")).toBeInTheDocument()
-    expect(screen.getByText("Fundo do Idoso (Federal/Estadual/Municipal)")).toBeInTheDocument()
-    expect(screen.getByText("Fundo de Criança e Adolescente (Federal/Estadual/Municipal)")).toBeInTheDocument()
-    expect(screen.getByText("PRONON/PRONAS (Federal)")).toBeInTheDocument()
+    expect(screen.getByText(/leis de incentivo fiscal/i)).toBeInTheDocument()
+  })
+
+  it("não renderiza lista de leis individuais", () => {
+    render(<MemoryRouter><IncentiveCard /></MemoryRouter>)
+    expect(screen.queryByText("Lei Rouanet (Federal)")).not.toBeInTheDocument()
+    expect(screen.queryByText("PRONON/PRONAS (Federal)")).not.toBeInTheDocument()
   })
 
   it("clicar em 'Ver projetos disponíveis' navega para /empresa/leis-de-incentivo", async () => {

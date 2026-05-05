@@ -1,5 +1,4 @@
 import AttachMoneyOutlinedIcon from "@mui/icons-material/AttachMoneyOutlined"
-import CheckOutlinedIcon from "@mui/icons-material/CheckOutlined"
 import { useNavigate } from "react-router-dom"
 
 export function InvestmentCard() {
@@ -19,33 +18,9 @@ export function InvestmentCard() {
         </div>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <CheckOutlinedIcon className="text-vinculo-green mt-1" style={{ fontSize: 20 }} />
-            <span className="text-slate-700 text-lg">Educação Ambiental nas Escolas</span>
-          </div>
-          <span className="text-slate-500 shrink-0">R$ 50.000 - R$ 180.000</span>
-        </div>
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <CheckOutlinedIcon className="text-vinculo-green mt-1" style={{ fontSize: 20 }} />
-            <span className="text-slate-700 text-lg">Saúde Comunitária</span>
-          </div>
-          <span className="text-slate-500 shrink-0">R$ 75.000 - R$ 85.000</span>
-        </div>
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <CheckOutlinedIcon className="text-vinculo-green mt-1" style={{ fontSize: 20 }} />
-            <span className="text-slate-700 text-lg">Inclusão Digital</span>
-          </div>
-          <span className="text-slate-500 shrink-0">R$ 20.000 - R$ 80.000</span>
-        </div>
-      </div>
-
       <button
         onClick={() => navigate("/empresa/investimento-social-privado")}
-        className="mt-8 w-full rounded-2xl bg-vinculo-green px-6 py-4 text-white text-lg hover:bg-emerald-600 transition-colors"
+        className="mt-2 w-full rounded-2xl bg-vinculo-green px-6 py-4 text-white text-lg hover:bg-emerald-600 transition-colors"
       >
         Explorar oportunidades
       </button>
