@@ -78,7 +78,7 @@ describe("AuthRoleRedirect payload", () => {
           stateCode: "SP",
           phone: "(11) 99999-9999",
           nomeProjeto: "Projeto Escola",
-          tipoProjeto: "governamental",
+          tipoProjeto: "tax_incentive_law",
           descricaoProjeto: "Projeto voltado para educação básica.",
           metaCaptacao: "10000",
           odsProjeto: ["4", "10"],
