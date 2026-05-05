@@ -1,18 +1,19 @@
 import { ProjectCard } from "../../components/projects/ProjectCard"
-import type { SocialEnrichedProject } from "./mockData"
+import type { ProjectListItem } from "../../api/projects"
 
 interface ProjectsGridProps {
-  projects: SocialEnrichedProject[]
+  projects: ProjectListItem[]
   loading: boolean
   error: string | null
+  onDetails: (id: number | string) => void
 }
 
-export function ProjectsGrid({ projects, loading, error }: ProjectsGridProps) {
+export function ProjectsGrid({ projects, loading, error, onDetails }: ProjectsGridProps) {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex justify-between items-baseline flex-wrap gap-2">
         <h2 className="text-2xl font-medium leading-9 text-vinculo-dark">
-          Todos os Projetos Sugeridos
+          Todos os Projetos
         </h2>
         {!loading && !error && (
           <span className="text-sm text-slate-500">
@@ -23,7 +24,9 @@ export function ProjectsGrid({ projects, loading, error }: ProjectsGridProps) {
       </div>
 
       {loading && (
-        <p className="text-slate-500 text-sm py-8 text-center">Carregando projetos...</p>
+        <p className="text-slate-500 text-sm py-8 text-center">
+          Carregando projetos...
+        </p>
       )}
 
       {!loading && error && (
@@ -34,7 +37,7 @@ export function ProjectsGrid({ projects, loading, error }: ProjectsGridProps) {
 
       {!loading && !error && projects.length === 0 && (
         <p className="text-slate-500 text-sm py-8 text-center">
-          Nenhum projeto encontrado para os temas selecionados.
+          Nenhum projeto disponível no momento.
         </p>
       )}
 
@@ -45,23 +48,9 @@ export function ProjectsGrid({ projects, loading, error }: ProjectsGridProps) {
               key={project.id}
               id={project.id}
               title={project.title}
-              // TODO(backend): description vem mockada — ProjectListItemDTO precisa expor
-              //   'description' (já existe na entidade Project, basta incluir no DTO).
               description={project.description}
-              // TODO(backend): tema do projeto (Saúde/Inclusão/etc) não existe na API.
-              //   ProjectListItemDTO não retorna categorias/temas. Atribuição mockada
-              //   por id % 7 em enrichProjectWithMocks.
-              type={project.primaryThemeLabel}
               fundingType="investimento-social-privado"
-              // TODO(backend): targetAmount mockado — ProjectListItemDTO precisa expor
-              //   'budgetNeeded' (já existe na entidade Project).
-              targetAmount={project.targetAmount}
-              // TODO(backend): progressPercent mockado — backend deve calcular
-              //   (investedAmount / budgetNeeded * 100) e expor no DTO.
-              progressPercent={project.progressPercent}
-              // TODO(backend): location mockado — Project entity não tem cidade/estado.
-              //   Requer modelagem nova ou derivar do endereço da NPO responsável.
-              location={project.location}
+              onDetails={onDetails}
             />
           ))}
         </div>
