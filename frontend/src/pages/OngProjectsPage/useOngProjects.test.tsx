@@ -37,7 +37,7 @@ function HookConsumer() {
         <article key={project.id}>
           <h2>{project.title}</h2>
           <span>{project.status}</span>
-          <span>{project.location}</span>
+          <span data-testid={`funding-${project.id}`}>{project.fundingModel}</span>
           <span>{project.progress}%</span>
         </article>
       ))}
@@ -60,10 +60,9 @@ describe("useOngProjects", () => {
           npoName: "ONG",
           npoPhone: "51999",
           startDate: "2026-01-01",
-          type: "SOCIAL",
+          type: "SOCIAL_INVESTMENT_LAW",
           budgetNeeded: 1000,
           investedAmount: 250,
-          location: "São Paulo, SP",
         },
       ],
       totalElements: 1,
@@ -89,8 +88,44 @@ describe("useOngProjects", () => {
     )
     expect(screen.getByText("Projeto Integrado")).toBeInTheDocument()
     expect(screen.getByText("Ativo")).toBeInTheDocument()
-    expect(screen.getByText("São Paulo, SP")).toBeInTheDocument()
     expect(screen.getByText("25%")).toBeInTheDocument()
+  })
+
+  it("mapeia SOCIAL_INVESTMENT_LAW para privateInvestment", async () => {
+    render(<HookConsumer />)
+
+    await waitFor(() => expect(screen.getByText("1 projetos")).toBeInTheDocument())
+    expect(screen.getByTestId("funding-1")).toHaveTextContent("privateInvestment")
+  })
+
+  it("mapeia TAX_INCENTIVE_LAW para incentiveLaw", async () => {
+    mocks.fetchProjectsMock.mockResolvedValue({
+      content: [
+        {
+          id: 2,
+          title: "Lei Incentivo",
+          status: "ACTIVE",
+          npoId: 42,
+          npoName: "ONG",
+          npoPhone: "51999",
+          startDate: "2026-01-01",
+          type: "TAX_INCENTIVE_LAW",
+          budgetNeeded: 50000,
+          investedAmount: 0,
+        },
+      ],
+      totalElements: 1,
+      totalPages: 1,
+      number: 0,
+      size: 50,
+      first: true,
+      last: true,
+    })
+
+    render(<HookConsumer />)
+
+    await waitFor(() => expect(screen.getByText("1 projetos")).toBeInTheDocument())
+    expect(screen.getByTestId("funding-2")).toHaveTextContent("incentiveLaw")
   })
 
   it("exibe erro quando o perfil não possui npoId", async () => {

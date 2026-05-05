@@ -9,7 +9,6 @@ export interface OngProject {
   fundingModel: OngProjectFundingModel
   amountNeeded: number
   title: string
-  location: string
   description: string
   progress: number
   tags: string[]
@@ -28,7 +27,6 @@ export const mockOngProjects: OngProject[] = [
     fundingModel: "incentiveLaw",
     amountNeeded: 150000,
     title: "Educação Transformadora",
-    location: "São Paulo, SP",
     description:
       "Programa de reforço escolar e formação profissionalizante para jovens em situação de vulnerabilidade social, oferecendo capacitação e desenvolvimento de habilidades.",
     progress: 75,
@@ -40,7 +38,6 @@ export const mockOngProjects: OngProject[] = [
     fundingModel: "directCapture",
     amountNeeded: 200000,
     title: "Saúde Comunitária",
-    location: "Rio de Janeiro, RJ",
     description:
       "Unidade móvel de saúde para atendimento médico e odontológico em comunidades rurais com difícil acesso a serviços de saúde básica.",
     progress: 45,
@@ -52,7 +49,6 @@ export const mockOngProjects: OngProject[] = [
     fundingModel: "directCapture",
     amountNeeded: 80000,
     title: "Cultura para Todos",
-    location: "Belo Horizonte, MG",
     description:
       "Programa de incentivo à cultura e arte com oficinas de música, teatro e artes plásticas para crianças e adolescentes em situação de vulnerabilidade.",
     progress: 60,

@@ -1,15 +1,15 @@
 import AccessTimeIcon from "@mui/icons-material/AccessTime"
-import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined"
 import TrendingUpIcon from "@mui/icons-material/TrendingUp"
 import { BaseButton } from "../general/BaseButton"
 import { ProgressBar } from "../general/ProgressBar"
+import type { OngProjectFundingModel } from "../../pages/OngProjectsPage/mockData"
 
 export interface OngProjectCardProps {
   id: number
   status: string
+  fundingModel: OngProjectFundingModel
   amountNeeded: number
   title: string
-  location: string
   description: string
   progress: number
   tags: string[]
@@ -35,9 +35,9 @@ function clampProgress(value: number) {
 export function OngProjectCard({
   id,
   status,
+  fundingModel,
   amountNeeded,
   title,
-  location,
   description,
   progress,
   tags,
@@ -46,6 +46,7 @@ export function OngProjectCard({
   onEdit,
 }: OngProjectCardProps) {
   const percent = clampProgress(progress)
+  const isIncentiveLaw = fundingModel === "incentiveLaw"
 
   return (
     <article
@@ -56,52 +57,53 @@ export function OngProjectCard({
         <span className="rounded-lg bg-vinculo-green px-3 py-1.5 text-sm font-medium text-white">
           {status}
         </span>
-        <span className="rounded-lg bg-amber-300 px-3 py-1.5 text-sm font-semibold text-slate-950">
-          {formatAmount(amountNeeded)}
-        </span>
+        {isIncentiveLaw && (
+          <span className="rounded-lg bg-amber-300 px-3 py-1.5 text-sm font-semibold text-slate-950">
+            {formatAmount(amountNeeded)}
+          </span>
+        )}
       </div>
 
       <h2 className="mt-5 text-xl font-semibold leading-7 text-vinculo-dark">
         {title}
       </h2>
 
-      <div className="mt-3 flex items-center gap-1.5 text-sm text-slate-500">
-        <LocationOnOutlinedIcon fontSize="small" />
-        <span>{location}</span>
-      </div>
-
       <p className="mt-4 text-sm leading-6 text-slate-600">{description}</p>
 
-      <div className="mt-6 rounded-lg bg-slate-50 p-4">
-        <div className="flex items-center gap-2 text-sm font-semibold text-slate-950">
-          <TrendingUpIcon className="text-vinculo-green" fontSize="small" />
-          <span>Progresso do Projeto</span>
-        </div>
+      {isIncentiveLaw && (
+        <div className="mt-6 rounded-lg bg-slate-50 p-4">
+          <div className="flex items-center gap-2 text-sm font-semibold text-slate-950">
+            <TrendingUpIcon className="text-vinculo-green" fontSize="small" />
+            <span>Progresso do Projeto</span>
+          </div>
 
-        <div className="mt-4 flex items-center justify-between gap-4 text-sm">
-          <span className="text-slate-500">Conclusão</span>
-          <span className="font-medium text-vinculo-green">{percent}%</span>
-        </div>
+          <div className="mt-4 flex items-center justify-between gap-4 text-sm">
+            <span className="text-slate-500">Conclusão</span>
+            <span className="font-medium text-vinculo-green">{percent}%</span>
+          </div>
 
-        <div className="mt-3">
-          <ProgressBar
-            value={percent}
-            trackClass="bg-slate-200"
-            ariaLabel={`Progresso de ${title}`}
-          />
+          <div className="mt-3">
+            <ProgressBar
+              value={percent}
+              trackClass="bg-slate-200"
+              ariaLabel={`Progresso de ${title}`}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {tags.map((tag) => (
-          <span
-            key={tag}
-            className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600"
-          >
-            {tag}
-          </span>
-        ))}
-      </div>
+      {tags.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {tags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
         <BaseButton
