@@ -10,13 +10,8 @@ export type CreateProjectFormData = {
   projectName: string;
   projectDescription: string;
   projectType: string;
-  focusArea: string;
   budgetNeeded: string;
-  fundraisingDeadline: string;
-  beneficiariesCount: string;
-  location: string;
   odsSelection: number[];
-  mainObjective: string;
 };
 
 type CreateProjectModalProps = {
@@ -34,26 +29,13 @@ const INITIAL_FORM_DATA: CreateProjectFormData = {
   projectName: "",
   projectDescription: "",
   projectType: "",
-  focusArea: "",
   budgetNeeded: "",
-  fundraisingDeadline: "",
-  beneficiariesCount: "",
-  location: "",
   odsSelection: [],
-  mainObjective: "",
 };
 
 const PROJECT_TYPE_OPTIONS = [
   { value: "social_investment_law", label: "Investimento Social Privado" },
   { value: "tax_incentive_law", label: "Leis de Incentivo" },
-];
-
-const AREA_OPTIONS = [
-  { value: "educacao", label: "Educação" },
-  { value: "saude", label: "Saúde" },
-  { value: "cultura", label: "Cultura" },
-  { value: "meio-ambiente", label: "Meio ambiente" },
-  { value: "assistencia-social", label: "Assistência social" },
 ];
 
 function validateProject(data: CreateProjectFormData) {
@@ -73,11 +55,7 @@ function validateProject(data: CreateProjectFormData) {
     errors.projectType = "Selecione o tipo de projeto.";
   }
 
-  if (!data.focusArea) {
-    errors.focusArea = "Selecione a área de atuação.";
-  }
-
-  if (!data.budgetNeeded.trim()) {
+  if (data.projectType === "tax_incentive_law" && !data.budgetNeeded.trim()) {
     errors.budgetNeeded = "Informe o valor necessário.";
   }
 
@@ -217,59 +195,29 @@ export function CreateProjectModal({
                 value={formData.projectType}
                 options={PROJECT_TYPE_OPTIONS}
                 error={errors.projectType}
-                onChange={(value) => updateField("projectType", value)}
+                onChange={(value) => {
+                  setFormData((current) => ({
+                    ...current,
+                    projectType: value,
+                    budgetNeeded: value === "tax_incentive_law" ? current.budgetNeeded : "",
+                  }));
+                  setErrors((current) => ({ ...current, projectType: undefined, budgetNeeded: undefined }));
+                }}
               />
 
-              <FormSelect
-                id="focusArea"
-                label="Área de Atuação"
-                value={formData.focusArea}
-                options={AREA_OPTIONS}
-                error={errors.focusArea}
-                onChange={(value) => updateField("focusArea", value)}
-              />
-
-              <Input
-                id="budgetNeeded"
-                label="Valor Necessário (R$)"
-                inputMode="decimal"
-                placeholder="Ex: 150.000,00"
-                value={formData.budgetNeeded}
-                onChange={(event) =>
-                  updateField("budgetNeeded", event.target.value)
-                }
-              />
-
-              <Input
-                id="fundraisingDeadline"
-                label="Prazo de Captação"
-                placeholder="Ex: 6 meses"
-                value={formData.fundraisingDeadline}
-                onChange={(event) =>
-                  updateField("fundraisingDeadline", event.target.value)
-                }
-              />
-
-              <Input
-                id="beneficiariesCount"
-                label="Número de Beneficiados"
-                inputMode="numeric"
-                placeholder="Ex: 120"
-                value={formData.beneficiariesCount}
-                onChange={(event) =>
-                  updateField("beneficiariesCount", event.target.value)
-                }
-              />
-
-              <Input
-                id="location"
-                label="Localidade"
-                placeholder="Ex: São Paulo, SP"
-                value={formData.location}
-                onChange={(event) =>
-                  updateField("location", event.target.value)
-                }
-              />
+              {formData.projectType === "tax_incentive_law" && (
+                <Input
+                  id="budgetNeeded"
+                  label="Valor Necessário (R$)"
+                  inputMode="decimal"
+                  placeholder="Ex: 150.000,00"
+                  value={formData.budgetNeeded}
+                  onChange={(event) =>
+                    updateField("budgetNeeded", event.target.value)
+                  }
+                  error={errors.budgetNeeded}
+                />
+              )}
 
               <fieldset className="md:col-span-2">
                 <legend className="mb-3 text-sm font-semibold text-vinculo-dark">
@@ -287,20 +235,6 @@ export function CreateProjectModal({
                   </p>
                 )}
               </fieldset>
-
-              <div className="md:col-span-2">
-                <TextArea
-                  id="mainObjective"
-                  label="Objetivo Principal"
-                  placeholder="Descreva o principal objetivo que este projeto pretende alcançar..."
-                  maxLength={600}
-                  value={formData.mainObjective}
-                  onChange={(event) =>
-                    updateField("mainObjective", event.target.value)
-                  }
-                  className="min-h-36"
-                />
-              </div>
             </div>
           </div>
 
@@ -362,7 +296,6 @@ function FormSelect({
       </label>
       <select
         id={id}
-        required
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className={`w-full rounded-xl border border-vinculo-gray bg-white px-4 py-3 text-slate-900 outline-none transition-all focus:border-vinculo-dark focus:ring-1 focus:ring-vinculo-dark ${
