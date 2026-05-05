@@ -1,13 +1,14 @@
 import { ProjectCard } from "../../components/projects/ProjectCard"
-import type { EnrichedProject } from "./mockData"
+import type { ProjectListItem } from "../../api/projects"
 
 interface ProjectsGridProps {
-  projects: EnrichedProject[]
+  projects: ProjectListItem[]
   loading: boolean
   error: string | null
+  onDetails: (id: number | string) => void
 }
 
-export function ProjectsGrid({ projects, loading, error }: ProjectsGridProps) {
+export function ProjectsGrid({ projects, loading, error, onDetails }: ProjectsGridProps) {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex justify-between items-baseline flex-wrap gap-2">
@@ -31,7 +32,7 @@ export function ProjectsGrid({ projects, loading, error }: ProjectsGridProps) {
 
       {!loading && !error && projects.length === 0 && (
         <p className="text-slate-500 text-sm py-8 text-center">
-          Nenhum projeto encontrado para este filtro.
+          Nenhum projeto disponível no momento.
         </p>
       )}
 
@@ -42,23 +43,11 @@ export function ProjectsGrid({ projects, loading, error }: ProjectsGridProps) {
               key={project.id}
               id={project.id}
               title={project.title}
-              // TODO(backend): description vem mockada — ProjectListItemDTO precisa expor
-              //   'description' (já existe na entidade Project, basta incluir no DTO).
               description={project.description}
-              // TODO(backend): tipo de lei específico (Rouanet/Esporte/etc) não existe na API.
-              //   ProjectType enum só tem TAX_INCENTIVE_LAW/SOCIAL_INVESTMENT_LAW.
-              //   Valor atual atribuído deterministicamente por id % 6 em enrichProjectWithMocks.
-              type={project.lawLabel}
               fundingType="lei-incentivo"
-              // TODO(backend): targetAmount mockado em R$ 50.000.
-              //   ProjectListItemDTO precisa expor 'budgetNeeded' (já existe na entidade Project).
-              targetAmount={project.targetAmount}
-              // TODO(backend): progressPercent mockado em 50%.
-              //   Backend deve calcular (investedAmount / budgetNeeded * 100) e expor no DTO.
+              targetAmount={project.budgetNeeded}
               progressPercent={project.progressPercent}
-              // TODO(backend): location mockado como "Brasil".
-              //   Project entity não tem cidade/estado — requer modelagem nova ou usar endereço da NPO.
-              location={project.location}
+              onDetails={onDetails}
             />
           ))}
         </div>

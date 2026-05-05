@@ -20,11 +20,16 @@ describe("InvestmentCard", () => {
     expect(screen.getByText("Investimento Social Privado")).toBeInTheDocument()
   })
 
-  it("renderiza os 3 projetos de exemplo", () => {
+  it("renderiza a descrição do card", () => {
     render(<MemoryRouter><InvestmentCard /></MemoryRouter>)
-    expect(screen.getByText("Educação Ambiental nas Escolas")).toBeInTheDocument()
-    expect(screen.getByText("Saúde Comunitária")).toBeInTheDocument()
-    expect(screen.getByText("Inclusão Digital")).toBeInTheDocument()
+    expect(screen.getByText(/valores da sua empresa/i)).toBeInTheDocument()
+  })
+
+  it("não renderiza lista de projetos de exemplo", () => {
+    render(<MemoryRouter><InvestmentCard /></MemoryRouter>)
+    expect(screen.queryByText("Educação Ambiental nas Escolas")).not.toBeInTheDocument()
+    expect(screen.queryByText("Saúde Comunitária")).not.toBeInTheDocument()
+    expect(screen.queryByText("Inclusão Digital")).not.toBeInTheDocument()
   })
 
   it("clicar em 'Explorar oportunidades' navega para /empresa/investimento-social-privado", async () => {

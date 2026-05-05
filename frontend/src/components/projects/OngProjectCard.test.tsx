@@ -5,9 +5,9 @@ import { OngProjectCard } from "./OngProjectCard"
 const baseProject = {
   id: 1,
   status: "Ativo",
+  fundingModel: "incentiveLaw" as const,
   amountNeeded: 150000,
   title: "Educação Transformadora",
-  location: "São Paulo, SP",
   description: "Programa de reforço escolar para jovens em vulnerabilidade.",
   progress: 75,
   tags: ["Educação", "Capacitação"],
@@ -21,26 +21,43 @@ describe("OngProjectCard", () => {
       screen.getByRole("article", { name: /Projeto Educação Transformadora/i }),
     ).toBeInTheDocument()
     expect(screen.getByText("Ativo")).toBeInTheDocument()
-    expect(screen.getByText((text) => text.includes("150.000"))).toBeInTheDocument()
-    expect(screen.getByText("São Paulo, SP")).toBeInTheDocument()
     expect(screen.getByText(baseProject.description)).toBeInTheDocument()
     expect(screen.getByText("Educação")).toBeInTheDocument()
     expect(screen.getByText("Capacitação")).toBeInTheDocument()
   })
 
-  it("exibe percentual e largura visual do progresso", () => {
+  it("não renderiza localidade", () => {
     render(<OngProjectCard {...baseProject} />)
+    expect(screen.queryByText(/localidade/i)).not.toBeInTheDocument()
+  })
 
+  it("exibe badge de valor e progresso em incentiveLaw", () => {
+    render(<OngProjectCard {...baseProject} fundingModel="incentiveLaw" />)
+
+    expect(screen.getByText(/150\.000/)).toBeInTheDocument()
     const progressbar = screen.getByRole("progressbar", {
       name: "Progresso de Educação Transformadora",
     })
     expect(progressbar).toHaveAttribute("aria-valuenow", "75")
     expect(screen.getByText("75%")).toBeInTheDocument()
-    expect((progressbar.firstElementChild as HTMLElement).style.width).toBe("75%")
+  })
+
+  it("não exibe badge de valor nem progresso em privateInvestment", () => {
+    render(<OngProjectCard {...baseProject} fundingModel="privateInvestment" amountNeeded={50000} progress={40} />)
+
+    expect(screen.queryByText(/R\$/)).not.toBeInTheDocument()
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument()
+  })
+
+  it("não exibe badge de valor nem progresso em directCapture", () => {
+    render(<OngProjectCard {...baseProject} fundingModel="directCapture" />)
+
+    expect(screen.queryByText(/R\$/)).not.toBeInTheDocument()
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument()
   })
 
   it("clampa progresso fora do intervalo permitido", () => {
-    render(<OngProjectCard {...baseProject} progress={140} />)
+    render(<OngProjectCard {...baseProject} fundingModel="incentiveLaw" progress={140} />)
 
     const progressbar = screen.getByRole("progressbar")
     expect(progressbar).toHaveAttribute("aria-valuenow", "100")

@@ -65,11 +65,6 @@ export function RoleHomePage({
           budgetNeeded: budgetRaw ? Number(budgetRaw) : null,
           odsIds: data.odsSelection,
           type: typeMap[data.projectType] ?? "SOCIAL_INVESTMENT_LAW",
-          focusArea: data.focusArea,
-          fundraisingDeadline: data.fundraisingDeadline || null,
-          beneficiariesCount: data.beneficiariesCount ? Number(data.beneficiariesCount) : null,
-          location: data.location || null,
-          mainObjective: data.mainObjective || null,
         },
         token,
       );
