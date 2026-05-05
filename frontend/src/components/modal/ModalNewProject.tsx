@@ -16,19 +16,31 @@ type ModalNewProjectProps = {
   open: boolean;
   formData: Pick<
     WizardFormData,
-    "nomeProjeto" | "tipoProjeto" | "descricaoProjeto" | "metaCaptacao" | "odsProjeto"
+    | "nomeProjeto"
+    | "tipoProjeto"
+    | "descricaoProjeto"
+    | "metaCaptacao"
+    | "odsProjeto"
   >;
   setFormData: Dispatch<
     SetStateAction<
       Pick<
         WizardFormData,
-        "nomeProjeto" | "tipoProjeto" | "descricaoProjeto" | "metaCaptacao" | "odsProjeto"
+        | "nomeProjeto"
+        | "tipoProjeto"
+        | "descricaoProjeto"
+        | "metaCaptacao"
+        | "odsProjeto"
       >
     >
   >;
   errors: Pick<
     FieldErrors,
-    "nomeProjeto" | "tipoProjeto" | "descricaoProjeto" | "metaCaptacao" | "odsProjeto"
+    | "nomeProjeto"
+    | "tipoProjeto"
+    | "descricaoProjeto"
+    | "metaCaptacao"
+    | "odsProjeto"
   >;
   odsOptions: OdsCatalogItem[];
   isOdsLoading: boolean;
@@ -144,7 +156,7 @@ export function ModalNewProject({
         <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-              Novo projeto
+              Cadastrar Novo projeto
             </p>
             <h2
               id="modal-new-project-title"
@@ -153,7 +165,8 @@ export function ModalNewProject({
               Preencha os dados do projeto
             </h2>
             <p className="mt-1 text-sm leading-6 text-slate-500">
-              Informe apenas as informações do projeto e finalize quando estiver pronto.
+              Informe apenas as informações do projeto e finalize quando estiver
+              pronto.
             </p>
           </div>
 
@@ -179,7 +192,10 @@ export function ModalNewProject({
         >
           <div className="flex flex-col gap-6">
             {submitError && (
-              <p className="rounded-xl border border-error/20 bg-error/10 px-4 py-3 text-sm text-error" role="alert">
+              <p
+                className="rounded-xl border border-error/20 bg-error/10 px-4 py-3 text-sm text-error"
+                role="alert"
+              >
                 {submitError}
               </p>
             )}
@@ -233,7 +249,8 @@ export function ModalNewProject({
                 required
                 value={formData.tipoProjeto}
                 onChange={(e) => {
-                  const nextType = e.target.value as WizardFormData["tipoProjeto"];
+                  const nextType = e.target
+                    .value as WizardFormData["tipoProjeto"];
 
                   setFormData((prev) => ({
                     ...prev,
@@ -386,7 +403,12 @@ export function ModalNewProject({
             )}
 
             <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
-              <BaseButton variant="ghost" type="button" onClick={onClose} disabled={isLoading}>
+              <BaseButton
+                variant="ghost"
+                type="button"
+                onClick={onClose}
+                disabled={isLoading}
+              >
                 {cancelLabel}
               </BaseButton>
               <BaseButton

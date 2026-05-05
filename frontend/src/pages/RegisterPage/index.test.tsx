@@ -17,8 +17,6 @@ const odsCatalogMock = [
   },
 ];
 
-const TEST_TIMEOUT = 15000
-
 vi.mock("@auth0/auth0-react", () => ({
   useAuth0: () => ({
     isAuthenticated: false,
@@ -89,49 +87,40 @@ describe("RegisterPage", () => {
 
       await advanceToProjectStep(user);
 
-      expect(
-        await screen.findByLabelText(/Nome do projeto/i),
-      ).toBeInTheDocument();
+      expect(await screen.findByLabelText(/Nome do projeto/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Descrição do projeto/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Tipo do projeto/i)).toBeInTheDocument();
       expect(screen.queryByLabelText(/Meta de captação/i)).not.toBeInTheDocument();
-  },
-    TEST_TIMEOUT,
+    },
+    10000,
   );
 
-  it(
-    "oculta a meta de captação quando o projeto é social",
-    async () => {
-      const user = userEvent.setup();
-      renderPage();
+  it("oculta a meta de captação quando o projeto é social", async () => {
+    const user = userEvent.setup();
+    renderPage();
 
-      await advanceToProjectStep(user);
+    await advanceToProjectStep(user);
 
-      await user.type(
-        await screen.findByLabelText(/Nome do projeto/i),
-        "Projeto Escola",
-      );
-      await user.type(
-        screen.getByLabelText(/Descrição do projeto/i),
-        "Projeto voltado para educação básica.",
-      );
-      await user.selectOptions(
-        screen.getByLabelText(/Tipo do projeto/i),
-        "social",
-      );
-      expect(screen.queryByLabelText(/Meta de captação/i)).not.toBeInTheDocument();
-      await user.click(
-        screen.getByRole("button", {
-          name: /ODS 1 - Erradicação da Pobreza/i,
-        }),
-      );
-      await user.click(screen.getByRole("button", { name: /Finalizar/i }));
-      expect(
-        await screen.findByText(/Você será redirecionado para concluir o acesso/i),
-      ).toBeInTheDocument();
-  },
-    TEST_TIMEOUT,
-  );
+    await user.type(await screen.findByLabelText(/Nome do projeto/i), "Projeto Escola");
+    await user.type(
+      screen.getByLabelText(/Descrição do projeto/i),
+      "Projeto voltado para educação básica.",
+    );
+    await user.selectOptions(
+      screen.getByLabelText(/Tipo do projeto/i),
+      "social",
+    );
+    expect(screen.queryByLabelText(/Meta de captação/i)).not.toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", {
+        name: /ODS 1 - Erradicação da Pobreza/i,
+      }),
+    );
+    await user.click(screen.getByRole("button", { name: /Finalizar/i }));
+    expect(
+      await screen.findByText(/Você será redirecionado para concluir o acesso/i),
+    ).toBeInTheDocument();
+  });
 
   it("exibe a meta de captação quando o projeto é governamental", async () => {
     const user = userEvent.setup();
@@ -215,7 +204,7 @@ describe("RegisterPage", () => {
     });
   });
 
-  it("não envia tipoProjeto para o Auth0 e mantém o fluxo no draft", async () => {
+  it("envia tipoProjeto para o Auth0 e mantém o fluxo no draft", async () => {
     const user = userEvent.setup();
     let resolveLogin: (() => void) | null = null;
 

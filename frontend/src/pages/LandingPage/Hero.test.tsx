@@ -1,8 +1,10 @@
 import { render, screen } from '@testing-library/react'
+import { vi } from 'vitest'
 import { Hero } from './Hero'
 
 describe('Hero', () => {
   beforeEach(() => {
+    vi.useRealTimers()
     render(<Hero />)
   })
 

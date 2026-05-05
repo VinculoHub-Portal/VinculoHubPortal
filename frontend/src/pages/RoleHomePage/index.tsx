@@ -1,180 +1,156 @@
-import { useEffect, useRef, useState } from "react"
-import { useAuth0 } from "@auth0/auth0-react"
-import { createNewProject } from "../../api/newProject"
-import { fetchOdsCatalog, type OdsCatalogItem } from "../../api/ods"
-import { Header } from "../../components/general/Header"
-import { ModalNewProject } from "../../components/modal/ModalNewProject"
-import { OngDashboardMock } from "./OngDashboardMock"
-import type { WizardFormData } from "../../types/wizard.types"
+import { useEffect, useState } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
+import { Header } from "../../components/general/Header";
+import { ModalNewProject } from "../../components/modal/ModalNewProject";
+import { OngDashboardMock } from "./OngDashboardMock";
+import { createProject, type CreateProjectPayload } from "../../api/projects";
+import { fetchOdsCatalog, type OdsCatalogItem } from "../../api/ods";
+import type { FieldErrors, WizardFormData } from "../../types/wizard.types";
 
 type RoleHomePageProps = {
-  title: string
-  description: string
-  showCreateProjectAction?: boolean
-}
-
-type NewProjectFormData = Pick<
-  WizardFormData,
-  "nomeProjeto" | "tipoProjeto" | "descricaoProjeto" | "metaCaptacao" | "odsProjeto"
->
-
-type NewProjectErrorField =
-  | "nomeProjeto"
-  | "tipoProjeto"
-  | "descricaoProjeto"
-  | "metaCaptacao"
-  | "odsProjeto"
-
-const INITIAL_NEW_PROJECT_FORM_DATA: NewProjectFormData = {
-  nomeProjeto: "",
-  tipoProjeto: "",
-  descricaoProjeto: "",
-  metaCaptacao: "",
-  odsProjeto: [],
-}
-
-function createInitialNewProjectFormData(): NewProjectFormData {
-  return {
-    ...INITIAL_NEW_PROJECT_FORM_DATA,
-    odsProjeto: [],
-  }
-}
-
-function validateNewProjectForm(data: NewProjectFormData) {
-  const errors: Partial<Record<NewProjectErrorField, string>> = {}
-
-  if (!data.nomeProjeto.trim()) {
-    errors.nomeProjeto = "Informe o nome do projeto."
-  }
-
-  if (!data.tipoProjeto) {
-    errors.tipoProjeto = "Selecione o tipo do projeto."
-  }
-
-  if (!data.descricaoProjeto.trim()) {
-    errors.descricaoProjeto = "Informe a descrição do projeto."
-  }
-
-  if (data.tipoProjeto === "governamental") {
-    if (!data.metaCaptacao.trim()) {
-      errors.metaCaptacao = "Informe a meta de captação."
-    } else if (Number.isNaN(Number(data.metaCaptacao))) {
-      errors.metaCaptacao = "Informe uma meta de captação válida."
-    }
-  }
-
-  if (data.odsProjeto.length === 0) {
-    errors.odsProjeto = "Selecione ao menos um ODS."
-  }
-
-  return errors
-}
+  title: string;
+  description: string;
+  showCreateProjectAction?: boolean;
+};
 
 export function RoleHomePage({
   title,
   description,
   showCreateProjectAction = false,
 }: RoleHomePageProps) {
-  const { getAccessTokenSilently } = useAuth0()
-  const timeoutRef = useRef<number | null>(null)
-  const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false)
-  const [projectFormData, setProjectFormData] = useState(
-    createInitialNewProjectFormData,
-  )
-  const [projectFormErrors, setProjectFormErrors] = useState<
-    Partial<Record<NewProjectErrorField, string>>
-  >({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const [odsOptions, setOdsOptions] = useState<OdsCatalogItem[]>([])
-  const [isOdsLoading, setIsOdsLoading] = useState(false)
-  const [isOdsError, setIsOdsError] = useState(false)
+  type NewProjectFormData = Pick<
+    WizardFormData,
+    | "nomeProjeto"
+    | "tipoProjeto"
+    | "descricaoProjeto"
+    | "metaCaptacao"
+    | "odsProjeto"
+  >;
+
+  type NewProjectErrors = Pick<
+    FieldErrors,
+    | "nomeProjeto"
+    | "tipoProjeto"
+    | "descricaoProjeto"
+    | "metaCaptacao"
+    | "odsProjeto"
+  >;
+
+  const INITIAL_NEW_PROJECT_FORM: NewProjectFormData = {
+    nomeProjeto: "",
+    tipoProjeto: "",
+    descricaoProjeto: "",
+    metaCaptacao: "",
+    odsProjeto: [],
+  };
+
+  const { getAccessTokenSilently } = useAuth0();
+  const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] =
+    useState(false);
+  const [modalKey, setModalKey] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [odsOptions, setOdsOptions] = useState<OdsCatalogItem[]>([]);
+  const [newProjectFormData, setNewProjectFormData] =
+    useState<NewProjectFormData>(INITIAL_NEW_PROJECT_FORM);
+  const [newProjectErrors, setNewProjectErrors] = useState<NewProjectErrors>(
+    {},
+  );
 
   useEffect(() => {
-    return () => {
-      if (timeoutRef.current !== null) {
-        window.clearTimeout(timeoutRef.current)
-      }
+    if (!showCreateProjectAction) {
+      return;
     }
-  }, [])
 
-  function resetNewProjectForm() {
-    setProjectFormData(createInitialNewProjectFormData())
-    setProjectFormErrors({})
-  }
-
-  async function loadOdsCatalog() {
-    setIsOdsLoading(true)
-    setIsOdsError(false)
-
-    try {
-      const items = await fetchOdsCatalog()
-      setOdsOptions(items)
-    } catch {
-      setIsOdsError(true)
-    } finally {
-      setIsOdsLoading(false)
-    }
-  }
+    fetchOdsCatalog().then(setOdsOptions).catch(() => {});
+  }, [showCreateProjectAction]);
 
   function openCreateProjectModal() {
-    setSubmitError(null)
-    resetNewProjectForm()
-    setIsCreateProjectModalOpen(true)
-    void loadOdsCatalog()
+    setSubmitError(null);
+    setIsCreateProjectModalOpen(true);
   }
 
   function closeCreateProjectModal() {
-    setIsCreateProjectModalOpen(false)
-    setSubmitError(null)
-    resetNewProjectForm()
+    setIsCreateProjectModalOpen(false);
+    setSubmitError(null);
+    setNewProjectErrors({});
+    setNewProjectFormData(INITIAL_NEW_PROJECT_FORM);
+    setModalKey((current) => current + 1);
   }
 
-  const setProjectFormDataWithReset = (
-    nextState:
-      | NewProjectFormData
-      | ((prevState: NewProjectFormData) => NewProjectFormData),
-  ) => {
-    setProjectFormData(nextState)
-    setProjectFormErrors({})
+  function validateNewProject(data: NewProjectFormData) {
+    const errors: NewProjectErrors = {};
+
+    if (!data.nomeProjeto.trim()) {
+      errors.nomeProjeto = "Informe o nome do projeto.";
+    }
+
+    if (!data.descricaoProjeto.trim()) {
+      errors.descricaoProjeto = "Informe a descrição do projeto.";
+    } else if (data.descricaoProjeto.trim().length < 50) {
+      errors.descricaoProjeto = "A descrição deve ter no mínimo 50 caracteres.";
+    }
+
+    if (!data.tipoProjeto) {
+      errors.tipoProjeto = "Selecione o tipo do projeto.";
+    }
+
+    if (data.tipoProjeto === "governamental" && !data.metaCaptacao.trim()) {
+      errors.metaCaptacao = "Informe a meta de captação.";
+    }
+
+    if (!data.odsProjeto.length) {
+      errors.odsProjeto = "Selecione ao menos um ODS.";
+    }
+
+    return errors;
   }
 
-  async function handleCreateProject(data: NewProjectFormData) {
-    setIsSubmitting(true)
-    setSubmitError(null)
+  async function handleCreateProject() {
+    const nextErrors = validateNewProject(newProjectFormData);
+    setNewProjectErrors(nextErrors);
 
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
     try {
-      const token = await getAccessTokenSilently()
-      await createNewProject(data, token)
+      const token = await getAccessTokenSilently();
+      const budgetValue =
+        newProjectFormData.tipoProjeto === "governamental"
+          ? Number(newProjectFormData.metaCaptacao) / 100
+          : 0;
+      const typeMap: Record<string, CreateProjectPayload["type"]> = {
+        social: "SOCIAL",
+        governamental: "GOVERNMENTAL",
+      };
 
-      closeCreateProjectModal()
-      setSuccessMessage("Projeto cadastrado com sucesso!")
-
-      if (timeoutRef.current !== null) {
-        window.clearTimeout(timeoutRef.current)
-      }
-
-      timeoutRef.current = window.setTimeout(() => {
-        setSuccessMessage(null)
-        timeoutRef.current = null
-      }, 5000)
+      await createProject(
+        {
+          title: newProjectFormData.nomeProjeto,
+          description: newProjectFormData.descricaoProjeto,
+          budgetNeeded: budgetValue,
+          odsIds: newProjectFormData.odsProjeto.map(Number),
+          type: typeMap[newProjectFormData.tipoProjeto] ?? "SOCIAL",
+          focusArea: newProjectFormData.tipoProjeto,
+          mainObjective: newProjectFormData.descricaoProjeto,
+        },
+        token,
+      );
+      setIsCreateProjectModalOpen(false);
+      setModalKey((k) => k + 1);
+      setNewProjectErrors({});
+      setNewProjectFormData(INITIAL_NEW_PROJECT_FORM);
+      setSuccessMessage("Projeto cadastrado com sucesso!");
+      setTimeout(() => setSuccessMessage(null), 5000);
     } catch {
-      setSubmitError("Não foi possível cadastrar o projeto. Tente novamente.")
+      setSubmitError("Não foi possível cadastrar o projeto. Tente novamente.");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
-
-  function handleConfirm() {
-    const errors = validateNewProjectForm(projectFormData)
-    setProjectFormErrors(errors)
-
-    if (Object.keys(errors).length > 0) {
-      return
-    }
-
-    void handleCreateProject(projectFormData)
   }
 
   if (showCreateProjectAction) {
@@ -185,20 +161,22 @@ export function RoleHomePage({
           onCreateProject={openCreateProjectModal}
         />
         <ModalNewProject
+          key={modalKey}
           open={isCreateProjectModalOpen}
-          formData={projectFormData}
-          setFormData={setProjectFormDataWithReset}
-          errors={projectFormErrors}
-          odsOptions={odsOptions}
-          isOdsLoading={isOdsLoading}
-          isOdsError={isOdsError}
+          formData={newProjectFormData}
+          setFormData={setNewProjectFormData}
+          errors={newProjectErrors}
+          isOdsLoading={false}
+          isOdsError={false}
           onClose={closeCreateProjectModal}
-          onConfirm={handleConfirm}
+          onConfirm={handleCreateProject}
           isLoading={isSubmitting}
           submitError={submitError}
+          odsOptions={odsOptions}
+          confirmLabel="Cadastrar Projeto"
         />
       </>
-    )
+    );
   }
 
   return (
@@ -220,7 +198,8 @@ export function RoleHomePage({
             <p className="mt-4 text-slate-700">{description}</p>
           </div>
         </div>
+
       </main>
     </div>
-  )
+  );
 }

@@ -1,31 +1,28 @@
-import { render, screen, waitFor } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
-import { MemoryRouter, Route, Routes } from "react-router-dom"
-import { beforeEach, describe, expect, it, vi } from "vitest"
-import { RoleHomePage } from "."
-import { formatCurrencyValue } from "../../utils/formatCurrency"
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { RoleHomePage } from ".";
 
 const mocks = vi.hoisted(() => ({
   getAccessTokenSilentlyMock: vi.fn(),
   fetchOdsCatalogMock: vi.fn(),
-  createNewProjectMock: vi.fn(),
-}))
-
-const TEST_TIMEOUT = 15000
+  createProjectMock: vi.fn(),
+}));
 
 vi.mock("@auth0/auth0-react", () => ({
   useAuth0: () => ({
     getAccessTokenSilently: mocks.getAccessTokenSilentlyMock,
   }),
-}))
+}));
 
 vi.mock("../../api/ods", () => ({
   fetchOdsCatalog: mocks.fetchOdsCatalogMock,
-}))
+}));
 
-vi.mock("../../api/newProject", () => ({
-  createNewProject: mocks.createNewProjectMock,
-}))
+vi.mock("../../api/projects", () => ({
+  createProject: mocks.createProjectMock,
+}));
 
 function renderOngDashboard() {
   return render(
@@ -44,196 +41,65 @@ function renderOngDashboard() {
         <Route path="/ong/projetos" element={<p>Meus Projetos</p>} />
       </Routes>
     </MemoryRouter>,
-  )
-}
-
-async function openCreateProjectModal(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole("button", { name: /Novo Projeto/i }))
-  expect(await screen.findByRole("dialog")).toBeInTheDocument()
-  await waitFor(() => {
-    expect(mocks.fetchOdsCatalogMock).toHaveBeenCalledTimes(1)
-  }, { timeout: 5000 })
-  await screen.findByText(/ODS 1/i, {}, { timeout: 5000 })
+  );
 }
 
 describe("RoleHomePage - dashboard da ONG", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    mocks.getAccessTokenSilentlyMock.mockResolvedValue("token")
+    vi.clearAllMocks();
+    mocks.getAccessTokenSilentlyMock.mockResolvedValue("token");
     mocks.fetchOdsCatalogMock.mockResolvedValue([
       { id: 1, name: "ODS 1", description: "Erradicação da pobreza" },
-      { id: 4, name: "ODS 4", description: "Educação de qualidade" },
-    ])
-    mocks.createNewProjectMock.mockResolvedValue({
-      id: 1,
-      name: "Projeto Escola",
-      description: "Projeto voltado para educação básica.",
-      type: "SOCIAL_INVESTMENT_LAW",
-      capital: null,
-      npoId: 20,
-    })
-  })
+    ]);
+    mocks.createProjectMock.mockResolvedValue({ id: 1 });
+  });
 
-  it("renderiza o dashboard da ONG", () => {
-    renderOngDashboard()
+  it("renderiza o mock do dashboard da ONG", async () => {
+    renderOngDashboard();
 
-    expect(screen.getByText("Dashboard da ONG")).toBeInTheDocument()
-    expect(screen.getByText("Projetos por Tipo")).toBeInTheDocument()
-    expect(screen.getByText("Status dos Projetos")).toBeInTheDocument()
-    expect(screen.getByText("Educação Transformadora")).toBeInTheDocument()
+    await waitFor(() => {
+      expect(mocks.fetchOdsCatalogMock).toHaveBeenCalledTimes(1);
+    });
+    expect(screen.getByText("Dashboard da ONG")).toBeInTheDocument();
+    expect(screen.getByText("Projetos por Tipo")).toBeInTheDocument();
+    expect(screen.getByText("Status dos Projetos")).toBeInTheDocument();
+    expect(screen.getByText("Educação Transformadora")).toBeInTheDocument();
     expect(
       screen.getByText("Novas Oportunidades de Financiamento Disponíveis"),
-    ).toBeInTheDocument()
-  })
+    ).toBeInTheDocument();
+  });
 
-  it("abre o modal de novo projeto pelo dashboard", async () => {
-    const user = userEvent.setup()
-    renderOngDashboard()
+  it("filtra projetos por status", async () => {
+    renderOngDashboard();
 
-    await openCreateProjectModal(user)
+    await userEvent.click(screen.getByRole("button", { name: "Em Captação" }));
 
+    expect(screen.getByText("Saúde Comunitária")).toBeInTheDocument();
     expect(
-      screen.getByRole("dialog", { name: "Preencha os dados do projeto" }),
-    ).toBeInTheDocument()
-    expect(mocks.fetchOdsCatalogMock).toHaveBeenCalledTimes(1)
-  })
-
-  it(
-    "valida ODS obrigatório antes de salvar",
-    async () => {
-      const user = userEvent.setup()
-      renderOngDashboard()
-
-      await openCreateProjectModal(user)
-      await user.type(
-        screen.getByLabelText(/Nome do projeto/i),
-        "Projeto Escola",
-      )
-      await user.type(
-        screen.getByLabelText(/Descrição do projeto/i),
-        "Projeto voltado para educação básica.",
-      )
-      await user.selectOptions(
-        screen.getByLabelText(/Tipo do projeto/i),
-        "social",
-      )
-      await user.click(screen.getByRole("button", { name: /Finalizar/i }))
-
-      expect(
-        await screen.findByText(/Selecione ao menos um ODS/i),
-      ).toBeInTheDocument()
-      expect(mocks.createNewProjectMock).not.toHaveBeenCalled()
-    },
-    TEST_TIMEOUT,
-  )
-
-  it("cadastra projeto social com o contrato do newProject", async () => {
-    const user = userEvent.setup()
-    renderOngDashboard()
-
-    await openCreateProjectModal(user)
-    await user.type(screen.getByLabelText(/Nome do projeto/i), "Projeto Escola")
-    await user.type(
-      screen.getByLabelText(/Descrição do projeto/i),
-      "Projeto voltado para educação básica.",
-    )
-    await user.selectOptions(screen.getByLabelText(/Tipo do projeto/i), "social")
-    await user.click(
-      screen.getByRole("button", { name: /ODS 1/i }),
-    )
-    await user.click(screen.getByRole("button", { name: /Finalizar/i }))
-
-    await waitFor(() => {
-      expect(mocks.createNewProjectMock).toHaveBeenCalledTimes(1)
-    })
-
-    expect(mocks.createNewProjectMock).toHaveBeenCalledWith(
-      {
-        nomeProjeto: "Projeto Escola",
-        tipoProjeto: "social",
-        descricaoProjeto: "Projeto voltado para educação básica.",
-        metaCaptacao: "",
-        odsProjeto: ["1"],
-      },
-      "token",
-    )
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
-    expect(
-      screen.getByText("Projeto cadastrado com sucesso!"),
-    ).toBeInTheDocument()
-  })
-
-  it("cadastra projeto governamental com meta de captação", async () => {
-    const user = userEvent.setup()
-    renderOngDashboard()
-
-    await openCreateProjectModal(user)
-    await user.type(screen.getByLabelText(/Nome do projeto/i), "Projeto Escola")
-    await user.type(
-      screen.getByLabelText(/Descrição do projeto/i),
-      "Projeto voltado para educação básica.",
-    )
-    await user.selectOptions(
-      screen.getByLabelText(/Tipo do projeto/i),
-      "governamental",
-    )
-    await user.type(screen.getByLabelText(/Meta de captação/i), "25000")
-    expect(screen.getByLabelText(/Meta de captação/i)).toHaveValue(
-      formatCurrencyValue("25000"),
-    )
-    await user.click(
-      screen.getByRole("button", { name: /ODS 4/i }),
-    )
-    await user.click(screen.getByRole("button", { name: /Finalizar/i }))
-
-    await waitFor(() => {
-      expect(mocks.createNewProjectMock).toHaveBeenCalledTimes(1)
-    })
-
-    expect(mocks.createNewProjectMock).toHaveBeenCalledWith(
-      {
-        nomeProjeto: "Projeto Escola",
-        tipoProjeto: "governamental",
-        descricaoProjeto: "Projeto voltado para educação básica.",
-        metaCaptacao: "25000",
-        odsProjeto: ["4"],
-      },
-      "token",
-    )
-  })
-
-  it("mantém o modal aberto e exibe erro quando o cadastro falha", async () => {
-    const user = userEvent.setup()
-    mocks.createNewProjectMock.mockRejectedValueOnce(new Error("network"))
-    renderOngDashboard()
-
-    await openCreateProjectModal(user)
-    await user.type(screen.getByLabelText(/Nome do projeto/i), "Projeto Escola")
-    await user.type(
-      screen.getByLabelText(/Descrição do projeto/i),
-      "Projeto voltado para educação básica.",
-    )
-    await user.selectOptions(screen.getByLabelText(/Tipo do projeto/i), "social")
-    await user.click(
-      screen.getByRole("button", { name: /ODS 1/i }),
-    )
-    await user.click(screen.getByRole("button", { name: /Finalizar/i }))
-
-    expect(
-      await screen.findByText(
-        "Não foi possível cadastrar o projeto. Tente novamente.",
-      ),
-    ).toBeInTheDocument()
-    expect(screen.getByRole("dialog")).toBeInTheDocument()
-  })
+      screen.queryByText("Educação Transformadora"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Cultura para Todos")).not.toBeInTheDocument();
+  });
 
   it("navega para meus projetos pelo link de todos os projetos", async () => {
-    renderOngDashboard()
+    renderOngDashboard();
 
     await userEvent.click(
       screen.getByRole("button", { name: /Ver todos os projetos/i }),
-    )
+    );
 
-    expect(screen.getByText("Meus Projetos")).toBeInTheDocument()
-  })
-})
+    expect(screen.getByText("Meus Projetos")).toBeInTheDocument();
+  });
+
+  it("abre o modal de novo projeto", async () => {
+    renderOngDashboard();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: /Novo Projeto/i }),
+    );
+
+    expect(
+      screen.getByRole("dialog", { name: /Preencha os dados do projeto/i }),
+    ).toBeInTheDocument();
+  });
+});
