@@ -80,22 +80,12 @@ function projectTypeLabel(value: string) {
   return labels[value] ?? humanize(value);
 }
 
-function parseLocation(value: string) {
-  const [city = "", stateUf = ""] = value.split(",").map((part) => part.trim());
-  return { city, stateUf };
-}
-
-function beneficiariesLabel(value: number | null) {
-  if (value == null) return "";
-  return `${new Intl.NumberFormat("pt-BR").format(value)} beneficiários`;
-}
-
 function computeProgress(invested: number | null, budget: number | null): number {
   if (invested == null || budget == null || budget <= 0) return 0;
   return Math.min(100, Math.round((invested / budget) * 100));
 }
 
-/** Maps API payload (camelCase or snake_case) to view model. Compatible with ProjectDetailResponse quando existir no backend. */
+/** Maps API payload (camelCase or snake_case) to view model. */
 export function mapApiPayloadToProjectDetails(raw: unknown, routeId: string): ProjectDetails {
   const o = raw && typeof raw === "object" ? (raw as UnknownRecord) : {};
 
@@ -105,16 +95,6 @@ export function mapApiPayloadToProjectDetails(raw: unknown, routeId: string): Pr
     o.fundingType || o.funding_type || o.captureType || o.capture_type || o.projectType || o.project_type,
   );
   const backendType = str(o.type);
-  const categoryRaw = str(o.category || o.area || o.areaName || o.area_name || o.focusArea || o.focus_area);
-  const parsedLocation = parseLocation(str(o.location));
-  const city = str(o.city || o.locality) || parsedLocation.city;
-  const stateUf = str(o.stateUf || o.state || o.uf) || parsedLocation.stateUf;
-  const mainObjective = str(o.mainObjective || o.main_objective || o.objective);
-  const beneficiaries = num(o.beneficiariesCount ?? o.beneficiaries_count);
-  const targetAudience =
-    str(o.targetAudience || o.target_audience || o.publicoAlvo || o.publico_alvo) ||
-    beneficiariesLabel(beneficiaries);
-  const scopeArea = humanize(str(o.scopeArea || o.scope_area || o.atuacao || o.areaAtuacao || o.focusArea || o.focus_area));
 
   const budget = num(o.budgetNeeded ?? o.budget_needed ?? o.requiredAmount ?? o.required_amount);
   const invested = num(o.investedAmount ?? o.invested_amount);
@@ -137,21 +117,15 @@ export function mapApiPayloadToProjectDetails(raw: unknown, routeId: string): Pr
     progressOverride != null && progressOverride >= 0
       ? Math.min(100, Math.round(progressOverride))
       : computeProgress(invested, budget);
+
   const fundingType = projectTypeLabel(fundingTypeRaw || backendType);
-  const category = humanize(categoryRaw);
 
   return {
     id,
     fundingType: fundingType || "—",
-    category: category || "—",
     requiredAmount: budget ?? 0,
     name: title || "Projeto",
-    city: city || "—",
-    stateUf: stateUf || "—",
     description: description || "",
-    mainObjective: mainObjective || "",
-    targetAudience: targetAudience || "—",
-    scopeArea: scopeArea || "—",
     sdgLabels,
     progressPercent,
   };

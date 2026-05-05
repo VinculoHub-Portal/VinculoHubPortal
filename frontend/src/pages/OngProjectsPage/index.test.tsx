@@ -37,17 +37,10 @@ vi.mock("./useOngProjects", () => ({
 const mockProjectDetails: ProjectDetails = {
   id: "1",
   fundingType: "Lei de Incentivo",
-  category: "Educação",
   requiredAmount: 150000,
   name: "Educação Transformadora",
-  city: "São Paulo",
-  stateUf: "SP",
   description:
     "Programa de reforço escolar e formação profissionalizante para jovens em situação de vulnerabilidade social.",
-  mainObjective:
-    "Ampliar o acesso à educação complementar e à capacitação profissional para adolescentes.",
-  targetAudience: "Jovens de 14 a 18 anos em situação de vulnerabilidade social",
-  scopeArea: "Educação",
   sdgLabels: ["Educação de Qualidade", "Redução das Desigualdades"],
   progressPercent: 75,
 }
