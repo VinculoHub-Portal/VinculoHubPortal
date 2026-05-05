@@ -8,12 +8,17 @@ const mocks = vi.hoisted(() => ({
   getAccessTokenSilentlyMock: vi.fn(),
   fetchOdsCatalogMock: vi.fn(),
   createProjectMock: vi.fn(),
+  showToastMock: vi.fn(),
 }))
 
 vi.mock("@auth0/auth0-react", () => ({
   useAuth0: () => ({
     getAccessTokenSilently: mocks.getAccessTokenSilentlyMock,
   }),
+}))
+
+vi.mock("../../context/ToastContext", () => ({
+  useToast: () => ({ showToast: mocks.showToastMock }),
 }))
 
 vi.mock("../../api/ods", () => ({
@@ -78,7 +83,7 @@ describe("RoleHomePage - dashboard da ONG", () => {
     renderOngDashboard()
 
     await userEvent.click(
-      screen.getByRole("button", { name: /Ver todos os projetos/i }),
+      screen.getByRole("button", { name: /Ver detalhes/i }),
     )
 
     expect(screen.getByText("Meus Projetos")).toBeInTheDocument()
