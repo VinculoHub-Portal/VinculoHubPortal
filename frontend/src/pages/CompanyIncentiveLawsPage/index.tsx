@@ -1,44 +1,20 @@
-import { useAuth0 } from "@auth0/auth0-react"
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft"
-import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
-import { fetchProjects, type ProjectListItem } from "../../api/projects"
 import { Header } from "../../components/general/Header"
+import { Pagination } from "../../components/general/Pagination"
+import { usePaginatedProjects } from "../../hooks/usePaginatedProjects"
 import { useProjectDetailsNavigation } from "../ProjectDetailsPage/projectDetailsNavigation"
 import { ProjectsGrid } from "./ProjectsGrid"
 
 export const CompanyIncentiveLawsPage = () => {
-  const { getAccessTokenSilently } = useAuth0()
   const openProjectDetails = useProjectDetailsNavigation("/empresa/leis-de-incentivo")
-  const [projects, setProjects] = useState<ProjectListItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { projects, loading, error, currentPage, totalPages, setCurrentPage } =
+    usePaginatedProjects({ type: "TAX_INCENTIVE_LAW" })
 
-  useEffect(() => {
-    let cancelled = false
-    async function load() {
-      try {
-        setLoading(true)
-        const token = await getAccessTokenSilently()
-        const data = await fetchProjects(
-          { type: "TAX_INCENTIVE_LAW", size: 50 },
-          token,
-        )
-        if (cancelled) return
-        setProjects(data.content)
-        setError(null)
-      } catch (e) {
-        if (!cancelled)
-          setError(e instanceof Error ? e.message : "Erro ao carregar projetos")
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-    void load()
-    return () => {
-      cancelled = true
-    }
-  }, [getAccessTokenSilently])
+  function handlePageChange(page: number) {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
@@ -68,6 +44,12 @@ export const CompanyIncentiveLawsPage = () => {
           loading={loading}
           error={error}
           onDetails={openProjectDetails}
+        />
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onChange={handlePageChange}
         />
       </main>
     </div>
