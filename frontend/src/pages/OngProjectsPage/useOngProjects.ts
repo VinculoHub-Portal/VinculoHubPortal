@@ -83,7 +83,6 @@ function mapProjectListItemToOngProject(project: ProjectListItem): OngProject {
     fundingModel: fundingModelFromType(project.type),
     amountNeeded,
     title: project.title,
-    location: project.location || "Localidade não informada",
     description:
       project.description ||
       "Descrição indisponível na listagem. Acesse os detalhes do projeto para mais informações.",
@@ -103,9 +102,8 @@ function projectStatusLabel(status: ProjectStatus) {
 }
 
 function fundingModelFromType(type?: ProjectType | null): OngProjectFundingModel {
-  if (type === "SOCIAL") return "privateInvestment"
-  if (type === "GOVERNMENTAL") return "incentiveLaw"
-
+  if (type === "SOCIAL_INVESTMENT_LAW") return "privateInvestment"
+  if (type === "TAX_INCENTIVE_LAW") return "incentiveLaw"
   return "directCapture"
 }
 
@@ -119,16 +117,5 @@ function calculateProgress(investedAmount: number, amountNeeded: number) {
 
 function projectTags(project: ProjectListItem) {
   const odsTags = project.ods?.map((ods) => ods.name).filter(Boolean) ?? []
-  const focusTag = project.focusArea ? [formatFocusArea(project.focusArea)] : []
-  const tags = [...focusTag, ...odsTags]
-
-  return tags.length > 0 ? tags : ["Projeto"]
-}
-
-function formatFocusArea(value: string) {
-  return value
-    .split("-")
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ")
+  return odsTags
 }

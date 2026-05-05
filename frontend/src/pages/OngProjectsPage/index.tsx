@@ -64,9 +64,9 @@ export function OngProjectsPage() {
                 key={project.id}
                 id={project.id}
                 status={project.status}
+                fundingModel={project.fundingModel}
                 amountNeeded={project.amountNeeded}
                 title={project.title}
-                location={project.location}
                 description={project.description}
                 progress={project.progress}
                 tags={project.tags}
