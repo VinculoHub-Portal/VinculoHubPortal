@@ -4,11 +4,15 @@ import CampaignOutlinedIcon from "@mui/icons-material/CampaignOutlined"
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined"
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined"
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined"
+import { useAuth0 } from "@auth0/auth0-react"
 import { useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { uploadDocument } from "../../api/document" //[cite: 2]
 import { BaseButton } from "../../components/general/BaseButton"
 import { Header } from "../../components/general/Header"
 import { ProgressBar } from "../../components/general/ProgressBar"
+import { useToast } from "../../context/ToastContext"
+import UploadModal from "./UploadModal"
 import {
   ongDashboardProjects,
   ongProjectTypeMetrics,
@@ -42,8 +46,10 @@ export function OngDashboardMock({
   successMessage = null,
 }: OngDashboardMockProps) {
   const navigate = useNavigate()
-  const [selectedFilter, setSelectedFilter] =
-    useState<OngDashboardFilter>("all")
+  const { showToast } = useToast()
+  const { getAccessTokenSilently } = useAuth0() // Hook para autenticação
+  const [selectedFilter, setSelectedFilter] = useState<OngDashboardFilter>("all")
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
 
   const filteredProjects = useMemo(
     () =>
@@ -52,6 +58,34 @@ export function OngDashboardMock({
       ),
     [selectedFilter],
   )
+
+  /**
+   * Realiza o upload do documento obtendo o token do Auth0
+   * para evitar o erro 401 (Unauthorized)
+   */
+  async function handleConfirmUpload(file: File, title: string, description: string) {
+    try {
+      // Obtém o token de acesso de forma silenciosa
+      const token = await getAccessTokenSilently()
+
+      // Envia o arquivo e o payload baseado no DocumentRequestDTO[cite: 2]
+      await uploadDocument(
+        file,
+        {
+          title,
+          description,
+          npoId: 1, // ID da ONG; idealmente recuperado do seu contexto de usuário
+        },
+        token,
+      )
+
+      showToast("Documento enviado com sucesso!")
+      setIsUploadModalOpen(false)
+    } catch (error) {
+      console.error("Upload Error:", error) 
+      showToast("Não foi possível realizar o upload. Verifique sua conexão e tente novamente.")
+    }
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
@@ -78,10 +112,12 @@ export function OngDashboardMock({
               <AddIcon fontSize="small" />
               Novo Projeto
             </BaseButton>
+
             <BaseButton
               type="button"
               variant="outline"
               className="min-h-14 w-full border-slate-200 bg-white px-8 text-lg shadow-md hover:bg-slate-50 sm:w-fit"
+              onClick={() => setIsUploadModalOpen(true)}
             >
               <FileUploadOutlinedIcon fontSize="small" />
               Upload de Documentos
@@ -106,18 +142,24 @@ export function OngDashboardMock({
         </section>
 
         <FundingOpportunitiesBanner />
+
+        {/* Modal de Upload de Documentos */}
+        <UploadModal
+          isOpen={isUploadModalOpen}
+          onClose={() => setIsUploadModalOpen(false)}
+          onUpload={handleConfirmUpload}
+        />
       </main>
     </div>
   )
 }
 
+//Subcomponentes
+
 function ProjectsByTypeCard({ onDetails }: { onDetails: () => void }) {
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-      <h2 className="text-xl font-semibold text-vinculo-dark">
-        Projetos por Tipo
-      </h2>
-
+      <h2 className="text-xl font-semibold text-vinculo-dark">Projetos por Tipo</h2>
       <div className="mt-8 flex flex-col gap-6">
         {ongProjectTypeMetrics.map((metric) => (
           <div key={metric.label}>
@@ -138,7 +180,6 @@ function ProjectsByTypeCard({ onDetails }: { onDetails: () => void }) {
           </div>
         ))}
       </div>
-
       <button
         type="button"
         className="mx-auto mt-8 flex items-center gap-1 rounded-lg px-3 py-2 text-base font-semibold text-vinculo-dark transition hover:bg-blue-50"
@@ -167,10 +208,7 @@ function ProjectStatusCard({
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
       <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-        <h2 className="text-xl font-semibold text-vinculo-dark">
-          Status dos Projetos
-        </h2>
-
+        <h2 className="text-xl font-semibold text-vinculo-dark">Status dos Projetos</h2>
         <div className="flex flex-wrap gap-2">
           {FILTERS.map((filter) => {
             const isSelected = selectedFilter === filter.id
@@ -212,43 +250,23 @@ function ProjectStatusCard({
               >
                 <DescriptionOutlinedIcon fontSize="small" />
               </span>
-              <span className="font-semibold text-vinculo-dark">
-                {project.title}
-              </span>
+              <span className="font-semibold text-vinculo-dark">{project.title}</span>
             </div>
-            <span className="flex items-center justify-between gap-3 text-slate-600 lg:block">
-              <span className="text-xs font-semibold uppercase text-slate-400 lg:hidden">
-                Tipo
-              </span>
-              {project.type}
-            </span>
-            <span className="flex items-center justify-between gap-3 lg:block">
-              <span className="text-xs font-semibold uppercase text-slate-400 lg:hidden">
-                Status
-              </span>
-              <StatusBadge status={project.status} />
-            </span>
-            <div className="flex items-center justify-between gap-3 lg:justify-start">
-              <span className="text-xs font-semibold uppercase text-slate-400 lg:hidden">
-                Progresso
-              </span>
-              <div className="flex min-w-0 flex-1 items-center gap-3 lg:flex-none">
-                <div className="w-full min-w-20 max-w-28">
-                  <ProgressBar
-                    value={project.progress}
-                    trackClass="bg-slate-200"
-                    ariaLabel={`Progresso de ${project.title}`}
-                  />
-                </div>
-                <span className="text-sm text-slate-500">
-                  {project.progress}%
-                </span>
+            <span className="text-slate-600">{project.type}</span>
+            <StatusBadge status={project.status} />
+            <div className="flex items-center gap-3">
+              <div className="flex-1 max-w-28">
+                <ProgressBar
+                  value={project.progress}
+                  trackClass="bg-slate-200"
+                  ariaLabel={`Progresso de ${project.title}`}
+                />
               </div>
+              <span className="text-sm text-slate-500">{project.progress}%</span>
             </div>
             <button
               type="button"
-              className="flex h-10 w-full items-center justify-center rounded-lg text-vinculo-dark transition hover:bg-blue-50 lg:w-10"
-              aria-label={`Ver ${project.title}`}
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-vinculo-dark transition hover:bg-blue-50"
               onClick={onViewProject}
             >
               <VisibilityOutlinedIcon fontSize="small" />
@@ -256,28 +274,16 @@ function ProjectStatusCard({
           </div>
         ))}
       </div>
-
-      <button
-        type="button"
-        className="mx-auto mt-5 flex items-center gap-1 rounded-lg px-3 py-2 text-base font-semibold text-vinculo-dark transition hover:bg-blue-50"
-        onClick={onViewProject}
-      >
-        Ver todos os projetos
-        <ArrowForwardIcon fontSize="small" />
-      </button>
     </article>
   )
 }
 
 function StatusBadge({ status }: { status: OngDashboardStatus }) {
   const isActive = status === "Ativo"
-
   return (
     <span
       className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${
-        isActive
-          ? "bg-green-100 text-emerald-700"
-          : "bg-amber-50 text-amber-700"
+        isActive ? "bg-green-100 text-emerald-700" : "bg-amber-50 text-amber-700"
       }`}
     >
       {status}
@@ -292,20 +298,15 @@ function FundingOpportunitiesBanner() {
         <div className="grid h-16 w-16 shrink-0 place-items-center rounded-lg bg-white/20">
           <CampaignOutlinedIcon fontSize="large" />
         </div>
-
         <div className="min-w-0 flex-1">
           <h2 className="text-2xl font-semibold leading-8">
             Novas Oportunidades de Financiamento Disponíveis
           </h2>
           <p className="mt-3 max-w-3xl text-base leading-7 text-white/90">
-            Explore editais ativos e descubra oportunidades de captação de
-            recursos para seus projetos. Confira prazos, requisitos e documentos
-            necessários.
+            Explore editais ativos e descubra oportunidades de captação de recursos para seus projetos.
           </p>
-
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
             <BaseButton
-              type="button"
               variant="primary"
               className="min-h-12 bg-white! px-6 text-vinculo-dark! hover:bg-slate-100"
             >
