@@ -287,7 +287,7 @@ function StatusBadge({ status }: { status: OngDashboardStatus }) {
 
 function FundingOpportunitiesBanner() {
   return (
-    <section className="rounded-lg bg-gradient-to-r from-vinculo-dark to-blue-600 p-6 text-white shadow-sm sm:p-8">
+    <section className="rounded-lg bg-linear-to-r from-vinculo-dark to-blue-600 p-6 text-white shadow-sm sm:p-8">
       <div className="flex flex-col gap-5 md:flex-row md:items-start">
         <div className="grid h-16 w-16 shrink-0 place-items-center rounded-lg bg-white/20">
           <CampaignOutlinedIcon fontSize="large" />
