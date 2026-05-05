@@ -43,7 +43,6 @@ const UploadModal = ({ isOpen, onClose, onUpload }: UploadDocumentModalProps) =>
       onClose={handleClose} 
       fullWidth 
       maxWidth="sm"
-      // Garante que o scroll não quebre o layout interno
       PaperProps={{
         sx: { borderRadius: 2 }
       }}
@@ -56,7 +55,6 @@ const UploadModal = ({ isOpen, onClose, onUpload }: UploadDocumentModalProps) =>
       </DialogTitle>
 
       <DialogContent dividers sx={{ p: 3 }}>
-        {/* Box com display flex e width 100% para evitar quebras de float */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, width: '100%' }}>
           
           <Box sx={{ width: '100%' }}>
@@ -92,15 +90,13 @@ const UploadModal = ({ isOpen, onClose, onUpload }: UploadDocumentModalProps) =>
             <Typography variant="body2" fontWeight="bold" gutterBottom sx={{ color: '#374151' }}>
               Documentos Anexos
             </Typography>
-            {/* O "component=label" às vezes conflita com o flex do MUI. 
-                Ajustamos para garantir centralização total. */}
             <Box
               component="label"
               sx={{
                 border: '2px dashed #e0e7ff',
                 borderRadius: 2,
                 p: 4,
-                display: 'flex', // Força flexbox aqui
+                display: 'flex', 
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -108,7 +104,7 @@ const UploadModal = ({ isOpen, onClose, onUpload }: UploadDocumentModalProps) =>
                 cursor: 'pointer',
                 bgcolor: '#f8faff',
                 width: '100%',
-                boxSizing: 'border-box', // Garante que o padding não estoure a largura
+                boxSizing: 'border-box', 
                 '&:hover': { bgcolor: '#f0f4ff' }
               }}
             >
@@ -148,7 +144,6 @@ const UploadModal = ({ isOpen, onClose, onUpload }: UploadDocumentModalProps) =>
             fontWeight: 'bold', 
             bgcolor: '#67ac74',
             '&:hover': { bgcolor: '#5a9665' },
-            // Evita que o botão herde estilos globais de margin
             m: '0 !important' 
           }}
         >
