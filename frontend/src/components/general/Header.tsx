@@ -7,6 +7,7 @@ import { AuthRedirectModal } from "../auth/AuthRedirectModal"
 import LanguageIcon from "@mui/icons-material/Language"
 import MenuIcon from "@mui/icons-material/Menu"
 import CloseIcon from "@mui/icons-material/Close"
+import { resolveDashboardPath } from "../../utils/dashboardPath"
 
 const auth0Audience = import.meta.env.VITE_AUTH0_AUDIENCE
 
@@ -14,7 +15,7 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isAuthRedirectModalOpen, setIsAuthRedirectModalOpen] = useState(false)
   const navigate = useNavigate()
-  const { isAuthenticated, loginWithRedirect, logout } = useAuth0()
+  const { isAuthenticated, loginWithRedirect, logout, user } = useAuth0()
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
   const openLoginRedirectNotice = () => {
@@ -50,12 +51,13 @@ export function Header() {
 
   const handleAuthClick = isAuthenticated ? handleLogout : openLoginRedirectNotice
   const authButtonLabel = isAuthenticated ? "Sair" : "Entrar"
+  const homePath = isAuthenticated ? resolveDashboardPath(user) : "/"
 
   return (
     <header className="bg-vinculo-dark w-full shadow-md relative z-50">
       <div className="px-6 md:px-8 py-4 flex justify-between items-center">
         <Link
-          to="/"
+          to={homePath}
           className="flex items-center gap-2 text-white text-xl font-bold hover:opacity-90 transition-opacity"
           aria-label="Ir para a página inicial"
         >
