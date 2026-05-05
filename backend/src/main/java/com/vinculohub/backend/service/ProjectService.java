@@ -62,6 +62,7 @@ public class ProjectService {
                         .type(request.type())
                         .budgetNeeded(request.capital())
                         .focusArea("")
+                        .type(request.type())
                         .ods(odsService.resolveSelection(request.ods()))
                         .build();
 

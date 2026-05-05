@@ -25,13 +25,13 @@ const PROJECT_TYPE_OPTIONS: Array<{
   description: string;
 }> = [
   {
-    value: "social",
-    label: "Social",
+    value: "social_investment_law",
+    label: "Investimento Social Privado",
     description: "Não exige meta de captação.",
   },
   {
-    value: "governamental",
-    label: "Governamental",
+    value: "tax_incentive_law",
+    label: "Leis de Incentivo",
     description: "Exige meta de captação.",
   },
 ];
@@ -125,7 +125,7 @@ export function Step4({
             setFormData((prev) => ({
               ...prev,
               tipoProjeto: nextType,
-              metaCaptacao: nextType === "governamental" ? prev.metaCaptacao : "",
+              metaCaptacao: nextType === "tax_incentive_law" ? prev.metaCaptacao : "",
             }));
           }}
           className={`w-full rounded-xl px-4 py-3 outline-none transition-all text-slate-900
@@ -156,7 +156,7 @@ export function Step4({
         )}
       </div>
 
-      {formData.tipoProjeto === "governamental" && (
+      {formData.tipoProjeto === "tax_incentive_law" && (
         <Input
           id="metaCaptacao"
           label="Meta de captação"
