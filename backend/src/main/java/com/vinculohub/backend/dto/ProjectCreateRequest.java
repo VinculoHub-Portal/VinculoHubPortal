@@ -20,14 +20,13 @@ public record ProjectCreateRequest(
         @NotBlank(message = "Resumo é obrigatório")
                 @Size(min = 50, max = 500, message = "Resumo deve ter entre 50 e 500 caracteres")
                 String description,
-        @NotNull(message = "Valor necessário é obrigatório")
-                @DecimalMin(value = "0.00", message = "Valor necessário não pode ser negativo")
+        @DecimalMin(value = "0.00", message = "Valor necessário não pode ser negativo")
                 BigDecimal budgetNeeded,
         LocalDate startDate,
         LocalDate endDate,
         @NotEmpty(message = "ODS é obrigatório") List<Integer> odsIds,
         @NotNull(message = "Tipo de projeto é obrigatório") ProjectType type,
-        @NotBlank(message = "Área de atuação é obrigatória") String focusArea,
+        String focusArea,
         String fundraisingDeadline,
         Integer beneficiariesCount,
         String location,
