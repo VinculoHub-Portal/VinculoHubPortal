@@ -13,7 +13,7 @@ import {
   ongDashboardProjects,
   ongProjectTypeMetrics,
   type OngDashboardStatus,
-} from "./ongDashboardMock"
+} from "./ongDashboardMockData"
 
 type OngDashboardFilter = "all" | "active" | "fundraising"
 
@@ -42,7 +42,8 @@ export function OngDashboardMock({
   successMessage = null,
 }: OngDashboardMockProps) {
   const navigate = useNavigate()
-  const [selectedFilter, setSelectedFilter] = useState<OngDashboardFilter>("all")
+  const [selectedFilter, setSelectedFilter] =
+    useState<OngDashboardFilter>("all")
 
   const filteredProjects = useMemo(
     () =>
@@ -232,14 +233,16 @@ function ProjectStatusCard({
                 Progresso
               </span>
               <div className="flex min-w-0 flex-1 items-center gap-3 lg:flex-none">
-              <div className="w-full min-w-20 max-w-28">
-                <ProgressBar
-                  value={project.progress}
-                  trackClass="bg-slate-200"
-                  ariaLabel={`Progresso de ${project.title}`}
-                />
-              </div>
-              <span className="text-sm text-slate-500">{project.progress}%</span>
+                <div className="w-full min-w-20 max-w-28">
+                  <ProgressBar
+                    value={project.progress}
+                    trackClass="bg-slate-200"
+                    ariaLabel={`Progresso de ${project.title}`}
+                  />
+                </div>
+                <span className="text-sm text-slate-500">
+                  {project.progress}%
+                </span>
               </div>
             </div>
             <button
@@ -295,8 +298,9 @@ function FundingOpportunitiesBanner() {
             Novas Oportunidades de Financiamento Disponíveis
           </h2>
           <p className="mt-3 max-w-3xl text-base leading-7 text-white/90">
-            Explore editais ativos e descubra oportunidades de captação de recursos
-            para seus projetos. Confira prazos, requisitos e documentos necessários.
+            Explore editais ativos e descubra oportunidades de captação de
+            recursos para seus projetos. Confira prazos, requisitos e documentos
+            necessários.
           </p>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
