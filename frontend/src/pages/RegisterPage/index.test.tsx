@@ -108,7 +108,7 @@ describe("RegisterPage", () => {
     );
     await user.selectOptions(
       screen.getByLabelText(/Tipo do projeto/i),
-      "social",
+      "social_investment_law",
     );
     expect(screen.queryByLabelText(/Meta de captação/i)).not.toBeInTheDocument();
     await user.click(
@@ -135,7 +135,7 @@ describe("RegisterPage", () => {
     );
     await user.selectOptions(
       screen.getByLabelText(/Tipo do projeto/i),
-      "governamental",
+      "tax_incentive_law",
     );
     expect(screen.getByLabelText(/Meta de captação/i)).toBeInTheDocument();
     await user.type(screen.getByLabelText(/Meta de captação/i), "10000");
@@ -180,7 +180,7 @@ describe("RegisterPage", () => {
     );
     await user.selectOptions(
       screen.getByLabelText(/Tipo do projeto/i),
-      "governamental",
+      "tax_incentive_law",
     );
     await user.type(screen.getByLabelText(/Meta de captação/i), "10000");
     await user.click(
@@ -224,7 +224,7 @@ describe("RegisterPage", () => {
     );
     await user.selectOptions(
       screen.getByLabelText(/Tipo do projeto/i),
-      "governamental",
+      "tax_incentive_law",
     );
     await user.type(screen.getByLabelText(/Meta de captação/i), "10000");
     await user.click(
@@ -240,7 +240,7 @@ describe("RegisterPage", () => {
       expect.objectContaining({
         appState: { returnTo: "/ong/dashboard" },
         authorizationParams: expect.objectContaining({
-          projectType: "governamental",
+          projectType: "tax_incentive_law",
           role: "NPO",
           screen_hint: "signup",
           ui_locales: "pt-BR",
@@ -248,7 +248,7 @@ describe("RegisterPage", () => {
       }),
     );
     expect(sessionStorage.getItem("vinculohub:npo-signup-draft")).toContain(
-      '"tipoProjeto":"governamental"',
+      '"tipoProjeto":"tax_incentive_law"',
     );
 
     (resolveLogin as (() => void) | null)?.();

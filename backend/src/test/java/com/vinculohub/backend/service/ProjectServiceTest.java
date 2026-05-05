@@ -65,7 +65,6 @@ class ProjectServiceTest {
                 new NpoFirstProjectSignupRequest(
                         "Projeto Inicial",
                         "Descrição do projeto inicial",
-                        ProjectType.SOCIAL_INVESTMENT_LAW,
                         new BigDecimal("1000.00"),
                         List.of("1", "2"),
                         ProjectType.SOCIAL_INVESTMENT_LAW);

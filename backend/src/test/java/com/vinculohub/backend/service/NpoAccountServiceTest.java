@@ -176,9 +176,8 @@ class NpoAccountServiceTest {
                 new NpoFirstProjectSignupRequest(
                         "Projeto Inicial",
                         "Projeto piloto",
-                        ProjectType.TAX_INCENTIVE_LAW,
                         new BigDecimal("1000.00"),
                         List.of("1", "2"),
-                        ProjectType.SOCIAL_INVESTMENT_LAW));
+                        ProjectType.TAX_INCENTIVE_LAW));
     }
 }
