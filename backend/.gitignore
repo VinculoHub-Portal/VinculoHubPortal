@@ -43,4 +43,3 @@ build/
 
 # Arquivos de log e travas
 .terraform.lock.hcl
-*.log

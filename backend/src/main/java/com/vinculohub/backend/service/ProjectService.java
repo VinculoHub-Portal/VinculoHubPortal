@@ -1,32 +1,36 @@
 /* (C)2026 */
 package com.vinculohub.backend.service;
 
-import com.vinculohub.backend.dto.NewProjectRequest;
-import com.vinculohub.backend.dto.NewProjectResponse;
 import com.vinculohub.backend.dto.NpoFirstProjectSignupRequest;
 import com.vinculohub.backend.dto.OdsResponse;
-import com.vinculohub.backend.dto.ProjectDetailResponse;
+import com.vinculohub.backend.dto.ProjectCreateRequest;
+import com.vinculohub.backend.dto.ProjectCreateResponse;
 import com.vinculohub.backend.dto.ProjectFilterParams;
 import com.vinculohub.backend.dto.ProjectListItemDTO;
+import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.NotFoundException;
+import com.vinculohub.backend.exception.UserNotFoundException;
 import com.vinculohub.backend.model.Npo;
+import com.vinculohub.backend.model.Ods;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.User;
-import com.vinculohub.backend.model.enums.ProjectType;
-import com.vinculohub.backend.model.enums.UserType;
+import com.vinculohub.backend.model.enums.ProjectStatus;
 import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.ProjectRepository;
 import com.vinculohub.backend.repository.UserRepository;
 import com.vinculohub.backend.repository.specification.ProjectSpecification;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProjectService {
@@ -59,9 +63,7 @@ public class ProjectService {
                                 requireText(
                                         request.description(),
                                         "Descrição do projeto é obrigatória."))
-                        .type(request.type())
                         .budgetNeeded(request.capital())
-                        .focusArea("")
                         .type(request.type())
                         .ods(odsService.resolveSelection(request.ods()))
                         .build();
@@ -70,53 +72,60 @@ public class ProjectService {
     }
 
     @Transactional
-    public NewProjectResponse createNewProjectForAuthenticatedNpo(
-            String auth0Id, NewProjectRequest request) {
+    public ProjectCreateResponse createProject(String auth0Id, ProjectCreateRequest request) {
+        if (auth0Id == null || auth0Id.isBlank()) {
+            log.error("Usuário autenticado não identificado");
+            throw new BadRequestException("Não foi possível identificar o usuário autenticado.");
+        }
+
         if (request == null) {
-            throw new IllegalArgumentException("Os dados do projeto são obrigatórios.");
+            throw new BadRequestException("Dados do projeto são obrigatórios.");
         }
 
-        User user =
-                userRepository
-                        .findByAuth0Id(requireText(auth0Id, "Identidade Auth0 é obrigatória."))
-                        .orElseThrow(
-                                () -> new NotFoundException("Usuário autenticado não encontrado."));
+        log.info("Creating project | auth0Id={} title={}", auth0Id, request.title());
 
-        if (user.getUserType() != UserType.npo) {
-            throw new IllegalArgumentException("Apenas ONGs podem criar projetos.");
-        }
-
+        User user = userRepository.findByAuth0Id(auth0Id).orElseThrow(UserNotFoundException::new);
         Npo npo =
                 npoRepository
                         .findByUserId(user.getId())
-                        .orElseThrow(
-                                () -> new NotFoundException("ONG autenticada não encontrada."));
+                        .orElseThrow(() -> new NotFoundException("ONG não encontrada"));
 
-        ProjectType type = requireProjectType(request.type());
-        BigDecimal capital = normalizeCapital(type, request.capital());
+        Set<Ods> ods;
+        try {
+            List<String> odsIds =
+                    request.odsIds() == null
+                            ? null
+                            : request.odsIds().stream()
+                                    .map(odsId -> String.valueOf(odsId))
+                                    .toList();
+            ods = odsService.resolveSelection(odsIds);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("ODS inválido");
+        }
 
         Project project =
                 Project.builder()
                         .npo(npo)
-                        .title(requireText(request.name(), "Nome do projeto é obrigatório."))
-                        .description(
-                                requireText(
-                                        request.description(),
-                                        "Descrição do projeto é obrigatória."))
-                        .type(type)
-                        .budgetNeeded(capital)
-                        .focusArea("")
-                        .ods(odsService.resolveSelection(request.ods()))
+                        .title(request.title())
+                        .description(request.description())
+                        .budgetNeeded(request.budgetNeeded())
+                        .investedAmount(BigDecimal.ZERO)
+                        .status(ProjectStatus.ACTIVE)
+                        .type(request.type())
+                        .startDate(request.startDate())
+                        .endDate(request.endDate())
+                        .ods(ods)
+                        .focusArea(request.focusArea())
+                        .fundraisingDeadline(request.fundraisingDeadline())
+                        .beneficiariesCount(request.beneficiariesCount())
+                        .location(request.location())
+                        .mainObjective(request.mainObjective())
                         .build();
 
-        Project savedProject = save(project);
-        return new NewProjectResponse(
-                savedProject.getId(),
-                savedProject.getTitle(),
-                savedProject.getDescription(),
-                savedProject.getType(),
-                savedProject.getBudgetNeeded(),
-                savedProject.getNpo().getId());
+        Project saved = projectRepository.save(project);
+        log.info("Project persisted | id={} npoId={}", saved.getId(), npo.getId());
+
+        return toCreateResponse(saved);
     }
 
     @Transactional(readOnly = true)
@@ -127,42 +136,9 @@ public class ProjectService {
 
     @Transactional(readOnly = true)
     public Project findById(Long id) {
-        if (id == null) {
-            throw new IllegalArgumentException("Identificador do projeto é obrigatório.");
-        }
-
         return projectRepository
                 .findById(id)
                 .orElseThrow(() -> new NotFoundException("Projeto não encontrado."));
-    }
-
-    @Transactional(readOnly = true)
-    public ProjectDetailResponse getProjectDetail(Long id) {
-        Project project = findById(id);
-        return toDetailResponse(project);
-    }
-
-    private static ProjectType requireProjectType(ProjectType type) {
-        if (type == null) {
-            throw new IllegalArgumentException("Tipo do projeto é obrigatório.");
-        }
-        return type;
-    }
-
-    private static BigDecimal normalizeCapital(ProjectType type, BigDecimal capital) {
-        if (type == ProjectType.SOCIAL_INVESTMENT_LAW) {
-            return null;
-        }
-
-        if (capital == null) {
-            throw new IllegalArgumentException("Meta de captação é obrigatória.");
-        }
-
-        if (capital.signum() < 0) {
-            throw new IllegalArgumentException("Meta de captação inválida.");
-        }
-
-        return capital;
     }
 
     private static String requireText(String value, String message) {
@@ -172,9 +148,10 @@ public class ProjectService {
         return value.trim();
     }
 
-    private static ProjectDetailResponse toDetailResponse(Project project) {
-        List<OdsResponse> ods =
-                project.getOds().stream()
+    private ProjectCreateResponse toCreateResponse(Project project) {
+        Set<Ods> ods = project.getOds() == null ? Set.of() : project.getOds();
+        List<OdsResponse> odsResponses =
+                ods.stream()
                         .map(
                                 item ->
                                         new OdsResponse(
@@ -183,21 +160,23 @@ public class ProjectService {
                                                 item.getDescription()))
                         .toList();
 
-        return new ProjectDetailResponse(
-                project.getId(),
-                project.getTitle(),
-                project.getDescription(),
-                project.getStatus().name(),
-                project.getType(),
-                project.getBudgetNeeded(),
-                project.getInvestedAmount(),
-                ods,
-                project.getStartDate(),
-                project.getEndDate(),
-                project.getFocusArea(),
-                project.getFundraisingDeadline(),
-                project.getBeneficiariesCount(),
-                project.getLocation(),
-                project.getMainObjective());
+        return ProjectCreateResponse.builder()
+                .id(project.getId())
+                .npoId(project.getNpo().getId())
+                .title(project.getTitle())
+                .description(project.getDescription())
+                .status(project.getStatus())
+                .type(project.getType())
+                .budgetNeeded(project.getBudgetNeeded())
+                .investedAmount(project.getInvestedAmount())
+                .startDate(project.getStartDate())
+                .endDate(project.getEndDate())
+                .ods(odsResponses)
+                .focusArea(project.getFocusArea())
+                .fundraisingDeadline(project.getFundraisingDeadline())
+                .beneficiariesCount(project.getBeneficiariesCount())
+                .location(project.getLocation())
+                .mainObjective(project.getMainObjective())
+                .build();
     }
 }

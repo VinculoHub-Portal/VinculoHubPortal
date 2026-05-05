@@ -1,14 +1,18 @@
 /* (C)2026 */
 package com.vinculohub.backend.controller;
 
-import com.vinculohub.backend.dto.NewProjectRequest;
-import com.vinculohub.backend.dto.NewProjectResponse;
+import com.vinculohub.backend.dto.OdsResponse;
+import com.vinculohub.backend.dto.ProjectCreateRequest;
+import com.vinculohub.backend.dto.ProjectCreateResponse;
 import com.vinculohub.backend.dto.ProjectDetailResponse;
 import com.vinculohub.backend.dto.ProjectFilterParams;
 import com.vinculohub.backend.dto.ProjectListItemDTO;
+import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.enums.ProjectStatus;
 import com.vinculohub.backend.model.enums.ProjectType;
 import com.vinculohub.backend.service.ProjectService;
+import jakarta.validation.Valid;
+import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,11 +41,11 @@ public class ProjectController {
 
     @PostMapping
     @PreAuthorize("hasRole('NPO')")
-    public ResponseEntity<NewProjectResponse> createProject(
-            @AuthenticationPrincipal Jwt jwt, @RequestBody NewProjectRequest request) {
-        log.info("POST /api/projects | sub={} name={}", jwt.getSubject(), request.name());
-        NewProjectResponse response =
-                projectService.createNewProjectForAuthenticatedNpo(jwt.getSubject(), request);
+    public ResponseEntity<ProjectCreateResponse> createProject(
+            @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody ProjectCreateRequest request) {
+        log.info("POST /api/projects | sub={} title={}", jwt.getSubject(), request.title());
+        ProjectCreateResponse response = projectService.createProject(jwt.getSubject(), request);
+        log.info("Project created | id={} npoId={}", response.id(), response.npoId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -72,7 +76,37 @@ public class ProjectController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProjectDetailResponse> getProjectById(@PathVariable Long id) {
-        return ResponseEntity.ok(projectService.getProjectDetail(id));
+    public ResponseEntity<ProjectDetailResponse> getById(@PathVariable Long id) {
+        log.info("GET /api/projects/{}", id);
+        Project project = projectService.findById(id);
+        return ResponseEntity.ok(toResponse(project));
+    }
+
+    private static ProjectDetailResponse toResponse(Project project) {
+        List<OdsResponse> ods =
+                project.getOds() == null
+                        ? List.of()
+                        : project.getOds().stream()
+                                .map(
+                                        o ->
+                                                new OdsResponse(
+                                                        o.getId(), o.getName(), o.getDescription()))
+                                .toList();
+        return new ProjectDetailResponse(
+                project.getId(),
+                project.getTitle(),
+                project.getDescription(),
+                project.getStatus().name(),
+                project.getType(),
+                project.getBudgetNeeded(),
+                project.getInvestedAmount(),
+                ods,
+                project.getStartDate(),
+                project.getEndDate(),
+                project.getFocusArea(),
+                project.getFundraisingDeadline(),
+                project.getBeneficiariesCount(),
+                project.getLocation(),
+                project.getMainObjective());
     }
 }
