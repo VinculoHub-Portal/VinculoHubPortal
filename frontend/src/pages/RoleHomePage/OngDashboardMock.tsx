@@ -4,13 +4,14 @@ import CampaignOutlinedIcon from "@mui/icons-material/CampaignOutlined"
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined"
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined"
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined"
+import { useAuth0 } from "@auth0/auth0-react"
 import { useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { useToast } from "../../context/ToastContext"
-import { uploadDocument } from "../../api/document" // Importação seguindo o padrão[cite: 2]
+import { uploadDocument } from "../../api/document" //[cite: 2]
 import { BaseButton } from "../../components/general/BaseButton"
 import { Header } from "../../components/general/Header"
 import { ProgressBar } from "../../components/general/ProgressBar"
+import { useToast } from "../../context/ToastContext"
 import UploadModal from "./UploadModal"
 import {
   ongDashboardProjects,
@@ -46,9 +47,8 @@ export function OngDashboardMock({
 }: OngDashboardMockProps) {
   const navigate = useNavigate()
   const { showToast } = useToast()
+  const { getAccessTokenSilently } = useAuth0() // Hook para autenticação
   const [selectedFilter, setSelectedFilter] = useState<OngDashboardFilter>("all")
-  
-  // Estado para controlar o Modal de Upload
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
 
   const filteredProjects = useMemo(
@@ -60,21 +60,30 @@ export function OngDashboardMock({
   )
 
   /**
-   * Executa o upload utilizando o serviço padronizado da API
+   * Realiza o upload do documento obtendo o token do Auth0
+   * para evitar o erro 401 (Unauthorized)
    */
   async function handleConfirmUpload(file: File, title: string, description: string) {
     try {
-      // payload baseado no DocumentRequestDTO[cite: 2]
-      await uploadDocument(file, {
-        title,
-        description,
-        npoId: 1, // Exemplo: idealmente recuperado do contexto de usuário
-      })
-      
-      showToast("Documento adicionado com sucesso!")
+      // Obtém o token de acesso de forma silenciosa
+      const token = await getAccessTokenSilently()
+
+      // Envia o arquivo e o payload baseado no DocumentRequestDTO[cite: 2]
+      await uploadDocument(
+        file,
+        {
+          title,
+          description,
+          npoId: 1, // ID da ONG; idealmente recuperado do seu contexto de usuário
+        },
+        token,
+      )
+
+      showToast("Documento enviado com sucesso!")
       setIsUploadModalOpen(false)
     } catch (error) {
-      showToast("Erro ao realizar o upload do documento. Tente novamente.")
+      console.error("Upload Error:", error) 
+      showToast("Não foi possível realizar o upload. Verifique sua conexão e tente novamente.")
     }
   }
 
@@ -103,7 +112,7 @@ export function OngDashboardMock({
               <AddIcon fontSize="small" />
               Novo Projeto
             </BaseButton>
-            
+
             <BaseButton
               type="button"
               variant="outline"
@@ -135,17 +144,17 @@ export function OngDashboardMock({
         <FundingOpportunitiesBanner />
 
         {/* Modal de Upload de Documentos */}
-        <UploadModal 
-          isOpen={isUploadModalOpen} 
-          onClose={() => setIsUploadModalOpen(false)} 
-          onUpload={handleConfirmUpload} 
+        <UploadModal
+          isOpen={isUploadModalOpen}
+          onClose={() => setIsUploadModalOpen(false)}
+          onUpload={handleConfirmUpload}
         />
       </main>
     </div>
   )
 }
 
-// --- Subcomponentes de Visualização (Mantidos conforme original) ---
+//Subcomponentes
 
 function ProjectsByTypeCard({ onDetails }: { onDetails: () => void }) {
   return (
@@ -156,7 +165,9 @@ function ProjectsByTypeCard({ onDetails }: { onDetails: () => void }) {
           <div key={metric.label}>
             <div className="flex items-center justify-between gap-4 text-base">
               <span className="text-slate-600">{metric.label}</span>
-              <span className="shrink-0 font-semibold text-slate-600">{metric.count} projetos</span>
+              <span className="shrink-0 font-semibold text-slate-600">
+                {metric.count} projetos
+              </span>
             </div>
             <div className="mt-3">
               <ProgressBar
@@ -188,7 +199,12 @@ interface ProjectStatusCardProps {
   onViewProject: () => void
 }
 
-function ProjectStatusCard({ selectedFilter, onFilterChange, projects, onViewProject }: ProjectStatusCardProps) {
+function ProjectStatusCard({
+  selectedFilter,
+  onFilterChange,
+  projects,
+  onViewProject,
+}: ProjectStatusCardProps) {
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
       <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
@@ -201,7 +217,9 @@ function ProjectStatusCard({ selectedFilter, onFilterChange, projects, onViewPro
                 key={filter.id}
                 type="button"
                 className={`min-h-11 rounded-lg border px-5 text-sm font-semibold transition ${
-                  isSelected ? "border-vinculo-dark bg-vinculo-dark text-white" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                  isSelected
+                    ? "border-vinculo-dark bg-vinculo-dark text-white"
+                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
                 }`}
                 onClick={() => onFilterChange(filter.id)}
               >
@@ -222,9 +240,14 @@ function ProjectStatusCard({ selectedFilter, onFilterChange, projects, onViewPro
 
       <div className="mt-4 flex flex-col gap-3 lg:mt-2 lg:gap-0 lg:divide-y-0">
         {projects.map((project) => (
-          <div key={project.id} className="grid grid-cols-1 gap-4 rounded-lg border border-slate-100 p-4 lg:grid-cols-[minmax(210px,1.6fr)_minmax(120px,0.9fr)_minmax(110px,0.75fr)_minmax(130px,1fr)_56px] lg:items-center lg:border-0 lg:p-0 lg:py-5">
+          <div
+            key={project.id}
+            className="grid grid-cols-1 gap-4 rounded-lg border border-slate-100 p-4 lg:grid-cols-[minmax(210px,1.6fr)_minmax(120px,0.9fr)_minmax(110px,0.75fr)_minmax(130px,1fr)_56px] lg:items-center lg:border-0 lg:p-0 lg:py-5"
+          >
             <div className="flex items-center gap-4">
-              <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-full text-white ${project.iconClassName}`}>
+              <span
+                className={`grid h-12 w-12 shrink-0 place-items-center rounded-full text-white ${project.iconClassName}`}
+              >
                 <DescriptionOutlinedIcon fontSize="small" />
               </span>
               <span className="font-semibold text-vinculo-dark">{project.title}</span>
@@ -233,7 +256,11 @@ function ProjectStatusCard({ selectedFilter, onFilterChange, projects, onViewPro
             <StatusBadge status={project.status} />
             <div className="flex items-center gap-3">
               <div className="flex-1 max-w-28">
-                <ProgressBar value={project.progress} trackClass="bg-slate-200" ariaLabel={`Progresso de ${project.title}`} />
+                <ProgressBar
+                  value={project.progress}
+                  trackClass="bg-slate-200"
+                  ariaLabel={`Progresso de ${project.title}`}
+                />
               </div>
               <span className="text-sm text-slate-500">{project.progress}%</span>
             </div>
@@ -254,7 +281,11 @@ function ProjectStatusCard({ selectedFilter, onFilterChange, projects, onViewPro
 function StatusBadge({ status }: { status: OngDashboardStatus }) {
   const isActive = status === "Ativo"
   return (
-    <span className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${isActive ? "bg-green-100 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+    <span
+      className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${
+        isActive ? "bg-green-100 text-emerald-700" : "bg-amber-50 text-amber-700"
+      }`}
+    >
       {status}
     </span>
   )
@@ -268,14 +299,23 @@ function FundingOpportunitiesBanner() {
           <CampaignOutlinedIcon fontSize="large" />
         </div>
         <div className="min-w-0 flex-1">
-          <h2 className="text-2xl font-semibold leading-8">Novas Oportunidades de Financiamento</h2>
-          <p className="mt-3 max-w-3xl text-base leading-7 text-white/90">Explore editais ativos e descubra oportunidades de captação de recursos.</p>
+          <h2 className="text-2xl font-semibold leading-8">
+            Novas Oportunidades de Financiamento Disponíveis
+          </h2>
+          <p className="mt-3 max-w-3xl text-base leading-7 text-white/90">
+            Explore editais ativos e descubra oportunidades de captação de recursos para seus projetos.
+          </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <BaseButton variant="primary" className="min-h-12 bg-white! px-6 text-vinculo-dark! hover:bg-slate-100">
+            <BaseButton
+              variant="primary"
+              className="min-h-12 bg-white! px-6 text-vinculo-dark! hover:bg-slate-100"
+            >
               <DescriptionOutlinedIcon fontSize="small" />
-              Acessar Mural
+              Acessar Mural de Editais
             </BaseButton>
-            <span className="w-fit rounded-full bg-vinculo-green px-4 py-2 text-sm font-semibold text-white">3 editais ativos</span>
+            <span className="w-fit rounded-full bg-vinculo-green px-4 py-2 text-sm font-semibold text-white">
+              3 editais ativos
+            </span>
           </div>
         </div>
       </div>
