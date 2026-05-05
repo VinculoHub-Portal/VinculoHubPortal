@@ -19,30 +19,9 @@ export function IncentiveCard() {
           </div>
         </div>
 
-        <div className="space-y-3">
-          <div className="rounded-2xl font-semibold bg-slate-100 px-5 py-4 text-slate-700">
-            Lei Rouanet (Federal)
-          </div>
-          <div className="rounded-2xl font-semibold bg-slate-100 px-5 py-4 text-slate-700">
-            Lei do Audiovisual (Federal)
-          </div>
-          <div className="rounded-2xl font-semibold bg-slate-100 px-5 py-4 text-slate-700">
-            Lei de Incentivo ao Esporte (Federal)
-          </div>
-          <div className="rounded-2xl font-semibold bg-slate-100 px-5 py-4 text-slate-700">
-            Fundo do Idoso (Federal/Estadual/Municipal)
-          </div>
-          <div className="rounded-2xl font-semibold bg-slate-100 px-5 py-4 text-slate-700">
-            Fundo de Criança e Adolescente (Federal/Estadual/Municipal)
-          </div>
-          <div className="rounded-2xl font-semibold bg-slate-100 px-5 py-4 text-slate-700">
-            PRONON/PRONAS (Federal)
-          </div>
-        </div>
-
         <button
           onClick={() => navigate("/empresa/leis-de-incentivo")}
-          className="mt-8 w-full rounded-2xl bg-vinculo-dark px-6 py-4 text-white text-lg hover:bg-slate-800 transition-colors"
+          className="mt-2 w-full rounded-2xl bg-vinculo-dark px-6 py-4 text-white text-lg hover:bg-slate-800 transition-colors"
         >
           Ver projetos disponíveis
         </button>
