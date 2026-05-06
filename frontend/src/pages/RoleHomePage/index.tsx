@@ -96,7 +96,7 @@ export function RoleHomePage({
       errors.tipoProjeto = "Selecione o tipo do projeto.";
     }
 
-    if (data.tipoProjeto === "governamental" && !data.metaCaptacao.trim()) {
+    if (data.tipoProjeto === "tax_incentive_law" && !data.metaCaptacao.trim()) {
       errors.metaCaptacao = "Informe a meta de captação.";
     }
 
@@ -120,12 +120,16 @@ export function RoleHomePage({
     try {
       const token = await getAccessTokenSilently();
       const budgetValue =
-        newProjectFormData.tipoProjeto === "governamental"
+        newProjectFormData.tipoProjeto === "tax_incentive_law"
           ? Number(newProjectFormData.metaCaptacao) / 100
           : 0;
-      const typeMap: Record<string, CreateProjectPayload["type"]> = {
-        social: "SOCIAL",
-        governamental: "GOVERNMENTAL",
+      const typeMap: Record<
+        WizardFormData["tipoProjeto"],
+        CreateProjectPayload["type"]
+      > = {
+        "": "SOCIAL_INVESTMENT_LAW",
+        social_investment_law: "SOCIAL_INVESTMENT_LAW",
+        tax_incentive_law: "TAX_INCENTIVE_LAW",
       };
 
       await createProject(
@@ -134,7 +138,7 @@ export function RoleHomePage({
           description: newProjectFormData.descricaoProjeto,
           budgetNeeded: budgetValue,
           odsIds: newProjectFormData.odsProjeto.map(Number),
-          type: typeMap[newProjectFormData.tipoProjeto] ?? "SOCIAL",
+          type: typeMap[newProjectFormData.tipoProjeto],
           focusArea: newProjectFormData.tipoProjeto,
           mainObjective: newProjectFormData.descricaoProjeto,
         },

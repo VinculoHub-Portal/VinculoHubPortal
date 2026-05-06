@@ -2,7 +2,10 @@ import { useAuth0 } from "@auth0/auth0-react";
 import axios from "axios";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { registerCompany, type CompanyRegistrationPayload } from "../../api/company";
+import {
+  registerCompany,
+  type CompanyRegistrationPayload,
+} from "../../api/company";
 import { mapWizardProjectType } from "../../api/newProject";
 import { api } from "../../services/api";
 import type { WizardFormData } from "../../types/wizard.types";
@@ -43,7 +46,8 @@ const companyWizardProgressKey = "vinculohub:company-wizard-progress";
 const rolesClaim = "https://vinculohub/roles";
 
 export function AuthRoleRedirect() {
-  const { getAccessTokenSilently, isAuthenticated, isLoading, user } = useAuth0();
+  const { getAccessTokenSilently, isAuthenticated, isLoading, user } =
+    useAuth0();
   const location = useLocation();
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -64,8 +68,12 @@ export function AuthRoleRedirect() {
         logger.info("AuthRedirect", "Token acquired");
 
         const hasNpoDraft = sessionStorage.getItem(npoSignupDraftKey) !== null;
-        const hasCompanyDraft = sessionStorage.getItem(companySignupDraftKey) !== null;
-        logger.info("AuthRedirect", "Draft check", { hasNpoDraft, hasCompanyDraft });
+        const hasCompanyDraft =
+          sessionStorage.getItem(companySignupDraftKey) !== null;
+        logger.info("AuthRedirect", "Draft check", {
+          hasNpoDraft,
+          hasCompanyDraft,
+        });
 
         let npoDraftSubmitted = false;
         let companyDraftSubmitted = false;
@@ -77,13 +85,19 @@ export function AuthRoleRedirect() {
             npoDraftSubmitted = true;
             logger.info("AuthRedirect", "NPO draft submitted successfully");
           } catch (error) {
-            logger.error("AuthRedirect", "NPO draft submission failed", getErrorMessage(error));
+            logger.error(
+              "AuthRedirect",
+              "NPO draft submission failed",
+              getErrorMessage(error),
+            );
             if (isServiceUnavailableError(error)) {
               showToast("Serviço indisponível");
             } else {
               sessionStorage.removeItem(npoSignupDraftKey);
               sessionStorage.removeItem(npoWizardProgressKey);
-              showToast("Não foi possível concluir o cadastro. Tente novamente.");
+              showToast(
+                "Não foi possível concluir o cadastro. Tente novamente.",
+              );
             }
             navigate("/cadastro", { replace: true });
             return;
@@ -97,7 +111,11 @@ export function AuthRoleRedirect() {
             companyDraftSubmitted = true;
             logger.info("AuthRedirect", "Company draft submitted successfully");
           } catch (error) {
-            logger.error("AuthRedirect", "Company draft submission failed", getErrorMessage(error));
+            logger.error(
+              "AuthRedirect",
+              "Company draft submission failed",
+              getErrorMessage(error),
+            );
             sessionStorage.removeItem(companySignupDraftKey);
             sessionStorage.removeItem(companyWizardProgressKey);
             showToast("Não foi possível concluir o cadastro. Tente novamente.");
@@ -112,7 +130,9 @@ export function AuthRoleRedirect() {
 
         const tokenRoles = getRolesFromToken(token);
         const userRoles = getRolesFromUser(user);
-        const role = profileRole(profile) ?? resolvePrimaryRole([...tokenRoles, ...userRoles]);
+        const role =
+          profileRole(profile) ??
+          resolvePrimaryRole([...tokenRoles, ...userRoles]);
         const redirectPath = redirectPathAfterSignupDraft({
           profile,
           role,
@@ -129,11 +149,14 @@ export function AuthRoleRedirect() {
           redirectPath,
         });
 
-        const returnTo = sessionStorage.getItem(returnToKey)
-        sessionStorage.removeItem(returnToKey)
+        const returnTo = sessionStorage.getItem(returnToKey);
+        sessionStorage.removeItem(returnToKey);
 
         const justSubmittedDraft =
-          npoDraftSubmitted || companyDraftSubmitted || hasNpoDraft || hasCompanyDraft
+          npoDraftSubmitted ||
+          companyDraftSubmitted ||
+          hasNpoDraft ||
+          hasCompanyDraft;
 
         if (returnTo && !justSubmittedDraft) {
           logger.info("AuthRedirect", `Restoring deep-link to ${returnTo}`);
@@ -149,14 +172,23 @@ export function AuthRoleRedirect() {
     }
 
     void redirectByRole();
-  }, [getAccessTokenSilently, isAuthenticated, isLoading, location.pathname, navigate, showToast, user]);
+  }, [
+    getAccessTokenSilently,
+    isAuthenticated,
+    isLoading,
+    location.pathname,
+    navigate,
+    showToast,
+    user,
+  ]);
 
   return null;
 }
 
 function getErrorMessage(error: unknown) {
   if (axios.isAxiosError(error)) {
-    const message = (error.response?.data as { message?: string } | undefined)?.message;
+    const message = (error.response?.data as { message?: string } | undefined)
+      ?.message;
     return message ?? error.message;
   }
 
@@ -233,13 +265,11 @@ async function submitNpoSignupDraft(token: string, user: unknown) {
         description: formData.descricaoProjeto,
         type: mapWizardProjectType(formData.tipoProjeto),
         capital:
-          formData.tipoProjeto === "tax_incentive_law" && formData.metaCaptacao.trim()
+          formData.tipoProjeto === "tax_incentive_law" &&
+          formData.metaCaptacao.trim()
             ? Number(formData.metaCaptacao)
             : null,
         ods: formData.odsProjeto,
-        type: formData.tipoProjeto === "tax_incentive_law"
-          ? "TAX_INCENTIVE_LAW"
-          : "SOCIAL_INVESTMENT_LAW",
       },
     },
     {
@@ -270,7 +300,10 @@ async function submitCompanySignupDraft(token: string, user: unknown) {
   }
 
   const email = getUserEmail(user) ?? payload.email;
-  logger.info("AuthRedirect", "Calling registerCompany", { cnpj: payload.cnpj, email });
+  logger.info("AuthRedirect", "Calling registerCompany", {
+    cnpj: payload.cnpj,
+    email,
+  });
 
   await registerCompany(
     {
@@ -315,7 +348,10 @@ function getRolesFromUser(user: unknown) {
 
 function decodeBase64Url(value: string) {
   const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
-  const paddedBase64 = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+  const paddedBase64 = base64.padEnd(
+    base64.length + ((4 - (base64.length % 4)) % 4),
+    "=",
+  );
   const binary = atob(paddedBase64);
   const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
 

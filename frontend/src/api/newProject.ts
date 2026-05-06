@@ -17,7 +17,7 @@ export type NewProjectRequest = {
 export function mapWizardProjectType(
   projectType: WizardFormData["tipoProjeto"],
 ): NewProjectRequest["type"] {
-  return projectType === "governamental"
+  return projectType === "tax_incentive_law"
     ? "TAX_INCENTIVE_LAW"
     : "SOCIAL_INVESTMENT_LAW";
 }
@@ -41,7 +41,8 @@ export function toNewProjectRequest(
     description: formData.descricaoProjeto.trim(),
     type,
     capital:
-      formData.tipoProjeto === "governamental" && formData.metaCaptacao.trim()
+      formData.tipoProjeto === "tax_incentive_law" &&
+      formData.metaCaptacao.trim()
         ? Number(formData.metaCaptacao)
         : null,
     ods: formData.odsProjeto,

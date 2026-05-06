@@ -59,12 +59,12 @@ const PROJECT_TYPE_OPTIONS: Array<{
   description: string;
 }> = [
   {
-    value: "social",
+    value: "social_investment_law",
     label: "Social",
     description: "Não exige meta de captação.",
   },
   {
-    value: "governamental",
+    value: "tax_incentive_law",
     label: "Governamental",
     description: "Exige meta de captação.",
   },
@@ -256,7 +256,7 @@ export function ModalNewProject({
                     ...prev,
                     tipoProjeto: nextType,
                     metaCaptacao:
-                      nextType === "governamental" ? prev.metaCaptacao : "",
+                      nextType === "tax_incentive_law" ? prev.metaCaptacao : "",
                   }));
                 }}
                 className={`w-full rounded-xl px-4 py-3 outline-none transition-all text-slate-900
@@ -287,7 +287,7 @@ export function ModalNewProject({
               )}
             </div>
 
-            {formData.tipoProjeto === "governamental" && (
+            {formData.tipoProjeto === "tax_incentive_law" && (
               <Input
                 id="metaCaptacao"
                 label="Meta de captação"

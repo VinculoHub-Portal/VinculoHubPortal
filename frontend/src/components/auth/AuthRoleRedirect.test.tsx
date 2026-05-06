@@ -25,9 +25,10 @@ vi.mock("../../context/ToastContext", () => ({
 }));
 
 vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual<typeof import("react-router-dom")>(
-    "react-router-dom",
-  );
+  const actual =
+    await vi.importActual<typeof import("react-router-dom")>(
+      "react-router-dom",
+    );
 
   return {
     ...actual,
@@ -125,7 +126,7 @@ describe("AuthRoleRedirect", () => {
           nomeProjeto: "Projeto Escola",
           tipoProjeto: "social",
           descricaoProjeto: "Projeto voltado para educação básica.",
-          metaCaptacao: "10000",
+          metaCaptacao: null,
           odsProjeto: ["1"],
         },
       }),
@@ -143,6 +144,111 @@ describe("AuthRoleRedirect", () => {
 
     const [, payload] = mocks.apiPostMock.mock.calls[0];
     expect(payload.firstProject.capital).toBeNull();
+    expect(payload.firstProject.ods).toEqual(["1"]);
+  });
+});
+
+describe("AuthRoleRedirect", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    sessionStorage.clear();
+    sessionStorage.setItem("auth0-login-completed", "true");
+    sessionStorage.setItem(
+      "vinculohub:npo-signup-draft",
+      JSON.stringify({
+        formData: {
+          nomeInstituicao: "Instituto Teste",
+          email: "teste@exemplo.com",
+          senha: "Abcd1234",
+          confirmarSenha: "Abcd1234",
+          cnpj: "",
+          razaoSocial: "",
+          cpf: "529.982.247-25",
+          porteOng: "medio",
+          resumoInstitucional: "",
+          esg: ["governamental"],
+          zipCode: "",
+          street: "",
+          streetNumber: "",
+          complement: "",
+          city: "",
+          state: "",
+          stateCode: "",
+          phone: "",
+          nomeProjeto: "Projeto Escola",
+          tipoProjeto: "governamental",
+          descricaoProjeto: "Projeto voltado para educação básica.",
+          metaCaptacao: "10000",
+          odsProjeto: ["1"],
+        },
+      }),
+    );
+    mocks.getAccessTokenSilentlyMock.mockResolvedValue("token");
+    mocks.apiPostMock.mockRejectedValue(
+      Object.assign(new Error("Service unavailable"), {
+        isAxiosError: true,
+        response: { status: 503 },
+      }),
+    );
+  });
+
+  it("mostra serviço indisponível quando o envio falha por erro 5xx", async () => {
+    render(
+      <MemoryRouter initialEntries={["/cadastro"]}>
+        <AuthRoleRedirect />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(mocks.showToastMock).toHaveBeenCalledWith("Serviço indisponível");
+    });
+  });
+
+  it("requer capital quando o projeto é governamental", async () => {
+    mocks.apiPostMock.mockResolvedValueOnce({ data: {} });
+    sessionStorage.setItem(
+      "vinculohub:npo-signup-draft",
+      JSON.stringify({
+        formData: {
+          nomeInstituicao: "Instituto Teste",
+          email: "teste@exemplo.com",
+          senha: "Abcd1234",
+          confirmarSenha: "Abcd1234",
+          cnpj: "",
+          razaoSocial: "",
+          cpf: "529.982.247-25",
+          porteOng: "pequena",
+          resumoInstitucional: "",
+          esg: ["ambiental"],
+          zipCode: "",
+          street: "",
+          streetNumber: "",
+          complement: "",
+          city: "",
+          state: "",
+          stateCode: "",
+          phone: "",
+          nomeProjeto: "Projeto Privado",
+          tipoProjeto: "tax_incentive_law",
+          descricaoProjeto: "Projeto voltado para lucro.",
+          metaCaptacao: "10000",
+          odsProjeto: ["1"],
+        },
+      }),
+    );
+
+    render(
+      <MemoryRouter initialEntries={["/cadastro"]}>
+        <AuthRoleRedirect />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(mocks.apiPostMock).toHaveBeenCalled();
+    });
+
+    const [, payload] = mocks.apiPostMock.mock.calls[0];
+    expect(payload.firstProject.capital).toEqual(10000);
     expect(payload.firstProject.ods).toEqual(["1"]);
   });
 });
@@ -177,7 +283,10 @@ describe("AuthRoleRedirect — fix de deep-link (returnTo)", () => {
 
   it("não usa o returnTo quando há draft de company pendente", async () => {
     sessionStorage.setItem("auth0-return-to", "/empresa/leis-de-incentivo");
-    sessionStorage.setItem("vinculohub:company-signup-draft", JSON.stringify({ payload: null }));
+    sessionStorage.setItem(
+      "vinculohub:company-signup-draft",
+      JSON.stringify({ payload: null }),
+    );
     mocks.apiPostMock.mockResolvedValue({ data: {} });
 
     render(
