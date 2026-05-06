@@ -1,10 +1,14 @@
 import CloseIcon from "@mui/icons-material/Close";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { BaseButton } from "../general/BaseButton";
 import { Input } from "../general/Input";
 import { TextArea } from "../general/TextArea";
 import { ProjectOdsChips } from "./ProjectOdsChips";
 import type { OdsCatalogItem } from "../../api/ods";
+import {
+  formatCurrencyValue,
+  normalizeCurrencyValue,
+} from "../../utils/formatCurrency";
 
 export type CreateProjectFormData = {
   projectName: string;
@@ -77,6 +81,7 @@ export function CreateProjectModal({
   const [formData, setFormData] =
     useState<CreateProjectFormData>(INITIAL_FORM_DATA);
   const [errors, setErrors] = useState<FormErrors>({});
+  const budgetNeededInputRef = useRef<HTMLInputElement | null>(null);
 
   if (!open) return null;
 
@@ -120,6 +125,11 @@ export function CreateProjectModal({
     onSubmit(formData);
   }
 
+  function moveCaretToEnd(input: HTMLInputElement) {
+    const end = input.value.length;
+    input.setSelectionRange(end, end);
+  }
+
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/65 px-4 py-6"
@@ -130,9 +140,6 @@ export function CreateProjectModal({
       <div className="flex max-h-[calc(100vh-3rem)] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl outline-none">
         <header className="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-              Cadastrar novo projeto
-            </p>
             <h2
               id="create-project-title"
               className="mt-1 text-2xl font-bold text-vinculo-dark"
@@ -212,12 +219,90 @@ export function CreateProjectModal({
                 <Input
                   id="budgetNeeded"
                   label="Valor Necessário (R$)"
-                  inputMode="decimal"
-                  placeholder="Ex: 150.000,00"
-                  value={formData.budgetNeeded}
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder="R$ 0,00"
+                  value={formatCurrencyValue(formData.budgetNeeded)}
+                  inputRef={budgetNeededInputRef}
                   onChange={(event) =>
-                    updateField("budgetNeeded", event.target.value)
+                    updateField(
+                      "budgetNeeded",
+                      normalizeCurrencyValue(event.target.value),
+                    )
                   }
+                  onKeyDown={(event) => {
+                    const key = event.key;
+
+                    if (/^\d$/.test(key)) {
+                      event.preventDefault();
+                      updateField(
+                        "budgetNeeded",
+                        normalizeCurrencyValue(
+                          `${formData.budgetNeeded}${key}`,
+                        ),
+                      );
+                      return;
+                    }
+
+                    if (key === "Backspace" || key === "Delete") {
+                      event.preventDefault();
+                      updateField(
+                        "budgetNeeded",
+                        formData.budgetNeeded.slice(0, -1),
+                      );
+                      return;
+                    }
+
+                    if (
+                      key === "ArrowLeft" ||
+                      key === "ArrowRight" ||
+                      key === "Home" ||
+                      key === "End"
+                    ) {
+                      requestAnimationFrame(() => {
+                        const input = budgetNeededInputRef.current;
+
+                        if (!input) {
+                          return;
+                        }
+
+                        moveCaretToEnd(input);
+                      });
+                    }
+                  }}
+                  onPaste={(event) => {
+                    event.preventDefault();
+                    const pastedDigits = event.clipboardData
+                      .getData("text")
+                      .replace(/\D/g, "");
+
+                    if (!pastedDigits) {
+                      return;
+                    }
+
+                    updateField(
+                      "budgetNeeded",
+                      normalizeCurrencyValue(
+                        `${formData.budgetNeeded}${pastedDigits}`,
+                      ),
+                    );
+                  }}
+                  onClick={() => {
+                    const input = budgetNeededInputRef.current;
+
+                    if (!input) {
+                      return;
+                    }
+
+                    moveCaretToEnd(input);
+                  }}
+                  onFocus={(event) => {
+                    moveCaretToEnd(event.currentTarget);
+                  }}
+                  onMouseUp={(event) => {
+                    moveCaretToEnd(event.currentTarget);
+                  }}
                   error={errors.budgetNeeded}
                 />
               )}
@@ -301,7 +386,9 @@ function FormSelect({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className={`w-full rounded-xl border border-vinculo-gray bg-white px-4 py-3 text-slate-900 outline-none transition-all focus:border-vinculo-dark focus:ring-1 focus:ring-vinculo-dark ${
-          error ? "!border !border-error focus:!border-error focus:!ring-error" : ""
+          error
+            ? "!border !border-error focus:!border-error focus:!ring-error"
+            : ""
         }`}
       >
         <option value="" disabled>
