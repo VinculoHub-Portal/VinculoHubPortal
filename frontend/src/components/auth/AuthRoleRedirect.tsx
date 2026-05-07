@@ -6,6 +6,7 @@ import { registerCompany, type CompanyRegistrationPayload } from "../../api/comp
 import { api } from "../../services/api";
 import type { WizardFormData } from "../../types/wizard.types";
 import { logger } from "../../utils/logger";
+import { useToast } from "../../context/ToastContext";
 
 type UserRole = "ADMIN" | "NPO" | "COMPANY" | "UNKNOWN";
 
@@ -33,14 +34,18 @@ type AuthenticatedProfile = {
 };
 
 const loginCompletedKey = "auth0-login-completed";
+const returnToKey = "auth0-return-to";
 const npoSignupDraftKey = "vinculohub:npo-signup-draft";
 const companySignupDraftKey = "vinculohub:company-signup-draft";
+const npoWizardProgressKey = "vinculohub:npo-wizard-progress";
+const companyWizardProgressKey = "vinculohub:company-wizard-progress";
 const rolesClaim = "https://vinculohub/roles";
 
 export function AuthRoleRedirect() {
   const { getAccessTokenSilently, isAuthenticated, isLoading, user } = useAuth0();
   const location = useLocation();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   useEffect(() => {
     const shouldRedirect = sessionStorage.getItem(loginCompletedKey) === "true";
@@ -72,6 +77,15 @@ export function AuthRoleRedirect() {
             logger.info("AuthRedirect", "NPO draft submitted successfully");
           } catch (error) {
             logger.error("AuthRedirect", "NPO draft submission failed", getErrorMessage(error));
+            if (isServiceUnavailableError(error)) {
+              showToast("Serviço indisponível");
+            } else {
+              sessionStorage.removeItem(npoSignupDraftKey);
+              sessionStorage.removeItem(npoWizardProgressKey);
+              showToast("Não foi possível concluir o cadastro. Tente novamente.");
+            }
+            navigate("/cadastro", { replace: true });
+            return;
           }
         }
 
@@ -83,6 +97,11 @@ export function AuthRoleRedirect() {
             logger.info("AuthRedirect", "Company draft submitted successfully");
           } catch (error) {
             logger.error("AuthRedirect", "Company draft submission failed", getErrorMessage(error));
+            sessionStorage.removeItem(companySignupDraftKey);
+            sessionStorage.removeItem(companyWizardProgressKey);
+            showToast("Não foi possível concluir o cadastro. Tente novamente.");
+            navigate("/cadastro", { replace: true });
+            return;
           }
         }
 
@@ -109,7 +128,16 @@ export function AuthRoleRedirect() {
           redirectPath,
         });
 
-        if (redirectPath !== location.pathname) {
+        const returnTo = sessionStorage.getItem(returnToKey)
+        sessionStorage.removeItem(returnToKey)
+
+        const justSubmittedDraft =
+          npoDraftSubmitted || companyDraftSubmitted || hasNpoDraft || hasCompanyDraft
+
+        if (returnTo && !justSubmittedDraft) {
+          logger.info("AuthRedirect", `Restoring deep-link to ${returnTo}`);
+          navigate(returnTo, { replace: true });
+        } else if (redirectPath !== location.pathname) {
           logger.info("AuthRedirect", `Navigating to ${redirectPath}`);
           navigate(redirectPath, { replace: true });
         }
@@ -120,7 +148,7 @@ export function AuthRoleRedirect() {
     }
 
     void redirectByRole();
-  }, [getAccessTokenSilently, isAuthenticated, isLoading, location.pathname, navigate, user]);
+  }, [getAccessTokenSilently, isAuthenticated, isLoading, location.pathname, navigate, showToast, user]);
 
   return null;
 }
@@ -132,6 +160,18 @@ function getErrorMessage(error: unknown) {
   }
 
   return String(error);
+}
+
+function isServiceUnavailableError(error: unknown) {
+  if (!axios.isAxiosError(error)) {
+    return false;
+  }
+
+  if (!error.response) {
+    return true;
+  }
+
+  return error.response.status >= 500 && error.response.status < 600;
 }
 
 async function getAuthenticatedProfile(token: string) {
@@ -187,6 +227,18 @@ async function submitNpoSignupDraft(token: string, user: unknown) {
             zipCode: formData.zipCode,
           }
         : null,
+      firstProject: {
+        name: formData.nomeProjeto,
+        description: formData.descricaoProjeto,
+        capital:
+          formData.tipoProjeto === "tax_incentive_law" && formData.metaCaptacao.trim()
+            ? Number(formData.metaCaptacao)
+            : null,
+        ods: formData.odsProjeto,
+        type: formData.tipoProjeto === "tax_incentive_law"
+          ? "TAX_INCENTIVE_LAW"
+          : "SOCIAL_INVESTMENT_LAW",
+      },
     },
     {
       headers: {
@@ -196,6 +248,7 @@ async function submitNpoSignupDraft(token: string, user: unknown) {
   );
 
   sessionStorage.removeItem(npoSignupDraftKey);
+  sessionStorage.removeItem(npoWizardProgressKey);
 }
 
 async function submitCompanySignupDraft(token: string, user: unknown) {
@@ -226,6 +279,7 @@ async function submitCompanySignupDraft(token: string, user: unknown) {
   );
 
   sessionStorage.removeItem(companySignupDraftKey);
+  sessionStorage.removeItem(companyWizardProgressKey);
   logger.info("AuthRedirect", "Company draft removed from sessionStorage");
 }
 

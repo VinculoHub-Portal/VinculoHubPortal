@@ -11,6 +11,7 @@ import com.vinculohub.backend.service.NpoAccountService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -27,9 +28,13 @@ public class NpoAccountController {
     }
 
     @PostMapping
+    @PreAuthorize("!hasRole('COMPANY') && !hasRole('ADMIN')")
     public ResponseEntity<NpoInstitutionalSignupResponse> create(
             @AuthenticationPrincipal Jwt jwt, @RequestBody NpoInstitutionalSignupRequest request) {
-        log.info("POST /api/npo-accounts | sub={} email={}", jwt.getSubject(), jwt.getClaimAsString("email"));
+        log.info(
+                "POST /api/npo-accounts | sub={} email={}",
+                jwt.getSubject(),
+                jwt.getClaimAsString("email"));
         NpoInstitutionalSignupResponse response =
                 npoAccountService.registerInstitutionalAccount(
                         jwt.getSubject(), jwt.getClaimAsString("email"), request);

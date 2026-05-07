@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { LandingPage } from "../pages/LandingPage"
 import { ComponentsPage } from "../pages/ComponentsPage"
@@ -7,6 +6,11 @@ import { AuthRoleRedirect } from "../components/auth/AuthRoleRedirect"
 import { ProtectedRoute } from "../components/auth/ProtectedRoute"
 import { RoleHomePage } from "../pages/RoleHomePage"
 import { CompanyRegistrationPage } from "../pages/CompanyRegistration/registration"
+import { ProjectDetailsPage } from "../pages/ProjectDetailsPage"
+import { CompanyDashboard } from "../pages/CompanyDashboard"
+import { CompanyIncentiveLawsPage } from "../pages/CompanyIncentiveLawsPage"
+import { CompanyPrivateInvestmentPage } from "../pages/CompanyPrivateInvestmentPage"
+import { OngProjectsPage } from "../pages/OngProjectsPage"
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -18,9 +22,17 @@ export const AppRouter = () => (
       <Route path="/cadastro/instituicao" element={<RegisterPage />} />
       <Route path="/company/register" element={<CompanyRegistrationPage />} />
       <Route
-        path="/admin/dashboard"
+        path="/projeto/:projectId"
         element={
           <ProtectedRoute>
+            <ProjectDetailsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/dashboard"
+        element={
+          <ProtectedRoute requiredRole="ADMIN">
             <RoleHomePage
               title="Painel administrativo"
               description="Gerencie usuários, organizações e configurações da plataforma."
@@ -31,22 +43,44 @@ export const AppRouter = () => (
       <Route
         path="/ong/dashboard"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole="NPO">
             <RoleHomePage
               title="Painel da ONG"
               description="Acompanhe seu cadastro, projetos e oportunidades para sua organização."
+              showCreateProjectAction
             />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/ong/projetos"
+        element={
+          <ProtectedRoute requiredRole="NPO">
+            <OngProjectsPage />
           </ProtectedRoute>
         }
       />
       <Route
         path="/empresa/dashboard"
         element={
-          <ProtectedRoute>
-            <RoleHomePage
-              title="Painel da empresa"
-              description="Encontre projetos, acompanhe parcerias e gerencie seu perfil institucional."
-            />
+          <ProtectedRoute requiredRole="COMPANY">
+            <CompanyDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/empresa/leis-de-incentivo"
+        element={
+          <ProtectedRoute requiredRole="COMPANY">
+            <CompanyIncentiveLawsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/empresa/investimento-social-privado"
+        element={
+          <ProtectedRoute requiredRole="COMPANY">
+            <CompanyPrivateInvestmentPage />
           </ProtectedRoute>
         }
       />

@@ -5,6 +5,7 @@ import './styles/main.css'
 import { Auth0Provider } from '@auth0/auth0-react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AppRouter } from './router'
+import { ToastProvider } from './context/ToastContext'
 
 const queryClient = new QueryClient()
 
@@ -21,6 +22,9 @@ createRoot(document.getElementById("root")!).render(
     <Auth0Provider
       domain={auth0Domain}
       clientId={auth0ClientId}
+      cacheLocation="localstorage"
+      useRefreshTokens={true}
+      useRefreshTokensFallback={true}
       authorizationParams={{
         redirect_uri: window.location.origin,
         audience: auth0Audience,
@@ -28,6 +32,9 @@ createRoot(document.getElementById("root")!).render(
       }}
       onRedirectCallback={(appState) => {
         sessionStorage.setItem("auth0-login-completed", "true")
+        if (appState?.returnTo && appState.returnTo !== "/") {
+          sessionStorage.setItem("auth0-return-to", appState.returnTo)
+        }
         window.history.replaceState(
           {},
           document.title,
@@ -36,7 +43,9 @@ createRoot(document.getElementById("root")!).render(
       }}
     >
       <QueryClientProvider client={queryClient}>
-        <AppRouter />
+        <ToastProvider>
+          <AppRouter />
+        </ToastProvider>
       </QueryClientProvider>
     </Auth0Provider>
   </StrictMode>,

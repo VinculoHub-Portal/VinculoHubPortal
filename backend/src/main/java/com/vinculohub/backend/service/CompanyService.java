@@ -10,7 +10,9 @@ import com.vinculohub.backend.model.Company;
 import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.model.enums.UserType;
 import com.vinculohub.backend.repository.CompanyRepository;
+import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.UserRepository;
+import com.vinculohub.backend.utils.DocumentValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,26 +24,35 @@ import org.springframework.transaction.annotation.Transactional;
 public class CompanyService {
 
     private final CompanyRepository companyRepository;
+    private final NpoRepository npoRepository;
     private final AddressService addressService;
     private final UserRepository userRepository;
 
     @Transactional
     public CompanyDTO createCompany(String auth0Id, String auth0Email, CompanyDTO companyDTO) {
-        log.info("Creating company | auth0Id={} email={} cnpj={}", auth0Id, auth0Email, companyDTO.cnpj());
+        log.info(
+                "Creating company | auth0Id={} email={} cnpj={}",
+                auth0Id,
+                auth0Email,
+                companyDTO.cnpj());
 
         if (auth0Id == null || auth0Id.isBlank()) {
             log.error("Auth0 ID is blank");
             throw new BadRequestException("Auth0 ID é obrigatório.");
         }
 
-        if (companyRepository.existsByCnpj(companyDTO.cnpj())) {
-            log.warn("Duplicate CNPJ: {}", companyDTO.cnpj());
-            throw new CompanyAlreadyExistsException("Já existe uma empresa cadastrada com este CNPJ.");
+        String sanitizedCnpj = DocumentValidator.sanitize(companyDTO.cnpj());
+        if (companyRepository.existsByCnpj(sanitizedCnpj)
+                || npoRepository.existsByCnpj(sanitizedCnpj)) {
+            log.warn("Duplicate CNPJ: {}", sanitizedCnpj);
+            throw new CompanyAlreadyExistsException(
+                    "Já existe uma instituição cadastrada com este CNPJ.");
         }
 
         if (userRepository.existsByAuth0Id(auth0Id)) {
             log.warn("Duplicate Auth0 ID: {}", auth0Id);
-            throw new CompanyAlreadyExistsException("Já existe uma conta cadastrada para este login.");
+            throw new CompanyAlreadyExistsException(
+                    "Já existe uma conta cadastrada para este login.");
         }
 
         String email =
@@ -55,7 +66,8 @@ public class CompanyService {
 
         if (userRepository.existsByEmailIgnoreCase(email)) {
             log.warn("Duplicate email: {}", email);
-            throw new CompanyAlreadyExistsException("Já existe uma conta cadastrada com este e-mail.");
+            throw new CompanyAlreadyExistsException(
+                    "Já existe uma conta cadastrada com este e-mail.");
         }
 
         Company company = new Company();
@@ -63,7 +75,7 @@ public class CompanyService {
         company.setSocialName(companyDTO.socialName());
         company.setDescription(companyDTO.description());
         company.setLogoUrl(firstPresent(companyDTO.logoUrl(), ""));
-        company.setCnpj(companyDTO.cnpj());
+        company.setCnpj(sanitizedCnpj);
         company.setPhone(companyDTO.phone());
 
         log.info("Creating address...");
