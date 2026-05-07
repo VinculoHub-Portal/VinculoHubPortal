@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { RoleHomePage } from "."
+import { formatCurrencyValue } from "../../utils/formatCurrency"
 
 const mocks = vi.hoisted(() => ({
   getAccessTokenSilentlyMock: vi.fn(),
@@ -162,6 +163,32 @@ describe("CreateProjectModal - cadastro de novo projeto", () => {
     await userEvent.selectOptions(screen.getByRole("combobox", { name: /Tipo de Projeto/i }), "Leis de Incentivo")
 
     expect(screen.getByLabelText(/Valor Necessário/i)).toBeInTheDocument()
+  })
+
+  it("formata Valor Necessário ao digitar", async () => {
+    await openModal()
+
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: /Tipo de Projeto/i }), "Leis de Incentivo")
+    const budgetInput = screen.getByLabelText(/Valor Necessário/i)
+
+    await userEvent.type(budgetInput, "150000")
+
+    expect(budgetInput).toHaveValue(formatCurrencyValue("150000"))
+  })
+
+  it("aceita valor colado e mantém a máscara", async () => {
+    await openModal()
+
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: /Tipo de Projeto/i }), "Leis de Incentivo")
+    const budgetInput = screen.getByLabelText(/Valor Necessário/i)
+
+    fireEvent.paste(budgetInput, {
+      clipboardData: {
+        getData: () => "150000",
+      },
+    })
+
+    expect(budgetInput).toHaveValue(formatCurrencyValue("150000"))
   })
 
   it("campo Valor Necessário some ao trocar para Investimento Social Privado", async () => {

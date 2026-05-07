@@ -12,26 +12,33 @@ export function ProjectOdsChips({
   onToggle,
 }: ProjectOdsChipsProps) {
   return (
-    <div className="flex flex-wrap gap-3">
-      {options.map((option) => {
-        const selected = selectedIds.includes(option.id);
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 shadow-inner">
+      <div className="max-h-[22rem] overflow-y-auto overscroll-contain pr-2">
+        <div className="grid grid-cols-1 gap-3">
+          {options.map((option) => {
+            const selected = selectedIds.includes(option.id);
 
-        return (
-          <button
-            key={option.id}
-            type="button"
-            aria-pressed={selected}
-            onClick={() => onToggle(option.id)}
-            className={`min-h-11 rounded-xl border px-4 py-2 text-sm font-semibold transition-all ${
-              selected
-                ? "border-vinculo-green bg-vinculo-green text-white shadow-sm"
-                : "border-slate-300 bg-white text-slate-600 hover:border-vinculo-green hover:text-vinculo-dark"
-            }`}
-          >
-            {option.name}
-          </button>
-        );
-      })}
+            return (
+              <button
+                key={option.id}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => onToggle(option.id)}
+                className={`flex flex-col gap-1 rounded-xl border-2 px-4 py-3 text-left transition-all ${
+                  selected
+                    ? "border-vinculo-green bg-vinculo-green/10 text-vinculo-dark"
+                    : "border-vinculo-gray bg-white text-slate-600 hover:border-slate-300"
+                }`}
+              >
+                <span className="text-sm font-semibold">{option.name}</span>
+                <span className="text-xs text-slate-500">
+                  {option.description}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

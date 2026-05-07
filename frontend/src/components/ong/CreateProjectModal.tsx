@@ -1,10 +1,14 @@
 import CloseIcon from "@mui/icons-material/Close";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { BaseButton } from "../general/BaseButton";
 import { Input } from "../general/Input";
 import { TextArea } from "../general/TextArea";
 import { ProjectOdsChips } from "./ProjectOdsChips";
 import type { OdsCatalogItem } from "../../api/ods";
+import {
+  formatCurrencyValue,
+  normalizeCurrencyValue,
+} from "../../utils/formatCurrency";
 
 export type CreateProjectFormData = {
   projectName: string;
@@ -77,6 +81,7 @@ export function CreateProjectModal({
   const [formData, setFormData] =
     useState<CreateProjectFormData>(INITIAL_FORM_DATA);
   const [errors, setErrors] = useState<FormErrors>({});
+  const budgetNeededInputRef = useRef<HTMLInputElement | null>(null);
 
   if (!open) return null;
 
@@ -120,23 +125,28 @@ export function CreateProjectModal({
     onSubmit(formData);
   }
 
+  function moveCaretToEnd(input: HTMLInputElement) {
+    const end = input.value.length;
+    input.setSelectionRange(end, end);
+  }
+
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/55 px-4 py-6"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/65 px-4 py-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby="create-project-title"
     >
-      <div className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
-        <header className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-5 md:px-8">
+      <div className="flex max-h-[calc(100vh-3rem)] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl outline-none">
+        <header className="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
           <div>
             <h2
               id="create-project-title"
-              className="text-2xl font-bold text-vinculo-dark"
+              className="mt-1 text-2xl font-bold text-vinculo-dark"
             >
               Cadastrar Novo Projeto
             </h2>
-            <p className="mt-2 text-base text-slate-600">
+            <p className="mt-1 text-sm leading-6 text-slate-500">
               Preencha os dados da nova iniciativa da ONG.
             </p>
           </div>
@@ -144,7 +154,7 @@ export function CreateProjectModal({
           <button
             type="button"
             onClick={handleClose}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-vinculo-dark"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
             aria-label="Fechar modal"
           >
             <CloseIcon />
@@ -152,24 +162,31 @@ export function CreateProjectModal({
         </header>
 
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-7 md:px-8">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="md:col-span-2">
-                <Input
-                  id="projectName"
-                  label="Nome do Projeto"
-                  isRequired
-                  placeholder="Ex: Educação para o Futuro"
-                  maxLength={255}
-                  value={formData.projectName}
-                  onChange={(event) =>
-                    updateField("projectName", event.target.value)
-                  }
-                  error={errors.projectName}
-                />
-              </div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
+            {submitError && (
+              <p
+                className="mb-6 rounded-xl border border-error/20 bg-error/10 px-4 py-3 text-sm text-error"
+                role="alert"
+              >
+                {submitError}
+              </p>
+            )}
 
-              <div className="md:col-span-2">
+            <div className="flex flex-col gap-6">
+              <Input
+                id="projectName"
+                label="Nome do Projeto"
+                isRequired
+                placeholder="Ex: Educação para o Futuro"
+                maxLength={255}
+                value={formData.projectName}
+                onChange={(event) =>
+                  updateField("projectName", event.target.value)
+                }
+                error={errors.projectName}
+              />
+
+              <div>
                 <TextArea
                   id="projectDescription"
                   label="Descrição do Projeto"
@@ -195,35 +212,109 @@ export function CreateProjectModal({
                 value={formData.projectType}
                 options={PROJECT_TYPE_OPTIONS}
                 error={errors.projectType}
-                onChange={(value) => {
-                  setFormData((current) => ({
-                    ...current,
-                    projectType: value,
-                    budgetNeeded: value === "tax_incentive_law" ? current.budgetNeeded : "",
-                  }));
-                  setErrors((current) => ({ ...current, projectType: undefined, budgetNeeded: undefined }));
-                }}
+                onChange={(value) => updateField("projectType", value)}
               />
 
               {formData.projectType === "tax_incentive_law" && (
                 <Input
                   id="budgetNeeded"
                   label="Valor Necessário (R$)"
-                  inputMode="decimal"
-                  placeholder="Ex: 150.000,00"
-                  value={formData.budgetNeeded}
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder="R$ 0,00"
+                  value={formatCurrencyValue(formData.budgetNeeded)}
+                  inputRef={budgetNeededInputRef}
                   onChange={(event) =>
-                    updateField("budgetNeeded", event.target.value)
+                    updateField(
+                      "budgetNeeded",
+                      normalizeCurrencyValue(event.target.value),
+                    )
                   }
+                  onKeyDown={(event) => {
+                    const key = event.key;
+
+                    if (/^\d$/.test(key)) {
+                      event.preventDefault();
+                      updateField(
+                        "budgetNeeded",
+                        normalizeCurrencyValue(
+                          `${formData.budgetNeeded}${key}`,
+                        ),
+                      );
+                      return;
+                    }
+
+                    if (key === "Backspace" || key === "Delete") {
+                      event.preventDefault();
+                      updateField(
+                        "budgetNeeded",
+                        formData.budgetNeeded.slice(0, -1),
+                      );
+                      return;
+                    }
+
+                    if (
+                      key === "ArrowLeft" ||
+                      key === "ArrowRight" ||
+                      key === "Home" ||
+                      key === "End"
+                    ) {
+                      requestAnimationFrame(() => {
+                        const input = budgetNeededInputRef.current;
+
+                        if (!input) {
+                          return;
+                        }
+
+                        moveCaretToEnd(input);
+                      });
+                    }
+                  }}
+                  onPaste={(event) => {
+                    event.preventDefault();
+                    const pastedDigits = event.clipboardData
+                      .getData("text")
+                      .replace(/\D/g, "");
+
+                    if (!pastedDigits) {
+                      return;
+                    }
+
+                    updateField(
+                      "budgetNeeded",
+                      normalizeCurrencyValue(
+                        `${formData.budgetNeeded}${pastedDigits}`,
+                      ),
+                    );
+                  }}
+                  onClick={() => {
+                    const input = budgetNeededInputRef.current;
+
+                    if (!input) {
+                      return;
+                    }
+
+                    moveCaretToEnd(input);
+                  }}
+                  onFocus={(event) => {
+                    moveCaretToEnd(event.currentTarget);
+                  }}
+                  onMouseUp={(event) => {
+                    moveCaretToEnd(event.currentTarget);
+                  }}
                   error={errors.budgetNeeded}
                 />
               )}
 
               <fieldset className="md:col-span-2">
-                <legend className="mb-3 text-sm font-semibold text-vinculo-dark">
+                <legend className="mb-2 text-sm font-semibold text-vinculo-dark">
                   Objetivos de Desenvolvimento Sustentável (ODS)
                   <span className="text-red-500"> *</span>
                 </legend>
+                <p className="mb-4 text-sm text-slate-500">
+                  Selecione um ou mais ODS relacionados ao projeto.
+                </p>
                 <ProjectOdsChips
                   options={odsOptions}
                   selectedIds={formData.odsSelection}
@@ -235,33 +326,28 @@ export function CreateProjectModal({
                   </p>
                 )}
               </fieldset>
+
+              <footer className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+                <BaseButton
+                  type="button"
+                  variant="ghost"
+                  className="w-full bg-transparent! text-slate-600! hover:bg-slate-100! sm:w-fit"
+                  onClick={handleClose}
+                  disabled={isSubmitting}
+                >
+                  Cancelar
+                </BaseButton>
+                <BaseButton
+                  type="submit"
+                  variant="secondary"
+                  className="w-full px-8 py-3 shadow-sm sm:w-fit"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Cadastrando..." : "Cadastrar Projeto"}
+                </BaseButton>
+              </footer>
             </div>
           </div>
-
-          <footer className="flex flex-col-reverse gap-3 border-t border-slate-200 px-5 py-5 sm:flex-row sm:justify-end md:px-8">
-            {submitError && (
-              <p className="self-center text-sm text-error" role="alert">
-                {submitError}
-              </p>
-            )}
-            <BaseButton
-              type="button"
-              variant="ghost"
-              className="w-full bg-transparent! text-slate-600! hover:bg-slate-100! sm:w-fit"
-              onClick={handleClose}
-              disabled={isSubmitting}
-            >
-              Cancelar
-            </BaseButton>
-            <BaseButton
-              type="submit"
-              variant="secondary"
-              className="w-full px-8 py-3 shadow-sm sm:w-fit"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Cadastrando..." : "Cadastrar Projeto"}
-            </BaseButton>
-          </footer>
         </form>
       </div>
     </div>
@@ -296,10 +382,13 @@ function FormSelect({
       </label>
       <select
         id={id}
+        required
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className={`w-full rounded-xl border border-vinculo-gray bg-white px-4 py-3 text-slate-900 outline-none transition-all focus:border-vinculo-dark focus:ring-1 focus:ring-vinculo-dark ${
-          error ? "!border !border-error focus:!border-error focus:!ring-error" : ""
+          error
+            ? "!border !border-error focus:!border-error focus:!ring-error"
+            : ""
         }`}
       >
         <option value="" disabled>

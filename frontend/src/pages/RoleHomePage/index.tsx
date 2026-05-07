@@ -8,6 +8,7 @@ import {
 import { OngDashboardMock } from "./OngDashboardMock";
 import { createProject, type CreateProjectPayload } from "../../api/projects";
 import { fetchOdsCatalog, type OdsCatalogItem } from "../../api/ods";
+import { normalizeCurrencyValue } from "../../utils/formatCurrency";
 
 type RoleHomePageProps = {
   title: string;
@@ -53,7 +54,7 @@ export function RoleHomePage({
     setSubmitError(null);
     try {
       const token = await getAccessTokenSilently();
-      const budgetRaw = data.budgetNeeded.replace(/\./g, "").replace(",", ".");
+      const budgetRaw = normalizeCurrencyValue(data.budgetNeeded);
       const typeMap: Record<string, CreateProjectPayload["type"]> = {
         social_investment_law: "SOCIAL_INVESTMENT_LAW",
         tax_incentive_law: "TAX_INCENTIVE_LAW",
