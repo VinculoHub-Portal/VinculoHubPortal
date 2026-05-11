@@ -1,0 +1,10 @@
+ALTER TABLE edital
+    ALTER COLUMN id TYPE BIGINT,
+    ALTER COLUMN file_size TYPE BIGINT,
+    ALTER COLUMN title SET NOT NULL,
+    ALTER COLUMN file_url SET NOT NULL,
+    ALTER COLUMN file_name SET NOT NULL,
+    ALTER COLUMN file_size SET NOT NULL,
+    ALTER COLUMN mime_type SET NOT NULL;
+
+CREATE INDEX idx_edital_deleted_at ON edital (deleted_at);
