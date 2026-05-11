@@ -1,9 +1,9 @@
 import CloseIcon from "@mui/icons-material/Close";
 import { useState } from "react";
 
-import { BaseButton } from "../general/BaseButton";
-import { Input } from "../general/Input";
-import { TextArea } from "../general/TextArea";
+import { BaseButton } from "../components/general/BaseButton";
+import { Input } from "../components/general/Input";
+import { TextArea } from "../components/general/TextArea";
 
 export type CreateNoticeFormData = {
   title: string;
