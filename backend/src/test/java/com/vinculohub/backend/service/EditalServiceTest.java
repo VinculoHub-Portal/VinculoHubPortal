@@ -39,7 +39,8 @@ class EditalServiceTest {
 
         EditalRequestDTO dto = new EditalRequestDTO("Edital 2026", "Descrição do edital");
 
-        when(s3Uploader.uploadFile(any(MultipartFile.class), eq("editais"))).thenReturn("https://bucket.s3.amazonaws.com/editais/edital.pdf");
+        when(s3Uploader.uploadFile(any(MultipartFile.class), eq("editais")))
+                .thenReturn("https://bucket.s3.amazonaws.com/editais/edital.pdf");
 
         Edital saved = new Edital();
         saved.setId(1L);
@@ -84,7 +85,9 @@ class EditalServiceTest {
     void shouldThrowWhenFileTypeIsNotPdf() {
         MultipartFile file = mock(MultipartFile.class);
         when(file.getSize()).thenReturn(1024L);
-        when(file.getContentType()).thenReturn("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+        when(file.getContentType())
+                .thenReturn(
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
 
         EditalRequestDTO dto = new EditalRequestDTO("Edital", null);
 

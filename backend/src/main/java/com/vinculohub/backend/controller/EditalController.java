@@ -22,8 +22,7 @@ public class EditalController {
     @PostMapping(consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<EditalResponseDTO> create(
-            @RequestPart("file") MultipartFile file,
-            @RequestPart("data") EditalRequestDTO dto) {
+            @RequestPart("file") MultipartFile file, @RequestPart("data") EditalRequestDTO dto) {
         EditalResponseDTO response = editalService.create(file, dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
