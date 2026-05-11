@@ -6,7 +6,6 @@ import { SupportedProjectsCard } from "./SupportedProjectsCard"
 import {
   mockBudget,
   mockCompanyName,
-  mockEsgFooterStats,
   mockEsgPillars,
   mockSupportedProjects,
 } from "./mockData"
@@ -32,7 +31,7 @@ export const CompanyDashboard = () => {
 
         <InvestmentModalitiesSection />
 
-        <EsgImpactSection pillars={mockEsgPillars} footerStats={mockEsgFooterStats} />
+        <EsgImpactSection pillars={mockEsgPillars} />
       </main>
     </div>
   )
