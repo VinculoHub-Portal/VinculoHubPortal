@@ -10,33 +10,44 @@ export type CreateNoticeFormData = {
   description: string;
   deadline: string;
   category: string;
-
-  // TODO:
-  // Adicionar tipagem real do arquivo posteriormente.
-  // Exemplo:
-  // file: File | null;
+  file: File | null;
 };
 
 type CreateNoticeModalProps = {
   open: boolean;
   onClose: () => void;
 
-  onSubmit: (data: CreateNoticeFormData) => void;
+// TODO:
+// Revisar integração real do submit com backend.
+// - endpoint
+// - service/API layer
+// - action responsável pelo POST
+// - contrato esperado pelo backend
+// - tratamento de erro da request
+//
+// Exemplo futuro:
+//
+// await noticeService.create(payload);
+//
+// ou:
+//
+// await api.post("/notices", payload);
+onSubmit: (data: FormData) => Promise<void>;
 
   isSubmitting?: boolean;
   submitError?: string | null;
 };
 
-type FormErrors = Partial<Record<keyof CreateNoticeFormData, string>>;
+type FormErrors = Partial<
+  Record<keyof CreateNoticeFormData, string>
+>;
 
 const INITIAL_FORM_DATA: CreateNoticeFormData = {
   title: "",
   description: "",
   deadline: "",
   category: "",
-
-  // TODO:
-  // file: null,
+  file: null,
 };
 
 const CATEGORY_OPTIONS = [
@@ -52,6 +63,12 @@ const CATEGORY_OPTIONS = [
     value: "innovation",
     label: "Inovação",
   },
+];
+
+const ACCEPTED_FILE_TYPES = [
+  "application/pdf",
+  "text/plain",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 
 function validateNotice(data: CreateNoticeFormData) {
@@ -73,14 +90,17 @@ function validateNotice(data: CreateNoticeFormData) {
     errors.category = "Selecione uma categoria.";
   }
 
-  // TODO:
-  // Adicionar validação do arquivo.
-  //
-  // Exemplo:
-  //
-  // if (!data.file) {
-  //   errors.file = "Envie um arquivo.";
-  // }
+  if (!data.file) {
+    errors.file = "Envie um arquivo.";
+  }
+
+  if (
+    data.file &&
+    !ACCEPTED_FILE_TYPES.includes(data.file.type)
+  ) {
+    errors.file =
+      "Formato inválido. Utilize PDF, DOCX ou TXT.";
+  }
 
   return errors;
 }
@@ -124,7 +144,9 @@ export function CreateNoticeModal({
     onClose();
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: React.FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
 
     const nextErrors = validateNotice(formData);
@@ -135,22 +157,37 @@ export function CreateNoticeModal({
       return;
     }
 
-    // TODO:
-    // Converter para FormData ao integrar com backend.
-    //
-    // Exemplo:
-    //
-    // const payload = new FormData();
-    //
-    // payload.append("title", formData.title);
-    // payload.append("description", formData.description);
-    // payload.append("deadline", formData.deadline);
-    // payload.append("category", formData.category);
-    // payload.append("file", formData.file);
-    //
-    // onSubmit(payload);
+    const payload = new FormData();
 
-    onSubmit(formData);
+    payload.append("title", formData.title);
+    payload.append("description", formData.description);
+    payload.append("deadline", formData.deadline);
+    payload.append("category", formData.category);
+
+    if (formData.file) {
+      payload.append("file", formData.file);
+    }
+
+    // TODO:
+    // Revisar integração final da action/service/API.
+    //
+    // Dependências de domínio:
+    // - implementação real da request HTTP
+    // - endpoint do backend
+    // - service responsável
+    // - estratégia de tratamento de erro
+    // - autenticação/interceptors (se existirem)
+    //
+    // Exemplo futuro:
+    //
+    // await noticeService.create(payload);
+    //
+    // ou:
+    //
+    // await api.post("/notices", payload);
+    await onSubmit(payload);
+
+    handleClose();
   }
 
   return (
@@ -167,7 +204,7 @@ export function CreateNoticeModal({
               id="create-notice-title"
               className="mt-1 text-2xl font-bold text-slate-900"
             >
-              Criar Edital
+              Criar Novo Edital
             </h2>
 
             <p className="mt-1 text-sm leading-6 text-slate-500">
@@ -199,18 +236,15 @@ export function CreateNoticeModal({
               </p>
             )}
 
-            {/* ===================================================== */}
-            {/* BOX INFORMATIVO - CRITÉRIO DE ACEITAÇÃO               */}
-            {/* ===================================================== */}
-
             <div className="mb-6 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-4 text-sm text-blue-800">
               <strong className="block font-semibold">
                 Informação Importante
               </strong>
 
               <p className="mt-1 leading-6">
-                Os editais publicados ficarão disponíveis no mural da
-                plataforma para visualização dos usuários.
+                Os editais publicados ficarão disponíveis
+                no mural da plataforma para visualização
+                dos usuários.
               </p>
             </div>
 
@@ -237,13 +271,19 @@ export function CreateNoticeModal({
                   maxLength={1000}
                   value={formData.description}
                   onChange={(event) =>
-                    updateField("description", event.target.value)
+                    updateField(
+                      "description",
+                      event.target.value,
+                    )
                   }
                   className="min-h-40"
                 />
 
                 {errors.description && (
-                  <p className="mt-1 text-sm text-red-600" role="alert">
+                  <p
+                    className="mt-1 text-sm text-red-600"
+                    role="alert"
+                  >
                     {errors.description}
                   </p>
                 )}
@@ -256,7 +296,10 @@ export function CreateNoticeModal({
                 isRequired
                 value={formData.deadline}
                 onChange={(event) =>
-                  updateField("deadline", event.target.value)
+                  updateField(
+                    "deadline",
+                    event.target.value,
+                  )
                 }
                 error={errors.deadline}
               />
@@ -267,12 +310,10 @@ export function CreateNoticeModal({
                 value={formData.category}
                 options={CATEGORY_OPTIONS}
                 error={errors.category}
-                onChange={(value) => updateField("category", value)}
+                onChange={(value) =>
+                  updateField("category", value)
+                }
               />
-
-              {/* ===================================================== */}
-              {/* PLACEHOLDER - UPLOAD                                 */}
-              {/* ===================================================== */}
 
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-semibold text-slate-900">
@@ -280,27 +321,39 @@ export function CreateNoticeModal({
                   <span className="text-red-500"> *</span>
                 </label>
 
-                {/* TODO:
-                    Implementar upload posteriormente.
-                    
-                    Requisitos:
-                    - aceitar PDF, DOCX e TXT
-                    - armazenar File no estado
-                    - integrar com FormData
-                    - exibir nome do arquivo
-                    - validar obrigatoriedade
-                    
-                    Exemplo:
-                    
-                    <input
-                      type="file"
-                      accept=".pdf,.doc,.docx,.txt"
-                    />
-                */}
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx,.txt"
+                  onChange={(event) => {
+                    const file =
+                      event.target.files?.[0] ?? null;
 
-                <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500">
-                  Área reservada para upload de arquivo
-                </div>
+                    updateField("file", file);
+                  }}
+                  className="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:opacity-90"
+                />
+
+                <p className="text-xs text-slate-500">
+                  Formatos permitidos: PDF, DOCX e TXT.
+                </p>
+
+                {formData.file && (
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                    Arquivo selecionado:{" "}
+                    <strong>
+                      {formData.file.name}
+                    </strong>
+                  </div>
+                )}
+
+                {errors.file && (
+                  <p
+                    className="text-sm text-red-600"
+                    role="alert"
+                  >
+                    {errors.file}
+                  </p>
+                )}
               </div>
 
               <footer className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
@@ -320,7 +373,9 @@ export function CreateNoticeModal({
                   className="w-full px-8 py-3 shadow-sm sm:w-fit"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Publicando..." : "Publicar Edital"}
+                  {isSubmitting
+                    ? "Publicando..."
+                    : "Publicar Edital"}
                 </BaseButton>
               </footer>
             </div>
@@ -365,7 +420,9 @@ function FormSelect({
         id={id}
         required
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) =>
+          onChange(event.target.value)
+        }
         className={`w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition-all focus:border-slate-900 focus:ring-1 focus:ring-slate-900 ${
           error
             ? "!border !border-red-500 focus:!border-red-500 focus:!ring-red-500"
@@ -377,14 +434,20 @@ function FormSelect({
         </option>
 
         {options.map((option) => (
-          <option key={option.value} value={option.value}>
+          <option
+            key={option.value}
+            value={option.value}
+          >
             {option.label}
           </option>
         ))}
       </select>
 
       {error && (
-        <p className="text-sm text-red-600" role="alert">
+        <p
+          className="text-sm text-red-600"
+          role="alert"
+        >
           {error}
         </p>
       )}
