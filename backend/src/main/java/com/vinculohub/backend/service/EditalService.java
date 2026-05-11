@@ -71,6 +71,7 @@ public class EditalService {
                 edital.getFileName(),
                 edital.getFileSize(),
                 edital.getMimeType(),
+                edital.getExpiredAt(),
                 edital.getCreatedAt(),
                 edital.getUpdatedAt());
     }

@@ -62,6 +62,7 @@ class EditalServiceTest {
         assertEquals("Descrição do edital", result.description());
         assertEquals("https://bucket.s3.amazonaws.com/editais/edital.pdf", result.fileUrl());
         assertEquals("application/pdf", result.mimeType());
+        assertNull(result.expiredAt());
 
         verify(s3Uploader).uploadFile(file, "editais");
         verify(editalRepository).save(any());

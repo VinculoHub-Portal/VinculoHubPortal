@@ -11,5 +11,6 @@ public record EditalResponseDTO(
         String fileName,
         Long fileSize,
         String mimeType,
+        LocalDateTime expiredAt,
         LocalDateTime createdAt,
         LocalDateTime updatedAt) {}

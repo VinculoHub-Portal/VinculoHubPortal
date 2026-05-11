@@ -5,4 +5,5 @@ ALTER TABLE edital
     ALTER COLUMN file_url SET NOT NULL,
     ALTER COLUMN file_name SET NOT NULL,
     ALTER COLUMN file_size SET NOT NULL,
-    ALTER COLUMN mime_type SET NOT NULL;
+    ALTER COLUMN mime_type SET NOT NULL,
+    ADD COLUMN expired_at TIMESTAMP;

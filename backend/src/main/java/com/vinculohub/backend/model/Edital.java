@@ -46,6 +46,9 @@ public class Edital {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "expired_at")
+    private LocalDateTime expiredAt;
+
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 }
