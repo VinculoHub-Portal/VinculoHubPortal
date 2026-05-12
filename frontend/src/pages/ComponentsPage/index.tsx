@@ -3,7 +3,6 @@ import { Header } from "../../components/general/Header"
 import { BaseButton } from "../../components/general/BaseButton"
 import { Input } from "../../components/general/Input"
 import { WizardSteps } from "../../components/auth/WizardSteps"
-import { CreateNoticeModal } from "../../announcement/CreateAnnouncementModal"
 
 export function ComponentsPage() {
   const [currentStep, setCurrentStep] = useState(1)
