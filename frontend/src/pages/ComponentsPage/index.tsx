@@ -121,7 +121,7 @@ export function ComponentsPage() {
             </BaseButton>
           </div>
           <div>
-            <CreateNoticeModal open={true} onClose={function (): void {
+            <CreateNoticeModal open={false} onClose={function (): void {
               throw new Error("Function not implemented.")
             } } onSubmit={function (data: FormData): Promise<void> {
               throw new Error("Function not implemented.")

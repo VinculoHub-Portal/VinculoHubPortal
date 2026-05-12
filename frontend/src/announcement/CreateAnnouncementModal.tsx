@@ -197,16 +197,20 @@ export function CreateNoticeModal({
     aria-modal="true"
     aria-labelledby="create-notice-title"
   >
-    <div className="flex max-h-[92vh] w-full max-w-[620px] flex-col overflow-hidden rounded-[22px] bg-[#F8F6F3] shadow-[0_20px_80px_rgba(0,0,0,0.25)]">
+    {/* ===================================================== */}
+    {/* MODAL CONTAINER                                       */}
+    {/* ===================================================== */}
+
+    <div className="w-full max-w-[580px] rounded-[20px] bg-[#F8F6F3] shadow-[0_20px_80px_rgba(0,0,0,0.25)]">
       {/* ===================================================== */}
       {/* HEADER                                                */}
       {/* ===================================================== */}
 
-      <header className="flex items-start justify-between px-7 pb-1 pt-7">
+      <header className="flex items-start justify-between px-6 pb-1 pt-6">
         <div>
           <h2
             id="create-notice-title"
-            className="text-[1.8rem] font-bold tracking-[-0.02em] text-[#0056A6]"
+            className="text-[1.65rem] font-bold tracking-[-0.02em] text-[#0056A6]"
           >
             Cadastrar Novo Edital
           </h2>
@@ -215,10 +219,10 @@ export function CreateNoticeModal({
         <button
           type="button"
           onClick={handleClose}
-          className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-all hover:bg-slate-200/70 hover:text-slate-700"
+          className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-all hover:bg-slate-200/70 hover:text-slate-700"
           aria-label="Fechar modal"
         >
-          <CloseIcon fontSize="medium" />
+          <CloseIcon sx={{ fontSize: 22 }} />
         </button>
       </header>
 
@@ -226,18 +230,15 @@ export function CreateNoticeModal({
       {/* FORM                                                  */}
       {/* ===================================================== */}
 
-      <form
-        onSubmit={handleSubmit}
-        className="flex min-h-0 flex-1 flex-col overflow-hidden"
-      >
-        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-7 pb-7 pt-3">
+      <form onSubmit={handleSubmit}>
+        <div className="flex flex-col gap-4 px-6 pb-6 pt-3">
           {/* ===================================================== */}
-          {/* ERROR                                                 */}
+          {/* SUBMIT ERROR                                          */}
           {/* ===================================================== */}
 
           {submitError && (
             <div
-              className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+              className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700"
               role="alert"
             >
               {submitError}
@@ -245,13 +246,13 @@ export function CreateNoticeModal({
           )}
 
           {/* ===================================================== */}
-          {/* TITLE                                                 */}
+          {/* TITLE FIELD                                           */}
           {/* ===================================================== */}
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <label
               htmlFor="title"
-              className="text-[0.95rem] font-semibold text-[#232323]"
+              className="text-[0.92rem] font-semibold text-[#232323]"
             >
               Título do Edital
               <span className="text-red-500"> *</span>
@@ -266,7 +267,7 @@ export function CreateNoticeModal({
               onChange={(event) =>
                 updateField("title", event.target.value)
               }
-              className={`h-[48px] rounded-[12px] border bg-white px-4 text-[14px] text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:ring-2 ${
+              className={`h-[44px] rounded-[11px] border bg-white px-4 text-[14px] text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:ring-2 ${
                 errors.title
                   ? "border-red-400 focus:ring-red-200"
                   : "border-slate-200 focus:border-[#0056A6] focus:ring-[#0056A6]/10"
@@ -281,13 +282,13 @@ export function CreateNoticeModal({
           </div>
 
           {/* ===================================================== */}
-          {/* DESCRIPTION                                           */}
+          {/* DESCRIPTION FIELD                                     */}
           {/* ===================================================== */}
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <label
               htmlFor="description"
-              className="text-[0.95rem] font-semibold text-[#232323]"
+              className="text-[0.92rem] font-semibold text-[#232323]"
             >
               Descrição
               <span className="text-red-500"> *</span>
@@ -304,7 +305,7 @@ export function CreateNoticeModal({
                   event.target.value,
                 )
               }
-              className={`min-h-[95px] resize-none rounded-[12px] border bg-white px-4 py-3 text-[14px] text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:ring-2 ${
+              className={`min-h-[78px] resize-none rounded-[11px] border bg-white px-4 py-3 text-[14px] text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:ring-2 ${
                 errors.description
                   ? "border-red-400 focus:ring-red-200"
                   : "border-slate-200 focus:border-[#0056A6] focus:ring-[#0056A6]/10"
@@ -322,11 +323,13 @@ export function CreateNoticeModal({
           {/* DEADLINE + CATEGORY                                   */}
           {/* ===================================================== */}
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {/* DEADLINE */}
+
+            <div className="flex flex-col gap-1.5">
               <label
                 htmlFor="deadline"
-                className="text-[0.95rem] font-semibold text-[#232323]"
+                className="text-[0.92rem] font-semibold text-[#232323]"
               >
                 Prazo de Inscrição
                 <span className="text-red-500"> *</span>
@@ -342,7 +345,7 @@ export function CreateNoticeModal({
                     event.target.value,
                   )
                 }
-                className={`h-[48px] rounded-[12px] border bg-white px-4 text-[14px] text-slate-700 outline-none transition-all focus:ring-2 ${
+                className={`h-[44px] rounded-[11px] border bg-white px-4 text-[14px] text-slate-700 outline-none transition-all focus:ring-2 ${
                   errors.deadline
                     ? "border-red-400 focus:ring-red-200"
                     : "border-slate-200 focus:border-[#0056A6] focus:ring-[#0056A6]/10"
@@ -356,10 +359,12 @@ export function CreateNoticeModal({
               )}
             </div>
 
-            <div className="flex flex-col gap-2">
+            {/* CATEGORY */}
+
+            <div className="flex flex-col gap-1.5">
               <label
                 htmlFor="category"
-                className="text-[0.95rem] font-semibold text-[#232323]"
+                className="text-[0.92rem] font-semibold text-[#232323]"
               >
                 Categoria/ODS
                 <span className="text-red-500"> *</span>
@@ -374,7 +379,7 @@ export function CreateNoticeModal({
                     event.target.value,
                   )
                 }
-                className={`h-[48px] rounded-[12px] border bg-white px-4 text-[14px] text-slate-700 outline-none transition-all focus:ring-2 ${
+                className={`h-[44px] rounded-[11px] border bg-white px-4 text-[14px] text-slate-700 outline-none transition-all focus:ring-2 ${
                   errors.category
                     ? "border-red-400 focus:ring-red-200"
                     : "border-slate-200 focus:border-[#0056A6] focus:ring-[#0056A6]/10"
@@ -407,7 +412,7 @@ export function CreateNoticeModal({
           {/* ===================================================== */}
 
           <div className="flex flex-col gap-2">
-            <label className="text-[0.95rem] font-semibold text-[#232323]">
+            <label className="text-[0.92rem] font-semibold text-[#232323]">
               Arquivo do Edital
               <span className="text-red-500"> *</span>
               <span className="font-medium text-slate-500">
@@ -416,7 +421,7 @@ export function CreateNoticeModal({
               </span>
             </label>
 
-            <label className="group flex min-h-[90px] cursor-pointer flex-col items-center justify-center rounded-[14px] border-2 border-dashed border-slate-300 bg-white px-5 py-5 transition-all hover:border-[#0056A6]/40 hover:bg-slate-50">
+            <label className="group flex min-h-[72px] cursor-pointer flex-col items-center justify-center rounded-[12px] border-2 border-dashed border-slate-300 bg-white px-4 py-4 transition-all hover:border-[#0056A6]/40 hover:bg-slate-50">
               <input
                 type="file"
                 accept=".pdf,.doc,.docx,.txt"
@@ -429,24 +434,24 @@ export function CreateNoticeModal({
                 }}
               />
 
-              <div className="flex flex-col items-center gap-2 text-center">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-all group-hover:bg-[#0056A6]/10 group-hover:text-[#0056A6]">
+              <div className="flex flex-col items-center gap-1 text-center">
+                <div className="text-[18px] text-slate-400 transition-all group-hover:text-[#0056A6]">
                   ↑
                 </div>
 
-                <div className="text-[14px] font-medium text-slate-600">
+                <div className="text-[13px] font-medium text-slate-600">
                   Clique para selecionar arquivo
                 </div>
               </div>
             </label>
 
-            <p className="text-[12px] text-slate-500">
+            <p className="text-[11px] text-slate-500">
               Formatos aceitos: PDF, DOCX, TXT.
               Tamanho máximo: 10MB
             </p>
 
             {formData.file && (
-              <div className="rounded-[12px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              <div className="rounded-[10px] border border-emerald-200 bg-emerald-50 px-3 py-2 text-[13px] text-emerald-700">
                 Arquivo selecionado:
                 <strong className="ml-1">
                   {formData.file.name}
@@ -465,7 +470,7 @@ export function CreateNoticeModal({
           {/* INFO BOX                                              */}
           {/* ===================================================== */}
 
-          <div className="rounded-[14px] border border-[#B7D4FF] bg-[#EEF5FF] px-4 py-3 text-[13px] leading-6 text-[#295EC7]">
+          <div className="rounded-[12px] border border-[#B7D4FF] bg-[#EEF5FF] px-4 py-3 text-[12.5px] leading-5 text-[#295EC7]">
             <strong>Nota:</strong> Este edital será
             exibido como um mural informativo. As ONGs
             não poderão se candidatar diretamente pela
@@ -481,7 +486,7 @@ export function CreateNoticeModal({
               type="button"
               onClick={handleClose}
               disabled={isSubmitting}
-              className="h-[44px] rounded-[12px] border border-slate-200 bg-white px-5 text-[14px] font-medium text-slate-700 transition-all hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+              className="h-[40px] rounded-[11px] border border-slate-200 bg-white px-5 text-[13px] font-medium text-slate-700 transition-all hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
             >
               Cancelar
             </button>
@@ -489,7 +494,7 @@ export function CreateNoticeModal({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="h-[44px] rounded-[12px] bg-[#69C36B] px-5 text-[14px] font-medium text-white transition-all hover:bg-[#58b35b] disabled:cursor-not-allowed disabled:opacity-60"
+              className="h-[40px] rounded-[11px] bg-[#69C36B] px-5 text-[13px] font-medium text-white transition-all hover:bg-[#58b35b] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSubmitting
                 ? "Publicando..."
