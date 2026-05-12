@@ -3,6 +3,7 @@ import { Header } from "../../components/general/Header"
 import { BaseButton } from "../../components/general/BaseButton"
 import { Input } from "../../components/general/Input"
 import { WizardSteps } from "../../components/auth/WizardSteps"
+import { CreateNoticeModal } from "../../announcement/CreateAnnouncementModal"
 
 export function ComponentsPage() {
   const [currentStep, setCurrentStep] = useState(1)
@@ -118,6 +119,13 @@ export function ComponentsPage() {
             <BaseButton variant="primary" fullWidth className="h-12">
               Acessar Portal VinculoHub
             </BaseButton>
+          </div>
+          <div>
+            <CreateNoticeModal open={true} onClose={function (): void {
+              throw new Error("Function not implemented.")
+            } } onSubmit={function (data: FormData): Promise<void> {
+              throw new Error("Function not implemented.")
+            } }></CreateNoticeModal>
           </div>
         </section>
       </main>

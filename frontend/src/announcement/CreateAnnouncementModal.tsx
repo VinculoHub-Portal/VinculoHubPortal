@@ -191,109 +191,150 @@ export function CreateNoticeModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/65 px-4 py-6"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="create-notice-title"
-    >
-      <div className="flex max-h-[calc(100vh-3rem)] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl outline-none">
-        <header className="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
-          <div>
-            <h2
-              id="create-notice-title"
-              className="mt-1 text-2xl font-bold text-slate-900"
-            >
-              Criar Novo Edital
-            </h2>
+  <div
+    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 px-4 py-4 backdrop-blur-[2px]"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="create-notice-title"
+  >
+    <div className="flex max-h-[92vh] w-full max-w-[620px] flex-col overflow-hidden rounded-[22px] bg-[#F8F6F3] shadow-[0_20px_80px_rgba(0,0,0,0.25)]">
+      {/* ===================================================== */}
+      {/* HEADER                                                */}
+      {/* ===================================================== */}
 
-            <p className="mt-1 text-sm leading-6 text-slate-500">
-              Preencha os dados para publicar um novo edital.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleClose}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
-            aria-label="Fechar modal"
+      <header className="flex items-start justify-between px-7 pb-1 pt-7">
+        <div>
+          <h2
+            id="create-notice-title"
+            className="text-[1.8rem] font-bold tracking-[-0.02em] text-[#0056A6]"
           >
-            <CloseIcon />
-          </button>
-        </header>
+            Cadastrar Novo Edital
+          </h2>
+        </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="flex min-h-0 flex-1 flex-col"
+        <button
+          type="button"
+          onClick={handleClose}
+          className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-all hover:bg-slate-200/70 hover:text-slate-700"
+          aria-label="Fechar modal"
         >
-          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
-            {submitError && (
-              <p
-                className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-                role="alert"
-              >
-                {submitError}
+          <CloseIcon fontSize="medium" />
+        </button>
+      </header>
+
+      {/* ===================================================== */}
+      {/* FORM                                                  */}
+      {/* ===================================================== */}
+
+      <form
+        onSubmit={handleSubmit}
+        className="flex min-h-0 flex-1 flex-col overflow-hidden"
+      >
+        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-7 pb-7 pt-3">
+          {/* ===================================================== */}
+          {/* ERROR                                                 */}
+          {/* ===================================================== */}
+
+          {submitError && (
+            <div
+              className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+              role="alert"
+            >
+              {submitError}
+            </div>
+          )}
+
+          {/* ===================================================== */}
+          {/* TITLE                                                 */}
+          {/* ===================================================== */}
+
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="title"
+              className="text-[0.95rem] font-semibold text-[#232323]"
+            >
+              Título do Edital
+              <span className="text-red-500"> *</span>
+            </label>
+
+            <input
+              id="title"
+              type="text"
+              placeholder="Ex: Edital de Cultura 2026"
+              maxLength={255}
+              value={formData.title}
+              onChange={(event) =>
+                updateField("title", event.target.value)
+              }
+              className={`h-[48px] rounded-[12px] border bg-white px-4 text-[14px] text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:ring-2 ${
+                errors.title
+                  ? "border-red-400 focus:ring-red-200"
+                  : "border-slate-200 focus:border-[#0056A6] focus:ring-[#0056A6]/10"
+              }`}
+            />
+
+            {errors.title && (
+              <p className="text-sm text-red-600">
+                {errors.title}
               </p>
             )}
+          </div>
 
-            <div className="mb-6 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-4 text-sm text-blue-800">
-              <strong className="block font-semibold">
-                Informação Importante
-              </strong>
+          {/* ===================================================== */}
+          {/* DESCRIPTION                                           */}
+          {/* ===================================================== */}
 
-              <p className="mt-1 leading-6">
-                Os editais publicados ficarão disponíveis
-                no mural da plataforma para visualização
-                dos usuários.
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="description"
+              className="text-[0.95rem] font-semibold text-[#232323]"
+            >
+              Descrição
+              <span className="text-red-500"> *</span>
+            </label>
+
+            <textarea
+              id="description"
+              placeholder="Descreva os objetivos e público-alvo do edital..."
+              maxLength={1000}
+              value={formData.description}
+              onChange={(event) =>
+                updateField(
+                  "description",
+                  event.target.value,
+                )
+              }
+              className={`min-h-[95px] resize-none rounded-[12px] border bg-white px-4 py-3 text-[14px] text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:ring-2 ${
+                errors.description
+                  ? "border-red-400 focus:ring-red-200"
+                  : "border-slate-200 focus:border-[#0056A6] focus:ring-[#0056A6]/10"
+              }`}
+            />
+
+            {errors.description && (
+              <p className="text-sm text-red-600">
+                {errors.description}
               </p>
-            </div>
+            )}
+          </div>
 
-            <div className="flex flex-col gap-6">
-              <Input
-                id="title"
-                label="Título"
-                isRequired
-                placeholder="Digite o título do edital"
-                maxLength={255}
-                value={formData.title}
-                onChange={(event) =>
-                  updateField("title", event.target.value)
-                }
-                error={errors.title}
-              />
+          {/* ===================================================== */}
+          {/* DEADLINE + CATEGORY                                   */}
+          {/* ===================================================== */}
 
-              <div>
-                <TextArea
-                  id="description"
-                  label="Descrição"
-                  isRequired
-                  placeholder="Descreva os detalhes do edital..."
-                  maxLength={1000}
-                  value={formData.description}
-                  onChange={(event) =>
-                    updateField(
-                      "description",
-                      event.target.value,
-                    )
-                  }
-                  className="min-h-40"
-                />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="deadline"
+                className="text-[0.95rem] font-semibold text-[#232323]"
+              >
+                Prazo de Inscrição
+                <span className="text-red-500"> *</span>
+              </label>
 
-                {errors.description && (
-                  <p
-                    className="mt-1 text-sm text-red-600"
-                    role="alert"
-                  >
-                    {errors.description}
-                  </p>
-                )}
-              </div>
-
-              <Input
+              <input
                 id="deadline"
-                label="Prazo"
                 type="date"
-                isRequired
                 value={formData.deadline}
                 onChange={(event) =>
                   updateField(
@@ -301,88 +342,164 @@ export function CreateNoticeModal({
                     event.target.value,
                   )
                 }
-                error={errors.deadline}
+                className={`h-[48px] rounded-[12px] border bg-white px-4 text-[14px] text-slate-700 outline-none transition-all focus:ring-2 ${
+                  errors.deadline
+                    ? "border-red-400 focus:ring-red-200"
+                    : "border-slate-200 focus:border-[#0056A6] focus:ring-[#0056A6]/10"
+                }`}
               />
 
-              <FormSelect
-                id="category"
-                label="Categoria"
-                value={formData.category}
-                options={CATEGORY_OPTIONS}
-                error={errors.category}
-                onChange={(value) =>
-                  updateField("category", value)
-                }
-              />
-
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-slate-900">
-                  Arquivo
-                  <span className="text-red-500"> *</span>
-                </label>
-
-                <input
-                  type="file"
-                  accept=".pdf,.doc,.docx,.txt"
-                  onChange={(event) => {
-                    const file =
-                      event.target.files?.[0] ?? null;
-
-                    updateField("file", file);
-                  }}
-                  className="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:opacity-90"
-                />
-
-                <p className="text-xs text-slate-500">
-                  Formatos permitidos: PDF, DOCX e TXT.
+              {errors.deadline && (
+                <p className="text-sm text-red-600">
+                  {errors.deadline}
                 </p>
+              )}
+            </div>
 
-                {formData.file && (
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                    Arquivo selecionado:{" "}
-                    <strong>
-                      {formData.file.name}
-                    </strong>
-                  </div>
-                )}
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="category"
+                className="text-[0.95rem] font-semibold text-[#232323]"
+              >
+                Categoria/ODS
+                <span className="text-red-500"> *</span>
+              </label>
 
-                {errors.file && (
-                  <p
-                    className="text-sm text-red-600"
-                    role="alert"
+              <select
+                id="category"
+                value={formData.category}
+                onChange={(event) =>
+                  updateField(
+                    "category",
+                    event.target.value,
+                  )
+                }
+                className={`h-[48px] rounded-[12px] border bg-white px-4 text-[14px] text-slate-700 outline-none transition-all focus:ring-2 ${
+                  errors.category
+                    ? "border-red-400 focus:ring-red-200"
+                    : "border-slate-200 focus:border-[#0056A6] focus:ring-[#0056A6]/10"
+                }`}
+              >
+                <option value="" disabled>
+                  Selecione...
+                </option>
+
+                {CATEGORY_OPTIONS.map((option) => (
+                  <option
+                    key={option.value}
+                    value={option.value}
                   >
-                    {errors.file}
-                  </p>
-                )}
-              </div>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
 
-              <footer className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
-                <BaseButton
-                  type="button"
-                  variant="ghost"
-                  className="w-full bg-transparent! text-slate-600! hover:bg-slate-100! sm:w-fit"
-                  onClick={handleClose}
-                  disabled={isSubmitting}
-                >
-                  Cancelar
-                </BaseButton>
-
-                <BaseButton
-                  type="submit"
-                  variant="secondary"
-                  className="w-full px-8 py-3 shadow-sm sm:w-fit"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting
-                    ? "Publicando..."
-                    : "Publicar Edital"}
-                </BaseButton>
-              </footer>
+              {errors.category && (
+                <p className="text-sm text-red-600">
+                  {errors.category}
+                </p>
+              )}
             </div>
           </div>
-        </form>
-      </div>
+
+          {/* ===================================================== */}
+          {/* FILE UPLOAD                                           */}
+          {/* ===================================================== */}
+
+          <div className="flex flex-col gap-2">
+            <label className="text-[0.95rem] font-semibold text-[#232323]">
+              Arquivo do Edital
+              <span className="text-red-500"> *</span>
+              <span className="font-medium text-slate-500">
+                {" "}
+                (PDF, DOCX, TXT)
+              </span>
+            </label>
+
+            <label className="group flex min-h-[90px] cursor-pointer flex-col items-center justify-center rounded-[14px] border-2 border-dashed border-slate-300 bg-white px-5 py-5 transition-all hover:border-[#0056A6]/40 hover:bg-slate-50">
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx,.txt"
+                className="hidden"
+                onChange={(event) => {
+                  const file =
+                    event.target.files?.[0] ?? null;
+
+                  updateField("file", file);
+                }}
+              />
+
+              <div className="flex flex-col items-center gap-2 text-center">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-all group-hover:bg-[#0056A6]/10 group-hover:text-[#0056A6]">
+                  ↑
+                </div>
+
+                <div className="text-[14px] font-medium text-slate-600">
+                  Clique para selecionar arquivo
+                </div>
+              </div>
+            </label>
+
+            <p className="text-[12px] text-slate-500">
+              Formatos aceitos: PDF, DOCX, TXT.
+              Tamanho máximo: 10MB
+            </p>
+
+            {formData.file && (
+              <div className="rounded-[12px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                Arquivo selecionado:
+                <strong className="ml-1">
+                  {formData.file.name}
+                </strong>
+              </div>
+            )}
+
+            {errors.file && (
+              <p className="text-sm text-red-600">
+                {errors.file}
+              </p>
+            )}
+          </div>
+
+          {/* ===================================================== */}
+          {/* INFO BOX                                              */}
+          {/* ===================================================== */}
+
+          <div className="rounded-[14px] border border-[#B7D4FF] bg-[#EEF5FF] px-4 py-3 text-[13px] leading-6 text-[#295EC7]">
+            <strong>Nota:</strong> Este edital será
+            exibido como um mural informativo. As ONGs
+            não poderão se candidatar diretamente pela
+            plataforma.
+          </div>
+
+          {/* ===================================================== */}
+          {/* FOOTER                                                */}
+          {/* ===================================================== */}
+
+          <footer className="flex items-center justify-end gap-3 pt-1">
+            <button
+              type="button"
+              onClick={handleClose}
+              disabled={isSubmitting}
+              className="h-[44px] rounded-[12px] border border-slate-200 bg-white px-5 text-[14px] font-medium text-slate-700 transition-all hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="h-[44px] rounded-[12px] bg-[#69C36B] px-5 text-[14px] font-medium text-white transition-all hover:bg-[#58b35b] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSubmitting
+                ? "Publicando..."
+                : "Publicar Edital"}
+            </button>
+          </footer>
+        </div>
+      </form>
     </div>
+  </div>
   );
 }
 
