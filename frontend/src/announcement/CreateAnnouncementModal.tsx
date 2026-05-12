@@ -1,10 +1,6 @@
 import CloseIcon from "@mui/icons-material/Close";
 import { useState } from "react";
 
-import { BaseButton } from "../components/general/BaseButton";
-import { Input } from "../components/general/Input";
-import { TextArea } from "../components/general/TextArea";
-
 export type CreateNoticeFormData = {
   title: string;
   description: string;
@@ -508,7 +504,7 @@ export function CreateNoticeModal({
   );
 }
 
-type FormSelectProps = {
+/*type FormSelectProps = {
   id: string;
   label: string;
   value: string;
@@ -518,9 +514,9 @@ type FormSelectProps = {
   }>;
   error?: string;
   onChange: (value: string) => void;
-};
+};*/
 
-function FormSelect({
+/*function FormSelect({
   id,
   label,
   value,
@@ -575,4 +571,4 @@ function FormSelect({
       )}
     </div>
   );
-}
+}*/
