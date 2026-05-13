@@ -9,26 +9,24 @@ export function useEditais() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    let cancelled = false
-    async function load() {
+    let mounted = true
+    void (async () => {
       try {
         setLoading(true)
         const token = await getAccessTokenSilently()
         const data = await fetchEditais(token)
-        if (!cancelled) {
-          setEditais(data)
-          setError(null)
-        }
+        if (!mounted) return
+        setEditais(data)
+        setError(null)
       } catch (e) {
-        if (!cancelled)
-          setError(e instanceof Error ? e.message : "Erro ao carregar editais")
+        if (!mounted) return
+        setError(e instanceof Error ? e.message : "Erro ao carregar editais")
       } finally {
-        if (!cancelled) setLoading(false)
+        if (mounted) setLoading(false)
       }
-    }
-    void load()
+    })()
     return () => {
-      cancelled = true
+      mounted = false
     }
   }, [getAccessTokenSilently])
 

@@ -36,6 +36,39 @@ function pickBool(obj: EditalApiRecord, keys: string[]): boolean | null {
   return null
 }
 
+function odsLabelFromRecord(obj: EditalApiRecord): string | null {
+  const nested = obj.ods
+  if (Array.isArray(nested) && nested.length > 0) {
+    const names = nested
+      .map((item) => {
+        if (!item || typeof item !== "object") return null
+        const o = item as Record<string, unknown>
+        const name = typeof o.name === "string" ? o.name.trim() : null
+        return name || null
+      })
+      .filter((n): n is string => Boolean(n))
+    if (names.length) return names.join(", ")
+  }
+  return pickString(obj, [
+    "ods",
+    "odsTitulo",
+    "odsLabel",
+    "odsDescricao",
+    "objetivoDesenvolvimentoSustentavel",
+  ])
+}
+
+function deriveIsActive(obj: EditalApiRecord, deadlineIso: string | null): boolean {
+  const isActiveFromBool = pickBool(obj, ["ativo", "active", "publicado"])
+  if (isActiveFromBool !== null) return isActiveFromBool
+  const statusStr = pickString(obj, ["status", "situacao"])
+  if (statusStr) return ["ACTIVE", "ATIVO", "PUBLICADO"].includes(statusStr.toUpperCase())
+  if (!deadlineIso) return true
+  const end = new Date(deadlineIso)
+  if (Number.isNaN(end.getTime())) return true
+  return end.getTime() > Date.now()
+}
+
 export function normalizeEditalRecord(raw: unknown): EditalListItem | null {
   if (!raw || typeof raw !== "object") return null
   const obj = raw as EditalApiRecord
@@ -46,25 +79,23 @@ export function normalizeEditalRecord(raw: unknown): EditalListItem | null {
     pickString(obj, ["titulo", "title", "nome", "tituloEdital"]) ?? ""
   if (!title) return null
 
-  const statusStr = pickString(obj, ["status", "situacao"])
-  const isActiveFromBool = pickBool(obj, ["ativo", "active", "publicado"])
-  const isActive =
-    isActiveFromBool ??
-    (statusStr ? ["ACTIVE", "ATIVO", "PUBLICADO"].includes(statusStr.toUpperCase()) : true)
+  const deadline = pickString(obj, [
+    "expiredAt",
+    "prazo",
+    "deadline",
+    "dataPrazo",
+    "dataLimite",
+    "endDate",
+  ])
+  const isActive = deriveIsActive(obj, deadline)
 
   return {
     id,
     title,
     description: pickString(obj, ["descricao", "description", "resumo"]),
     isActive,
-    odsLabel: pickString(obj, [
-      "ods",
-      "odsTitulo",
-      "odsLabel",
-      "odsDescricao",
-      "objetivoDesenvolvimentoSustentavel",
-    ]),
-    deadline: pickString(obj, ["prazo", "deadline", "dataPrazo", "dataLimite", "endDate"]),
+    odsLabel: odsLabelFromRecord(obj),
+    deadline,
     fileUrl: pickString(obj, [
       "arquivoUrl",
       "fileUrl",

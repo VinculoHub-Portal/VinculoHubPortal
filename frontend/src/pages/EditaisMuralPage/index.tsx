@@ -48,7 +48,11 @@ export function EditaisMuralPage() {
             </p>
           </div>
           {isAdmin ? (
-            <BaseButton type="button" variant="secondary" className="shrink-0 shadow-sm">
+            <BaseButton
+              type="button"
+              variant="secondary"
+              className="shrink-0 shadow-sm"
+            >
               + Novo Edital
             </BaseButton>
           ) : null}
