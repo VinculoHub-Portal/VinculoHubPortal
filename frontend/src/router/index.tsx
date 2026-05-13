@@ -11,6 +11,7 @@ import { CompanyDashboard } from "../pages/CompanyDashboard"
 import { CompanyIncentiveLawsPage } from "../pages/CompanyIncentiveLawsPage"
 import { CompanyPrivateInvestmentPage } from "../pages/CompanyPrivateInvestmentPage"
 import { OngProjectsPage } from "../pages/OngProjectsPage"
+import { EditaisMuralPage } from "../pages/EditaisMuralPage"
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -57,6 +58,14 @@ export const AppRouter = () => (
         element={
           <ProtectedRoute requiredRole="NPO">
             <OngProjectsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/editais"
+        element={
+          <ProtectedRoute requiredRole="ADMIN">
+            <EditaisMuralPage />
           </ProtectedRoute>
         }
       />
