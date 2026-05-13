@@ -1,5 +1,7 @@
 import CloseIcon from "@mui/icons-material/Close";
+import { useAuth0 } from "@auth0/auth0-react";
 import { useState } from "react";
+import { api } from "../services/api";
 
 export type CreateNoticeFormData = {
   title: string;
@@ -12,24 +14,7 @@ export type CreateNoticeFormData = {
 type CreateNoticeModalProps = {
   open: boolean;
   onClose: () => void;
-
-// TODO:
-// Revisar integração real do submit com backend.
-// - endpoint
-// - service/API layer
-// - action responsável pelo POST
-// - contrato esperado pelo backend
-// - tratamento de erro da request
-//
-// Exemplo futuro:
-//
-// await noticeService.create(payload);
-//
-// ou:
-//
-// await api.post("/notices", payload);
-onSubmit: (data: FormData) => Promise<void>;
-
+  onSubmit?: (data: FormData) => Promise<void>;
   isSubmitting?: boolean;
   submitError?: string | null;
 };
@@ -48,22 +33,22 @@ const INITIAL_FORM_DATA: CreateNoticeFormData = {
 
 const CATEGORY_OPTIONS = [
   {
-    value: "technology",
-    label: "Tecnologia",
+    value: "9",
+    label: "Indústria, Inovação e Infraestrutura",
   },
   {
-    value: "education",
-    label: "Educação",
+    value: "4",
+    label: "Educação de Qualidade",
   },
   {
-    value: "innovation",
-    label: "Inovação",
+    value: "17",
+    label: "Parcerias e Meios de Implementação",
   },
 ];
 
 const ACCEPTED_FILE_TYPES = [
   "application/pdf",
-  "text/plain",
+  "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 
@@ -95,7 +80,7 @@ function validateNotice(data: CreateNoticeFormData) {
     !ACCEPTED_FILE_TYPES.includes(data.file.type)
   ) {
     errors.file =
-      "Formato inválido. Utilize PDF, DOCX ou TXT.";
+      "Formato inválido. Utilize PDF, DOC ou DOCX.";
   }
 
   return errors;
@@ -108,10 +93,20 @@ export function CreateNoticeModal({
   isSubmitting = false,
   submitError = null,
 }: CreateNoticeModalProps) {
+  const { getAccessTokenSilently } = useAuth0();
   const [formData, setFormData] =
     useState<CreateNoticeFormData>(INITIAL_FORM_DATA);
 
   const [errors, setErrors] = useState<FormErrors>({});
+  const [internalIsSubmitting, setInternalIsSubmitting] =
+    useState(false);
+  const [internalSubmitError, setInternalSubmitError] =
+    useState<string | null>(null);
+
+  const effectiveIsSubmitting =
+    isSubmitting || internalIsSubmitting;
+  const effectiveSubmitError =
+    submitError ?? internalSubmitError;
 
   if (!open) return null;
 
@@ -153,37 +148,47 @@ export function CreateNoticeModal({
       return;
     }
 
-    const payload = new FormData();
-
-    payload.append("title", formData.title);
-    payload.append("description", formData.description);
-    payload.append("deadline", formData.deadline);
-    payload.append("category", formData.category);
-
-    if (formData.file) {
-      payload.append("file", formData.file);
+    if (!formData.file) {
+      return;
     }
 
-    // TODO:
-    // Revisar integração final da action/service/API.
-    //
-    // Dependências de domínio:
-    // - implementação real da request HTTP
-    // - endpoint do backend
-    // - service responsável
-    // - estratégia de tratamento de erro
-    // - autenticação/interceptors (se existirem)
-    //
-    // Exemplo futuro:
-    //
-    // await noticeService.create(payload);
-    //
-    // ou:
-    //
-    // await api.post("/notices", payload);
-    await onSubmit(payload);
+    const selectedOdsId = Number(formData.category);
+    const payload = {
+      title: formData.title,
+      description: formData.description,
+      odsIds: Number.isNaN(selectedOdsId) ? [] : [selectedOdsId],
+    };
 
-    handleClose();
+    const submitData = new FormData();
+    submitData.append("file", formData.file);
+    submitData.append(
+      "data",
+      new Blob([JSON.stringify(payload)], {
+        type: "application/json",
+      }),
+    );
+
+    setInternalSubmitError(null);
+    setInternalIsSubmitting(true);
+
+    try {
+      if (onSubmit) {
+        await onSubmit(submitData);
+      } else {
+        const token = await getAccessTokenSilently();
+        await api.post("/api/editais", submitData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+
+      handleClose();
+    } catch {
+      setInternalSubmitError(
+        "Não foi possível publicar o edital. Tente novamente.",
+      );
+    } finally {
+      setInternalIsSubmitting(false);
+    }
   }
 
   return (
@@ -232,12 +237,12 @@ export function CreateNoticeModal({
           {/* SUBMIT ERROR                                          */}
           {/* ===================================================== */}
 
-          {submitError && (
+          {effectiveSubmitError && (
             <div
               className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700"
               role="alert"
             >
-              {submitError}
+              {effectiveSubmitError}
             </div>
           )}
 
@@ -413,14 +418,14 @@ export function CreateNoticeModal({
               <span className="text-red-500"> *</span>
               <span className="font-medium text-slate-500">
                 {" "}
-                (PDF, DOCX, TXT)
+                (PDF, DOC, DOCX)
               </span>
             </label>
 
             <label className="group flex min-h-[72px] cursor-pointer flex-col items-center justify-center rounded-[12px] border-2 border-dashed border-slate-300 bg-white px-4 py-4 transition-all hover:border-[#0056A6]/40 hover:bg-slate-50">
               <input
                 type="file"
-                accept=".pdf,.doc,.docx,.txt"
+                accept=".pdf,.doc,.docx"
                 className="hidden"
                 onChange={(event) => {
                   const file =
@@ -442,7 +447,7 @@ export function CreateNoticeModal({
             </label>
 
             <p className="text-[11px] text-slate-500">
-              Formatos aceitos: PDF, DOCX, TXT.
+              Formatos aceitos: PDF, DOC, DOCX.
               Tamanho máximo: 10MB
             </p>
 
@@ -481,7 +486,7 @@ export function CreateNoticeModal({
             <button
               type="button"
               onClick={handleClose}
-              disabled={isSubmitting}
+              disabled={effectiveIsSubmitting}
               className="h-[40px] rounded-[11px] border border-slate-200 bg-white px-5 text-[13px] font-medium text-slate-700 transition-all hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
             >
               Cancelar
@@ -489,10 +494,10 @@ export function CreateNoticeModal({
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={effectiveIsSubmitting}
               className="h-[40px] rounded-[11px] bg-[#69C36B] px-5 text-[13px] font-medium text-white transition-all hover:bg-[#58b35b] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSubmitting
+              {effectiveIsSubmitting
                 ? "Publicando..."
                 : "Publicar Edital"}
             </button>
