@@ -3,6 +3,8 @@ package com.vinculohub.backend.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
@@ -45,6 +47,13 @@ public class Edital {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "edital_ods",
+            joinColumns = @JoinColumn(name = "edital_id"),
+            inverseJoinColumns = @JoinColumn(name = "ods_id"))
+    private Set<Ods> ods = new LinkedHashSet<>();
 
     @Column(name = "expired_at")
     private LocalDateTime expiredAt;

@@ -28,6 +28,8 @@ class EditalServiceTest {
 
     @Mock private S3Uploader s3Uploader;
 
+    @Mock private OdsService odsService;
+
     @InjectMocks private EditalService editalService;
 
     @Test
@@ -37,7 +39,7 @@ class EditalServiceTest {
         when(file.getContentType()).thenReturn("application/pdf");
         when(file.getOriginalFilename()).thenReturn("edital.pdf");
 
-        EditalRequestDTO dto = new EditalRequestDTO("Edital 2026", "Descrição do edital");
+        EditalRequestDTO dto = new EditalRequestDTO("Edital 2026", "Descrição do edital", null);
 
         when(s3Uploader.uploadFile(any(MultipartFile.class), eq("editais")))
                 .thenReturn("https://bucket.s3.amazonaws.com/editais/edital.pdf");
@@ -74,7 +76,7 @@ class EditalServiceTest {
         MultipartFile file = mock(MultipartFile.class);
         when(file.getSize()).thenReturn(11 * 1024 * 1024L);
 
-        EditalRequestDTO dto = new EditalRequestDTO("Edital", null);
+        EditalRequestDTO dto = new EditalRequestDTO("Edital", null, null);
 
         assertThrows(FileSizeValidationException.class, () -> editalService.create(file, dto));
 
@@ -89,7 +91,7 @@ class EditalServiceTest {
                 .thenReturn(
                         "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
 
-        EditalRequestDTO dto = new EditalRequestDTO("Edital", null);
+        EditalRequestDTO dto = new EditalRequestDTO("Edital", null, null);
 
         assertThrows(FileFormatValidationException.class, () -> editalService.create(file, dto));
 
@@ -102,7 +104,7 @@ class EditalServiceTest {
         when(file.getSize()).thenReturn(1024L);
         when(file.getContentType()).thenReturn("application/pdf");
 
-        EditalRequestDTO dto = new EditalRequestDTO("Edital", null);
+        EditalRequestDTO dto = new EditalRequestDTO("Edital", null, null);
 
         when(s3Uploader.uploadFile(any(), any())).thenThrow(IOException.class);
 
@@ -131,7 +133,7 @@ class EditalServiceTest {
         when(file.getSize()).thenReturn(1024L);
         when(file.getContentType()).thenReturn("image/jpeg");
 
-        EditalRequestDTO dto = new EditalRequestDTO("Edital", null);
+        EditalRequestDTO dto = new EditalRequestDTO("Edital", null, null);
 
         assertThrows(FileFormatValidationException.class, () -> editalService.create(file, dto));
     }
@@ -143,7 +145,7 @@ class EditalServiceTest {
         when(file.getContentType()).thenReturn("application/pdf");
         when(file.getOriginalFilename()).thenReturn("edital.pdf");
 
-        EditalRequestDTO dto = new EditalRequestDTO("Edital", null);
+        EditalRequestDTO dto = new EditalRequestDTO("Edital", null, null);
 
         when(s3Uploader.uploadFile(any(MultipartFile.class), any())).thenReturn("https://url");
         when(editalRepository.save(any(Edital.class))).thenReturn(buildEdital(1L, "Edital"));

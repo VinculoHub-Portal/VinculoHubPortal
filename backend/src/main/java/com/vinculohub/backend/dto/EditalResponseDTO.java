@@ -2,6 +2,7 @@
 package com.vinculohub.backend.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record EditalResponseDTO(
         Long id,
@@ -11,6 +12,7 @@ public record EditalResponseDTO(
         String fileName,
         Long fileSize,
         String mimeType,
+        List<OdsResponse> ods,
         LocalDateTime expiredAt,
         LocalDateTime createdAt,
         LocalDateTime updatedAt) {}
