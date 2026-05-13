@@ -13,34 +13,24 @@ const mockPillars: EsgPillar[] = [
   { label: "Governança", projects: 2, percentageOfTotal: 20, Icon: mockIcon, iconBgClass: "bg-amber-50", iconColorClass: "text-amber-500", barColorClass: "bg-amber-500" },
 ]
 
-const mockFooter = { beneficiaries: "1.250", communities: 8, sdgs: 5, states: 3 }
-
 describe("EsgImpactSection", () => {
   it("renderiza o título 'Impacto ESG'", () => {
-    render(<EsgImpactSection pillars={mockPillars} footerStats={mockFooter} />)
+    render(<EsgImpactSection pillars={mockPillars} />)
     expect(screen.getByText("Impacto ESG")).toBeInTheDocument()
   })
 
   it("renderiza os 3 pilares com seus labels", () => {
-    render(<EsgImpactSection pillars={mockPillars} footerStats={mockFooter} />)
+    render(<EsgImpactSection pillars={mockPillars} />)
     expect(screen.getByText("Ambiental")).toBeInTheDocument()
     expect(screen.getByText("Social")).toBeInTheDocument()
     expect(screen.getByText("Governança")).toBeInTheDocument()
   })
 
   it("exibe contagens de projetos de cada pilar", () => {
-    render(<EsgImpactSection pillars={mockPillars} footerStats={mockFooter} />)
+    render(<EsgImpactSection pillars={mockPillars} />)
     expect(screen.getByText("3 projetos apoiados")).toBeInTheDocument()
     expect(screen.getByText("4 projetos apoiados")).toBeInTheDocument()
     expect(screen.getByText("2 projetos apoiados")).toBeInTheDocument()
   })
 
-  it("renderiza os 4 stats do rodapé", () => {
-    render(<EsgImpactSection pillars={mockPillars} footerStats={mockFooter} />)
-    expect(screen.getByText("1.250")).toBeInTheDocument()
-    expect(screen.getByText("Pessoas beneficiadas")).toBeInTheDocument()
-    expect(screen.getByText("8")).toBeInTheDocument()
-    expect(screen.getByText("5")).toBeInTheDocument()
-    expect(screen.getByText("3")).toBeInTheDocument()
-  })
 })
