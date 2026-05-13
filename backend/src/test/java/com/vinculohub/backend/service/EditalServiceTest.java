@@ -84,18 +84,33 @@ class EditalServiceTest {
     }
 
     @Test
-    void shouldThrowWhenFileTypeIsNotPdf() {
+    void shouldThrowWhenFileTypeIsNotAllowed() {
         MultipartFile file = mock(MultipartFile.class);
         when(file.getSize()).thenReturn(1024L);
-        when(file.getContentType())
-                .thenReturn(
-                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+        when(file.getContentType()).thenReturn("image/png");
 
         EditalRequestDTO dto = new EditalRequestDTO("Edital", null, null);
 
         assertThrows(FileFormatValidationException.class, () -> editalService.create(file, dto));
 
         verifyNoInteractions(s3Uploader, editalRepository);
+    }
+
+    @Test
+    void shouldNotThrowForDocxMimeType() throws Exception {
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.getSize()).thenReturn(1024L);
+        when(file.getContentType())
+                .thenReturn(
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+        when(file.getOriginalFilename()).thenReturn("edital.docx");
+
+        EditalRequestDTO dto = new EditalRequestDTO("Edital", null, null);
+
+        when(s3Uploader.uploadFile(any(MultipartFile.class), any())).thenReturn("https://url");
+        when(editalRepository.save(any(Edital.class))).thenReturn(buildEdital(1L, "Edital"));
+
+        assertDoesNotThrow(() -> editalService.create(file, dto));
     }
 
     @Test

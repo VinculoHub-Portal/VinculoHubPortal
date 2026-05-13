@@ -29,7 +29,16 @@ public class EditalService {
     private final OdsService odsService;
 
     private static final long MAX_FILE_SIZE = 10L * 1024 * 1024;
-    private static final String ALLOWED_TYPE = "application/pdf";
+    private static final Set<String> ALLOWED_TYPES = Set.of(
+    "application/pdf",
+    "application/x-pdf",
+    "application/acrobat",
+    "application/vnd.pdf",
+    "text/pdf",
+    "text/x-pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/msword"
+    );
 
     @Transactional
     public EditalResponseDTO create(MultipartFile file, EditalRequestDTO dto) {
@@ -37,8 +46,8 @@ public class EditalService {
             throw new FileSizeValidationException("File exceeds 10MB limit");
         }
 
-        if (!ALLOWED_TYPE.equals(file.getContentType())) {
-            throw new FileFormatValidationException("Only PDF files are allowed");
+        if (!ALLOWED_TYPES.contains(file.getContentType())) {
+            throw new FileFormatValidationException("Only PDF and DOCX files are allowed");
         }
 
         String fileUrl;
