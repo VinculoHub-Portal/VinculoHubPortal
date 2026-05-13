@@ -29,16 +29,16 @@ public class EditalService {
     private final OdsService odsService;
 
     private static final long MAX_FILE_SIZE = 10L * 1024 * 1024;
-    private static final Set<String> ALLOWED_TYPES = Set.of(
-    "application/pdf",
-    "application/x-pdf",
-    "application/acrobat",
-    "application/vnd.pdf",
-    "text/pdf",
-    "text/x-pdf",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/msword"
-    );
+    private static final Set<String> ALLOWED_TYPES =
+            Set.of(
+                    "application/pdf",
+                    "application/x-pdf",
+                    "application/acrobat",
+                    "application/vnd.pdf",
+                    "text/pdf",
+                    "text/x-pdf",
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    "application/msword");
 
     @Transactional
     public EditalResponseDTO create(MultipartFile file, EditalRequestDTO dto) {
@@ -59,8 +59,7 @@ public class EditalService {
 
         Set<Ods> ods = Set.of();
         if (dto.odsIds() != null && !dto.odsIds().isEmpty()) {
-            List<String> odsStringIds =
-                    dto.odsIds().stream().map(String::valueOf).toList();
+            List<String> odsStringIds = dto.odsIds().stream().map(String::valueOf).toList();
             ods = odsService.resolveSelection(odsStringIds);
         }
 
