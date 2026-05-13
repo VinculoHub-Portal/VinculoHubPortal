@@ -1,10 +1,8 @@
 import { Header } from "../../components/general/Header"
 import { EsgImpactSection } from "./EsgImpactSection"
-import { InvestmentBudgetCard } from "./InvestmentBudgetCard"
 import { InvestmentModalitiesSection } from "./InvestmentModalitiesSection"
 import { SupportedProjectsCard } from "./SupportedProjectsCard"
 import {
-  mockBudget,
   mockCompanyName,
   mockEsgPillars,
   mockSupportedProjects,
@@ -25,7 +23,6 @@ export const CompanyDashboard = () => {
         </header>
 
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <InvestmentBudgetCard data={mockBudget} />
           <SupportedProjectsCard data={mockSupportedProjects} />
         </section>
 
