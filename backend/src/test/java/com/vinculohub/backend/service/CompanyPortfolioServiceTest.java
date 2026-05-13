@@ -71,8 +71,7 @@ class CompanyPortfolioServiceTest {
                         BadRequestException.class,
                         () -> companyPortfolioService.getSupportedProjectsSummary(" "));
 
-        assertEquals(
-                "Não foi possível identificar o usuário autenticado.", exception.getMessage());
+        assertEquals("Não foi possível identificar o usuário autenticado.", exception.getMessage());
         verifyNoInteractions(userRepository, companyRepository, companyProjectRepository);
     }
 
@@ -98,9 +97,7 @@ class CompanyPortfolioServiceTest {
         NotFoundException exception =
                 assertThrows(
                         NotFoundException.class,
-                        () ->
-                                companyPortfolioService.getSupportedProjectsSummary(
-                                        "auth0|company"));
+                        () -> companyPortfolioService.getSupportedProjectsSummary("auth0|company"));
 
         assertEquals("Empresa não encontrada", exception.getMessage());
         verify(userRepository).findByAuth0Id("auth0|company");
@@ -117,8 +114,7 @@ class CompanyPortfolioServiceTest {
 
         when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
         when(companyRepository.findByUserId(10)).thenReturn(Optional.of(company));
-        when(companyProjectRepository.getSupportedProjectsSummaryByCompanyId(20))
-                .thenReturn(null);
+        when(companyProjectRepository.getSupportedProjectsSummaryByCompanyId(20)).thenReturn(null);
 
         CompanySupportedProjectsSummaryResponse response =
                 companyPortfolioService.getSupportedProjectsSummary(auth0Id);

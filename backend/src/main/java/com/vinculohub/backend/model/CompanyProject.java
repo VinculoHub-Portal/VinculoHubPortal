@@ -34,8 +34,7 @@ import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 @Builder
 public class CompanyProject {
 
-    @EmbeddedId
-    private CompanyProjectId id;
+    @EmbeddedId private CompanyProjectId id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @MapsId("companyId")

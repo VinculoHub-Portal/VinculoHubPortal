@@ -34,8 +34,7 @@ class CompanyPortfolioControllerTest {
                         get("/api/company/portfolio/summary")
                                 .with(
                                         jwt().authorities(
-                                                        new SimpleGrantedAuthority(
-                                                                "ROLE_COMPANY"))
+                                                        new SimpleGrantedAuthority("ROLE_COMPANY"))
                                                 .jwt(jwt -> jwt.subject("auth0|company"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(6))
