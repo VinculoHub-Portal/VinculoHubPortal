@@ -376,32 +376,40 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("PUT /api/projects/{id} com sucesso retorna 200 com projeto atualizado")
     void shouldUpdateProjectSuccessfully() throws Exception {
-        User user = userRepository.save(
-                User.builder().auth0Id("auth0|npo_owner").name("NPO Owner").build());
-        Npo ownerNpo = npoRepository.save(
-                Npo.builder()
-                        .name("ONG Proprietária")
-                        .npoSize(NpoSize.small)
-                        .userId(user.getId())
-                        .build());
-        Project project = projectRepository.save(
-                Project.builder()
-                        .npo(ownerNpo)
-                        .title("Título Original")
-                        .description("Descrição original com pelo menos cinquenta caracteres válidos.")
-                        .status(ProjectStatus.ACTIVE)
-                        .type(ProjectType.SOCIAL)
-                        .budgetNeeded(BigDecimal.valueOf(1000))
-                        .ods(Set.of(ods1))
-                        .build());
+        User user =
+                userRepository.save(
+                        User.builder().auth0Id("auth0|npo_owner").name("NPO Owner").build());
+        Npo ownerNpo =
+                npoRepository.save(
+                        Npo.builder()
+                                .name("ONG Proprietária")
+                                .npoSize(NpoSize.small)
+                                .userId(user.getId())
+                                .build());
+        Project project =
+                projectRepository.save(
+                        Project.builder()
+                                .npo(ownerNpo)
+                                .title("Título Original")
+                                .description("Descrição original com pelo menos cinquenta caracteres válidos.")
+                                .status(ProjectStatus.ACTIVE)
+                                .type(ProjectType.SOCIAL)
+                                .budgetNeeded(BigDecimal.valueOf(1000))
+                                .ods(Set.of(ods1))
+                                .build());
 
-        String updateRequestJson = objectMapper.writeValueAsString(
-                java.util.Map.of(
-                        "title", "Título Atualizado",
-                        "description", "Descrição atualizada com pelo menos cinquenta caracteres válidos e completos.",
-                        "budgetNeeded", 2000,
-                        "type", "CULTURAL",
-                        "odsIds", java.util.List.of(1, 3)));
+        String updateRequestJson =
+                objectMapper.writeValueAsString(
+                        java.util.Map.of(
+                                "title", "Título Atualizado",
+                                "description",
+                                "Descrição atualizada com pelo menos cinquenta caracteres válidos e completos.",
+                                "budgetNeeded",
+                                2000,
+                                "type",
+                                "CULTURAL",
+                                "odsIds",
+                                java.util.List.of(1, 3)));
 
         mockMvc.perform(
                         put("/api/projects/" + project.getId())
@@ -419,32 +427,39 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("PUT /api/projects/{id} com campos inválidos retorna 400")
     void shouldReturn400WhenUpdatingWithInvalidFields() throws Exception {
-        User user = userRepository.save(
-                User.builder().auth0Id("auth0|npo_owner").name("NPO Owner").build());
-        Npo ownerNpo = npoRepository.save(
-                Npo.builder()
-                        .name("ONG Proprietária")
-                        .npoSize(NpoSize.small)
-                        .userId(user.getId())
-                        .build());
-        Project project = projectRepository.save(
-                Project.builder()
-                        .npo(ownerNpo)
-                        .title("Título Original")
-                        .description("Descrição original com pelo menos cinquenta caracteres válidos.")
-                        .status(ProjectStatus.ACTIVE)
-                        .type(ProjectType.SOCIAL)
-                        .budgetNeeded(BigDecimal.valueOf(1000))
-                        .ods(Set.of(ods1))
-                        .build());
+        User user =
+                userRepository.save(
+                        User.builder().auth0Id("auth0|npo_owner").name("NPO Owner").build());
+        Npo ownerNpo =
+                npoRepository.save(
+                        Npo.builder()
+                                .name("ONG Proprietária")
+                                .npoSize(NpoSize.small)
+                                .userId(user.getId())
+                                .build());
+        Project project =
+                projectRepository.save(
+                        Project.builder()
+                                .npo(ownerNpo)
+                                .title("Título Original")
+                                .description("Descrição original com pelo menos cinquenta caracteres válidos.")
+                                .status(ProjectStatus.ACTIVE)
+                                .type(ProjectType.SOCIAL)
+                                .budgetNeeded(BigDecimal.valueOf(1000))
+                                .ods(Set.of(ods1))
+                                .build());
 
-        String updateRequestJson = objectMapper.writeValueAsString(
-                java.util.Map.of(
-                        "title", "Ti",
-                        "description", "Curta",
-                        "budgetNeeded", -1000,
-                        "type", "CULTURAL",
-                        "odsIds", java.util.List.of()));
+        String updateRequestJson =
+                objectMapper.writeValueAsString(
+                        java.util.Map.of(
+                                "title", "Ti",
+                                "description", "Curta",
+                                "budgetNeeded",
+                                -1000,
+                                "type",
+                                "CULTURAL",
+                                "odsIds",
+                                java.util.List.of()));
 
         mockMvc.perform(
                         put("/api/projects/" + project.getId())
@@ -460,8 +475,9 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("PUT /api/projects/{id} inexistente retorna 404")
     void shouldReturn404WhenUpdatingNonExistentProject() throws Exception {
-        User user = userRepository.save(
-                User.builder().auth0Id("auth0|npo_owner").name("NPO Owner").build());
+        User user =
+                userRepository.save(
+                        User.builder().auth0Id("auth0|npo_owner").name("NPO Owner").build());
         npoRepository.save(
                 Npo.builder()
                         .name("ONG Proprietária")
@@ -469,13 +485,18 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                         .userId(user.getId())
                         .build());
 
-        String updateRequestJson = objectMapper.writeValueAsString(
-                java.util.Map.of(
-                        "title", "Título Novo",
-                        "description", "Descrição nova com pelo menos cinquenta caracteres válidos.",
-                        "budgetNeeded", 2000,
-                        "type", "CULTURAL",
-                        "odsIds", java.util.List.of(1)));
+        String updateRequestJson =
+                objectMapper.writeValueAsString(
+                        java.util.Map.of(
+                                "title", "Título Novo",
+                                "description",
+                                "Descrição nova com pelo menos cinquenta caracteres válidos.",
+                                "budgetNeeded",
+                                2000,
+                                "type",
+                                "CULTURAL",
+                                "odsIds",
+                                java.util.List.of(1)));
 
         mockMvc.perform(
                         put("/api/projects/99999")
@@ -491,42 +512,52 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("PUT /api/projects/{id} por ONG não proprietária retorna 403")
     void shouldReturn403WhenNpoIsNotOwner() throws Exception {
-        User ownerUser = userRepository.save(
-                User.builder().auth0Id("auth0|npo_owner").name("NPO Owner").build());
-        User otherUser = userRepository.save(
-                User.builder().auth0Id("auth0|other_npo").name("Other NPO").build());
-        
-        Npo ownerNpo = npoRepository.save(
-                Npo.builder()
-                        .name("ONG Proprietária")
-                        .npoSize(NpoSize.small)
-                        .userId(ownerUser.getId())
-                        .build());
-        Npo otherNpo = npoRepository.save(
-                Npo.builder()
-                        .name("Outra ONG")
-                        .npoSize(NpoSize.small)
-                        .userId(otherUser.getId())
-                        .build());
-        
-        Project project = projectRepository.save(
-                Project.builder()
-                        .npo(ownerNpo)
-                        .title("Projeto da ONG Proprietária")
-                        .description("Descrição original com pelo menos cinquenta caracteres válidos.")
-                        .status(ProjectStatus.ACTIVE)
-                        .type(ProjectType.SOCIAL)
-                        .budgetNeeded(BigDecimal.valueOf(1000))
-                        .ods(Set.of(ods1))
-                        .build());
+        User ownerUser =
+                userRepository.save(
+                        User.builder().auth0Id("auth0|npo_owner").name("NPO Owner").build());
+        User otherUser =
+                userRepository.save(
+                        User.builder().auth0Id("auth0|other_npo").name("Other NPO").build());
 
-        String updateRequestJson = objectMapper.writeValueAsString(
-                java.util.Map.of(
-                        "title", "Título Novo",
-                        "description", "Descrição nova com pelo menos cinquenta caracteres válidos.",
-                        "budgetNeeded", 2000,
-                        "type", "CULTURAL",
-                        "odsIds", java.util.List.of(1)));
+        Npo ownerNpo =
+                npoRepository.save(
+                        Npo.builder()
+                                .name("ONG Proprietária")
+                                .npoSize(NpoSize.small)
+                                .userId(ownerUser.getId())
+                                .build());
+        Npo otherNpo =
+                npoRepository.save(
+                        Npo.builder()
+                                .name("Outra ONG")
+                                .npoSize(NpoSize.small)
+                                .userId(otherUser.getId())
+                                .build());
+
+        Project project =
+                projectRepository.save(
+                        Project.builder()
+                                .npo(ownerNpo)
+                                .title("Projeto da ONG Proprietária")
+                                .description("Descrição original com pelo menos cinquenta caracteres válidos.")
+                                .status(ProjectStatus.ACTIVE)
+                                .type(ProjectType.SOCIAL)
+                                .budgetNeeded(BigDecimal.valueOf(1000))
+                                .ods(Set.of(ods1))
+                                .build());
+
+        String updateRequestJson =
+                objectMapper.writeValueAsString(
+                        java.util.Map.of(
+                                "title", "Título Novo",
+                                "description",
+                                "Descrição nova com pelo menos cinquenta caracteres válidos.",
+                                "budgetNeeded",
+                                2000,
+                                "type",
+                                "CULTURAL",
+                                "odsIds",
+                                java.util.List.of(1)));
 
         mockMvc.perform(
                         put("/api/projects/" + project.getId())
@@ -542,13 +573,18 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("PUT /api/projects/{id} sem autenticação retorna 401")
     void shouldReturn401WhenUpdatingWithoutAuth() throws Exception {
-        String updateRequestJson = objectMapper.writeValueAsString(
-                java.util.Map.of(
-                        "title", "Título Novo",
-                        "description", "Descrição nova com pelo menos cinquenta caracteres válidos.",
-                        "budgetNeeded", 2000,
-                        "type", "CULTURAL",
-                        "odsIds", java.util.List.of(1)));
+        String updateRequestJson =
+                objectMapper.writeValueAsString(
+                        java.util.Map.of(
+                                "title", "Título Novo",
+                                "description",
+                                "Descrição nova com pelo menos cinquenta caracteres válidos.",
+                                "budgetNeeded",
+                                2000,
+                                "type",
+                                "CULTURAL",
+                                "odsIds",
+                                java.util.List.of(1)));
 
         mockMvc.perform(
                         put("/api/projects/1")
@@ -560,8 +596,9 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("PUT /api/projects/{id} com papel ROLE_COMPANY retorna 403")
     void shouldReturn403WhenUpdatingWithWrongRole() throws Exception {
-        User user = userRepository.save(
-                User.builder().auth0Id("auth0|company").name("Company User").build());
+        User user =
+                userRepository.save(
+                        User.builder().auth0Id("auth0|company").name("Company User").build());
         npoRepository.save(
                 Npo.builder()
                         .name("ONG Teste")
@@ -569,13 +606,18 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                         .userId(user.getId())
                         .build());
 
-        String updateRequestJson = objectMapper.writeValueAsString(
-                java.util.Map.of(
-                        "title", "Título Novo",
-                        "description", "Descrição nova com pelo menos cinquenta caracteres válidos.",
-                        "budgetNeeded", 2000,
-                        "type", "CULTURAL",
-                        "odsIds", java.util.List.of(1)));
+        String updateRequestJson =
+                objectMapper.writeValueAsString(
+                        java.util.Map.of(
+                                "title", "Título Novo",
+                                "description",
+                                "Descrição nova com pelo menos cinquenta caracteres válidos.",
+                                "budgetNeeded",
+                                2000,
+                                "type",
+                                "CULTURAL",
+                                "odsIds",
+                                java.util.List.of(1)));
 
         mockMvc.perform(
                         put("/api/projects/1")

@@ -97,8 +97,11 @@ public class ProjectService {
                 .orElseThrow(() -> new NotFoundException("Projeto não encontrado."));
 
         if (!project.getNpo().getId().equals(npo.getId())) {
-            log.warn("Access denied: ONG {} tried to update project {} of ONG {}", 
-                npo.getId(), projectId, project.getNpo().getId());
+            log.warn(
+                    "Access denied: ONG {} tried to update project {} of ONG {}",
+                    npo.getId(),
+                    projectId,
+                    project.getNpo().getId());
             throw new ForbiddenException("Você não tem permissão para atualizar este projeto.");
         }
 

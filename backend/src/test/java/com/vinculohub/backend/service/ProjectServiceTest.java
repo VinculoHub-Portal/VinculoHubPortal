@@ -333,34 +333,37 @@ class ProjectServiceTest {
         Long projectId = 30L;
         User user = User.builder().id(10).auth0Id(auth0Id).build();
         Npo npo = Npo.builder().id(20).name("ONG Exemplo").build();
-        Project existingProject = Project.builder()
-                .id(projectId)
-                .title("Título antigo")
-                .description("Descrição antiga com pelo menos cinquenta caracteres aqui")
-                .budgetNeeded(new BigDecimal("500.00"))
-                .type(ProjectType.SOCIAL_INVESTMENT_LAW)
-                .npo(npo)
-                .ods(new LinkedHashSet<>())
-                .build();
+        Project existingProject =
+                Project.builder()
+                        .id(projectId)
+                        .title("Título antigo")
+                        .description("Descrição antiga com pelo menos cinquenta caracteres aqui")
+                        .budgetNeeded(new BigDecimal("500.00"))
+                        .type(ProjectType.SOCIAL_INVESTMENT_LAW)
+                        .npo(npo)
+                        .ods(new LinkedHashSet<>())
+                        .build();
 
-        ProjectUpdateRequest updateRequest = new ProjectUpdateRequest(
-                "Título novo",
-                "Descrição nova com impacto mensurável e escopo bem definido.",
-                new BigDecimal("1500.00"),
-                LocalDate.of(2026, 6, 1),
-                LocalDate.of(2027, 1, 1),
-                List.of(1, 2),
-                ProjectType.CULTURAL,
-                null,
-                null,
-                null,
-                null,
-                null);
+        ProjectUpdateRequest updateRequest =
+                new ProjectUpdateRequest(
+                        "Título novo",
+                        "Descrição nova com impacto mensurável e escopo bem definido.",
+                        new BigDecimal("1500.00"),
+                        LocalDate.of(2026, 6, 1),
+                        LocalDate.of(2027, 1, 1),
+                        List.of(1, 2),
+                        ProjectType.CULTURAL,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
 
-        Set<Ods> ods = new LinkedHashSet<>(
-                List.of(
-                        Ods.builder().id(1).name("ODS 1").description("Desc 1").build(),
-                        Ods.builder().id(2).name("ODS 2").description("Desc 2").build()));
+        Set<Ods> ods =
+                new LinkedHashSet<>(
+                        List.of(
+                                Ods.builder().id(1).name("ODS 1").description("Desc 1").build(),
+                                Ods.builder().id(2).name("ODS 2").description("Desc 2").build()));
 
         when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
         when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
@@ -372,7 +375,9 @@ class ProjectServiceTest {
         Project updated = projectService.updateProject(auth0Id, projectId, updateRequest);
 
         assertEquals("Título novo", updated.getTitle());
-        assertEquals("Descrição nova com impacto mensurável e escopo bem definido.", updated.getDescription());
+        assertEquals(
+                "Descrição nova com impacto mensurável e escopo bem definido.",
+                updated.getDescription());
         assertEquals(new BigDecimal("1500.00"), updated.getBudgetNeeded());
         assertEquals(ProjectType.CULTURAL, updated.getType());
         assertEquals(ods, updated.getOds());
@@ -386,19 +391,20 @@ class ProjectServiceTest {
         String auth0Id = "auth0|npo";
         User user = User.builder().id(10).auth0Id(auth0Id).build();
         Npo npo = Npo.builder().id(20).name("ONG Exemplo").build();
-        ProjectUpdateRequest updateRequest = new ProjectUpdateRequest(
-                "Título novo",
-                "Descrição nova com pelo menos cinquenta caracteres válidos.",
-                new BigDecimal("1000.00"),
-                null,
-                null,
-                List.of(1),
-                ProjectType.CULTURAL,
-                null,
-                null,
-                null,
-                null,
-                null);
+        ProjectUpdateRequest updateRequest =
+                new ProjectUpdateRequest(
+                        "Título novo",
+                        "Descrição nova com pelo menos cinquenta caracteres válidos.",
+                        new BigDecimal("1000.00"),
+                        null,
+                        null,
+                        List.of(1),
+                        ProjectType.CULTURAL,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
 
         when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
         when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
@@ -419,29 +425,31 @@ class ProjectServiceTest {
         User user = User.builder().id(10).auth0Id(auth0Id).build();
         Npo npoAutenticada = Npo.builder().id(20).name("ONG Exemplo").build();
         Npo npoProprietaria = Npo.builder().id(99).name("ONG Proprietária").build();
-        
-        Project existingProject = Project.builder()
-                .id(projectId)
-                .title("Título original")
-                .description("Descrição original com pelo menos cinquenta caracteres aqui")
-                .budgetNeeded(new BigDecimal("500.00"))
-                .type(ProjectType.SOCIAL_INVESTMENT_LAW)
-                .npo(npoProprietaria)
-                .build();
 
-        ProjectUpdateRequest updateRequest = new ProjectUpdateRequest(
-                "Título novo",
-                "Descrição nova com impacto mensurável e escopo bem definido.",
-                new BigDecimal("1500.00"),
-                null,
-                null,
-                List.of(1),
-                ProjectType.CULTURAL,
-                null,
-                null,
-                null,
-                null,
-                null);
+        Project existingProject =
+                Project.builder()
+                        .id(projectId)
+                        .title("Título original")
+                        .description("Descrição original com pelo menos cinquenta caracteres aqui")
+                        .budgetNeeded(new BigDecimal("500.00"))
+                        .type(ProjectType.SOCIAL_INVESTMENT_LAW)
+                        .npo(npoProprietaria)
+                        .build();
+
+        ProjectUpdateRequest updateRequest =
+                new ProjectUpdateRequest(
+                        "Título novo",
+                        "Descrição nova com impacto mensurável e escopo bem definido.",
+                        new BigDecimal("1500.00"),
+                        null,
+                        null,
+                        List.of(1),
+                        ProjectType.CULTURAL,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
 
         when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
         when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npoAutenticada));
@@ -462,28 +470,30 @@ class ProjectServiceTest {
         Long projectId = 30L;
         User user = User.builder().id(10).auth0Id(auth0Id).build();
         Npo npo = Npo.builder().id(20).name("ONG Exemplo").build();
-        Project existingProject = Project.builder()
-                .id(projectId)
-                .title("Título original")
-                .description("Descrição original com pelo menos cinquenta caracteres aqui")
-                .budgetNeeded(new BigDecimal("500.00"))
-                .type(ProjectType.SOCIAL_INVESTMENT_LAW)
-                .npo(npo)
-                .build();
+        Project existingProject =
+                Project.builder()
+                        .id(projectId)
+                        .title("Título original")
+                        .description("Descrição original com pelo menos cinquenta caracteres aqui")
+                        .budgetNeeded(new BigDecimal("500.00"))
+                        .type(ProjectType.SOCIAL_INVESTMENT_LAW)
+                        .npo(npo)
+                        .build();
 
-        ProjectUpdateRequest updateRequest = new ProjectUpdateRequest(
-                "Título novo",
-                "Descrição nova com impacto mensurável e escopo bem definido.",
-                new BigDecimal("1500.00"),
-                null,
-                null,
-                List.of(1, 99),
-                ProjectType.CULTURAL,
-                null,
-                null,
-                null,
-                null,
-                null);
+        ProjectUpdateRequest updateRequest =
+                new ProjectUpdateRequest(
+                        "Título novo",
+                        "Descrição nova com impacto mensurável e escopo bem definido.",
+                        new BigDecimal("1500.00"),
+                        null,
+                        null,
+                        List.of(1, 99),
+                        ProjectType.CULTURAL,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
 
         when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
         when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
@@ -501,19 +511,20 @@ class ProjectServiceTest {
     @Test
     @DisplayName("Deve lançar BadRequestException quando auth0Id é nulo na atualização")
     void shouldThrowBadRequestExceptionWhenAuth0IdIsNullOnUpdate() {
-        ProjectUpdateRequest updateRequest = new ProjectUpdateRequest(
-                "Título novo",
-                "Descrição nova com impacto mensurável e escopo bem definido.",
-                new BigDecimal("1500.00"),
-                null,
-                null,
-                List.of(1),
-                ProjectType.CULTURAL,
-                null,
-                null,
-                null,
-                null,
-                null);
+        ProjectUpdateRequest updateRequest =
+                new ProjectUpdateRequest(
+                        "Título novo",
+                        "Descrição nova com impacto mensurável e escopo bem definido.",
+                        new BigDecimal("1500.00"),
+                        null,
+                        null,
+                        List.of(1),
+                        ProjectType.CULTURAL,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
 
         BadRequestException exception = assertThrows(
                 BadRequestException.class,
