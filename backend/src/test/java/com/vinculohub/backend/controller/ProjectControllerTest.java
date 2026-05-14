@@ -3,6 +3,7 @@ package com.vinculohub.backend.controller;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -10,18 +11,23 @@ import com.vinculohub.backend.database.AbstractIntegrationTest;
 import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.model.Ods;
 import com.vinculohub.backend.model.Project;
+import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.model.enums.NpoSize;
 import com.vinculohub.backend.model.enums.ProjectStatus;
 import com.vinculohub.backend.model.enums.ProjectType;
 import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.OdsRepository;
 import com.vinculohub.backend.repository.ProjectRepository;
+import com.vinculohub.backend.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -33,6 +39,8 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     @Autowired private ProjectRepository projectRepository;
     @Autowired private NpoRepository npoRepository;
     @Autowired private OdsRepository odsRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private ObjectMapper objectMapper;
 
     private Npo npo;
     private Ods ods1;
@@ -363,5 +371,219 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     @DisplayName("GET /api/projects sem autenticação retorna 401")
     void shouldReturn401WithoutAuth() throws Exception {
         mockMvc.perform(get("/api/projects")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("PUT /api/projects/{id} com sucesso retorna 200 com projeto atualizado")
+    void shouldUpdateProjectSuccessfully() throws Exception {
+        User user = userRepository.save(
+                User.builder().auth0Id("auth0|npo_owner").name("NPO Owner").build());
+        Npo ownerNpo = npoRepository.save(
+                Npo.builder()
+                        .name("ONG Proprietária")
+                        .npoSize(NpoSize.small)
+                        .userId(user.getId())
+                        .build());
+        Project project = projectRepository.save(
+                Project.builder()
+                        .npo(ownerNpo)
+                        .title("Título Original")
+                        .description("Descrição original com pelo menos cinquenta caracteres válidos.")
+                        .status(ProjectStatus.ACTIVE)
+                        .type(ProjectType.SOCIAL)
+                        .budgetNeeded(BigDecimal.valueOf(1000))
+                        .ods(Set.of(ods1))
+                        .build());
+
+        String updateRequestJson = objectMapper.writeValueAsString(
+                java.util.Map.of(
+                        "title", "Título Atualizado",
+                        "description", "Descrição atualizada com pelo menos cinquenta caracteres válidos e completos.",
+                        "budgetNeeded", 2000,
+                        "type", "CULTURAL",
+                        "odsIds", java.util.List.of(1, 3)));
+
+        mockMvc.perform(
+                        put("/api/projects/" + project.getId())
+                                .with(jwt()
+                                        .jwt(jwt -> jwt.subject("auth0|npo_owner"))
+                                        .authorities(new SimpleGrantedAuthority("ROLE_NPO")))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(updateRequestJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Título Atualizado"))
+                .andExpect(jsonPath("$.type").value("CULTURAL"))
+                .andExpect(jsonPath("$.budgetNeeded").value(2000));
+    }
+
+    @Test
+    @DisplayName("PUT /api/projects/{id} com campos inválidos retorna 400")
+    void shouldReturn400WhenUpdatingWithInvalidFields() throws Exception {
+        User user = userRepository.save(
+                User.builder().auth0Id("auth0|npo_owner").name("NPO Owner").build());
+        Npo ownerNpo = npoRepository.save(
+                Npo.builder()
+                        .name("ONG Proprietária")
+                        .npoSize(NpoSize.small)
+                        .userId(user.getId())
+                        .build());
+        Project project = projectRepository.save(
+                Project.builder()
+                        .npo(ownerNpo)
+                        .title("Título Original")
+                        .description("Descrição original com pelo menos cinquenta caracteres válidos.")
+                        .status(ProjectStatus.ACTIVE)
+                        .type(ProjectType.SOCIAL)
+                        .budgetNeeded(BigDecimal.valueOf(1000))
+                        .ods(Set.of(ods1))
+                        .build());
+
+        String updateRequestJson = objectMapper.writeValueAsString(
+                java.util.Map.of(
+                        "title", "Ti",
+                        "description", "Curta",
+                        "budgetNeeded", -1000,
+                        "type", "CULTURAL",
+                        "odsIds", java.util.List.of()));
+
+        mockMvc.perform(
+                        put("/api/projects/" + project.getId())
+                                .with(jwt()
+                                        .jwt(jwt -> jwt.subject("auth0|npo_owner"))
+                                        .authorities(new SimpleGrantedAuthority("ROLE_NPO")))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(updateRequestJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    @DisplayName("PUT /api/projects/{id} inexistente retorna 404")
+    void shouldReturn404WhenUpdatingNonExistentProject() throws Exception {
+        User user = userRepository.save(
+                User.builder().auth0Id("auth0|npo_owner").name("NPO Owner").build());
+        npoRepository.save(
+                Npo.builder()
+                        .name("ONG Proprietária")
+                        .npoSize(NpoSize.small)
+                        .userId(user.getId())
+                        .build());
+
+        String updateRequestJson = objectMapper.writeValueAsString(
+                java.util.Map.of(
+                        "title", "Título Novo",
+                        "description", "Descrição nova com pelo menos cinquenta caracteres válidos.",
+                        "budgetNeeded", 2000,
+                        "type", "CULTURAL",
+                        "odsIds", java.util.List.of(1)));
+
+        mockMvc.perform(
+                        put("/api/projects/99999")
+                                .with(jwt()
+                                        .jwt(jwt -> jwt.subject("auth0|npo_owner"))
+                                        .authorities(new SimpleGrantedAuthority("ROLE_NPO")))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(updateRequestJson))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404));
+    }
+
+    @Test
+    @DisplayName("PUT /api/projects/{id} por ONG não proprietária retorna 403")
+    void shouldReturn403WhenNpoIsNotOwner() throws Exception {
+        User ownerUser = userRepository.save(
+                User.builder().auth0Id("auth0|npo_owner").name("NPO Owner").build());
+        User otherUser = userRepository.save(
+                User.builder().auth0Id("auth0|other_npo").name("Other NPO").build());
+        
+        Npo ownerNpo = npoRepository.save(
+                Npo.builder()
+                        .name("ONG Proprietária")
+                        .npoSize(NpoSize.small)
+                        .userId(ownerUser.getId())
+                        .build());
+        Npo otherNpo = npoRepository.save(
+                Npo.builder()
+                        .name("Outra ONG")
+                        .npoSize(NpoSize.small)
+                        .userId(otherUser.getId())
+                        .build());
+        
+        Project project = projectRepository.save(
+                Project.builder()
+                        .npo(ownerNpo)
+                        .title("Projeto da ONG Proprietária")
+                        .description("Descrição original com pelo menos cinquenta caracteres válidos.")
+                        .status(ProjectStatus.ACTIVE)
+                        .type(ProjectType.SOCIAL)
+                        .budgetNeeded(BigDecimal.valueOf(1000))
+                        .ods(Set.of(ods1))
+                        .build());
+
+        String updateRequestJson = objectMapper.writeValueAsString(
+                java.util.Map.of(
+                        "title", "Título Novo",
+                        "description", "Descrição nova com pelo menos cinquenta caracteres válidos.",
+                        "budgetNeeded", 2000,
+                        "type", "CULTURAL",
+                        "odsIds", java.util.List.of(1)));
+
+        mockMvc.perform(
+                        put("/api/projects/" + project.getId())
+                                .with(jwt()
+                                        .jwt(jwt -> jwt.subject("auth0|other_npo"))
+                                        .authorities(new SimpleGrantedAuthority("ROLE_NPO")))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(updateRequestJson))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
+    }
+
+    @Test
+    @DisplayName("PUT /api/projects/{id} sem autenticação retorna 401")
+    void shouldReturn401WhenUpdatingWithoutAuth() throws Exception {
+        String updateRequestJson = objectMapper.writeValueAsString(
+                java.util.Map.of(
+                        "title", "Título Novo",
+                        "description", "Descrição nova com pelo menos cinquenta caracteres válidos.",
+                        "budgetNeeded", 2000,
+                        "type", "CULTURAL",
+                        "odsIds", java.util.List.of(1)));
+
+        mockMvc.perform(
+                        put("/api/projects/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(updateRequestJson))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("PUT /api/projects/{id} com papel ROLE_COMPANY retorna 403")
+    void shouldReturn403WhenUpdatingWithWrongRole() throws Exception {
+        User user = userRepository.save(
+                User.builder().auth0Id("auth0|company").name("Company User").build());
+        npoRepository.save(
+                Npo.builder()
+                        .name("ONG Teste")
+                        .npoSize(NpoSize.small)
+                        .userId(user.getId())
+                        .build());
+
+        String updateRequestJson = objectMapper.writeValueAsString(
+                java.util.Map.of(
+                        "title", "Título Novo",
+                        "description", "Descrição nova com pelo menos cinquenta caracteres válidos.",
+                        "budgetNeeded", 2000,
+                        "type", "CULTURAL",
+                        "odsIds", java.util.List.of(1)));
+
+        mockMvc.perform(
+                        put("/api/projects/1")
+                                .with(jwt()
+                                        .jwt(jwt -> jwt.subject("auth0|company"))
+                                        .authorities(new SimpleGrantedAuthority("ROLE_COMPANY")))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(updateRequestJson))
+                .andExpect(status().isForbidden());
     }
 }
