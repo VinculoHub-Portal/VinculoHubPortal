@@ -410,9 +410,10 @@ class ProjectServiceTest {
         when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
         when(projectRepository.findById(99L)).thenReturn(Optional.empty());
 
-        NotFoundException exception = assertThrows(
-                NotFoundException.class,
-                () -> projectService.updateProject(auth0Id, 99L, updateRequest));
+        NotFoundException exception =
+                assertThrows(
+                        NotFoundException.class,
+                        () -> projectService.updateProject(auth0Id, 99L, updateRequest));
 
         assertEquals("Projeto não encontrado.", exception.getMessage());
     }
@@ -455,9 +456,10 @@ class ProjectServiceTest {
         when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npoAutenticada));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(existingProject));
 
-        ForbiddenException exception = assertThrows(
-                ForbiddenException.class,
-                () -> projectService.updateProject(auth0Id, projectId, updateRequest));
+        ForbiddenException exception =
+                assertThrows(
+                        ForbiddenException.class,
+                        () -> projectService.updateProject(auth0Id, projectId, updateRequest));
 
         assertEquals("Você não tem permissão para atualizar este projeto.", exception.getMessage());
         verify(projectRepository, never()).save(any());
@@ -501,9 +503,10 @@ class ProjectServiceTest {
         when(odsService.resolveSelection(List.of("1", "99")))
                 .thenThrow(new IllegalArgumentException("ODS inválido"));
 
-        BadRequestException exception = assertThrows(
-                BadRequestException.class,
-                () -> projectService.updateProject(auth0Id, projectId, updateRequest));
+        BadRequestException exception =
+                assertThrows(
+                        BadRequestException.class,
+                        () -> projectService.updateProject(auth0Id, projectId, updateRequest));
 
         assertEquals("ODS inválido", exception.getMessage());
     }
@@ -526,9 +529,10 @@ class ProjectServiceTest {
                         null,
                         null);
 
-        BadRequestException exception = assertThrows(
-                BadRequestException.class,
-                () -> projectService.updateProject(null, 30L, updateRequest));
+        BadRequestException exception =
+                assertThrows(
+                        BadRequestException.class,
+                        () -> projectService.updateProject(null, 30L, updateRequest));
 
         assertEquals("Não foi possível identificar o usuário autenticado.", exception.getMessage());
     }
