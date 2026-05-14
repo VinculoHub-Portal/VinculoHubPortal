@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vinculohub.backend.database.AbstractIntegrationTest;
 import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.model.Ods;
@@ -19,7 +20,6 @@ import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.OdsRepository;
 import com.vinculohub.backend.repository.ProjectRepository;
 import com.vinculohub.backend.repository.UserRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Set;
@@ -391,7 +391,9 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                         Project.builder()
                                 .npo(ownerNpo)
                                 .title("Título Original")
-                                .description("Descrição original com pelo menos cinquenta caracteres válidos.")
+                                .description(
+                                        "Descrição original com pelo menos cinquenta caracteres"
+                                                + " válidos.")
                                 .status(ProjectStatus.ACTIVE)
                                 .type(ProjectType.SOCIAL)
                                 .budgetNeeded(BigDecimal.valueOf(1000))
@@ -401,9 +403,11 @@ class ProjectControllerTest extends AbstractIntegrationTest {
         String updateRequestJson =
                 objectMapper.writeValueAsString(
                         java.util.Map.of(
-                                "title", "Título Atualizado",
+                                "title",
+                                "Título Atualizado",
                                 "description",
-                                "Descrição atualizada com pelo menos cinquenta caracteres válidos e completos.",
+                                "Descrição atualizada com pelo menos cinquenta caracteres válidos e"
+                                        + " completos.",
                                 "budgetNeeded",
                                 2000,
                                 "type",
@@ -413,9 +417,10 @@ class ProjectControllerTest extends AbstractIntegrationTest {
 
         mockMvc.perform(
                         put("/api/projects/" + project.getId())
-                                .with(jwt()
-                                        .jwt(jwt -> jwt.subject("auth0|npo_owner"))
-                                        .authorities(new SimpleGrantedAuthority("ROLE_NPO")))
+                                .with(
+                                        jwt().jwt(jwt -> jwt.subject("auth0|npo_owner"))
+                                                .authorities(
+                                                        new SimpleGrantedAuthority("ROLE_NPO")))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateRequestJson))
                 .andExpect(status().isOk())
@@ -442,7 +447,9 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                         Project.builder()
                                 .npo(ownerNpo)
                                 .title("Título Original")
-                                .description("Descrição original com pelo menos cinquenta caracteres válidos.")
+                                .description(
+                                        "Descrição original com pelo menos cinquenta caracteres"
+                                                + " válidos.")
                                 .status(ProjectStatus.ACTIVE)
                                 .type(ProjectType.SOCIAL)
                                 .budgetNeeded(BigDecimal.valueOf(1000))
@@ -452,8 +459,10 @@ class ProjectControllerTest extends AbstractIntegrationTest {
         String updateRequestJson =
                 objectMapper.writeValueAsString(
                         java.util.Map.of(
-                                "title", "Ti",
-                                "description", "Curta",
+                                "title",
+                                "Ti",
+                                "description",
+                                "Curta",
                                 "budgetNeeded",
                                 -1000,
                                 "type",
@@ -463,9 +472,10 @@ class ProjectControllerTest extends AbstractIntegrationTest {
 
         mockMvc.perform(
                         put("/api/projects/" + project.getId())
-                                .with(jwt()
-                                        .jwt(jwt -> jwt.subject("auth0|npo_owner"))
-                                        .authorities(new SimpleGrantedAuthority("ROLE_NPO")))
+                                .with(
+                                        jwt().jwt(jwt -> jwt.subject("auth0|npo_owner"))
+                                                .authorities(
+                                                        new SimpleGrantedAuthority("ROLE_NPO")))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateRequestJson))
                 .andExpect(status().isBadRequest())
@@ -488,7 +498,8 @@ class ProjectControllerTest extends AbstractIntegrationTest {
         String updateRequestJson =
                 objectMapper.writeValueAsString(
                         java.util.Map.of(
-                                "title", "Título Novo",
+                                "title",
+                                "Título Novo",
                                 "description",
                                 "Descrição nova com pelo menos cinquenta caracteres válidos.",
                                 "budgetNeeded",
@@ -500,9 +511,10 @@ class ProjectControllerTest extends AbstractIntegrationTest {
 
         mockMvc.perform(
                         put("/api/projects/99999")
-                                .with(jwt()
-                                        .jwt(jwt -> jwt.subject("auth0|npo_owner"))
-                                        .authorities(new SimpleGrantedAuthority("ROLE_NPO")))
+                                .with(
+                                        jwt().jwt(jwt -> jwt.subject("auth0|npo_owner"))
+                                                .authorities(
+                                                        new SimpleGrantedAuthority("ROLE_NPO")))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateRequestJson))
                 .andExpect(status().isNotFound())
@@ -539,7 +551,9 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                         Project.builder()
                                 .npo(ownerNpo)
                                 .title("Projeto da ONG Proprietária")
-                                .description("Descrição original com pelo menos cinquenta caracteres válidos.")
+                                .description(
+                                        "Descrição original com pelo menos cinquenta caracteres"
+                                                + " válidos.")
                                 .status(ProjectStatus.ACTIVE)
                                 .type(ProjectType.SOCIAL)
                                 .budgetNeeded(BigDecimal.valueOf(1000))
@@ -549,7 +563,8 @@ class ProjectControllerTest extends AbstractIntegrationTest {
         String updateRequestJson =
                 objectMapper.writeValueAsString(
                         java.util.Map.of(
-                                "title", "Título Novo",
+                                "title",
+                                "Título Novo",
                                 "description",
                                 "Descrição nova com pelo menos cinquenta caracteres válidos.",
                                 "budgetNeeded",
@@ -561,9 +576,10 @@ class ProjectControllerTest extends AbstractIntegrationTest {
 
         mockMvc.perform(
                         put("/api/projects/" + project.getId())
-                                .with(jwt()
-                                        .jwt(jwt -> jwt.subject("auth0|other_npo"))
-                                        .authorities(new SimpleGrantedAuthority("ROLE_NPO")))
+                                .with(
+                                        jwt().jwt(jwt -> jwt.subject("auth0|other_npo"))
+                                                .authorities(
+                                                        new SimpleGrantedAuthority("ROLE_NPO")))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateRequestJson))
                 .andExpect(status().isForbidden())
@@ -576,7 +592,8 @@ class ProjectControllerTest extends AbstractIntegrationTest {
         String updateRequestJson =
                 objectMapper.writeValueAsString(
                         java.util.Map.of(
-                                "title", "Título Novo",
+                                "title",
+                                "Título Novo",
                                 "description",
                                 "Descrição nova com pelo menos cinquenta caracteres válidos.",
                                 "budgetNeeded",
@@ -609,7 +626,8 @@ class ProjectControllerTest extends AbstractIntegrationTest {
         String updateRequestJson =
                 objectMapper.writeValueAsString(
                         java.util.Map.of(
-                                "title", "Título Novo",
+                                "title",
+                                "Título Novo",
                                 "description",
                                 "Descrição nova com pelo menos cinquenta caracteres válidos.",
                                 "budgetNeeded",
@@ -621,9 +639,10 @@ class ProjectControllerTest extends AbstractIntegrationTest {
 
         mockMvc.perform(
                         put("/api/projects/1")
-                                .with(jwt()
-                                        .jwt(jwt -> jwt.subject("auth0|company"))
-                                        .authorities(new SimpleGrantedAuthority("ROLE_COMPANY")))
+                                .with(
+                                        jwt().jwt(jwt -> jwt.subject("auth0|company"))
+                                                .authorities(
+                                                        new SimpleGrantedAuthority("ROLE_COMPANY")))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateRequestJson))
                 .andExpect(status().isForbidden());

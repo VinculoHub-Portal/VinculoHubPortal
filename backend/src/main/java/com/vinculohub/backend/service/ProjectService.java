@@ -92,9 +92,10 @@ public class ProjectService {
                         .findByUserId(user.getId())
                         .orElseThrow(() -> new NotFoundException("ONG não encontrada"));
 
-        Project project = projectRepository
-                .findById(projectId)
-                .orElseThrow(() -> new NotFoundException("Projeto não encontrado."));
+        Project project =
+                projectRepository
+                        .findById(projectId)
+                        .orElseThrow(() -> new NotFoundException("Projeto não encontrado."));
 
         if (!project.getNpo().getId().equals(npo.getId())) {
             log.warn(
