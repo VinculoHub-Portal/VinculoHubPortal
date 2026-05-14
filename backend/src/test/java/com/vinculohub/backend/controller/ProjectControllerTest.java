@@ -51,6 +51,7 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     void setup() {
         projectRepository.deleteAll();
         npoRepository.deleteAll();
+        userRepository.deleteAll();
         npo =
                 npoRepository.save(
                         Npo.builder()
