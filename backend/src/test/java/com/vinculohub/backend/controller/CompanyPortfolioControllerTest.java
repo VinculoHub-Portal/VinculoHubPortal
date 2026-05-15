@@ -11,14 +11,15 @@ import com.vinculohub.backend.dto.CompanySupportedProjectsSummaryResponse;
 import com.vinculohub.backend.service.CompanyPortfolioService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(controllers = CompanyPortfolioController.class)
-@AutoConfigureMockMvc(addFilters = false)
+@TestPropertySource(
+        properties = {"spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost"})
 class CompanyPortfolioControllerTest {
 
     @Autowired private MockMvc mockMvc;
