@@ -152,6 +152,7 @@ Table edital {
   file_name varchar(255)
   file_size integer
   mime_type varchar(100)
+  expired_at timestamp
   created_at timestamp
   updated_at timestamp
   deleted_at timestamp

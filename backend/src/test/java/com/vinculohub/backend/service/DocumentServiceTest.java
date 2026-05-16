@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import com.vinculohub.backend.dto.DocumentRequestDTO;
 import com.vinculohub.backend.dto.DocumentResponseDTO;
+import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.FileFormatValidationException;
 import com.vinculohub.backend.exception.FileSizeValidationException;
 import com.vinculohub.backend.exception.NotFoundException;
@@ -88,6 +89,49 @@ class DocumentServiceTest {
     }
 
     @Test
+    void shouldUploadDocumentWithoutProject() throws Exception {
+        MultipartFile file = mock(MultipartFile.class);
+
+        when(file.getSize()).thenReturn(1024L);
+        when(file.getContentType()).thenReturn("application/pdf");
+        when(file.getOriginalFilename()).thenReturn("file.pdf");
+
+        DocumentRequestDTO dto = new DocumentRequestDTO();
+        dto.setNpoId(1);
+        dto.setTitle("Institutional Doc");
+        dto.setDescription("Desc");
+
+        Npo npo = new Npo();
+        npo.setId(1);
+
+        when(npoRepository.findById(1)).thenReturn(Optional.of(npo));
+        when(s3Uploader.uploadFile(any(), any())).thenReturn("http://url");
+
+        Document saved = new Document();
+        saved.setId(10);
+        saved.setNpo(npo);
+        saved.setProject(null);
+        saved.setTitle(dto.getTitle());
+        saved.setDescription(dto.getDescription());
+        saved.setFileUrl("http://url");
+        saved.setFileName("file.pdf");
+        saved.setFileSize(1024);
+        saved.setMimeType("application/pdf");
+
+        when(documentRepository.save(any())).thenReturn(saved);
+
+        DocumentResponseDTO result = documentService.upload(file, dto);
+
+        assertNotNull(result);
+        assertEquals(10, result.getId());
+        assertEquals(1, result.getNpoId());
+        assertNull(result.getProjectId());
+
+        verify(projectRepository, never()).findById(anyLong());
+        verify(documentRepository).save(any());
+    }
+
+    @Test
     void shouldThrowExceptionWhenFileTooLarge() {
         MultipartFile file = mock(MultipartFile.class);
 
@@ -124,6 +168,18 @@ class DocumentServiceTest {
         when(npoRepository.findById(1)).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> documentService.upload(file, dto));
+    }
+
+    @Test
+    void shouldThrowBadRequestWhenNpoIdIsMissing() {
+        MultipartFile file = mock(MultipartFile.class);
+
+        when(file.getSize()).thenReturn(1024L);
+        when(file.getContentType()).thenReturn("application/pdf");
+
+        DocumentRequestDTO dto = new DocumentRequestDTO();
+
+        assertThrows(BadRequestException.class, () -> documentService.upload(file, dto));
     }
 
     @Test
