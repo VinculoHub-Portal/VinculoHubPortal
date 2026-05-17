@@ -462,7 +462,7 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("DELETE /api/projects/{id} com role incorreta retorna 500")
+    @DisplayName("DELETE /api/projects/{id}  com role incorreta retorna 403")
     void shouldReturn403WhenDeletingWithCompanyRole() throws Exception {
         // Setup projeto válido
         Project project = projectRepository.save(
@@ -475,7 +475,8 @@ class ProjectControllerTest extends AbstractIntegrationTest {
 
         mockMvc.perform(delete("/api/projects/" + project.getId())
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_COMPANY"))))
-                .andExpect(status().isInternalServerError());
+                 .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));;
     }
 
     
