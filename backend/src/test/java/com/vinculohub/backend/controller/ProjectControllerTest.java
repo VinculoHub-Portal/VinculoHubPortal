@@ -1,7 +1,10 @@
 /* (C)2026 */
 package com.vinculohub.backend.controller;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -10,12 +13,15 @@ import com.vinculohub.backend.database.AbstractIntegrationTest;
 import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.model.Ods;
 import com.vinculohub.backend.model.Project;
+import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.model.enums.NpoSize;
 import com.vinculohub.backend.model.enums.ProjectStatus;
 import com.vinculohub.backend.model.enums.ProjectType;
+import com.vinculohub.backend.model.enums.UserType;
 import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.OdsRepository;
 import com.vinculohub.backend.repository.ProjectRepository;
+import com.vinculohub.backend.repository.UserRepository;
 import java.time.LocalDate;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,8 +39,10 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     @Autowired private ProjectRepository projectRepository;
     @Autowired private NpoRepository npoRepository;
     @Autowired private OdsRepository odsRepository;
+    @Autowired private UserRepository userRepository;
 
     private Npo npo;
+    private User userDono;
     private Ods ods1;
     private Ods ods3;
     private Ods ods5;
@@ -43,6 +51,16 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     void setup() {
         projectRepository.deleteAll();
         npoRepository.deleteAll();
+        userRepository.deleteAll();
+
+        userDono = userRepository.save(
+                User.builder()
+                        .name("Dono ONG")
+                        .email("dono@ong.com")
+                        .auth0Id("auth0|dono")
+                        .userType(UserType.npo)
+                        .build());
+
         npo =
                 npoRepository.save(
                         Npo.builder()
@@ -50,6 +68,7 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                                 .npoSize(NpoSize.small)
                                 .phone("(11) 9999-0000")
                                 .environmental(true)
+                                .userId(userDono.getId())
                                 .build());
         ods1 = odsRepository.findById(1).orElseThrow();
         ods3 = odsRepository.findById(3).orElseThrow();
@@ -364,4 +383,98 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     void shouldReturn401WithoutAuth() throws Exception {
         mockMvc.perform(get("/api/projects")).andExpect(status().isUnauthorized());
     }
+
+
+    @Test
+    @DisplayName("DELETE /api/projects/{id} exclui o projeto com sucesso quando é o dono")
+    void shouldDeleteProjectSuccessfully() throws Exception {
+        Project project = projectRepository.save(
+                Project.builder()
+                        .npo(npo)
+                        .title("Projeto a ser deletado")
+                        .description("Descrição do projeto para teste")
+                        .status(ProjectStatus.ACTIVE)
+                        .build());
+
+        mockMvc.perform(delete("/api/projects/" + project.getId())
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_NPO"))
+                                   .jwt(jwt -> jwt.claim("sub", "auth0|dono"))))
+                .andExpect(status().isNoContent()); 
+        boolean exists = projectRepository.existsById(project.getId());
+        assertFalse(exists, "O projeto deveria ter sido excluído");
+    }
+
+    @Test
+    @DisplayName("DELETE /api/projects/{id} retorna 404 para projeto inexistente")
+    void shouldReturn404WhenDeletingNonExistentProject() throws Exception {
+        mockMvc.perform(delete("/api/projects/999999")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_NPO"))
+                                   .jwt(jwt -> jwt.claim("sub", "auth0|dono"))))
+                .andExpect(status().isNotFound());
+    }
+
+
+
+    @Test
+    @DisplayName("DELETE /api/projects/{id} retorna 403 quando a ONG não é a dona")
+    void shouldFailWhenDeletingProjectFromAnotherNpo() throws Exception {
+        User userIntruso = userRepository.save(
+                User.builder()
+                        .name("Intruso")
+                        .email("intruso@ong.com")
+                        .auth0Id("auth0|outro_usuario")
+                        .userType(UserType.npo)
+                        .build());
+
+        Npo outraNpo = npoRepository.save(
+                Npo.builder()
+                        .name("ONG Intruso")
+                        .npoSize(NpoSize.small)
+                        .userId(userIntruso.getId())
+                        .build()
+        );
+
+        Project project = projectRepository.save(
+                Project.builder()
+                        .npo(npo)
+                        .title("Projeto do Dono A")
+                        .description("Descrição do projeto do dono A")
+                        .status(ProjectStatus.ACTIVE)
+                        .build());
+        mockMvc.perform(delete("/api/projects/" + project.getId())
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_NPO"))
+                                   .jwt(jwt -> jwt.claim("sub", "auth0|outro_usuario")))) 
+                .andExpect(status().isForbidden()); 
+        assertTrue(projectRepository.existsById(project.getId()));
+    }
+
+    @Test
+    @DisplayName("DELETE /api/projects/{id} sem autenticação retorna 401")
+    void shouldReturn401WhenDeletingWithoutAuth() throws Exception {
+        // Mesmo se o projeto existir, não deve passar pela segurança
+        mockMvc.perform(delete("/api/projects/1"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("DELETE /api/projects/{id} com role incorreta retorna 500")
+    void shouldReturn403WhenDeletingWithCompanyRole() throws Exception {
+        // Setup projeto válido
+        Project project = projectRepository.save(
+                Project.builder()
+                        .npo(npo)
+                        .title("Projeto da ONG")
+                        .description("Descrição restrita para deleção")
+                        .status(ProjectStatus.ACTIVE)
+                        .build());
+
+        mockMvc.perform(delete("/api/projects/" + project.getId())
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_COMPANY"))))
+                .andExpect(status().isInternalServerError());
+    }
+
+    
+
+
+
 }
