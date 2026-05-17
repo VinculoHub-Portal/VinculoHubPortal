@@ -11,6 +11,8 @@ import { CompanyDashboard } from "../pages/CompanyDashboard"
 import { CompanyIncentiveLawsPage } from "../pages/CompanyIncentiveLawsPage"
 import { CompanyPrivateInvestmentPage } from "../pages/CompanyPrivateInvestmentPage"
 import { OngProjectsPage } from "../pages/OngProjectsPage"
+import { OngProfilePage } from "../pages/OngProfilePage"
+import { OngPublicProfilePage } from "../pages/OngPublicProfilePage"
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -60,6 +62,15 @@ export const AppRouter = () => (
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/ong/perfil"
+        element={
+          <ProtectedRoute requiredRole="NPO">
+            <OngProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/ong/publico/:slug" element={<OngPublicProfilePage />} />
       <Route
         path="/empresa/dashboard"
         element={
