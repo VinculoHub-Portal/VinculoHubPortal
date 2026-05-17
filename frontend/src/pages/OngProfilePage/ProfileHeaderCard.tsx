@@ -1,6 +1,5 @@
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined"
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined"
-import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined"
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined"
 import EventOutlinedIcon from "@mui/icons-material/EventOutlined"
 import { BaseButton } from "../../components/general/BaseButton"
