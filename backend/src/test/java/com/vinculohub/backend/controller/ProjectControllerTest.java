@@ -58,7 +58,7 @@ class ProjectControllerTest extends AbstractIntegrationTest {
         npoRepository.deleteAll();
         userRepository.deleteAll();
 
-        userDono = 
+        userDono =
                 userRepository.save(
                         User.builder()
                                 .name("Dono ONG")
@@ -390,11 +390,10 @@ class ProjectControllerTest extends AbstractIntegrationTest {
         mockMvc.perform(get("/api/projects")).andExpect(status().isUnauthorized());
     }
 
-
     @Test
     @DisplayName("DELETE /api/projects/{id} exclui o projeto com sucesso quando é o dono")
     void shouldDeleteProjectSuccessfully() throws Exception {
-        Project project = 
+        Project project =
                 projectRepository.save(
                         Project.builder()
                                 .npo(npo)
@@ -403,10 +402,12 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                                 .status(ProjectStatus.ACTIVE)
                                 .build());
 
-        mockMvc.perform(delete("/api/projects/" + project.getId())
-                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_NPO"))
-                                   .jwt(jwt -> jwt.claim("sub", "auth0|dono"))))
-                .andExpect(status().isNoContent()); 
+        mockMvc.perform(
+                        delete("/api/projects/" + project.getId())
+                                .with(
+                                        jwt().authorities(new SimpleGrantedAuthority("ROLE_NPO"))
+                                                .jwt(jwt -> jwt.claim("sub", "auth0|dono"))))
+                .andExpect(status().isNoContent());
         boolean exists = projectRepository.existsById(project.getId());
         assertFalse(exists, "O projeto deveria ter sido excluído");
     }
@@ -414,9 +415,11 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("DELETE /api/projects/{id} retorna 404 para projeto inexistente")
     void shouldReturn404WhenDeletingNonExistentProject() throws Exception {
-        mockMvc.perform(delete("/api/projects/999999")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_NPO"))
-                                   .jwt(jwt -> jwt.claim("sub", "auth0|dono"))))
+        mockMvc.perform(
+                        delete("/api/projects/999999")
+                                .with(
+                                        jwt().authorities(new SimpleGrantedAuthority("ROLE_NPO"))
+                                                .jwt(jwt -> jwt.claim("sub", "auth0|dono"))))
                 .andExpect(status().isNotFound());
     }
 
@@ -451,10 +454,12 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                                 .description("Descrição do projeto do dono A")
                                 .status(ProjectStatus.ACTIVE)
                                 .build());
-        mockMvc.perform(delete("/api/projects/" + project.getId())
-                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_NPO"))
-                                   .jwt(jwt -> jwt.claim("sub", "auth0|outro_usuario")))) 
-                .andExpect(status().isForbidden()); 
+        mockMvc.perform(
+                        delete("/api/projects/" + project.getId())
+                                .with(
+                                        jwt().authorities(new SimpleGrantedAuthority("ROLE_NPO"))
+                                                .jwt(jwt -> jwt.claim("sub", "auth0|outro_usuario"))))
+                .andExpect(status().isForbidden());
         assertTrue(projectRepository.existsById(project.getId()));
     }
 
@@ -467,7 +472,7 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("DELETE /api/projects/{id}  com role incorreta retorna 403")
+    @DisplayName("DELETE /api/projects/{id} com role incorreta retorna 403")
     void shouldReturn403WhenDeletingWithCompanyRole() throws Exception {
         // Setup projeto válido
         Project project = 
