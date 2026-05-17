@@ -1,6 +1,6 @@
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline"
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined"
-import { useMemo, type ReactNode } from "react"
+import { useCallback, useMemo, type ReactNode } from "react"
 import { useNavigate } from "react-router-dom"
 import { BackLink } from "../../components/general/BackLink"
 import { Header } from "../../components/general/Header"
@@ -13,6 +13,10 @@ import { useOngProjects } from "./useOngProjects"
 export function OngProjectsPage() {
   const navigate = useNavigate()
   const openProjectDetails = useProjectDetailsNavigation("/ong/projetos")
+  const editProject = useCallback(
+    (id: number) => navigate(`/ong/projetos/${id}/editar`),
+    [navigate],
+  )
   const { projects, loading, error } = useOngProjects()
   const summary = useMemo(() => getOngProjectSummary(projects), [projects])
 
@@ -71,6 +75,7 @@ export function OngProjectsPage() {
                 progress={project.progress}
                 tags={project.tags}
                 onDetails={openProjectDetails}
+                onEdit={editProject}
               />
             ))}
           </section>

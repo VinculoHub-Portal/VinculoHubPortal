@@ -16,6 +16,7 @@ export interface OngProjectCardProps {
   onTimeline?: (id: number) => void
   onDetails?: (id: number) => void
   onEdit?: (id: number) => void
+  onDelete?: (id: number) => void
 }
 
 const CURRENCY_FORMATTER = new Intl.NumberFormat("pt-BR", {
@@ -44,6 +45,7 @@ export function OngProjectCard({
   onTimeline,
   onDetails,
   onEdit,
+  onDelete,
 }: OngProjectCardProps) {
   const percent = clampProgress(progress)
   const isIncentiveLaw = fundingModel === "incentiveLaw"
@@ -105,7 +107,7 @@ export function OngProjectCard({
         </div>
       )}
 
-      <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
+      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
         <BaseButton
           type="button"
           variant="secondary"
@@ -133,6 +135,17 @@ export function OngProjectCard({
           onClick={() => onEdit?.(id)}
         >
           Editar Projeto
+        </BaseButton>
+        <BaseButton
+          type="button"
+          variant="outline"
+          fullWidth
+          disabled
+          title="Funcionalidade em breve"
+          className="min-h-12 border-slate-200 bg-white py-3 text-slate-400"
+          onClick={() => onDelete?.(id)}
+        >
+          Excluir Projeto
         </BaseButton>
       </div>
     </article>

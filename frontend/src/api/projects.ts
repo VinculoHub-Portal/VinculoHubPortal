@@ -122,3 +122,46 @@ export async function createProject(
     throw error
   }
 }
+
+export interface UpdateProjectPayload {
+  title: string
+  description: string
+  budgetNeeded: number | null
+  odsIds: number[]
+  type: "SOCIAL_INVESTMENT_LAW" | "TAX_INCENTIVE_LAW"
+}
+
+export async function fetchProjectById(
+  projectId: number,
+  token: string,
+): Promise<CreateProjectResponse> {
+  logger.info("ProjectsAPI", "Fetching project by id", { projectId })
+  try {
+    const { data } = await api.get<CreateProjectResponse>(`/api/projects/${projectId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    logger.info("ProjectsAPI", "Project fetched", { id: data.id })
+    return data
+  } catch (error) {
+    logger.error("ProjectsAPI", "Failed to fetch project", error)
+    throw error
+  }
+}
+
+export async function updateProject(
+  projectId: number,
+  payload: UpdateProjectPayload,
+  token: string,
+): Promise<CreateProjectResponse> {
+  logger.info("ProjectsAPI", "Updating project", { projectId, title: payload.title })
+  try {
+    const { data } = await api.put<CreateProjectResponse>(`/api/projects/${projectId}`, payload, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    logger.info("ProjectsAPI", "Project updated", { id: data.id })
+    return data
+  } catch (error) {
+    logger.error("ProjectsAPI", "Failed to update project", error)
+    throw error
+  }
+}

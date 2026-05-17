@@ -61,6 +61,10 @@ function renderPage() {
           <Route path="/ong/projetos" element={<OngProjectsPage />} />
           <Route path="/ong/dashboard" element={<p>Dashboard da ONG</p>} />
           <Route path="/projeto/:projectId" element={<ProjectDetailsPage />} />
+          <Route
+            path="/ong/projetos/:projectId/editar"
+            element={<p>Página de Edição</p>}
+          />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -176,5 +180,24 @@ describe("OngProjectsPage", () => {
 
     expect(screen.getByText("Nenhum projeto encontrado")).toBeInTheDocument()
     expect(screen.getByLabelText("Total de Projetos: 0")).toBeInTheDocument()
+  })
+
+  it("navega para a página de edição ao clicar em Editar Projeto", async () => {
+    renderPage()
+
+    const editButtons = screen.getAllByRole("button", {
+      name: "Editar Projeto",
+    })
+    await userEvent.click(editButtons[0])
+
+    expect(screen.getByText("Página de Edição")).toBeInTheDocument()
+  })
+
+  it("renderiza botão Excluir Projeto desabilitado em cada card", () => {
+    renderPage()
+
+    const deleteButtons = screen.getAllByRole("button", { name: "Excluir Projeto" })
+    expect(deleteButtons.length).toBe(mockOngProjects.length)
+    deleteButtons.forEach((btn) => expect(btn).toBeDisabled())
   })
 })
