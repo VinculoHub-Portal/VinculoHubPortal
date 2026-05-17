@@ -31,8 +31,8 @@ class ProjectRepositoryTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void cleanup() {
-        projectRepository.deleteAll();
-        npoRepository.deleteAll();
+        projectRepository.deleteAllInBatch();
+        npoRepository.deleteAllInBatch();
     }
 
     @Test
