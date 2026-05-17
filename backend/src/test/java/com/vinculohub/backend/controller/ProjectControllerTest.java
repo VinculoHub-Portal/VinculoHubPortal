@@ -423,12 +423,10 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
-
-
     @Test
     @DisplayName("DELETE /api/projects/{id} retorna 403 quando a ONG não é a dona")
     void shouldFailWhenDeletingProjectFromAnotherNpo() throws Exception {
-        User userIntruso = 
+        User userIntruso =
                 userRepository.save(
                         User.builder()
                                 .name("Intruso")
@@ -437,16 +435,15 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                                 .userType(UserType.npo)
                                 .build());
 
-        Npo outraNpo = 
+        Npo outraNpo =
                 npoRepository.save(
                         Npo.builder()
                                 .name("ONG Intruso")
                                 .npoSize(NpoSize.small)
                                 .userId(userIntruso.getId())
-                                .build()
-        );
+                                .build());
 
-        Project project = 
+        Project project =
                 projectRepository.save(
                         Project.builder()
                                 .npo(npo)
@@ -458,7 +455,11 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                         delete("/api/projects/" + project.getId())
                                 .with(
                                         jwt().authorities(new SimpleGrantedAuthority("ROLE_NPO"))
-                                                .jwt(jwt -> jwt.claim("sub", "auth0|outro_usuario"))))
+                                                .jwt(
+                                                        jwt ->
+                                                                jwt.claim(
+                                                                        "sub",
+                                                                        "auth0|outro_usuario"))))
                 .andExpect(status().isForbidden());
         assertTrue(projectRepository.existsById(project.getId()));
     }
@@ -467,15 +468,14 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     @DisplayName("DELETE /api/projects/{id} sem autenticação retorna 401")
     void shouldReturn401WhenDeletingWithoutAuth() throws Exception {
         // Mesmo se o projeto existir, não deve passar pela segurança
-        mockMvc.perform(delete("/api/projects/1"))
-                .andExpect(status().isUnauthorized());
+        mockMvc.perform(delete("/api/projects/1")).andExpect(status().isUnauthorized());
     }
 
     @Test
     @DisplayName("DELETE /api/projects/{id} com role incorreta retorna 403")
     void shouldReturn403WhenDeletingWithCompanyRole() throws Exception {
         // Setup projeto válido
-        Project project = 
+        Project project =
                 projectRepository.save(
                         Project.builder()
                                 .npo(npo)
@@ -484,16 +484,16 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                                 .status(ProjectStatus.ACTIVE)
                                 .build());
 
-        mockMvc.perform(delete("/api/projects/" + project.getId())
-                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_COMPANY"))))
-                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.status").value(403));;
+        mockMvc.perform(
+                        delete("/api/projects/" + project.getId())
+                                .with(
+                                        jwt().authorities(
+                                                        new SimpleGrantedAuthority(
+                                                                "ROLE_COMPANY"))))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
+        ;
     }
-
-    
-
-
-
 
     @Test
     @DisplayName("PUT /api/projects/{id} com sucesso retorna 200 com projeto atualizado")
