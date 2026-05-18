@@ -120,13 +120,7 @@ export function ComponentsPage() {
               Acessar Portal VinculoHub
             </BaseButton>
           </div>
-
-          <div>
-            <CreateNoticeModal open={true} onClose={function (): void {
-              throw new Error("Function not implemented.")
-            } }/>
-          </div>
-        </section>
+          </section>
       </main>
     </div>
   )
