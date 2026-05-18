@@ -34,10 +34,7 @@ export const AppRouter = () => (
         path="/admin/dashboard"
         element={
           <ProtectedRoute requiredRole="ADMIN">
-            <RoleHomePage
-              title="Painel administrativo"
-              description="Gerencie usuários, organizações e configurações da plataforma."
-            />
+            <AdminDashboard />
           </ProtectedRoute>
         }
       />
