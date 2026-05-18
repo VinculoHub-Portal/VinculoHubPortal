@@ -80,6 +80,7 @@ export function CreateNoticeModal({
   submitError = null,
 }: CreateNoticeModalProps) {
   const { getAccessTokenSilently } = useAuth0();
+  const [isModalOpen, setIsModalOpen] = useState(open);
   const [formData, setFormData] =
     useState<CreateNoticeFormData>(INITIAL_FORM_DATA);
 
@@ -102,10 +103,11 @@ export function CreateNoticeModal({
       return;
     }
 
+    setIsModalOpen(true);
     fetchOdsCatalog().then(setOdsOptions).catch(() => {});
   }, [open]);
 
-  if (!open) return null;
+  if (!open || !isModalOpen) return null;
 
   function updateField<Field extends keyof CreateNoticeFormData>(
     field: Field,
@@ -129,6 +131,7 @@ export function CreateNoticeModal({
 
   function handleClose() {
     resetForm();
+    setIsModalOpen(false);
     onClose();
   }
 

@@ -139,6 +139,20 @@ describe("CreateNoticeModal", () => {
     expect(screen.getByRole("option", { name: "Selecione..." })).toBeInTheDocument();
   });
 
+  it("fecha o modal internamente ao clicar no botão de fechar", async () => {
+    const user = userEvent.setup();
+    const { onClose } = renderModal();
+
+    await user.click(
+      screen.getByRole("button", { name: /Fechar modal/i }),
+    );
+
+    expect(
+      screen.queryByRole("dialog", { name: "Cadastrar Novo Edital" }),
+    ).not.toBeInTheDocument();
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
   it("exibe erros de validação ao tentar publicar vazio", async () => {
     const user = userEvent.setup();
     renderModal();
