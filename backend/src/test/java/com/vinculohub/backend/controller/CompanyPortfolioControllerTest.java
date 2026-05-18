@@ -91,7 +91,8 @@ class CompanyPortfolioControllerTest extends AbstractIntegrationTest {
                                 .build());
 
         jdbcTemplate.update(
-                "INSERT INTO company_project (company_id, project_id, status) VALUES (?, ?, 'active'::relationship_status)",
+                "INSERT INTO company_project (company_id, project_id, status) VALUES (?, ?,"
+                        + " 'active'::relationship_status)",
                 company.getId(),
                 project.getId());
 
@@ -105,7 +106,8 @@ class CompanyPortfolioControllerTest extends AbstractIntegrationTest {
                                                                                 "email",
                                                                                 "empresa-dashboard@test.com"))
                                                 .authorities(
-                                                        new SimpleGrantedAuthority("ROLE_COMPANY"))))
+                                                        new SimpleGrantedAuthority(
+                                                                "ROLE_COMPANY"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.projectCount").value(1))
                 .andExpect(jsonPath("$.totalInvested").value(3000.00))
@@ -136,7 +138,8 @@ class CompanyPortfolioControllerTest extends AbstractIntegrationTest {
                                                                                 "email",
                                                                                 "empresa-dashboard@test.com"))
                                                 .authorities(
-                                                        new SimpleGrantedAuthority("ROLE_COMPANY"))))
+                                                        new SimpleGrantedAuthority(
+                                                                "ROLE_COMPANY"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.projectCount").value(0))
                 .andExpect(jsonPath("$.totalInvested").value(0))

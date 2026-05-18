@@ -375,21 +375,21 @@ class ProjectServiceTest {
         when(projectRepository.sumPortfolioTotalsByCompanyId(7))
                 .thenReturn(
                         new PortfolioTotalsProjection() {
-                                    @Override
-                                    public Long getProjectCount() {
-                                        return 2L;
-                                    }
+                            @Override
+                            public Long getProjectCount() {
+                                return 2L;
+                            }
 
-                                    @Override
-                                    public BigDecimal getTotalInvested() {
-                                        return new BigDecimal("1000.00");
-                                    }
+                            @Override
+                            public BigDecimal getTotalInvested() {
+                                return new BigDecimal("1000.00");
+                            }
 
-                                    @Override
-                                    public BigDecimal getTotalBudgetNeeded() {
-                                        return new BigDecimal("2000.00");
-                                    }
-                                });
+                            @Override
+                            public BigDecimal getTotalBudgetNeeded() {
+                                return new BigDecimal("2000.00");
+                            }
+                        });
         when(projectRepository.sumByEsgPillarForCompany(7))
                 .thenReturn(
                         List.of(
@@ -397,8 +397,7 @@ class ProjectServiceTest {
                                 pillarRow("SOCIAL", 1L, "400.00", "1200.00"),
                                 pillarRow("GOVERNANCE", 0L, "0.00", "0.00")));
 
-        CompanyEsgImpactDashboardResponse response =
-                projectService.getEsgImpactDashboard(auth0Id);
+        CompanyEsgImpactDashboardResponse response = projectService.getEsgImpactDashboard(auth0Id);
 
         assertEquals(2L, response.projectCount());
         assertEquals(new BigDecimal("1000.00"), response.totalInvested());

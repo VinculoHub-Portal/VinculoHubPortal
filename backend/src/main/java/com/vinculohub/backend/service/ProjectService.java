@@ -206,8 +206,7 @@ public class ProjectService {
                                             pillarProjects,
                                             pillarInvested,
                                             pillarBudget,
-                                            investmentPercentage(
-                                                    pillarInvested, totalInvested));
+                                            investmentPercentage(pillarInvested, totalInvested));
                                 })
                         .toList();
 
