@@ -196,6 +196,20 @@ describe("CreateNoticeModal", () => {
     expect(mocks.apiPostMock).not.toHaveBeenCalled();
   });
 
+  it("substitui o seletor pela caixa de arquivo selecionado", async () => {
+    const { container } = renderModal();
+
+    await fillValidForm(container);
+
+    expect(screen.getByText("Arquivo selecionado")).toBeInTheDocument();
+    expect(screen.getByText("edital.pdf")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: /Trocar arquivo selecionado/i,
+      }),
+    ).toBeInTheDocument();
+  });
+
   it("envia multipart para POST /api/editais com token Auth0", async () => {
     const { container, onClose } = renderModal();
     const { file, user } = await fillValidForm(container);

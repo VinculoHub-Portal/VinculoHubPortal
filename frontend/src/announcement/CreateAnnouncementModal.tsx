@@ -1,6 +1,7 @@
 import CloseIcon from "@mui/icons-material/Close";
+import SyncAltIcon from "@mui/icons-material/SyncAlt";
 import { useAuth0 } from "@auth0/auth0-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "../services/api";
 import { fetchOdsCatalog, type OdsCatalogItem } from "../api/ods";
 
@@ -80,6 +81,7 @@ export function CreateNoticeModal({
   submitError = null,
 }: CreateNoticeModalProps) {
   const { getAccessTokenSilently } = useAuth0();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(open);
   const [formData, setFormData] =
     useState<CreateNoticeFormData>(INITIAL_FORM_DATA);
@@ -422,8 +424,11 @@ export function CreateNoticeModal({
               </span>
             </label>
 
-            <label className="group flex min-h-[72px] cursor-pointer flex-col items-center justify-center rounded-[12px] border-2 border-dashed border-slate-300 bg-white px-4 py-4 transition-all hover:border-[#0056A6]/40 hover:bg-slate-50">
+            <label className={`group min-h-[72px] cursor-pointer flex-col items-center justify-center rounded-[12px] border-2 border-dashed border-slate-300 bg-white px-4 py-4 transition-all hover:border-[#0056A6]/40 hover:bg-slate-50 ${
+              formData.file ? "hidden" : "flex"
+            }`}>
               <input
+                ref={fileInputRef}
                 type="file"
                 accept=".pdf,.doc,.docx"
                 className="hidden"
@@ -452,11 +457,24 @@ export function CreateNoticeModal({
             </p>
 
             {formData.file && (
-              <div className="rounded-[10px] border border-emerald-200 bg-emerald-50 px-3 py-2 text-[13px] text-emerald-700">
-                Arquivo selecionado:
-                <strong className="ml-1">
-                  {formData.file.name}
-                </strong>
+              <div className="flex min-h-[72px] items-center justify-between gap-3 rounded-[12px] border border-emerald-300 bg-transparent px-4 py-3 text-emerald-800">
+                <div className="min-w-0">
+                  <p className="text-[12px] font-medium text-emerald-700">
+                    Arquivo selecionado
+                  </p>
+                  <p className="truncate text-[13px] font-semibold">
+                    {formData.file.name}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-emerald-300 bg-white text-emerald-700 transition-all hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                  aria-label="Trocar arquivo selecionado"
+                >
+                  <SyncAltIcon sx={{ fontSize: 20 }} />
+                </button>
               </div>
             )}
 
