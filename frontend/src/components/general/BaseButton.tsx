@@ -1,11 +1,5 @@
 interface BaseButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?:
-    | "primary"
-    | "secondary"
-    | "outline"
-    | "ghost"
-    | "attention"
-    | "warning";
+  variant?: | "primary" | "secondary" | "outline" | "ghost" | "attention" | "warning"
   fullWidth?: boolean;
 }
 
