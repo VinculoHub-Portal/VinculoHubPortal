@@ -9,11 +9,9 @@ const editalIconActionClassName =
 
 export type EditalCardProps = {
   title: string
-  /** Quando true, exibe o selo verde "Ativo"; caso contrário, selo neutro "Encerrado". */
   isActive: boolean
   description?: string | null
   odsLabel?: string | null
-  /** Já formatado, ex.: "Prazo: 14/05/2026" */
   deadlineLine?: string | null
   fileUrl?: string | null
   fileName?: string | null

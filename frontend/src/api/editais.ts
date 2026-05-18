@@ -1,18 +1,15 @@
 import { api } from "../services/api"
 import { logger } from "../utils/logger"
 
-/** Campos esperados do GET /api/editais (aceita variações comuns de naming). */
 export type EditalApiRecord = Record<string, unknown>
 
 export type EditalListItem = {
   id: string
   title: string
   description: string | null
-  /** Quando true, exibe o selo "Ativo". */
   isActive: boolean
   odsLabel: string | null
   deadline: string | null
-  /** URL pública (ex.: S3) para download/visualização. */
   fileUrl: string | null
   fileName: string | null
   publishedAt: string | null
