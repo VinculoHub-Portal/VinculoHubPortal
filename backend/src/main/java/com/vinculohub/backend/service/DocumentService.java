@@ -3,6 +3,7 @@ package com.vinculohub.backend.service;
 
 import com.vinculohub.backend.dto.DocumentRequestDTO;
 import com.vinculohub.backend.dto.DocumentResponseDTO;
+import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.FileFormatValidationException;
 import com.vinculohub.backend.exception.FileSizeValidationException;
 import com.vinculohub.backend.exception.NotFoundException;
@@ -40,6 +41,10 @@ public class DocumentService {
                     "application/vnd.ms-excel");
 
     public DocumentResponseDTO upload(MultipartFile file, DocumentRequestDTO docReq) {
+        if (docReq == null) {
+            throw new BadRequestException("Document metadata is required");
+        }
+
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new FileSizeValidationException("File exceeds 5MB limit");
         }
@@ -48,15 +53,22 @@ public class DocumentService {
             throw new FileFormatValidationException("Unsupported file type");
         }
 
+        if (docReq.getNpoId() == null) {
+            throw new BadRequestException("Npo id is required");
+        }
+
         Npo npo =
                 npoRepository
                         .findById(docReq.getNpoId())
                         .orElseThrow(() -> new NotFoundException("Npo not found"));
 
-        Project project =
-                projectRepository
-                        .findById(docReq.getProjectId().longValue())
-                        .orElseThrow(() -> new NotFoundException("Project not found"));
+        Project project = null;
+        if (docReq.getProjectId() != null) {
+            project =
+                    projectRepository
+                            .findById(docReq.getProjectId().longValue())
+                            .orElseThrow(() -> new NotFoundException("Project not found"));
+        }
 
         String fileUrl;
         try {
@@ -103,8 +115,9 @@ public class DocumentService {
         DocumentResponseDTO dto = new DocumentResponseDTO();
 
         dto.setId(document.getId());
-        dto.setNpoId(document.getNpo().getId());
-        dto.setProjectId(document.getProject().getId().intValue());
+        dto.setNpoId(document.getNpo() == null ? null : document.getNpo().getId());
+        dto.setProjectId(
+                document.getProject() == null ? null : document.getProject().getId().intValue());
         dto.setTitle(document.getTitle());
         dto.setDescription(document.getDescription());
         dto.setFileUrl(document.getFileUrl());
