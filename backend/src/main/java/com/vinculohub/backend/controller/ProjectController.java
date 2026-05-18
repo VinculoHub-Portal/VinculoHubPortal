@@ -7,6 +7,7 @@ import com.vinculohub.backend.dto.ProjectCreateResponse;
 import com.vinculohub.backend.dto.ProjectDetailResponse;
 import com.vinculohub.backend.dto.ProjectFilterParams;
 import com.vinculohub.backend.dto.ProjectListItemDTO;
+import com.vinculohub.backend.dto.ProjectUpdateRequest;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.enums.ProjectStatus;
 import com.vinculohub.backend.model.enums.ProjectType;
@@ -23,9 +24,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -80,6 +83,27 @@ public class ProjectController {
         log.info("GET /api/projects/{}", id);
         Project project = projectService.findById(id);
         return ResponseEntity.ok(toResponse(project));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('NPO')")
+    public ResponseEntity<ProjectDetailResponse> updateProject(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody ProjectUpdateRequest request,
+            @PathVariable Long id) {
+        log.info("PUT /api/projects/{} | sub={} title={}", id, jwt.getSubject(), request.title());
+        Project updated = projectService.updateProject(jwt.getSubject(), id, request);
+        log.info("Project updated | id={} npoId={}", updated.getId(), updated.getNpo().getId());
+        return ResponseEntity.ok(toResponse(updated));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('NPO')")
+    public ResponseEntity<Void> deleteProject(
+            @AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
+        log.info("DELETE /api/projects/{}", id);
+        projectService.deleteProject(jwt.getSubject(), id);
+        return ResponseEntity.noContent().build();
     }
 
     private static ProjectDetailResponse toResponse(Project project) {
