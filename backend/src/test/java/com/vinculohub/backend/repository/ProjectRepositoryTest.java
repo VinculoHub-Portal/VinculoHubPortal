@@ -17,6 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
@@ -29,12 +30,15 @@ class ProjectRepositoryTest extends AbstractIntegrationTest {
 
     @Autowired private ProjectRepository projectRepository;
 
+    @Autowired private JdbcTemplate jdbcTemplate;
+
     @BeforeEach
     void cleanup() {
-        projectRepository.deleteAll();
-        projectRepository.flush();
-        npoRepository.deleteAll();
-        npoRepository.flush();
+        jdbcTemplate.execute("DELETE FROM project_ods");
+        jdbcTemplate.execute("DELETE FROM company_project");
+        jdbcTemplate.execute("DELETE FROM document");
+        jdbcTemplate.execute("DELETE FROM project");
+        jdbcTemplate.execute("DELETE FROM npo");
     }
 
     @Test
