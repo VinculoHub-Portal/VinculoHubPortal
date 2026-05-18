@@ -165,3 +165,19 @@ export async function updateProject(
     throw error
   }
 }
+
+export async function deleteProject(
+  projectId: number,
+  token: string,
+): Promise<void> {
+  logger.info("ProjectsAPI", "Deleting project", { projectId })
+  try {
+    await api.delete(`/api/projects/${projectId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    logger.info("ProjectsAPI", "Project deleted", { projectId })
+  } catch (error) {
+    logger.error("ProjectsAPI", "Failed to delete project", error)
+    throw error
+  }
+}

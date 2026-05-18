@@ -1,24 +1,65 @@
+import axios from "axios"
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline"
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined"
-import { useCallback, useMemo, type ReactNode } from "react"
+import { useCallback, useMemo, useState, type ReactNode } from "react"
 import { useNavigate } from "react-router-dom"
+import { useAuth0 } from "@auth0/auth0-react"
 import { BackLink } from "../../components/general/BackLink"
 import { Header } from "../../components/general/Header"
+import { ConfirmDeleteProjectModal } from "../../components/ong/ConfirmDeleteProjectModal"
 import { OngProjectCard } from "../../components/projects/OngProjectCard"
+import { useToast } from "../../context/ToastContext"
+import { deleteProject } from "../../api/projects"
 import { useProjectDetailsNavigation } from "../ProjectDetailsPage/projectDetailsNavigation"
-import { getOngProjectSummary } from "./mockData"
+import { getOngProjectSummary, type OngProject } from "./mockData"
 import { SummaryCard } from "./SummaryCard"
 import { useOngProjects } from "./useOngProjects"
 
 export function OngProjectsPage() {
   const navigate = useNavigate()
+  const { getAccessTokenSilently } = useAuth0()
+  const { showToast } = useToast()
   const openProjectDetails = useProjectDetailsNavigation("/ong/projetos")
   const editProject = useCallback(
     (id: number) => navigate(`/ong/projetos/${id}/editar`),
     [navigate],
   )
-  const { projects, loading, error } = useOngProjects()
+  const { projects, loading, error, refetch } = useOngProjects()
   const summary = useMemo(() => getOngProjectSummary(projects), [projects])
+
+  const [projectToDelete, setProjectToDelete] = useState<OngProject | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const handleDeleteClick = useCallback(
+    (id: number) => {
+      const project = projects.find((p) => p.id === id)
+      if (project) setProjectToDelete(project)
+    },
+    [projects],
+  )
+
+  async function handleConfirmDelete() {
+    if (!projectToDelete) return
+    setIsDeleting(true)
+    try {
+      const token = await getAccessTokenSilently()
+      await deleteProject(projectToDelete.id, token)
+      showToast("Projeto excluído", "success")
+      setProjectToDelete(null)
+      await refetch()
+    } catch (err) {
+      let msg = "Falha ao excluir projeto. Tente novamente."
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 403)
+          msg = "Você não tem permissão para excluir este projeto."
+        else if (err.response?.status === 404) msg = "Projeto não encontrado."
+      }
+      showToast(msg, "error")
+      setProjectToDelete(null)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
@@ -76,11 +117,20 @@ export function OngProjectsPage() {
                 tags={project.tags}
                 onDetails={openProjectDetails}
                 onEdit={editProject}
+                onDelete={handleDeleteClick}
               />
             ))}
           </section>
         </ProjectListState>
       </main>
+
+      <ConfirmDeleteProjectModal
+        open={projectToDelete !== null}
+        projectTitle={projectToDelete?.title ?? ""}
+        isDeleting={isDeleting}
+        onCancel={() => setProjectToDelete(null)}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   )
 }

@@ -68,6 +68,7 @@ describe("OngProjectCard", () => {
     const onTimeline = vi.fn()
     const onDetails = vi.fn()
     const onEdit = vi.fn()
+    const onDelete = vi.fn()
 
     render(
       <OngProjectCard
@@ -75,29 +76,23 @@ describe("OngProjectCard", () => {
         onTimeline={onTimeline}
         onDetails={onDetails}
         onEdit={onEdit}
+        onDelete={onDelete}
       />,
     )
 
     fireEvent.click(screen.getByRole("button", { name: /Ver Linha do Tempo/i }))
     fireEvent.click(screen.getByRole("button", { name: /Detalhes do Projeto/i }))
     fireEvent.click(screen.getByRole("button", { name: /Editar Projeto/i }))
+    fireEvent.click(screen.getByRole("button", { name: /Excluir Projeto/i }))
 
     expect(onTimeline).toHaveBeenCalledWith(1)
     expect(onDetails).toHaveBeenCalledWith(1)
     expect(onEdit).toHaveBeenCalledWith(1)
+    expect(onDelete).toHaveBeenCalledWith(1)
   })
 
-  it("renderiza botão Excluir Projeto como desabilitado", () => {
+  it("renderiza botão Excluir Projeto habilitado", () => {
     render(<OngProjectCard {...baseProject} />)
-
-    const deleteButton = screen.getByRole("button", { name: /Excluir Projeto/i })
-    expect(deleteButton).toBeDisabled()
-  })
-
-  it("botão Excluir Projeto exibe title indicando funcionalidade em breve", () => {
-    render(<OngProjectCard {...baseProject} />)
-
-    const deleteButton = screen.getByRole("button", { name: /Excluir Projeto/i })
-    expect(deleteButton).toHaveAttribute("title", "Funcionalidade em breve")
+    expect(screen.getByRole("button", { name: /Excluir Projeto/i })).not.toBeDisabled()
   })
 })

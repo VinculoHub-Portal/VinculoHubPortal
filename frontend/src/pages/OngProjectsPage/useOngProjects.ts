@@ -1,5 +1,5 @@
 import { useAuth0 } from "@auth0/auth0-react"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { fetchAuthenticatedProfile } from "../../api/me"
 import {
   fetchProjects,
@@ -13,6 +13,7 @@ interface UseOngProjectsResult {
   projects: OngProject[]
   loading: boolean
   error: string | null
+  refetch: () => Promise<void>
 }
 
 export function useOngProjects(): UseOngProjectsResult {
@@ -21,56 +22,43 @@ export function useOngProjects(): UseOngProjectsResult {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    let active = true
-
-    async function loadProjects() {
-      if (isLoading) {
-        return
-      }
-
-      if (!isAuthenticated) {
-        setProjects([])
-        setError("Faça login para visualizar seus projetos.")
-        setLoading(false)
-        return
-      }
-
-      try {
-        setLoading(true)
-        setError(null)
-        const token = await getAccessTokenSilently()
-        const profile = await fetchAuthenticatedProfile(token)
-
-        if (!profile.npoId) {
-          throw new Error("ONG não encontrada para o usuário autenticado.")
-        }
-
-        const data = await fetchProjects({ npoId: profile.npoId, size: 50 }, token)
-
-        if (active) {
-          setProjects(data.content.map(mapProjectListItemToOngProject))
-        }
-      } catch {
-        if (active) {
-          setError("Não foi possível carregar os projetos.")
-          setProjects([])
-        }
-      } finally {
-        if (active) {
-          setLoading(false)
-        }
-      }
+  const refetch = useCallback(async () => {
+    if (isLoading) {
+      return
     }
 
-    void loadProjects()
+    if (!isAuthenticated) {
+      setProjects([])
+      setError("Faça login para visualizar seus projetos.")
+      setLoading(false)
+      return
+    }
 
-    return () => {
-      active = false
+    try {
+      setLoading(true)
+      setError(null)
+      const token = await getAccessTokenSilently()
+      const profile = await fetchAuthenticatedProfile(token)
+
+      if (!profile.npoId) {
+        throw new Error("ONG não encontrada para o usuário autenticado.")
+      }
+
+      const data = await fetchProjects({ npoId: profile.npoId, size: 50 }, token)
+      setProjects(data.content.map(mapProjectListItemToOngProject))
+    } catch {
+      setError("Não foi possível carregar os projetos.")
+      setProjects([])
+    } finally {
+      setLoading(false)
     }
   }, [getAccessTokenSilently, isAuthenticated, isLoading])
 
-  return { projects, loading, error }
+  useEffect(() => {
+    void refetch()
+  }, [refetch])
+
+  return { projects, loading, error, refetch }
 }
 
 function mapProjectListItemToOngProject(project: ProjectListItem): OngProject {

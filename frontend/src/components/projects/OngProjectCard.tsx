@@ -140,9 +140,7 @@ export function OngProjectCard({
           type="button"
           variant="outline"
           fullWidth
-          disabled
-          title="Funcionalidade em breve"
-          className="min-h-12 border-slate-200 bg-white py-3 text-slate-400"
+          className="min-h-12 border-vinculo-red bg-white py-3 text-vinculo-red hover:bg-red-50"
           onClick={() => onDelete?.(id)}
         >
           Excluir Projeto

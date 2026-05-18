@@ -1,13 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { fetchProjectById, fetchProjects, updateProject } from "./projects"
+import { deleteProject, fetchProjectById, fetchProjects, updateProject } from "./projects"
 
 const mocks = vi.hoisted(() => ({
   apiGetMock: vi.fn(),
   apiPutMock: vi.fn(),
+  apiDeleteMock: vi.fn(),
 }))
 
 vi.mock("../services/api", () => ({
-  api: { get: mocks.apiGetMock, put: mocks.apiPutMock },
+  api: { get: mocks.apiGetMock, put: mocks.apiPutMock, delete: mocks.apiDeleteMock },
 }))
 
 vi.mock("../utils/logger", () => ({
@@ -138,5 +139,28 @@ describe("updateProject", () => {
   it("propaga o erro quando api.put rejeita", async () => {
     mocks.apiPutMock.mockRejectedValue(new Error("Forbidden"))
     await expect(updateProject(1, payload, "meu-token")).rejects.toThrow("Forbidden")
+  })
+})
+
+describe("deleteProject", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.apiDeleteMock.mockResolvedValue({})
+  })
+
+  it("chama DELETE /api/projects/:id com token de autenticação", async () => {
+    await deleteProject(42, "meu-token")
+    expect(mocks.apiDeleteMock).toHaveBeenCalledWith("/api/projects/42", {
+      headers: { Authorization: "Bearer meu-token" },
+    })
+  })
+
+  it("resolve sem retorno quando a exclusão é bem-sucedida", async () => {
+    await expect(deleteProject(42, "meu-token")).resolves.toBeUndefined()
+  })
+
+  it("propaga o erro quando api.delete rejeita", async () => {
+    mocks.apiDeleteMock.mockRejectedValue(new Error("Forbidden"))
+    await expect(deleteProject(42, "meu-token")).rejects.toThrow("Forbidden")
   })
 })
