@@ -1,7 +1,8 @@
 import CloseIcon from "@mui/icons-material/Close";
 import { useAuth0 } from "@auth0/auth0-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../services/api";
+import { fetchOdsCatalog, type OdsCatalogItem } from "../api/ods";
 
 export type CreateNoticeFormData = {
   title: string;
@@ -30,21 +31,6 @@ const INITIAL_FORM_DATA: CreateNoticeFormData = {
   category: "",
   file: null,
 };
-
-const CATEGORY_OPTIONS = [
-  {
-    value: "9",
-    label: "Indústria, Inovação e Infraestrutura",
-  },
-  {
-    value: "4",
-    label: "Educação de Qualidade",
-  },
-  {
-    value: "17",
-    label: "Parcerias e Meios de Implementação",
-  },
-];
 
 const ACCEPTED_FILE_TYPES = [
   "application/pdf",
@@ -98,6 +84,9 @@ export function CreateNoticeModal({
     useState<CreateNoticeFormData>(INITIAL_FORM_DATA);
 
   const [errors, setErrors] = useState<FormErrors>({});
+  const [odsOptions, setOdsOptions] = useState<OdsCatalogItem[]>(
+    [],
+  );
   const [internalIsSubmitting, setInternalIsSubmitting] =
     useState(false);
   const [internalSubmitError, setInternalSubmitError] =
@@ -107,6 +96,14 @@ export function CreateNoticeModal({
     isSubmitting || internalIsSubmitting;
   const effectiveSubmitError =
     submitError ?? internalSubmitError;
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    fetchOdsCatalog().then(setOdsOptions).catch(() => {});
+  }, [open]);
 
   if (!open) return null;
 
@@ -390,12 +387,12 @@ export function CreateNoticeModal({
                   Selecione...
                 </option>
 
-                {CATEGORY_OPTIONS.map((option) => (
+                {odsOptions.map((option) => (
                   <option
-                    key={option.value}
-                    value={option.value}
+                    key={option.id}
+                    value={String(option.id)}
                   >
-                    {option.label}
+                    {option.name}
                   </option>
                 ))}
               </select>

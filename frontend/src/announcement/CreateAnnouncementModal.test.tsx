@@ -5,6 +5,7 @@ import { CreateNoticeModal } from "./CreateAnnouncementModal";
 
 const mocks = vi.hoisted(() => ({
   apiPostMock: vi.fn(),
+  fetchOdsCatalogMock: vi.fn(),
   getAccessTokenSilentlyMock: vi.fn(),
 }));
 
@@ -18,6 +19,10 @@ vi.mock("../services/api", () => ({
   api: {
     post: mocks.apiPostMock,
   },
+}));
+
+vi.mock("../api/ods", () => ({
+  fetchOdsCatalog: mocks.fetchOdsCatalogMock,
 }));
 
 function renderModal(
@@ -51,6 +56,9 @@ async function fillValidForm(container: HTMLElement) {
   fireEvent.change(screen.getByLabelText(/Prazo de Inscrição/i), {
     target: { value: "2026-12-31" },
   });
+  await screen.findByRole("option", {
+    name: "Educação de Qualidade",
+  });
   await user.selectOptions(
     screen.getByRole("combobox", { name: /Categoria\/ODS/i }),
     "4",
@@ -68,6 +76,18 @@ describe("CreateNoticeModal", () => {
     vi.clearAllMocks();
     mocks.getAccessTokenSilentlyMock.mockResolvedValue("token-admin");
     mocks.apiPostMock.mockResolvedValue({ data: { id: 1 } });
+    mocks.fetchOdsCatalogMock.mockResolvedValue([
+      {
+        id: 4,
+        name: "Educação de Qualidade",
+        description: "Assegurar educação inclusiva.",
+      },
+      {
+        id: 9,
+        name: "Indústria, Inovação e Infraestrutura",
+        description: "Construir infraestrutura resiliente.",
+      },
+    ]);
   });
 
   it("não renderiza quando open é false", () => {
@@ -78,7 +98,7 @@ describe("CreateNoticeModal", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("renderiza os campos principais e erro recebido por prop", () => {
+  it("renderiza os campos principais, busca ODS e exibe erro recebido por prop", async () => {
     renderModal({ submitError: "Falha externa" });
 
     expect(
@@ -92,7 +112,31 @@ describe("CreateNoticeModal", () => {
     expect(
       screen.getByRole("combobox", { name: /Categoria\/ODS/i }),
     ).toBeInTheDocument();
+    expect(mocks.fetchOdsCatalogMock).toHaveBeenCalledOnce();
+    expect(
+      await screen.findByRole("option", {
+        name: "Educação de Qualidade",
+      }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent("Falha externa");
+  });
+
+  it("não quebra quando a busca de ODS falha", async () => {
+    mocks.fetchOdsCatalogMock.mockRejectedValue(new Error("Falha ODS"));
+
+    renderModal();
+
+    await waitFor(() =>
+      expect(mocks.fetchOdsCatalogMock).toHaveBeenCalledOnce(),
+    );
+
+    expect(
+      screen.getByRole("combobox", { name: /Categoria\/ODS/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("option", { name: "Educação de Qualidade" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Selecione..." })).toBeInTheDocument();
   });
 
   it("exibe erros de validação ao tentar publicar vazio", async () => {
