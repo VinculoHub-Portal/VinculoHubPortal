@@ -29,7 +29,7 @@ export function EditaisMuralPage() {
     <div className="min-h-screen bg-surface flex flex-col gap-10 pb-20">
       <Header />
 
-      <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 sm:px-6">
+      <main className="flex w-full flex-col gap-8 px-6 md:px-8">
         <Link
           to={dashboardPath}
           className="flex w-fit items-center gap-1 text-sm font-medium text-vinculo-dark transition-opacity hover:opacity-70"
