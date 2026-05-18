@@ -9,7 +9,6 @@ import PendingActionsOutlinedIcon from "@mui/icons-material/PendingActionsOutlin
 import { BaseButton } from "../../components/general/BaseButton";
 import { Header } from "../../components/general/Header";
 import { MetricCard } from "../../components/general/MetricCard";
-
 const dashboardMetrics = [
   {
     label: "Total de ONGs",
@@ -17,6 +16,7 @@ const dashboardMetrics = [
     description: "Cadastradas no sistema",
     icon: <CorporateFareOutlinedIcon fontSize="small" />,
     variant: "brand" as const,
+    href: "/admin/ongs",
   },
   {
     label: "Editais Publicados",
@@ -24,6 +24,7 @@ const dashboardMetrics = [
     description: "Ativos no mural",
     icon: <DescriptionOutlinedIcon fontSize="small" />,
     variant: "success" as const,
+    href: "/admin/editais",
   },
   {
     label: "Vínculos Ativos",
@@ -31,6 +32,7 @@ const dashboardMetrics = [
     description: "Empresas e ONGs conectadas",
     icon: <HubOutlinedIcon fontSize="small" />,
     variant: "accent" as const,
+    href: "/admin/vinculos",
   },
   {
     label: "Notificações Pendentes",
@@ -38,6 +40,7 @@ const dashboardMetrics = [
     description: "Mediações necessárias",
     icon: <PendingActionsOutlinedIcon fontSize="small" />,
     variant: "warning" as const,
+    href: "/admin/notificacoes",
   },
 ];
 
@@ -117,7 +120,7 @@ export function AdminDashboard() {
         </header>
 
         <section
-          className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2"
           aria-label="Métricas do dashboard"
         >
           {dashboardMetrics.map((metric) => (
@@ -128,9 +131,11 @@ export function AdminDashboard() {
               description={metric.description}
               icon={metric.icon}
               variant={metric.variant}
+              href={metric.href}
             />
           ))}
         </section>
+
       </main>
     </div>
   );
