@@ -9,12 +9,6 @@ export interface InvestmentBudget {
   usedPercentage: number
 }
 
-export interface SupportedProjectsStats {
-  active: number
-  incentiveLaws: number
-  privateInvestment: number
-}
-
 export interface EsgPillar {
   label: string
   projects: number
@@ -41,17 +35,6 @@ export const mockBudget: InvestmentBudget = {
   totalDisplay: "R$ 250.000",
   usedDisplay: "R$ 150.000",
   usedPercentage: 60,
-}
-
-// TODO(backend): substituir pela contagem de projetos apoiados pela empresa.
-//   Endpoint a criar: GET /api/me/company/supported-projects/stats retornando
-//   { active: number, incentiveLaws: number, privateInvestment: number }.
-//   Requer relacionamento Empresa↔Projeto no modelo (não existe; ProjectController
-//   hoje só filtra por npoId/status/title/odsCodes/type, sem companyId).
-export const mockSupportedProjects: SupportedProjectsStats = {
-  active: 5,
-  incentiveLaws: 3,
-  privateInvestment: 2,
 }
 
 // TODO(backend): substituir pelas métricas de pilares ESG da empresa.

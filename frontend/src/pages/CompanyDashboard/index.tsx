@@ -2,13 +2,15 @@ import { Header } from "../../components/general/Header"
 import { EsgImpactSection } from "./EsgImpactSection"
 import { InvestmentModalitiesSection } from "./InvestmentModalitiesSection"
 import { SupportedProjectsCard } from "./SupportedProjectsCard"
+import { useSupportedProjectsSummary } from "./useSupportedProjectsSummary"
 import {
   mockCompanyName,
   mockEsgPillars,
-  mockSupportedProjects,
 } from "./mockData"
 
 export const CompanyDashboard = () => {
+  const supportedProjectsSummary = useSupportedProjectsSummary()
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
       <Header />
@@ -23,7 +25,11 @@ export const CompanyDashboard = () => {
         </header>
 
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <SupportedProjectsCard data={mockSupportedProjects} />
+          <SupportedProjectsCard
+            data={supportedProjectsSummary.data}
+            loading={supportedProjectsSummary.loading}
+            error={supportedProjectsSummary.error}
+          />
         </section>
 
         <InvestmentModalitiesSection />
