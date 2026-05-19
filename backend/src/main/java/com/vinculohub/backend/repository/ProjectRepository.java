@@ -27,7 +27,9 @@ public interface ProjectRepository
                     INNER JOIN company_project cp ON cp.project_id = p.id
                     WHERE cp.company_id = :companyId
                       AND cp.deleted_at IS NULL
+                      AND cp.status = 'active'
                       AND p.deleted_at IS NULL
+                      AND p.status = 'ACTIVE'
                     """,
             nativeQuery = true)
     PortfolioTotalsProjection sumPortfolioTotalsByCompanyId(@Param("companyId") Integer companyId);
@@ -44,7 +46,9 @@ public interface ProjectRepository
                     INNER JOIN npo n ON n.id = p.npo_id
                     WHERE cp.company_id = :companyId
                       AND cp.deleted_at IS NULL
+                      AND cp.status = 'active'
                       AND p.deleted_at IS NULL
+                      AND p.status = 'ACTIVE'
                       AND n.deleted_at IS NULL
                       AND n.environmental IS TRUE
                     UNION ALL
@@ -57,7 +61,9 @@ public interface ProjectRepository
                     INNER JOIN npo n ON n.id = p.npo_id
                     WHERE cp.company_id = :companyId
                       AND cp.deleted_at IS NULL
+                      AND cp.status = 'active'
                       AND p.deleted_at IS NULL
+                      AND p.status = 'ACTIVE'
                       AND n.deleted_at IS NULL
                       AND n.social IS TRUE
                     UNION ALL
@@ -70,7 +76,9 @@ public interface ProjectRepository
                     INNER JOIN npo n ON n.id = p.npo_id
                     WHERE cp.company_id = :companyId
                       AND cp.deleted_at IS NULL
+                      AND cp.status = 'active'
                       AND p.deleted_at IS NULL
+                      AND p.status = 'ACTIVE'
                       AND n.deleted_at IS NULL
                       AND n.governance IS TRUE
                     """,
