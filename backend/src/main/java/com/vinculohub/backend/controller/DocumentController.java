@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/documents")
+@RequestMapping("/api/documents")
 @RequiredArgsConstructor
 public class DocumentController {
 

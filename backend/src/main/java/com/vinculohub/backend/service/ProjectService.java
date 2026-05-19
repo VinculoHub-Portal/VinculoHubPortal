@@ -9,7 +9,9 @@ import com.vinculohub.backend.dto.ProjectCreateRequest;
 import com.vinculohub.backend.dto.ProjectCreateResponse;
 import com.vinculohub.backend.dto.ProjectFilterParams;
 import com.vinculohub.backend.dto.ProjectListItemDTO;
+import com.vinculohub.backend.dto.ProjectUpdateRequest;
 import com.vinculohub.backend.exception.BadRequestException;
+import com.vinculohub.backend.exception.ForbiddenException;
 import com.vinculohub.backend.exception.NotFoundException;
 import com.vinculohub.backend.exception.UserNotFoundException;
 import com.vinculohub.backend.model.Company;
@@ -29,6 +31,7 @@ import com.vinculohub.backend.repository.specification.ProjectSpecification;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Arrays;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -82,6 +85,71 @@ public class ProjectService {
                         .build();
 
         return save(project);
+    }
+
+    @Transactional
+    public Project updateProject(String auth0Id, Long projectId, ProjectUpdateRequest request) {
+        if (auth0Id == null || auth0Id.isBlank()) {
+            log.error("Usuário autenticado não identificado");
+            throw new BadRequestException("Não foi possível identificar o usuário autenticado.");
+        }
+
+        if (request == null) {
+            throw new BadRequestException("Dados do projeto são obrigatórios.");
+        }
+
+        log.info("Updating project | projectId={} auth0Id={}", projectId, auth0Id);
+
+        User user = userRepository.findByAuth0Id(auth0Id).orElseThrow(UserNotFoundException::new);
+        Npo npo =
+                npoRepository
+                        .findByUserId(user.getId())
+                        .orElseThrow(() -> new NotFoundException("ONG não encontrada"));
+
+        Project project =
+                projectRepository
+                        .findById(projectId)
+                        .orElseThrow(() -> new NotFoundException("Projeto não encontrado."));
+
+        if (!project.getNpo().getId().equals(npo.getId())) {
+            log.warn(
+                    "Access denied: ONG {} tried to update project {} of ONG {}",
+                    npo.getId(),
+                    projectId,
+                    project.getNpo().getId());
+            throw new ForbiddenException("Você não tem permissão para atualizar este projeto.");
+        }
+
+        Set<Ods> ods;
+        try {
+            List<String> odsIds =
+                    request.odsIds() == null
+                            ? null
+                            : request.odsIds().stream()
+                                    .map(odsId -> String.valueOf(odsId))
+                                    .toList();
+            ods = odsService.resolveSelection(odsIds);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("ODS inválido");
+        }
+
+        project.setTitle(request.title());
+        project.setDescription(request.description());
+        project.setBudgetNeeded(request.budgetNeeded());
+        project.setType(request.type());
+        project.setStartDate(request.startDate());
+        project.setEndDate(request.endDate());
+        project.setOds(ods);
+        project.setFocusArea(request.focusArea());
+        project.setFundraisingDeadline(request.fundraisingDeadline());
+        project.setBeneficiariesCount(request.beneficiariesCount());
+        project.setLocation(request.location());
+        project.setMainObjective(request.mainObjective());
+
+        Project updated = projectRepository.save(project);
+        log.info("Project updated | id={} npoId={}", updated.getId(), npo.getId());
+
+        return updated;
     }
 
     @Transactional
@@ -234,6 +302,26 @@ public class ProjectService {
             throw new IllegalArgumentException(message);
         }
         return value.trim();
+    }
+
+    @Transactional
+    public void deleteProject(String auth0Id, Long projectId) {
+        Project project =
+                projectRepository
+                        .findById(projectId)
+                        .orElseThrow(() -> new NotFoundException("Projeto não encontrado."));
+
+        Integer projectOwner = project.getNpo().getUserId();
+
+        User userRequested =
+                userRepository.findByAuth0Id(auth0Id).orElseThrow(UserNotFoundException::new);
+
+        if (!userRequested.getId().equals(projectOwner)) {
+            throw new ForbiddenException("Você não tem permissão para deletar este projeto.");
+        } else {
+            project.setDeletedAt(LocalDateTime.now());
+            projectRepository.save(project);
+        }
     }
 
     private ProjectCreateResponse toCreateResponse(Project project) {

@@ -13,6 +13,7 @@ import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.model.enums.NpoSize;
 import com.vinculohub.backend.model.enums.ProjectStatus;
+import com.vinculohub.backend.model.enums.ProjectType;
 import com.vinculohub.backend.model.enums.UserType;
 import com.vinculohub.backend.repository.CompanyRepository;
 import com.vinculohub.backend.repository.NpoRepository;
@@ -88,6 +89,7 @@ class CompanyPortfolioControllerTest extends AbstractIntegrationTest {
                                 .status(ProjectStatus.ACTIVE)
                                 .budgetNeeded(new BigDecimal("5000.00"))
                                 .investedAmount(new BigDecimal("3000.00"))
+                                .type(ProjectType.SOCIAL_INVESTMENT_LAW)
                                 .build());
 
         jdbcTemplate.update(
@@ -147,5 +149,65 @@ class CompanyPortfolioControllerTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.pillars[0].projectCount").value(0))
                 .andExpect(jsonPath("$.pillars[1].projectCount").value(0))
                 .andExpect(jsonPath("$.pillars[2].projectCount").value(0));
+    }
+
+    @Test
+    @DisplayName("GET /api/company/portfolio/summary retorna resumo de projetos apoiados")
+    void shouldReturnSupportedProjectsSummary() throws Exception {
+        Npo npo =
+                npoRepository.save(
+                        Npo.builder()
+                                .name("ONG Portfólio")
+                                .npoSize(NpoSize.small)
+                                .environmental(true)
+                                .build());
+
+        Project incentiveLawProject =
+                projectRepository.save(
+                        Project.builder()
+                                .npo(npo)
+                                .title("Projeto Lei de Incentivo")
+                                .description("Projeto ativo de lei de incentivo.")
+                                .status(ProjectStatus.ACTIVE)
+                                .type(ProjectType.TAX_INCENTIVE_LAW)
+                                .budgetNeeded(new BigDecimal("10000.00"))
+                                .investedAmount(new BigDecimal("4000.00"))
+                                .build());
+
+        Project privateInvestmentProject =
+                projectRepository.save(
+                        Project.builder()
+                                .npo(npo)
+                                .title("Projeto Investimento Privado")
+                                .description("Projeto ativo de investimento privado.")
+                                .status(ProjectStatus.ACTIVE)
+                                .type(ProjectType.SOCIAL_INVESTMENT_LAW)
+                                .budgetNeeded(new BigDecimal("8000.00"))
+                                .investedAmount(new BigDecimal("2000.00"))
+                                .build());
+
+        jdbcTemplate.update(
+                "INSERT INTO company_project (company_id, project_id, status) VALUES (?, ?,"
+                        + " 'active'::relationship_status)",
+                company.getId(),
+                incentiveLawProject.getId());
+
+        jdbcTemplate.update(
+                "INSERT INTO company_project (company_id, project_id, status) VALUES (?, ?,"
+                        + " 'active'::relationship_status)",
+                company.getId(),
+                privateInvestmentProject.getId());
+
+        mockMvc.perform(
+                        get("/api/company/portfolio/summary")
+                                .with(
+                                        jwt().jwt(jwt -> jwt.subject(AUTH0_ID))
+                                                .authorities(
+                                                        new SimpleGrantedAuthority(
+                                                                "ROLE_COMPANY"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.active").value(2))
+                .andExpect(jsonPath("$.incentiveLaws").value(1))
+                .andExpect(jsonPath("$.privateInvestment").value(1));
     }
 }

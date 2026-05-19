@@ -25,13 +25,6 @@ export interface EsgPillar {
   barColorClass: string
 }
 
-export interface EsgFooterStats {
-  beneficiaries: string
-  communities: number
-  sdgs: number
-  states: number
-}
-
 // TODO(backend): substituir pelo nome da empresa logada.
 //   Endpoint a criar: estender GET /api/me/profile (MeController) para incluir
 //   companyName/legalName/socialName, OU novo GET /api/me/company retornando CompanyDTO.
@@ -97,16 +90,3 @@ export const mockEsgPillars: EsgPillar[] = [
     barColorClass: "bg-red-700",
   },
 ]
-
-// TODO(backend): substituir pelos stats de impacto agregado da empresa.
-//   Endpoint a criar: GET /api/me/company/impact-stats retornando
-//   { beneficiaries: string, communities: number, sdgs: number, states: number }
-//   (beneficiaries formatado pt-BR pelo backend, ex.: "1.250").
-//   Requer modelar campos de impacto em Project (beneficiariesCount/communities/
-//   states) ou nova entidade ProjectImpact. Hoje só Project.odsCodes existe.
-export const mockEsgFooterStats: EsgFooterStats = {
-  beneficiaries: "1.250",
-  communities: 8,
-  sdgs: 5,
-  states: 3,
-}
