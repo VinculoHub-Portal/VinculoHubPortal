@@ -13,17 +13,23 @@ import com.vinculohub.backend.exception.NotFoundException;
 import com.vinculohub.backend.model.Document;
 import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.model.Project;
+import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.repository.DocumentRepository;
 import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.ProjectRepository;
+import com.vinculohub.backend.repository.UserRepository;
 import com.vinculohub.backend.service.storage.S3Uploader;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +40,8 @@ class DocumentServiceTest {
     @Mock private NpoRepository npoRepository;
 
     @Mock private ProjectRepository projectRepository;
+
+    @Mock private UserRepository userRepository;
 
     @Mock private S3Uploader s3Uploader;
 
@@ -225,5 +233,63 @@ class DocumentServiceTest {
         when(s3Uploader.uploadFile(any(), any())).thenThrow(IOException.class);
 
         assertThrows(RuntimeException.class, () -> documentService.upload(file, dto));
+    }
+
+    @Test
+    void shouldListDocumentsForAuthenticatedNpo() {
+        User user = new User();
+        user.setId(20);
+
+        Npo npo = new Npo();
+        npo.setId(1);
+
+        Document document = new Document();
+        document.setId(10);
+        document.setNpo(npo);
+        document.setTitle("Institutional Doc");
+        document.setDescription("Desc");
+        document.setFileUrl("http://url");
+        document.setFileName("file.pdf");
+        document.setFileSize(1024);
+        document.setMimeType("application/pdf");
+
+        when(userRepository.findByAuth0Id("auth0|123")).thenReturn(Optional.of(user));
+        when(npoRepository.findByUserId(20)).thenReturn(Optional.of(npo));
+        PageRequest pageable = PageRequest.of(0, 20);
+
+        when(documentRepository.findByNpo_Id(1, pageable))
+                .thenReturn(new PageImpl<>(List.of(document), pageable, 1));
+
+        Page<DocumentResponseDTO> result =
+                documentService.findAllByAuthenticatedNpo("auth0|123", pageable);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals(10, result.getContent().get(0).getId());
+        assertEquals(1, result.getContent().get(0).getNpoId());
+        assertEquals("Institutional Doc", result.getContent().get(0).getTitle());
+
+        verify(documentRepository).findByNpo_Id(1, pageable);
+    }
+
+    @Test
+    void shouldThrowBadRequestWhenAuthenticatedUserIsMissing() {
+        assertThrows(
+                BadRequestException.class,
+                () -> documentService.findAllByAuthenticatedNpo(" ", PageRequest.of(0, 20)));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAuthenticatedNpoNotFound() {
+        User user = new User();
+        user.setId(20);
+
+        when(userRepository.findByAuth0Id("auth0|123")).thenReturn(Optional.of(user));
+        when(npoRepository.findByUserId(20)).thenReturn(Optional.empty());
+
+        assertThrows(
+                NotFoundException.class,
+                () ->
+                        documentService.findAllByAuthenticatedNpo(
+                                "auth0|123", PageRequest.of(0, 20)));
     }
 }

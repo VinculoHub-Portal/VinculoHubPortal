@@ -1,12 +1,12 @@
 import CorporateFareOutlinedIcon from "@mui/icons-material/CorporateFareOutlined";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
-//import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
-//import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
-//import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
-//import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
+import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
+import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
+import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
 import PendingActionsOutlinedIcon from "@mui/icons-material/PendingActionsOutlined";
-import { BaseButton } from "../../components/general/BaseButton";
+import { FlexibleButton } from "../../components/general/FlexibleButton";
 import { Header } from "../../components/general/Header";
 import { MetricCard } from "../../components/general/MetricCard";
 
@@ -47,7 +47,7 @@ export function AdminDashboard() {
       <Header />
 
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
-        <header className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <header className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between align-middle">
           <div className="space-y-2">
             <h1 className="text-3xl font-bold leading-tight text-vinculo-dark sm:text-4xl">
               Painel administrativo
@@ -57,11 +57,10 @@ export function AdminDashboard() {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <BaseButton
-              //icon={<InsertDriveFileOutlinedIcon fontSize="small" />}
+          <div className="flex flex-wrap items-start gap-3 lg:flex-nowrap">
+            <FlexibleButton
+              icon={<InsertDriveFileOutlinedIcon fontSize="small" />}
               variant="secondary"
-              className="rounded-full px-6 py-3 text-sm sm:text-base"
               onClick={() => {
                 document.getElementById("cadastrar-edital")?.scrollIntoView({
                   behavior: "smooth",
@@ -70,12 +69,11 @@ export function AdminDashboard() {
               }}
             >
               Cadastrar Edital
-            </BaseButton>
+            </FlexibleButton>
 
-            <BaseButton
-              //icon={<FileDownloadOutlinedIcon fontSize="small" />}
+            <FlexibleButton
+              icon={<FileDownloadOutlinedIcon fontSize="small" />}
               variant="outline"
-              className="rounded-full px-6 py-3 text-sm sm:text-base"
               onClick={() => {
                 document.getElementById("exportar-dados")?.scrollIntoView({
                   behavior: "smooth",
@@ -84,12 +82,11 @@ export function AdminDashboard() {
               }}
             >
               Exportar Dados
-            </BaseButton>
+            </FlexibleButton>
 
-            <BaseButton
-              //icon={<AccessTimeOutlinedIcon fontSize="small" />}
+            <FlexibleButton
+              icon={<AccessTimeOutlinedIcon fontSize="small" />}
               variant="attention"
-              className="rounded-full px-6 py-3 text-sm sm:text-base"
               onClick={() => {
                 document.getElementById("denuncias")?.scrollIntoView({
                   behavior: "smooth",
@@ -98,12 +95,11 @@ export function AdminDashboard() {
               }}
             >
               Ver Denúncias
-            </BaseButton>
+            </FlexibleButton>
 
-            <BaseButton
-              //icon={<ReportProblemOutlinedIcon fontSize="small" />}
+            <FlexibleButton
+              icon={<ReportProblemOutlinedIcon fontSize="small" />}
               variant="warning"
-              className="rounded-full px-6 py-3 text-sm sm:text-base"
               onClick={() => {
                 document.getElementById("mediacoes")?.scrollIntoView({
                   behavior: "smooth",
@@ -112,7 +108,7 @@ export function AdminDashboard() {
               }}
             >
               Mediações
-            </BaseButton>
+            </FlexibleButton>
           </div>
         </header>
 
