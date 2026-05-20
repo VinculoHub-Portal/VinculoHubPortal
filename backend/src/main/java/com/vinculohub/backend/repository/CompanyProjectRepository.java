@@ -13,28 +13,27 @@ import org.springframework.stereotype.Repository;
 public interface CompanyProjectRepository extends JpaRepository<CompanyProject, CompanyProjectId> {
 
     @Query(
-            """
-SELECT
-    COUNT(cp) AS totalActiveProjects,
-    COUNT(
-        CASE
-            WHEN cp.project.type = com.vinculohub.backend.model.enums.ProjectType.TAX_INCENTIVE_LAW
-            THEN 1
-            ELSE NULL
-        END
-    ) AS incentiveLawProjects,
-    COUNT(
-        CASE
-            WHEN cp.project.type = com.vinculohub.backend.model.enums.ProjectType.SOCIAL_INVESTMENT_LAW
-            THEN 1
-            ELSE NULL
-        END
-    ) AS privateInvestmentProjects
-FROM CompanyProject cp
-WHERE cp.company.id = :companyId
-    AND cp.status = com.vinculohub.backend.model.enums.RelationshipStatus.active
-    AND cp.project.status = com.vinculohub.backend.model.enums.ProjectStatus.ACTIVE
-""")
+            value =
+                    """
+                    SELECT
+                        COUNT(DISTINCT p.id) AS totalActiveProjects,
+                        COUNT(DISTINCT CASE
+                            WHEN p.project_type = 'TAX_INCENTIVE_LAW' THEN p.id
+                            ELSE NULL
+                        END) AS incentiveLawProjects,
+                        COUNT(DISTINCT CASE
+                            WHEN p.project_type = 'SOCIAL_INVESTMENT_LAW' THEN p.id
+                            ELSE NULL
+                        END) AS privateInvestmentProjects
+                    FROM company_project cp
+                    INNER JOIN project p ON p.id = cp.project_id
+                    WHERE cp.company_id = :companyId
+                      AND cp.deleted_at IS NULL
+                      AND cp.status = 'active'::relationship_status
+                      AND p.deleted_at IS NULL
+                      AND p.status = 'ACTIVE'
+                    """,
+            nativeQuery = true)
     CompanySupportedProjectsSummaryProjection getSupportedProjectsSummaryByCompanyId(
             @Param("companyId") Integer companyId);
 }
