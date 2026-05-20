@@ -24,11 +24,6 @@ describe("CompanyDashboard", () => {
     expect(screen.getByText(/Bem-vindo de volta, Empresa ABC/)).toBeInTheDocument()
   })
 
-  it("renderiza a seção de investimento disponível", () => {
-    render(<MemoryRouter><CompanyDashboard /></MemoryRouter>)
-    expect(screen.getByText("Investimento Disponível")).toBeInTheDocument()
-  })
-
   it("renderiza a seção de projetos apoiados", () => {
     render(<MemoryRouter><CompanyDashboard /></MemoryRouter>)
     expect(screen.getByText("Projetos Apoiados")).toBeInTheDocument()

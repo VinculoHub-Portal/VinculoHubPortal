@@ -1,16 +1,17 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { LandingPage } from "../pages/LandingPage";
-import { ComponentsPage } from "../pages/ComponentsPage";
-import { RegisterPage } from "../pages/RegisterPage";
-import { AuthRoleRedirect } from "../components/auth/AuthRoleRedirect";
-import { ProtectedRoute } from "../components/auth/ProtectedRoute";
-import { RoleHomePage } from "../pages/RoleHomePage";
-import { CompanyRegistrationPage } from "../pages/CompanyRegistration/registration";
-import { ProjectDetailsPage } from "../pages/ProjectDetailsPage";
-import { CompanyDashboard } from "../pages/CompanyDashboard";
-import { CompanyIncentiveLawsPage } from "../pages/CompanyIncentiveLawsPage";
-import { CompanyPrivateInvestmentPage } from "../pages/CompanyPrivateInvestmentPage";
-import { OngProjectsPage } from "../pages/OngProjectsPage";
+import { BrowserRouter, Routes, Route } from "react-router-dom"
+import { LandingPage } from "../pages/LandingPage"
+import { ComponentsPage } from "../pages/ComponentsPage"
+import { RegisterPage } from "../pages/RegisterPage"
+import { AuthRoleRedirect } from "../components/auth/AuthRoleRedirect"
+import { ProtectedRoute } from "../components/auth/ProtectedRoute"
+import { RoleHomePage } from "../pages/RoleHomePage"
+import { CompanyRegistrationPage } from "../pages/CompanyRegistration/registration"
+import { ProjectDetailsPage } from "../pages/ProjectDetailsPage"
+import { CompanyDashboard } from "../pages/CompanyDashboard"
+import { CompanyIncentiveLawsPage } from "../pages/CompanyIncentiveLawsPage"
+import { CompanyPrivateInvestmentPage } from "../pages/CompanyPrivateInvestmentPage"
+import { OngProjectsPage } from "../pages/OngProjectsPage"
+import { EditaisMuralPage } from "../pages/EditaisMuralPage"
 import { AdminDashboard } from "../pages/AdminDashboard";
 
 export const AppRouter = () => (
@@ -55,6 +56,14 @@ export const AppRouter = () => (
         element={
           <ProtectedRoute requiredRole="NPO">
             <OngProjectsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/editais"
+        element={
+          <ProtectedRoute requiredRole="ADMIN">
+            <EditaisMuralPage />
           </ProtectedRoute>
         }
       />
