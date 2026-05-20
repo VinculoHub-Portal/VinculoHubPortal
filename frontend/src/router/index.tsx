@@ -12,6 +12,7 @@ import { CompanyIncentiveLawsPage } from "../pages/CompanyIncentiveLawsPage"
 import { CompanyPrivateInvestmentPage } from "../pages/CompanyPrivateInvestmentPage"
 import { OngProjectsPage } from "../pages/OngProjectsPage"
 import { EditaisMuralPage } from "../pages/EditaisMuralPage"
+import { AdminDashboard } from "../pages/AdminDashboard";
 
 export const AppRouter = () => (
   <BrowserRouter>
