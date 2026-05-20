@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 @ActiveProfiles("test")
@@ -29,10 +30,15 @@ class ProjectRepositoryTest extends AbstractIntegrationTest {
 
     @Autowired private ProjectRepository projectRepository;
 
+    @Autowired private JdbcTemplate jdbcTemplate;
+
     @BeforeEach
     void cleanup() {
-        projectRepository.deleteAll();
-        npoRepository.deleteAll();
+        jdbcTemplate.execute("DELETE FROM project_ods");
+        jdbcTemplate.execute("DELETE FROM company_project");
+        jdbcTemplate.execute("DELETE FROM document");
+        jdbcTemplate.execute("DELETE FROM project");
+        jdbcTemplate.execute("DELETE FROM npo");
     }
 
     @Test

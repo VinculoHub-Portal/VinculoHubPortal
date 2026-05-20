@@ -22,6 +22,7 @@ import com.vinculohub.backend.repository.ProjectRepository;
 import com.vinculohub.backend.repository.UserRepository;
 import com.vinculohub.backend.repository.specification.ProjectSpecification;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -213,6 +214,26 @@ public class ProjectService {
             throw new IllegalArgumentException(message);
         }
         return value.trim();
+    }
+
+    @Transactional
+    public void deleteProject(String auth0Id, Long projectId) {
+        Project project =
+                projectRepository
+                        .findById(projectId)
+                        .orElseThrow(() -> new NotFoundException("Projeto não encontrado."));
+
+        Integer projectOwner = project.getNpo().getUserId();
+
+        User userRequested =
+                userRepository.findByAuth0Id(auth0Id).orElseThrow(UserNotFoundException::new);
+
+        if (!userRequested.getId().equals(projectOwner)) {
+            throw new ForbiddenException("Você não tem permissão para deletar este projeto.");
+        } else {
+            project.setDeletedAt(LocalDateTime.now());
+            projectRepository.save(project);
+        }
     }
 
     private ProjectCreateResponse toCreateResponse(Project project) {
