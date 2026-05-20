@@ -107,10 +107,10 @@ class ProjectDetailResponseTest {
                 Npo.builder()
                         .name("ONG Segura")
                         .description("Descrição Segura")
-                        .cnpj("12.345.678/0001-90") 
+                        .cnpj("12.345.678/0001-90")
                         .cpf("123.456.789-00")
-                        .phone("(11) 99999-9999") 
-                        .userId(99) 
+                        .phone("(11) 99999-9999")
+                        .userId(99)
                         .build();
 
         Project project = Project.builder().id(4L).npo(npo).build();
