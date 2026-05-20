@@ -2,6 +2,7 @@ import {
   cloneElement,
   type ButtonHTMLAttributes,
   type ReactElement,
+  type SVGProps,
 } from "react";
 
 type FlexibleButtonVariant =
@@ -15,7 +16,7 @@ type FlexibleButtonVariant =
 export interface FlexibleButtonProps
   extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className"> {
   variant?: FlexibleButtonVariant;
-  icon: ReactElement;
+  icon: ReactElement<SVGProps<SVGSVGElement>>;
 }
 
 const VARIANT_CLASSES: Record<FlexibleButtonVariant, string> = {

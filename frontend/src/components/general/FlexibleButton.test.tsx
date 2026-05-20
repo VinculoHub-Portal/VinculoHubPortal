@@ -4,6 +4,13 @@ import { describe, expect, it } from "vitest";
 import { FlexibleButton } from "./FlexibleButton";
 
 describe("FlexibleButton", () => {
+  it("exige um ícone", () => {
+    // @ts-expect-error FlexibleButton requer icon
+    const invalidButton = <FlexibleButton>Sem ícone</FlexibleButton>
+
+    expect(invalidButton).toBeDefined()
+  })
+
   it("renderiza um botão independente com ícone obrigatório", () => {
     render(
       <FlexibleButton icon={<AddIcon data-testid="flexible-button-icon" />}>
