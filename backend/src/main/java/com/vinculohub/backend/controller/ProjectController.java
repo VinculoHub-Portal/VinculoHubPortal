@@ -24,6 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -94,6 +95,15 @@ public class ProjectController {
         Project updated = projectService.updateProject(jwt.getSubject(), id, request);
         log.info("Project updated | id={} npoId={}", updated.getId(), updated.getNpo().getId());
         return ResponseEntity.ok(toResponse(updated));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('NPO')")
+    public ResponseEntity<Void> deleteProject(
+            @AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
+        log.info("DELETE /api/projects/{}", id);
+        projectService.deleteProject(jwt.getSubject(), id);
+        return ResponseEntity.noContent().build();
     }
 
     private static ProjectDetailResponse toResponse(Project project) {
