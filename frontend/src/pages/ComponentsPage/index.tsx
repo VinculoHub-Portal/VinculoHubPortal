@@ -119,7 +119,7 @@ export function ComponentsPage() {
               Acessar Portal VinculoHub
             </BaseButton>
           </div>
-        </section>
+          </section>
       </main>
     </div>
   )

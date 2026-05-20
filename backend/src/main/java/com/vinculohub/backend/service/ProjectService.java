@@ -1,6 +1,8 @@
 /* (C)2026 */
 package com.vinculohub.backend.service;
 
+import com.vinculohub.backend.dto.CompanyEsgImpactDashboardResponse;
+import com.vinculohub.backend.dto.EsgPillarImpactDTO;
 import com.vinculohub.backend.dto.NpoFirstProjectSignupRequest;
 import com.vinculohub.backend.dto.OdsResponse;
 import com.vinculohub.backend.dto.ProjectCreateRequest;
@@ -12,18 +14,29 @@ import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.ForbiddenException;
 import com.vinculohub.backend.exception.NotFoundException;
 import com.vinculohub.backend.exception.UserNotFoundException;
+import com.vinculohub.backend.model.Company;
 import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.model.Ods;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.User;
+import com.vinculohub.backend.model.enums.EsgPillar;
 import com.vinculohub.backend.model.enums.ProjectStatus;
+import com.vinculohub.backend.repository.CompanyRepository;
 import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.ProjectRepository;
 import com.vinculohub.backend.repository.UserRepository;
+import com.vinculohub.backend.repository.projection.EsgPillarAggregationProjection;
+import com.vinculohub.backend.repository.projection.PortfolioTotalsProjection;
 import com.vinculohub.backend.repository.specification.ProjectSpecification;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -38,6 +51,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProjectService {
     private final ProjectRepository projectRepository;
     private final NpoRepository npoRepository;
+    private final CompanyRepository companyRepository;
     private final UserRepository userRepository;
     private final OdsService odsService;
 
@@ -208,11 +222,106 @@ public class ProjectService {
                 .orElseThrow(() -> new NotFoundException("Projeto não encontrado."));
     }
 
+    @Transactional(readOnly = true)
+    public CompanyEsgImpactDashboardResponse getEsgImpactDashboard(String auth0Id) {
+        if (auth0Id == null || auth0Id.isBlank()) {
+            throw new BadRequestException("Não foi possível identificar o usuário autenticado.");
+        }
+
+        User user = userRepository.findByAuth0Id(auth0Id).orElseThrow(UserNotFoundException::new);
+        Company company =
+                companyRepository
+                        .findByUserId(user.getId())
+                        .orElseThrow(() -> new NotFoundException("Empresa não encontrada"));
+
+        PortfolioTotalsProjection totals =
+                projectRepository.sumPortfolioTotalsByCompanyId(company.getId());
+        BigDecimal totalInvested =
+                totals == null ? BigDecimal.ZERO : zeroIfNull(totals.getTotalInvested());
+        BigDecimal totalBudgetNeeded =
+                totals == null ? BigDecimal.ZERO : zeroIfNull(totals.getTotalBudgetNeeded());
+        long projectCount =
+                totals == null || totals.getProjectCount() == null ? 0L : totals.getProjectCount();
+
+        Map<EsgPillar, EsgPillarAggregationProjection> byPillar =
+                projectRepository.sumByEsgPillarForCompany(company.getId()).stream()
+                        .collect(
+                                Collectors.toMap(
+                                        row -> EsgPillar.valueOf(row.getPillar()),
+                                        Function.identity()));
+
+        List<EsgPillarImpactDTO> pillars =
+                Arrays.stream(EsgPillar.values())
+                        .map(
+                                pillar -> {
+                                    EsgPillarAggregationProjection row = byPillar.get(pillar);
+                                    BigDecimal pillarInvested =
+                                            row == null
+                                                    ? BigDecimal.ZERO
+                                                    : zeroIfNull(row.getTotalInvested());
+                                    BigDecimal pillarBudget =
+                                            row == null
+                                                    ? BigDecimal.ZERO
+                                                    : zeroIfNull(row.getTotalBudgetNeeded());
+                                    long pillarProjects =
+                                            row == null || row.getProjectCount() == null
+                                                    ? 0L
+                                                    : row.getProjectCount();
+
+                                    return new EsgPillarImpactDTO(
+                                            pillar,
+                                            pillar.getLabel(),
+                                            pillarProjects,
+                                            pillarInvested,
+                                            pillarBudget,
+                                            investmentPercentage(pillarInvested, totalInvested));
+                                })
+                        .toList();
+
+        return new CompanyEsgImpactDashboardResponse(
+                projectCount, totalInvested, totalBudgetNeeded, pillars);
+    }
+
+    private static BigDecimal zeroIfNull(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
+    }
+
+    private static BigDecimal investmentPercentage(
+            BigDecimal pillarInvested, BigDecimal totalInvested) {
+        if (totalInvested.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+
+        return pillarInvested
+                .multiply(BigDecimal.valueOf(100))
+                .divide(totalInvested, 2, RoundingMode.HALF_UP);
+    }
+
     private static String requireText(String value, String message) {
         if (value == null || value.trim().isEmpty()) {
             throw new IllegalArgumentException(message);
         }
         return value.trim();
+    }
+
+    @Transactional
+    public void deleteProject(String auth0Id, Long projectId) {
+        Project project =
+                projectRepository
+                        .findById(projectId)
+                        .orElseThrow(() -> new NotFoundException("Projeto não encontrado."));
+
+        Integer projectOwner = project.getNpo().getUserId();
+
+        User userRequested =
+                userRepository.findByAuth0Id(auth0Id).orElseThrow(UserNotFoundException::new);
+
+        if (!userRequested.getId().equals(projectOwner)) {
+            throw new ForbiddenException("Você não tem permissão para deletar este projeto.");
+        } else {
+            project.setDeletedAt(LocalDateTime.now());
+            projectRepository.save(project);
+        }
     }
 
     private ProjectCreateResponse toCreateResponse(Project project) {
