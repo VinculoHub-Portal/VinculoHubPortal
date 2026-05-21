@@ -116,21 +116,6 @@ public class ProjectController {
                                                 new OdsResponse(
                                                         o.getId(), o.getName(), o.getDescription()))
                                 .toList();
-        return new ProjectDetailResponse(
-                project.getId(),
-                project.getTitle(),
-                project.getDescription(),
-                project.getStatus().name(),
-                project.getType(),
-                project.getBudgetNeeded(),
-                project.getInvestedAmount(),
-                ods,
-                project.getStartDate(),
-                project.getEndDate(),
-                project.getFocusArea(),
-                project.getFundraisingDeadline(),
-                project.getBeneficiariesCount(),
-                project.getLocation(),
-                project.getMainObjective());
+        return ProjectDetailResponse.from(project, ods);
     }
 }
