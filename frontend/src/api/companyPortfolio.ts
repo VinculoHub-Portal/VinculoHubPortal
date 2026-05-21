@@ -16,7 +16,7 @@ export interface CompanyEsgImpactDashboardResponse {
   projectCount: number
   totalInvested: number
   totalBudgetNeeded: number
-  pillars: EsgPillarImpactResponse[]
+  pillars: EsgPillarImpactResponse[] 
 }
 
 export async function fetchCompanyEsgImpactDashboard(
