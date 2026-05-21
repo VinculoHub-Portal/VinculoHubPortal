@@ -63,7 +63,7 @@ describe("CompanyDashboard", () => {
     await renderCompanyDashboard()
     expect(screen.getByText(/Bem-vindo de volta, Empresa ABC/)).toBeInTheDocument()
   })
-
+  
   it("renderiza as opções de modalidades de investimento", async () => {
     await renderCompanyDashboard()
     expect(screen.getByText("Leis de Incentivo")).toBeInTheDocument()
