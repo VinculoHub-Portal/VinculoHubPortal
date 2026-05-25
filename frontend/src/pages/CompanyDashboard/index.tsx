@@ -8,12 +8,13 @@ import { SupportedProjectsCard } from "./SupportedProjectsCard"
 import { mapEsgImpactDashboardToPillars } from "./esgImpactMapper"
 import {
   mockCompanyName,
-  mockSupportedProjects,
   type EsgPillar,
 } from "./mockData"
+import { useSupportedProjectsSummary } from "./useSupportedProjectsSummary"
 
 export const CompanyDashboard = () => {
   const { getAccessTokenSilently } = useAuth0()
+  const supportedProjectsSummary = useSupportedProjectsSummary()
   const [esgPillars, setEsgPillars] = useState<EsgPillar[]>([])
   const [esgLoading, setEsgLoading] = useState(true)
   const [esgError, setEsgError] = useState<string | null>(null)
@@ -60,7 +61,11 @@ export const CompanyDashboard = () => {
         </header>
 
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <SupportedProjectsCard data={mockSupportedProjects} />
+          <SupportedProjectsCard
+            data={supportedProjectsSummary.data}
+            loading={supportedProjectsSummary.loading}
+            error={supportedProjectsSummary.error}
+          />
         </section>
 
         <InvestmentModalitiesSection />
