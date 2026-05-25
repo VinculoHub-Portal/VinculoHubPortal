@@ -211,4 +211,19 @@ class CompanyPortfolioControllerTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.incentiveLaws").value(1))
                 .andExpect(jsonPath("$.privateInvestment").value(1));
     }
+
+    @Test
+    void shouldRejectRequestWithoutAuthentication() throws Exception {
+        mockMvc.perform(get("/api/company/portfolio/summary")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldRejectRequestWithoutCompanyRole() throws Exception {
+        mockMvc.perform(
+                        get("/api/company/portfolio/summary")
+                                .with(
+                                        jwt().authorities(new SimpleGrantedAuthority("ROLE_NPO"))
+                                                .jwt(jwt -> jwt.subject("auth0|npo"))))
+                .andExpect(status().isForbidden());
+    }
 }
