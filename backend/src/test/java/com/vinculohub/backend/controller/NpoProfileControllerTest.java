@@ -24,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -39,15 +40,17 @@ class NpoProfileControllerTest extends AbstractIntegrationTest {
     @Autowired private ProjectRepository projectRepository;
     @Autowired private CompanyProjectRepository companyProjectRepository;
     @Autowired private DocumentRepository documentRepository;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
     @BeforeEach
     void setup() {
-        documentRepository.deleteAll();
-        companyProjectRepository.deleteAll();
-        projectRepository.deleteAll();
-        npoRepository.deleteAll();
-        addressRepository.deleteAll();
-        userRepository.deleteAll();
+        jdbcTemplate.update("DELETE FROM company_project");
+        jdbcTemplate.update("DELETE FROM project_ods");
+        jdbcTemplate.update("DELETE FROM document");
+        jdbcTemplate.update("DELETE FROM project");
+        jdbcTemplate.update("DELETE FROM npo");
+        jdbcTemplate.update("DELETE FROM address");
+        jdbcTemplate.update("DELETE FROM users");
     }
 
     @Test
