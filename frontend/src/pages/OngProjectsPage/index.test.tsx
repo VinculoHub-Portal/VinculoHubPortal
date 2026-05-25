@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import userEvent from "@testing-library/user-event"
 import axios from "axios"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { OngProjectsPage } from "."
 import { ProjectDetailsPage } from "../ProjectDetailsPage"
 import type { ProjectDetails } from "../ProjectDetailsPage/projectDetails.types"
@@ -97,6 +97,10 @@ describe("OngProjectsPage", () => {
       error: null,
       refetch: mockRefetch,
     })
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
   it("renderiza header, resumo e lista de projetos", () => {

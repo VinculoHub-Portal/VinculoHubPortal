@@ -46,7 +46,7 @@ describe("ConfirmDeleteProjectModal", () => {
   it("chama onCancel ao clicar no overlay fora do card", async () => {
     const onCancel = vi.fn()
     render(<ConfirmDeleteProjectModal {...defaultProps} onCancel={onCancel} />)
-    await userEvent.click(screen.getByRole("dialog"))
+    await userEvent.click(screen.getByTestId("modal-overlay"))
     expect(onCancel).toHaveBeenCalledOnce()
   })
 

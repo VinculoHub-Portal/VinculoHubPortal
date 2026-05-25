@@ -38,6 +38,7 @@ export function ConfirmDeleteProjectModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-delete-title"
+      data-testid="modal-overlay"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isDeleting) onCancel()
       }}

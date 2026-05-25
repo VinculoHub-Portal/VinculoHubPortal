@@ -45,8 +45,8 @@ export function OngProjectsPage() {
       const token = await getAccessTokenSilently()
       await deleteProject(projectToDelete.id, token)
       showToast("Projeto excluído", "success")
-      setProjectToDelete(null)
       await refetch()
+      setProjectToDelete(null)
     } catch (err) {
       let msg = "Falha ao excluir projeto. Tente novamente."
       if (axios.isAxiosError(err)) {

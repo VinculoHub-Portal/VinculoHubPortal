@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import axios from "axios"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { EditProjectPage } from "."
 
 const mocks = vi.hoisted(() => ({
@@ -81,6 +81,10 @@ describe("EditProjectPage", () => {
     mocks.fetchProjectByIdMock.mockResolvedValue(mockProject)
     mocks.fetchOdsCatalogMock.mockResolvedValue(mockOdsOptions)
     mocks.updateProjectMock.mockResolvedValue({ ...mockProject, title: "Atualizado" })
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
   it("exibe estado de carregamento enquanto busca o projeto", () => {

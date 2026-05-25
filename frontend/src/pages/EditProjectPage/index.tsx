@@ -57,8 +57,13 @@ function validateProject(data: EditProjectFormData): FormErrors {
     errors.projectType = "Selecione o tipo de projeto."
   }
 
-  if (data.projectType === "tax_incentive_law" && !data.budgetNeeded.trim()) {
-    errors.budgetNeeded = "Informe o valor necessário."
+  if (data.projectType === "tax_incentive_law") {
+    const trimmed = data.budgetNeeded.trim()
+    if (!trimmed) {
+      errors.budgetNeeded = "Informe o valor necessário."
+    } else if (Number(trimmed) <= 0) {
+      errors.budgetNeeded = "O valor necessário deve ser maior que zero."
+    }
   }
 
   if (data.odsSelection.length === 0) {
@@ -93,13 +98,23 @@ export function EditProjectPage() {
   useEffect(() => {
     if (!projectId) return
 
+    const projectIdNumber = Number(projectId)
+    if (!Number.isFinite(projectIdNumber) || projectIdNumber <= 0) {
+      setLoadState("not-found")
+      return
+    }
+
+    let active = true
+
     async function load() {
       try {
         const token = await getAccessTokenSilently()
         const [project, ods] = await Promise.all([
-          fetchProjectById(Number(projectId), token),
+          fetchProjectById(projectIdNumber, token),
           fetchOdsCatalog(),
         ])
+
+        if (!active) return
 
         setOdsOptions(ods)
 
@@ -121,6 +136,7 @@ export function EditProjectPage() {
         })
         setLoadState("ready")
       } catch (err) {
+        if (!active) return
         if (axios.isAxiosError(err) && err.response?.status === 404) {
           setLoadState("not-found")
         } else {
@@ -130,6 +146,10 @@ export function EditProjectPage() {
     }
 
     load()
+
+    return () => {
+      active = false
+    }
   }, [projectId, getAccessTokenSilently])
 
   function updateField<K extends keyof EditProjectFormData>(
@@ -285,9 +305,19 @@ export function EditProjectPage() {
                     updateField("projectDescription", e.target.value)
                   }
                   className="min-h-40"
+                  aria-invalid={Boolean(errors.projectDescription)}
+                  aria-describedby={
+                    errors.projectDescription
+                      ? "projectDescription-error"
+                      : undefined
+                  }
                 />
                 {errors.projectDescription && (
-                  <p className="mt-1 text-sm text-error" role="alert">
+                  <p
+                    id="projectDescription-error"
+                    className="mt-1 text-sm text-error"
+                    role="alert"
+                  >
                     {errors.projectDescription}
                   </p>
                 )}
