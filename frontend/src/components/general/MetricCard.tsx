@@ -8,6 +8,7 @@ interface MetricCardProps {
   description: string
   icon: ReactNode
   variant?: MetricCardVariant
+  href?: string
 }
 
 const variantStyles: Record<MetricCardVariant, { iconBgClass: string; iconTextClass: string }> = {
@@ -35,6 +36,7 @@ export function MetricCard({
   description,
   icon,
   variant = "brand",
+  href,
 }: MetricCardProps) {
   const { iconBgClass, iconTextClass } = variantStyles[variant]
 
@@ -59,7 +61,17 @@ export function MetricCard({
         </span>
       </div>
 
-      <p className="mt-3 text-sm leading-6 text-slate-500">{description}</p>
+      <div className="mt-3 flex items-center justify-between">
+        <p className="text-sm leading-6 text-slate-500">{description}</p>
+        {href && (
+          <a
+            href={href}
+            className="shrink-0 text-xs font-medium text-vinculo-dark hover:underline"
+          >
+            Ver todos
+          </a>
+        )}
+      </div>
     </article>
   )
 }
