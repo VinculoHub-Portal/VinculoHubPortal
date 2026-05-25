@@ -18,6 +18,7 @@ import com.vinculohub.backend.repository.AddressRepository;
 import com.vinculohub.backend.repository.DocumentRepository;
 import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.ProjectRepository;
+import com.vinculohub.backend.repository.CompanyProjectRepository;
 import com.vinculohub.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -36,11 +37,13 @@ class NpoProfileControllerTest extends AbstractIntegrationTest {
     @Autowired private UserRepository userRepository;
     @Autowired private AddressRepository addressRepository;
     @Autowired private ProjectRepository projectRepository;
+        @Autowired private CompanyProjectRepository companyProjectRepository;
     @Autowired private DocumentRepository documentRepository;
 
     @BeforeEach
     void setup() {
         documentRepository.deleteAll();
+                companyProjectRepository.deleteAll();
         projectRepository.deleteAll();
         npoRepository.deleteAll();
         addressRepository.deleteAll();
