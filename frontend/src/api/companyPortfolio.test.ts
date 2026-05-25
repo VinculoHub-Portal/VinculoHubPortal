@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { fetchCompanySupportedProjectsSummary } from "./companyPortfolio"
+import {
+  fetchCompanyEsgImpactDashboard,
+  fetchCompanySupportedProjectsSummary,
+} from "./companyPortfolio"
 
 const mocks = vi.hoisted(() => ({
   apiGetMock: vi.fn(),
@@ -49,5 +52,58 @@ describe("fetchCompanySupportedProjectsSummary", () => {
     mocks.apiGetMock.mockRejectedValue(new Error("Network error"))
 
     await expect(fetchCompanySupportedProjectsSummary("token")).rejects.toThrow("Network error")
+  })
+})
+
+describe("fetchCompanyEsgImpactDashboard", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it("chama GET /api/me/company/portfolio/esg-impact com bearer token", async () => {
+    mocks.apiGetMock.mockResolvedValue({
+      data: {
+        projectCount: 3,
+        totalInvested: 1000,
+        totalBudgetNeeded: 2000,
+        pillars: [],
+      },
+    })
+
+    await fetchCompanyEsgImpactDashboard("meu-token")
+
+    expect(mocks.apiGetMock).toHaveBeenCalledWith(
+      "/api/me/company/portfolio/esg-impact",
+      {
+        headers: { Authorization: "Bearer meu-token" },
+      },
+    )
+  })
+
+  it("retorna os dados da resposta", async () => {
+    const dashboard = {
+      projectCount: 3,
+      totalInvested: 1000,
+      totalBudgetNeeded: 2000,
+      pillars: [
+        {
+          pillar: "ENVIRONMENTAL",
+          label: "Ambiental",
+          projectCount: 2,
+          totalInvested: 600,
+          budgetNeeded: 800,
+          investmentPercentage: 60,
+        },
+      ],
+    }
+    mocks.apiGetMock.mockResolvedValue({ data: dashboard })
+
+    await expect(fetchCompanyEsgImpactDashboard("token")).resolves.toEqual(dashboard)
+  })
+
+  it("propaga erro quando a requisição falha", async () => {
+    mocks.apiGetMock.mockRejectedValue(new Error("Network error"))
+
+    await expect(fetchCompanyEsgImpactDashboard("token")).rejects.toThrow("Network error")
   })
 })
