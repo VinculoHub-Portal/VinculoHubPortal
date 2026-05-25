@@ -24,4 +24,16 @@ describe("SupportedProjectsCard", () => {
     render(<SupportedProjectsCard data={mockData} />)
     expect(screen.getByText("Ver todos os projetos")).toBeInTheDocument()
   })
+
+  it("exibe estado de carregamento sem depender dos mocks", () => {
+    render(<SupportedProjectsCard data={mockData} loading />)
+    expect(screen.getAllByText("...")).toHaveLength(3)
+  })
+
+  it("exibe mensagem amigável quando a integração falha", () => {
+    render(<SupportedProjectsCard data={mockData} error="Falha na rede" />)
+    expect(
+      screen.getByText("Não foi possível carregar os dados atualizados."),
+    ).toBeInTheDocument()
+  })
 })
