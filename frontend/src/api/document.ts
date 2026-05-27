@@ -62,7 +62,7 @@ export async function uploadDocument(
 
   try {
     const { data } = await api.post<DocumentResponseDTO>(
-      "api/documents",
+      "/api/documents",
       formData,
       {
         headers: {

@@ -13,6 +13,9 @@ import { CompanyPrivateInvestmentPage } from "../pages/CompanyPrivateInvestmentP
 import { OngProjectsPage } from "../pages/OngProjectsPage"
 import { OngProfilePage } from "../pages/OngProfilePage"
 import { OngPublicProfilePage } from "../pages/OngPublicProfilePage"
+import { EditProjectPage } from "../pages/EditProjectPage"
+import { EditaisMuralPage } from "../pages/EditaisMuralPage"
+import { AdminDashboard } from "../pages/AdminDashboard"
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -35,10 +38,7 @@ export const AppRouter = () => (
         path="/admin/dashboard"
         element={
           <ProtectedRoute requiredRole="ADMIN">
-            <RoleHomePage
-              title="Painel administrativo"
-              description="Gerencie usuários, organizações e configurações da plataforma."
-            />
+            <AdminDashboard />
           </ProtectedRoute>
         }
       />
@@ -71,6 +71,22 @@ export const AppRouter = () => (
         }
       />
       <Route path="/ong/publico/:slug" element={<OngPublicProfilePage />} />
+      <Route
+        path="/ong/projetos/:projectId/editar"
+        element={
+          <ProtectedRoute requiredRole="NPO">
+            <EditProjectPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/editais"
+        element={
+          <ProtectedRoute requiredRole="ADMIN">
+            <EditaisMuralPage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/empresa/dashboard"
         element={
