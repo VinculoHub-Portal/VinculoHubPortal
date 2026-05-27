@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { fetchProjects } from "./projects"
+import { deleteProject, fetchProjectById, fetchProjects, updateProject } from "./projects"
 
 const mocks = vi.hoisted(() => ({
   apiGetMock: vi.fn(),
+  apiPutMock: vi.fn(),
+  apiDeleteMock: vi.fn(),
 }))
 
 vi.mock("../services/api", () => ({
-  api: { get: mocks.apiGetMock },
+  api: { get: mocks.apiGetMock, put: mocks.apiPutMock, delete: mocks.apiDeleteMock },
 }))
 
 vi.mock("../utils/logger", () => ({
@@ -23,10 +25,25 @@ const mockPage = {
   last: true,
 }
 
+const mockProject = {
+  id: 1,
+  npoId: 10,
+  title: "Projeto A",
+  description: "Descrição do projeto A com mais de cinquenta caracteres para validar.",
+  status: "ACTIVE",
+  type: "TAX_INCENTIVE_LAW",
+  budgetNeeded: 100000,
+  investedAmount: null,
+  startDate: null,
+  endDate: null,
+  ods: [{ id: 1, name: "Sem Pobreza", description: "ODS 1" }],
+}
+
 describe("fetchProjects", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.apiGetMock.mockResolvedValue({ data: mockPage })
+    mocks.apiPutMock.mockResolvedValue({ data: mockProject })
   })
 
   it("chama GET /api/projects com os params corretos", async () => {
@@ -63,5 +80,87 @@ describe("fetchProjects", () => {
   it("propaga o erro quando api.get rejeita", async () => {
     mocks.apiGetMock.mockRejectedValue(new Error("Network error"))
     await expect(fetchProjects()).rejects.toThrow("Network error")
+  })
+})
+
+describe("fetchProjectById", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.apiGetMock.mockResolvedValue({ data: mockProject })
+  })
+
+  it("chama GET /api/projects/:id com token de autenticação", async () => {
+    await fetchProjectById(1, "meu-token")
+    expect(mocks.apiGetMock).toHaveBeenCalledWith("/api/projects/1", {
+      headers: { Authorization: "Bearer meu-token" },
+    })
+  })
+
+  it("retorna os dados do projeto corretamente", async () => {
+    const result = await fetchProjectById(1, "meu-token")
+    expect(result.id).toBe(1)
+    expect(result.title).toBe("Projeto A")
+    expect(result.type).toBe("TAX_INCENTIVE_LAW")
+    expect(result.ods).toHaveLength(1)
+  })
+
+  it("propaga o erro quando api.get rejeita", async () => {
+    mocks.apiGetMock.mockRejectedValue(new Error("Not found"))
+    await expect(fetchProjectById(999, "meu-token")).rejects.toThrow("Not found")
+  })
+})
+
+describe("updateProject", () => {
+  const payload = {
+    title: "Título Atualizado",
+    description: "Descrição atualizada com mais de cinquenta caracteres para ser válida.",
+    budgetNeeded: 150000,
+    odsIds: [1, 3],
+    type: "TAX_INCENTIVE_LAW" as const,
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.apiPutMock.mockResolvedValue({ data: { ...mockProject, title: "Título Atualizado" } })
+  })
+
+  it("chama PUT /api/projects/:id com payload e token corretos", async () => {
+    await updateProject(1, payload, "meu-token")
+    expect(mocks.apiPutMock).toHaveBeenCalledWith("/api/projects/1", payload, {
+      headers: { Authorization: "Bearer meu-token" },
+    })
+  })
+
+  it("retorna os dados do projeto atualizado", async () => {
+    const result = await updateProject(1, payload, "meu-token")
+    expect(result.title).toBe("Título Atualizado")
+  })
+
+  it("propaga o erro quando api.put rejeita", async () => {
+    mocks.apiPutMock.mockRejectedValue(new Error("Forbidden"))
+    await expect(updateProject(1, payload, "meu-token")).rejects.toThrow("Forbidden")
+  })
+})
+
+describe("deleteProject", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.apiDeleteMock.mockResolvedValue({})
+  })
+
+  it("chama DELETE /api/projects/:id com token de autenticação", async () => {
+    await deleteProject(42, "meu-token")
+    expect(mocks.apiDeleteMock).toHaveBeenCalledWith("/api/projects/42", {
+      headers: { Authorization: "Bearer meu-token" },
+    })
+  })
+
+  it("resolve sem retorno quando a exclusão é bem-sucedida", async () => {
+    await expect(deleteProject(42, "meu-token")).resolves.toBeUndefined()
+  })
+
+  it("propaga o erro quando api.delete rejeita", async () => {
+    mocks.apiDeleteMock.mockRejectedValue(new Error("Forbidden"))
+    await expect(deleteProject(42, "meu-token")).rejects.toThrow("Forbidden")
   })
 })
