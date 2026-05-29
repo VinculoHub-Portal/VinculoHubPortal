@@ -10,6 +10,7 @@ import { OdsTags } from "./OdsTags";
 import { ProjectDetailsNotFound } from "./ProjectDetailsNotFound";
 import { ProjectDetailsSkeleton } from "./ProjectDetailsSkeleton";
 import { ProjectHeader } from "./ProjectHeader";
+import { ResponsibleInstitutionCard } from "./ResponsibleInstitutionCard";
 
 function formatBrl(amount: number) {
   return new Intl.NumberFormat("pt-BR", {
@@ -107,6 +108,12 @@ export function ProjectDetailsPage() {
                 <FundingProgress progressPercent={project.progressPercent} />
               )}
             </article>
+          )}
+
+          {Boolean(projectId) && !query.isLoading && !query.isError && project && (
+            <div className="mt-6">
+              <ResponsibleInstitutionCard institution={project.responsibleInstitution} />
+            </div>
           )}
         </div>
       </div>
