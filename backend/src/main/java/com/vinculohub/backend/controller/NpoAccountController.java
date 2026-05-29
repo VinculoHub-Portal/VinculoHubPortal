@@ -1,6 +1,7 @@
 /* (C)2026 */
 package com.vinculohub.backend.controller;
 
+import com.vinculohub.backend.dto.NpoExportDTO;
 import com.vinculohub.backend.dto.NpoInstitutionalSignupRequest;
 import com.vinculohub.backend.dto.NpoInstitutionalSignupResponse;
 import com.vinculohub.backend.exception.DuplicateDocumentException;
@@ -8,6 +9,7 @@ import com.vinculohub.backend.exception.DuplicateLoginException;
 import com.vinculohub.backend.exception.EsgSelectionException;
 import com.vinculohub.backend.exception.InvalidDocumentException;
 import com.vinculohub.backend.service.NpoAccountService;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +27,13 @@ public class NpoAccountController {
 
     public NpoAccountController(NpoAccountService npoAccountService) {
         this.npoAccountService = npoAccountService;
+    }
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<NpoExportDTO>> listAll() {
+        log.info("GET /api/npo-accounts");
+        return ResponseEntity.ok(npoAccountService.findAllForExport());
     }
 
     @PostMapping

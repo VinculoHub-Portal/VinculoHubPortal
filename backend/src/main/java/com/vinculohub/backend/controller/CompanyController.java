@@ -2,8 +2,10 @@
 package com.vinculohub.backend.controller;
 
 import com.vinculohub.backend.dto.CompanyDTO;
+import com.vinculohub.backend.dto.CompanyExportDTO;
 import com.vinculohub.backend.service.CompanyService;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -18,6 +20,13 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class CompanyController {
     private final CompanyService companyService;
+
+    @GetMapping("/api/companies")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<CompanyExportDTO>> listAll() {
+        log.info("GET /api/companies");
+        return ResponseEntity.ok(companyService.findAllForExport());
+    }
 
     @PostMapping("/api/company-accounts")
     @PreAuthorize("!hasRole('NPO') && !hasRole('ADMIN')")

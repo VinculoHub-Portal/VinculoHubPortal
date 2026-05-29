@@ -6,9 +6,13 @@ import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined
 import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
 import PendingActionsOutlinedIcon from "@mui/icons-material/PendingActionsOutlined";
+import { useAuth0 } from "@auth0/auth0-react";
+import { useState } from "react";
+import { fetchAllCompanies, fetchAllNpos } from "../../api/admin";
 import { FlexibleButton } from "../../components/general/FlexibleButton";
 import { Header } from "../../components/general/Header";
 import { MetricCard } from "../../components/general/MetricCard";
+import { downloadCsv } from "../../utils/exportCsv";
 const dashboardMetrics = [
   {
     label: "Total de ONGs",
@@ -44,7 +48,52 @@ const dashboardMetrics = [
   },
 ];
 
+const NPO_HEADERS = {
+  id: "ID",
+  name: "Nome",
+  cnpj: "CNPJ",
+  cpf: "CPF",
+  phone: "Telefone",
+  npoSize: "Porte",
+  environmental: "Ambiental",
+  social: "Social",
+  governance: "Governança",
+  city: "Cidade",
+  state: "Estado",
+  zipCode: "CEP",
+  createdAt: "Data de Cadastro",
+}
+
+const COMPANY_HEADERS = {
+  id: "ID",
+  legalName: "Razão Social",
+  socialName: "Nome Fantasia",
+  cnpj: "CNPJ",
+  phone: "Telefone",
+  email: "E-mail",
+  city: "Cidade",
+  state: "Estado",
+  zipCode: "CEP",
+  createdAt: "Data de Cadastro",
+}
+
 export function AdminDashboard() {
+  const { getAccessTokenSilently } = useAuth0()
+  const [exporting, setExporting] = useState(false)
+
+  async function handleExport() {
+    setExporting(true)
+    try {
+      const token = await getAccessTokenSilently()
+      const [npos, companies] = await Promise.all([fetchAllNpos(token), fetchAllCompanies(token)])
+      const date = new Date().toISOString().slice(0, 10)
+      downloadCsv(`ongs_${date}.csv`, npos, NPO_HEADERS)
+      downloadCsv(`empresas_${date}.csv`, companies, COMPANY_HEADERS)
+    } finally {
+      setExporting(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 pb-8">
       <Header />
@@ -77,14 +126,10 @@ export function AdminDashboard() {
             <FlexibleButton
               icon={<FileDownloadOutlinedIcon fontSize="small" />}
               variant="outline"
-              onClick={() => {
-                document.getElementById("exportar-dados")?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "start",
-                });
-              }}
+              onClick={() => void handleExport()}
+              disabled={exporting}
             >
-              Exportar Dados
+              {exporting ? "Exportando..." : "Exportar Dados"}
             </FlexibleButton>
 
             <FlexibleButton
