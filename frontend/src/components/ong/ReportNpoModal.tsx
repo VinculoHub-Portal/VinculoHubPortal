@@ -18,6 +18,14 @@ type ReportNpoModalProps = {
   onClose: () => void
 }
 
+// TODO botão Denunciar:
+// Plugar este modal no perfil da ONG quando o botão da empresa for implementado.
+// Exemplo:
+// const [isReportModalOpen, setIsReportModalOpen] = useState(false)
+// <button type="button" onClick={() => setIsReportModalOpen(true)}>Denunciar</button>
+// <ReportNpoModal npoId={npoId} open={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} />
+// O botão deve aparecer somente para usuários empresa e a ONG não deve receber notificação.
+
 const MIN_REASON_LENGTH = 10
 const MAX_REASON_LENGTH = 1000
 
