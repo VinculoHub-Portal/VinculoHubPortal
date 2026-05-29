@@ -70,7 +70,14 @@ export const AppRouter = () => (
           </ProtectedRoute>
         }
       />
-      <Route path="/ong/publico/:slug" element={<OngPublicProfilePage />} />
+      <Route
+        path="/ong/publico/:id"
+        element={
+          <ProtectedRoute>
+            <OngPublicProfilePage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/ong/projetos/:projectId/editar"
         element={

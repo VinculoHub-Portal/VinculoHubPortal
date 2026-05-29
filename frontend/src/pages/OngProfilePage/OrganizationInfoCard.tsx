@@ -1,19 +1,23 @@
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined"
-import BusinessOutlinedIcon from "@mui/icons-material/BusinessOutlined"
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined"
-import EventOutlinedIcon from "@mui/icons-material/EventOutlined"
-import MonetizationOnOutlinedIcon from "@mui/icons-material/MonetizationOnOutlined"
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined"
 import MailOutlinedIcon from "@mui/icons-material/MailOutlined"
 import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined"
-import LanguageOutlinedIcon from "@mui/icons-material/LanguageOutlined"
 import { Input } from "../../components/general/Input"
-import type { NpoProfile } from "./npoProfileMockData"
+import type { NpoContactData, NpoAddressData, NpoInstitutionalData } from "../../api/npo"
+import { cnpjOrCpfLabel, formatAddress, npoSizeLabel } from "./npoProfileDisplay"
 
 interface OrganizationInfoCardProps {
-  profile: NpoProfile
+  institutionalData: NpoInstitutionalData
+  contact: NpoContactData
+  address: NpoAddressData | null
   isEditing: boolean
-  onChange?: <K extends keyof NpoProfile>(field: K, value: NpoProfile[K]) => void
+  onInstitutionalChange?: <K extends keyof NpoInstitutionalData>(
+    field: K,
+    value: NpoInstitutionalData[K],
+  ) => void
+  onContactChange?: <K extends keyof NpoContactData>(field: K, value: NpoContactData[K]) => void
+  onAddressChange?: <K extends keyof NpoAddressData>(field: K, value: NpoAddressData[K]) => void
 }
 
 interface InfoItemProps {
@@ -51,7 +55,18 @@ function InfoItem({ icon, label, value, isEditing, inputId, onValueChange }: Inf
   )
 }
 
-export function OrganizationInfoCard({ profile, isEditing, onChange }: OrganizationInfoCardProps) {
+export function OrganizationInfoCard({
+  institutionalData,
+  contact,
+  address,
+  isEditing,
+  onInstitutionalChange,
+  onContactChange,
+  onAddressChange,
+}: OrganizationInfoCardProps) {
+  const docField = cnpjOrCpfLabel(institutionalData.cnpj, institutionalData.cpf)
+  const addressStr = formatAddress(address)
+
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
@@ -60,83 +75,105 @@ export function OrganizationInfoCard({ profile, isEditing, onChange }: Organizat
             Informações da Organização
           </h2>
           <div className="flex flex-col gap-4">
-            <InfoItem
-              icon={<DescriptionOutlinedIcon fontSize="small" />}
-              label="CNPJ"
-              value={profile.cnpj}
-              isEditing={isEditing}
-              inputId="ong-cnpj"
-              onValueChange={(v) => onChange?.("cnpj", v)}
-            />
-            <InfoItem
-              icon={<BusinessOutlinedIcon fontSize="small" />}
-              label="Área de Atuação"
-              value={profile.actionArea}
-              isEditing={isEditing}
-              inputId="ong-action-area"
-              onValueChange={(v) => onChange?.("actionArea", v)}
-            />
-            <InfoItem
-              icon={<ShieldOutlinedIcon fontSize="small" />}
-              label="Porte da Organização"
-              value={profile.organizationSize}
-              isEditing={isEditing}
-              inputId="ong-size"
-              onValueChange={(v) => onChange?.("organizationSize", v)}
-            />
-            <InfoItem
-              icon={<EventOutlinedIcon fontSize="small" />}
-              label="Ano de Fundação"
-              value={String(profile.foundationYear)}
-              isEditing={isEditing}
-              inputId="ong-foundation-year"
-              onValueChange={(v) => onChange?.("foundationYear", Number(v))}
-            />
-            <InfoItem
-              icon={<MonetizationOnOutlinedIcon fontSize="small" />}
-              label="Orçamento Anual para Projetos Sociais"
-              value={profile.annualBudget}
-              isEditing={isEditing}
-              inputId="ong-annual-budget"
-              onValueChange={(v) => onChange?.("annualBudget", v)}
-            />
+            {docField && (
+              <InfoItem
+                icon={<DescriptionOutlinedIcon fontSize="small" />}
+                label={docField.label}
+                value={docField.value}
+                isEditing={isEditing}
+                inputId="ong-cnpj"
+                onValueChange={(v) =>
+                  institutionalData.cnpj !== null
+                    ? onInstitutionalChange?.("cnpj", v)
+                    : onInstitutionalChange?.("cpf", v)
+                }
+              />
+            )}
+            {institutionalData.npoSize && (
+              <InfoItem
+                icon={<ShieldOutlinedIcon fontSize="small" />}
+                label="Porte da Organização"
+                value={npoSizeLabel(institutionalData.npoSize)}
+                isEditing={false}
+                inputId="ong-size"
+              />
+            )}
           </div>
         </div>
 
         <div>
           <h2 className="mb-5 text-base font-semibold text-vinculo-dark">Contato</h2>
           <div className="flex flex-col gap-4">
-            <InfoItem
-              icon={<LocationOnOutlinedIcon fontSize="small" />}
-              label="Endereço"
-              value={profile.address}
-              isEditing={isEditing}
-              inputId="ong-address"
-              onValueChange={(v) => onChange?.("address", v)}
-            />
+            {isEditing ? (
+              <>
+                <Input
+                  id="ong-address-street"
+                  label="Rua"
+                  value={address?.street ?? ""}
+                  icon={<LocationOnOutlinedIcon fontSize="small" />}
+                  onChange={(e) => onAddressChange?.("street", e.target.value)}
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    id="ong-address-number"
+                    label="Número"
+                    value={address?.number ?? ""}
+                    onChange={(e) => onAddressChange?.("number", e.target.value)}
+                  />
+                  <Input
+                    id="ong-address-complement"
+                    label="Complemento"
+                    value={address?.complement ?? ""}
+                    onChange={(e) => onAddressChange?.("complement", e.target.value)}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    id="ong-address-city"
+                    label="Cidade"
+                    value={address?.city ?? ""}
+                    onChange={(e) => onAddressChange?.("city", e.target.value)}
+                  />
+                  <Input
+                    id="ong-address-state-code"
+                    label="Estado (UF)"
+                    value={address?.stateCode ?? ""}
+                    onChange={(e) => onAddressChange?.("stateCode", e.target.value)}
+                  />
+                </div>
+                <Input
+                  id="ong-address-zip"
+                  label="CEP"
+                  value={address?.zipCode ?? ""}
+                  onChange={(e) => onAddressChange?.("zipCode", e.target.value)}
+                />
+              </>
+            ) : (
+              addressStr && (
+                <InfoItem
+                  icon={<LocationOnOutlinedIcon fontSize="small" />}
+                  label="Endereço"
+                  value={addressStr}
+                  isEditing={false}
+                  inputId="ong-address"
+                />
+              )
+            )}
             <InfoItem
               icon={<MailOutlinedIcon fontSize="small" />}
               label="E-mail"
-              value={profile.email}
+              value={contact.email ?? ""}
               isEditing={isEditing}
               inputId="ong-email"
-              onValueChange={(v) => onChange?.("email", v)}
+              onValueChange={(v) => onContactChange?.("email", v)}
             />
             <InfoItem
               icon={<PhoneOutlinedIcon fontSize="small" />}
               label="Telefone"
-              value={profile.phone}
+              value={contact.phone ?? ""}
               isEditing={isEditing}
               inputId="ong-phone"
-              onValueChange={(v) => onChange?.("phone", v)}
-            />
-            <InfoItem
-              icon={<LanguageOutlinedIcon fontSize="small" />}
-              label="Website"
-              value={profile.website}
-              isEditing={isEditing}
-              inputId="ong-website"
-              onValueChange={(v) => onChange?.("website", v)}
+              onValueChange={(v) => onContactChange?.("phone", v)}
             />
           </div>
         </div>

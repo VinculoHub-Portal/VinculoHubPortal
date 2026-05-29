@@ -1,15 +1,23 @@
 import { useParams } from "react-router-dom"
-import { npoProfilesBySlug } from "../OngProfilePage/npoProfileMockData"
-import { MissionCard } from "../OngProfilePage/MissionCard"
+import { useNpoProfile } from "../../hooks/useNpoProfile"
 import { OrganizationInfoCard } from "../OngProfilePage/OrganizationInfoCard"
 import { ProfileHeaderCard } from "../OngProfilePage/ProfileHeaderCard"
 import { ResponsibleCard } from "../OngProfilePage/ResponsibleCard"
 
 export function OngPublicProfilePage() {
-  const { slug } = useParams<{ slug: string }>()
-  const profile = slug ? npoProfilesBySlug[slug] : undefined
+  const { id } = useParams<{ id: string }>()
+  const numericId = id ? Number(id) : undefined
+  const { profile, loading, error } = useNpoProfile(numericId)
 
-  if (!profile) {
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <p className="text-sm text-slate-500">Carregando perfil…</p>
+      </div>
+    )
+  }
+
+  if (error || !profile) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="text-center">
@@ -32,16 +40,19 @@ export function OngPublicProfilePage() {
 
       <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 sm:px-6">
         <ProfileHeaderCard
-          profile={profile}
+          institutionalData={profile.institutionalData}
+          editable={false}
           isEditing={false}
-          hideEditButton
         />
 
-        <OrganizationInfoCard profile={profile} isEditing={false} />
+        <OrganizationInfoCard
+          institutionalData={profile.institutionalData}
+          contact={profile.contact}
+          address={profile.address}
+          isEditing={false}
+        />
 
         <ResponsibleCard responsible={profile.responsible} isEditing={false} />
-
-        <MissionCard mission={profile.mission} isEditing={false} />
       </main>
     </div>
   )

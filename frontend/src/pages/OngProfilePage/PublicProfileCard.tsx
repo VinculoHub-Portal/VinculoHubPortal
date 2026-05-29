@@ -3,12 +3,12 @@ import { useState } from "react"
 import { BaseButton } from "../../components/general/BaseButton"
 
 interface PublicProfileCardProps {
-  slug: string
+  id: number
 }
 
-export function PublicProfileCard({ slug }: PublicProfileCardProps) {
+export function PublicProfileCard({ id }: PublicProfileCardProps) {
   const [copied, setCopied] = useState(false)
-  const publicUrl = `${window.location.origin}/ong/publico/${slug}`
+  const publicUrl = `${window.location.origin}/ong/publico/${id}`
 
   async function handleCopy() {
     try {

@@ -1,51 +1,59 @@
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined"
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined"
+import NatureOutlinedIcon from "@mui/icons-material/NatureOutlined"
+import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined"
+import AccountBalanceOutlinedIcon from "@mui/icons-material/AccountBalanceOutlined"
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined"
-import EventOutlinedIcon from "@mui/icons-material/EventOutlined"
 import { BaseButton } from "../../components/general/BaseButton"
 import { TextArea } from "../../components/general/TextArea"
 import { Input } from "../../components/general/Input"
-import type { NpoProfile } from "./npoProfileMockData"
+import type { NpoInstitutionalData } from "../../api/npo"
+import { buildBadges } from "./npoProfileDisplay"
 
 interface ProfileHeaderCardProps {
-  profile: NpoProfile
+  institutionalData: NpoInstitutionalData
+  editable: boolean
   isEditing: boolean
-  hideEditButton?: boolean
   onEdit?: () => void
   onSave?: () => void
   onCancel?: () => void
-  onChange?: <K extends keyof NpoProfile>(field: K, value: NpoProfile[K]) => void
+  onChange?: <K extends keyof NpoInstitutionalData>(field: K, value: NpoInstitutionalData[K]) => void
 }
 
 const BADGE_ICONS: Record<string, React.ReactNode> = {
+  Ambiental: <NatureOutlinedIcon fontSize="inherit" />,
+  Social: <PeopleOutlinedIcon fontSize="inherit" />,
+  Governança: <AccountBalanceOutlinedIcon fontSize="inherit" />,
   Médio: <ShieldOutlinedIcon fontSize="inherit" />,
-}
-
-function BadgeIcon({ badge }: { badge: string }) {
-  if (badge.startsWith("Fundada em")) {
-    return <EventOutlinedIcon fontSize="inherit" />
-  }
-  if (BADGE_ICONS[badge]) {
-    return BADGE_ICONS[badge]
-  }
-  return null
+  Pequeno: <ShieldOutlinedIcon fontSize="inherit" />,
+  Grande: <ShieldOutlinedIcon fontSize="inherit" />,
 }
 
 export function ProfileHeaderCard({
-  profile,
+  institutionalData,
+  editable,
   isEditing,
-  hideEditButton = false,
   onEdit,
   onSave,
   onCancel,
   onChange,
 }: ProfileHeaderCardProps) {
+  const badges = buildBadges(institutionalData)
+
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-4">
           <div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-vinculo-dark text-white text-2xl">
-            <DescriptionOutlinedIcon fontSize="inherit" />
+            {institutionalData.logoUrl ? (
+              <img
+                src={institutionalData.logoUrl}
+                alt={institutionalData.name}
+                className="h-14 w-14 rounded-xl object-cover"
+              />
+            ) : (
+              <DescriptionOutlinedIcon fontSize="inherit" />
+            )}
           </div>
 
           <div className="flex flex-col gap-1">
@@ -53,29 +61,30 @@ export function ProfileHeaderCard({
               <Input
                 id="ong-name"
                 label="Nome da Organização"
-                value={profile.name}
+                value={institutionalData.name}
                 onChange={(e) => onChange?.("name", e.target.value)}
               />
             ) : (
-              <h1 className="text-xl font-bold text-vinculo-dark">{profile.name}</h1>
+              <h1 className="text-xl font-bold text-vinculo-dark">{institutionalData.name}</h1>
             )}
-            <span className="text-sm text-slate-500">({profile.organizationType})</span>
 
-            <div className="mt-2 flex flex-wrap gap-2">
-              {profile.badges.map((badge) => (
-                <span
-                  key={badge}
-                  className="inline-flex items-center gap-1 rounded-full bg-vinculo-dark px-3 py-1 text-xs font-semibold text-white"
-                >
-                  <BadgeIcon badge={badge} />
-                  {badge}
-                </span>
-              ))}
-            </div>
+            {badges.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {badges.map((badge) => (
+                  <span
+                    key={badge}
+                    className="inline-flex items-center gap-1 rounded-full bg-vinculo-dark px-3 py-1 text-xs font-semibold text-white"
+                  >
+                    {BADGE_ICONS[badge]}
+                    {badge}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {!hideEditButton && (
+        {editable && (
           <div className="flex shrink-0 items-center gap-2">
             {isEditing ? (
               <>
@@ -105,12 +114,14 @@ export function ProfileHeaderCard({
           <TextArea
             id="ong-description"
             label="Descrição"
-            value={profile.description}
+            value={institutionalData.description ?? ""}
             rows={4}
             onChange={(e) => onChange?.("description", e.target.value)}
           />
         ) : (
-          <p className="text-sm leading-relaxed text-slate-600">{profile.description}</p>
+          <p className="text-sm leading-relaxed text-slate-600">
+            {institutionalData.description}
+          </p>
         )}
       </div>
     </article>
