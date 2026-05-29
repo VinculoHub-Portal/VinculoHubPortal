@@ -2,12 +2,14 @@
 package com.vinculohub.backend.service;
 
 import com.vinculohub.backend.dto.NpoProfileResponse;
+import com.vinculohub.backend.exception.ForbiddenException;
 import com.vinculohub.backend.exception.NotFoundException;
 import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.model.Document;
 import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.User;
+import com.vinculohub.backend.repository.AddressRepository;
 import com.vinculohub.backend.repository.DocumentRepository;
 import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.ProjectRepository;
@@ -24,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class NpoProfileService {
 
     private final NpoRepository npoRepository;
+    private final AddressRepository addressRepository;
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
     private final DocumentRepository documentRepository;
@@ -70,6 +73,38 @@ public class NpoProfileService {
                 mapDocuments(npo.getId()));
     }
 
+    @Transactional
+    public NpoProfileResponse updateProfile(
+            Integer npoId, String authenticatedAuth0Id, NpoProfileResponse.UpdateRequest request) {
+        if (npoId == null) {
+            throw new IllegalArgumentException("O id da ONG é obrigatório.");
+        }
+        if (request == null) {
+            throw new IllegalArgumentException("Os dados de atualização são obrigatórios.");
+        }
+
+        Npo npo =
+                npoRepository
+                        .findById(npoId)
+                        .orElseThrow(() -> new NotFoundException("ONG não encontrada."));
+
+        User responsibleUser = resolveResponsibleUser(npo);
+        if (!isOwner(authenticatedAuth0Id, responsibleUser)) {
+            throw new ForbiddenException("Apenas o dono do perfil pode editar os dados da ONG.");
+        }
+
+        applyInstitutionalUpdate(npo, request.institutionalData(), request.contact());
+        applyResponsibleUpdate(responsibleUser, request.responsible());
+        applyAddressUpdate(npo, request.address());
+
+        npoRepository.save(npo);
+        if (responsibleUser != null) {
+            userRepository.save(responsibleUser);
+        }
+
+        return getProfile(npoId, authenticatedAuth0Id);
+    }
+
     private User resolveResponsibleUser(Npo npo) {
         Integer userId = npo.getUserId();
         if (userId == null) {
@@ -77,6 +112,118 @@ public class NpoProfileService {
         }
 
         return userRepository.findById(userId).orElse(null);
+    }
+
+    private boolean isOwner(String authenticatedAuth0Id, User responsibleUser) {
+        return authenticatedAuth0Id != null
+                && !authenticatedAuth0Id.isBlank()
+                && responsibleUser != null
+                && authenticatedAuth0Id.equals(responsibleUser.getAuth0Id());
+    }
+
+    private void applyInstitutionalUpdate(
+            Npo npo,
+            NpoProfileResponse.InstitutionalUpdate institutionalData,
+            NpoProfileResponse.ContactUpdate contactData) {
+        if (institutionalData != null) {
+            if (institutionalData.name() != null && !institutionalData.name().isBlank()) {
+                npo.setName(institutionalData.name().trim());
+            }
+            if (institutionalData.description() != null) {
+                npo.setDescription(trimToNull(institutionalData.description()));
+            }
+            if (institutionalData.logoUrl() != null) {
+                npo.setLogoUrl(trimToNull(institutionalData.logoUrl()));
+            }
+            if (institutionalData.npoSize() != null) {
+                npo.setNpoSize(institutionalData.npoSize());
+            }
+            if (institutionalData.cnpj() != null) {
+                npo.setCnpj(trimToNull(institutionalData.cnpj()));
+            }
+            if (institutionalData.cpf() != null) {
+                npo.setCpf(trimToNull(institutionalData.cpf()));
+            }
+            if (institutionalData.environmental() != null) {
+                npo.setEnvironmental(institutionalData.environmental());
+            }
+            if (institutionalData.social() != null) {
+                npo.setSocial(institutionalData.social());
+            }
+            if (institutionalData.governance() != null) {
+                npo.setGovernance(institutionalData.governance());
+            }
+        }
+
+        if (contactData != null) {
+            if (contactData.phone() != null) {
+                npo.setPhone(trimToNull(contactData.phone()));
+            }
+            if (contactData.email() != null && !contactData.email().isBlank()) {
+                User responsibleUser = resolveResponsibleUser(npo);
+                if (responsibleUser != null) {
+                    responsibleUser.setEmail(contactData.email().trim());
+                }
+            }
+        }
+    }
+
+    private void applyResponsibleUpdate(
+            User responsibleUser, NpoProfileResponse.ResponsibleUpdate responsible) {
+        if (responsibleUser == null || responsible == null) {
+            return;
+        }
+
+        if (responsible.name() != null && !responsible.name().isBlank()) {
+            responsibleUser.setName(responsible.name().trim());
+        }
+        if (responsible.email() != null && !responsible.email().isBlank()) {
+            responsibleUser.setEmail(responsible.email().trim());
+        }
+    }
+
+    private void applyAddressUpdate(Npo npo, NpoProfileResponse.AddressUpdate addressData) {
+        if (addressData == null) {
+            return;
+        }
+
+        Address address = npo.getAddress();
+        if (address == null) {
+            address = new Address();
+        }
+
+        if (addressData.state() != null) {
+            address.setState(trimToNull(addressData.state()));
+        }
+        if (addressData.stateCode() != null) {
+            address.setStateCode(trimToNull(addressData.stateCode()));
+        }
+        if (addressData.city() != null) {
+            address.setCity(trimToNull(addressData.city()));
+        }
+        if (addressData.street() != null) {
+            address.setStreet(trimToNull(addressData.street()));
+        }
+        if (addressData.number() != null) {
+            address.setNumber(trimToNull(addressData.number()));
+        }
+        if (addressData.complement() != null) {
+            address.setComplement(trimToNull(addressData.complement()));
+        }
+        if (addressData.zipCode() != null) {
+            address.setZipCode(trimToNull(addressData.zipCode()));
+        }
+
+        npo.setAddress(addressRepository.save(address));
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private NpoProfileResponse.AddressData mapAddress(Address address) {

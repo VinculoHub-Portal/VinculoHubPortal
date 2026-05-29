@@ -77,4 +77,34 @@ public record NpoProfileResponse(
             String mimeType,
             LocalDateTime createdAt,
             Long projectId) {}
+
+    public record UpdateRequest(
+            InstitutionalUpdate institutionalData,
+            ContactUpdate contact,
+            AddressUpdate address,
+            ResponsibleUpdate responsible) {}
+
+    public record InstitutionalUpdate(
+            String name,
+            String description,
+            String logoUrl,
+            NpoSize npoSize,
+            String cnpj,
+            String cpf,
+            Boolean environmental,
+            Boolean social,
+            Boolean governance) {}
+
+    public record ContactUpdate(String email, String phone) {}
+
+    public record AddressUpdate(
+            String state,
+            String stateCode,
+            String city,
+            String street,
+            String number,
+            String complement,
+            String zipCode) {}
+
+    public record ResponsibleUpdate(String name, String email) {}
 }
