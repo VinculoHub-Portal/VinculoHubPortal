@@ -1,6 +1,7 @@
 /* (C)2026 */
 package com.vinculohub.backend.service;
 
+import com.vinculohub.backend.dto.DocumentDownloadResponseDTO;
 import com.vinculohub.backend.dto.DocumentRequestDTO;
 import com.vinculohub.backend.dto.DocumentResponseDTO;
 import com.vinculohub.backend.exception.BadRequestException;
@@ -18,6 +19,8 @@ import com.vinculohub.backend.repository.ProjectRepository;
 import com.vinculohub.backend.repository.UserRepository;
 import com.vinculohub.backend.service.storage.S3Uploader;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -38,6 +41,8 @@ public class DocumentService {
     private final S3Uploader s3Uploader;
 
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+    private static final Duration DOWNLOAD_URL_TTL = Duration.ofMinutes(10);
 
     private static final List<String> ALLOWED_TYPES =
             List.of(
@@ -129,6 +134,36 @@ public class DocumentService {
                         .orElseThrow(() -> new NotFoundException("ONG nao encontrada"));
 
         return documentRepository.findByNpo_Id(npo.getId(), pageable).map(this::mapToResponse);
+    }
+
+    public DocumentDownloadResponseDTO generateDownloadUrlForAuthenticatedNpo(
+            String auth0Id, Integer documentId) {
+        if (auth0Id == null || auth0Id.isBlank()) {
+            throw new BadRequestException("Nao foi possivel identificar o usuario autenticado.");
+        }
+        if (documentId == null) {
+            throw new BadRequestException("Document id is required");
+        }
+
+        User user = userRepository.findByAuth0Id(auth0Id).orElseThrow(UserNotFoundException::new);
+        Npo npo =
+                npoRepository
+                        .findByUserId(user.getId())
+                        .orElseThrow(() -> new NotFoundException("ONG nao encontrada"));
+
+        Document document =
+                documentRepository
+                        .findByIdAndNpo_Id(documentId, npo.getId())
+                        .orElseThrow(() -> new NotFoundException("Documento nao encontrado"));
+
+        String downloadUrl =
+                s3Uploader.generatePresignedDownloadUrl(document.getFileUrl(), DOWNLOAD_URL_TTL);
+
+        return new DocumentDownloadResponseDTO(
+                downloadUrl,
+                document.getFileName(),
+                document.getMimeType(),
+                Instant.now().plus(DOWNLOAD_URL_TTL));
     }
 
     private DocumentResponseDTO mapToResponse(Document document) {
