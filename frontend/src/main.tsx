@@ -11,7 +11,8 @@ const queryClient = new QueryClient()
 
 const auth0Domain = import.meta.env.VITE_AUTH0_DOMAIN
 const auth0ClientId = import.meta.env.VITE_AUTH0_CLIENT_ID
-const auth0Audience = import.meta.env.VITE_AUTH0_AUDIENCE
+const defaultAuth0Audience = "https://api.vinculohub"
+const auth0Audience = import.meta.env.VITE_AUTH0_AUDIENCE || defaultAuth0Audience
 
 if (!auth0Domain || !auth0ClientId || !auth0Audience) {
   console.error("Auth0 não configurado. Confira VITE_AUTH0_DOMAIN, VITE_AUTH0_CLIENT_ID e VITE_AUTH0_AUDIENCE.")
