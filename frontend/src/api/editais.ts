@@ -120,10 +120,11 @@ function unwrapList(data: unknown): unknown[] {
   return []
 }
 
-export async function fetchEditais(token?: string): Promise<EditalListItem[]> {
+export async function fetchEditais(token?: string, activeOnly = false): Promise<EditalListItem[]> {
   logger.info("EditaisAPI", "Fetching editais")
   try {
-    const { data } = await api.get<unknown>("/api/editais", {
+    const url = activeOnly ? "/api/editais?active=true" : "/api/editais"
+    const { data } = await api.get<unknown>(url, {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     })
     const list = unwrapList(data)

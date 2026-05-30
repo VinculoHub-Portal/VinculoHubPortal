@@ -2,11 +2,12 @@ import { useAuth0 } from "@auth0/auth0-react"
 import { useEffect, useState } from "react"
 import { fetchEditais, type EditalListItem } from "../api/editais"
 
-export function useEditais() {
+export function useEditais(activeOnly = false) {
   const { getAccessTokenSilently } = useAuth0()
   const [editais, setEditais] = useState<EditalListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     let mounted = true
@@ -14,7 +15,7 @@ export function useEditais() {
       try {
         setLoading(true)
         const token = await getAccessTokenSilently()
-        const data = await fetchEditais(token)
+        const data = await fetchEditais(token, activeOnly)
         if (!mounted) return
         setEditais(data)
         setError(null)
@@ -28,7 +29,11 @@ export function useEditais() {
     return () => {
       mounted = false
     }
-  }, [getAccessTokenSilently])
+  }, [getAccessTokenSilently, activeOnly, refreshKey])
 
-  return { editais, loading, error }
+  function refetch() {
+    setRefreshKey((k) => k + 1)
+  }
+
+  return { editais, loading, error, refetch }
 }

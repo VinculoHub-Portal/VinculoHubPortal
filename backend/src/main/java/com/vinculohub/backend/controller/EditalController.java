@@ -28,7 +28,10 @@ public class EditalController {
     }
 
     @GetMapping
-    public ResponseEntity<List<EditalResponseDTO>> listAll() {
-        return ResponseEntity.ok(editalService.findAll());
+    public ResponseEntity<List<EditalResponseDTO>> listAll(
+            @RequestParam(name = "active", required = false, defaultValue = "false")
+                    boolean activeOnly) {
+        var result = activeOnly ? editalService.findAllActive() : editalService.findAll();
+        return ResponseEntity.ok(result);
     }
 }

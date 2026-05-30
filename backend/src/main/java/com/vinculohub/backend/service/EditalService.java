@@ -11,6 +11,7 @@ import com.vinculohub.backend.model.Ods;
 import com.vinculohub.backend.repository.EditalRepository;
 import com.vinculohub.backend.service.storage.S3Uploader;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -70,6 +71,7 @@ public class EditalService {
         edital.setFileName(UUID.randomUUID() + "_" + file.getOriginalFilename());
         edital.setFileSize(file.getSize());
         edital.setMimeType(file.getContentType());
+        edital.setExpiredAt(dto.expiredAt());
         edital.setOds(ods);
 
         return mapToResponse(editalRepository.save(edital));
@@ -77,7 +79,14 @@ public class EditalService {
 
     @Transactional(readOnly = true)
     public List<EditalResponseDTO> findAll() {
-        return editalRepository.findAll().stream()
+        return editalRepository.findAllByOrderByCreatedAtDesc().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<EditalResponseDTO> findAllActive() {
+        return editalRepository.findAllActiveOrderByCreatedAtDesc(LocalDateTime.now()).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }

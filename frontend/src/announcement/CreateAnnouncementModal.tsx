@@ -16,6 +16,7 @@ export type CreateNoticeFormData = {
 type CreateNoticeModalProps = {
   open: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
   onSubmit?: (data: FormData) => Promise<void>;
   isSubmitting?: boolean;
   submitError?: string | null;
@@ -76,6 +77,7 @@ function validateNotice(data: CreateNoticeFormData) {
 export function CreateNoticeModal({
   open,
   onClose,
+  onSuccess,
   onSubmit,
   isSubmitting = false,
   submitError = null,
@@ -155,10 +157,14 @@ export function CreateNoticeModal({
     }
 
     const selectedOdsId = Number(formData.category);
+    const expiredAt = formData.deadline
+      ? `${formData.deadline}T23:59:59`
+      : null;
     const payload = {
       title: formData.title,
       description: formData.description,
       odsIds: Number.isNaN(selectedOdsId) ? [] : [selectedOdsId],
+      expiredAt,
     };
 
     const submitData = new FormData();
@@ -183,6 +189,7 @@ export function CreateNoticeModal({
         });
       }
 
+      onSuccess?.();
       handleClose();
     } catch {
       setInternalSubmitError(
