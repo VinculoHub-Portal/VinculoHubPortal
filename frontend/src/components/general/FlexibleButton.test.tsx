@@ -51,4 +51,26 @@ describe("FlexibleButton", () => {
     expect(button).toHaveClass("text-vinculo-dark")
     expect(button).toHaveClass("border-vinculo-dark")
   })
+
+  it("renderiza a variante sutil compacta", () => {
+    render(
+      <FlexibleButton
+        icon={<AddIcon data-testid="flexible-button-icon" />}
+        variant="subtle"
+        size="compact"
+      >
+        Denunciar
+      </FlexibleButton>,
+    )
+
+    const button = screen.getByRole("button", { name: "Denunciar" })
+
+    expect(button).toHaveClass("rounded-lg")
+    expect(button).toHaveClass("border")
+    expect(button).toHaveClass("px-3")
+    expect(button).toHaveClass("py-1.5")
+    expect(button).toHaveClass("text-slate-500")
+    expect(screen.getByTestId("flexible-button-icon")).toHaveClass("h-4")
+    expect(screen.getByTestId("flexible-button-icon")).toHaveClass("w-4")
+  })
 })
