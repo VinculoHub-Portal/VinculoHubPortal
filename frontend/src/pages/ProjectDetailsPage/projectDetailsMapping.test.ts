@@ -119,6 +119,7 @@ describe("mapApiPayloadToProjectDetails", () => {
       const result = mapApiPayloadToProjectDetails(
         {
           responsibleInstitution: {
+            npoId: 10,
             name: "Saúde Solidária",
             logoUrl: "https://example.com/logo.png",
             city: "Recife",
@@ -129,6 +130,7 @@ describe("mapApiPayloadToProjectDetails", () => {
         ROUTE_ID,
       );
       expect(result.responsibleInstitution).toEqual({
+        npoId: 10,
         name: "Saúde Solidária",
         logoUrl: "https://example.com/logo.png",
         city: "Recife",
@@ -143,6 +145,7 @@ describe("mapApiPayloadToProjectDetails", () => {
         ROUTE_ID,
       );
       expect(result.responsibleInstitution).toEqual({
+        npoId: null,
         name: "ONG Teste",
         logoUrl: null,
         city: null,

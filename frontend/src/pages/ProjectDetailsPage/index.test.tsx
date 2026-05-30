@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -8,6 +9,7 @@ import type { ProjectDetails } from "./projectDetails.types";
 const mocks = vi.hoisted(() => ({
   fetchProjectDetailsMock: vi.fn(),
   getAccessTokenSilentlyMock: vi.fn(),
+  userMock: { "https://vinculohub/roles": ["COMPANY"] },
 }));
 
 vi.mock("@auth0/auth0-react", () => ({
@@ -16,12 +18,17 @@ vi.mock("@auth0/auth0-react", () => ({
     isAuthenticated: true,
     loginWithRedirect: vi.fn(),
     logout: vi.fn(),
-    user: { "https://vinculohub/roles": ["COMPANY"] },
+    user: mocks.userMock,
   }),
 }));
 
 vi.mock("./fetchProjectDetails", () => ({
   fetchProjectDetails: mocks.fetchProjectDetailsMock,
+}));
+
+vi.mock("../../components/ong/ReportNpoModal", () => ({
+  ReportNpoModal: ({ open, npoId }: { open: boolean; npoId: number }) =>
+    open ? <div data-testid="report-modal">Modal de denúncia {npoId}</div> : null,
 }));
 
 const baseProject: ProjectDetails = {
@@ -60,6 +67,7 @@ describe("ProjectDetailsPage", () => {
     vi.clearAllMocks();
     mocks.getAccessTokenSilentlyMock.mockResolvedValue("token-test");
     mocks.fetchProjectDetailsMock.mockResolvedValue(baseProject);
+    mocks.userMock = { "https://vinculohub/roles": ["COMPANY"] };
   });
 
   afterEach(() => {
@@ -133,6 +141,7 @@ describe("ProjectDetailsPage", () => {
       mocks.fetchProjectDetailsMock.mockResolvedValue({
         ...baseProject,
         responsibleInstitution: {
+          npoId: 10,
           name: "Saúde Solidária",
           logoUrl: null,
           city: "Recife",
@@ -153,6 +162,55 @@ describe("ProjectDetailsPage", () => {
         expect(screen.getByText("Saúde em Movimento")).toBeInTheDocument();
       });
       expect(screen.queryByText("Organização Responsável")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("denúncia", () => {
+    it("exibe o botão e abre o modal para empresa", async () => {
+      const user = userEvent.setup();
+      mocks.fetchProjectDetailsMock.mockResolvedValue({
+        ...baseProject,
+        responsibleInstitution: {
+          npoId: 10,
+          name: "Saúde Solidária",
+          logoUrl: null,
+          city: "Recife",
+          stateCode: "PE",
+          description: "ONG focada em saúde.",
+        },
+      });
+
+      renderPage();
+
+      expect(await screen.findByRole("button", { name: "Denunciar" })).toBeInTheDocument();
+
+      await user.click(screen.getByRole("button", { name: "Denunciar" }));
+
+      expect(screen.getByTestId("report-modal")).toHaveTextContent("10");
+    });
+
+    it("não exibe o botão para usuários que não são empresa", async () => {
+      mocks.userMock = { "https://vinculohub/roles": ["NPO"] };
+      mocks.fetchProjectDetailsMock.mockResolvedValue({
+        ...baseProject,
+        responsibleInstitution: {
+          npoId: 10,
+          name: "Saúde Solidária",
+          logoUrl: null,
+          city: "Recife",
+          stateCode: "PE",
+          description: "ONG focada em saúde.",
+        },
+      });
+
+      renderPage();
+
+      await waitFor(() => {
+        expect(screen.getByText("Saúde em Movimento")).toBeInTheDocument();
+      });
+
+      expect(screen.queryByRole("button", { name: "Denunciar" })).not.toBeInTheDocument();
+      expect(screen.queryByTestId("report-modal")).not.toBeInTheDocument();
     });
   });
 

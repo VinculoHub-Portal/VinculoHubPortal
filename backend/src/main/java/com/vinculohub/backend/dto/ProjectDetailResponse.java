@@ -44,6 +44,7 @@ public record ProjectDetailResponse(
 
             institutionResponse =
                     new ProjectResponsibleInstitutionResponse(
+                            project.getNpo().getId(),
                             project.getNpo().getName(),
                             logoUrl,
                             city,

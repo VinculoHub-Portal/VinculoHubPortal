@@ -91,6 +91,7 @@ function mapResponsibleInstitution(v: unknown): ResponsibleInstitution | null {
   const name = str(o.name);
   if (!name) return null;
   return {
+    npoId: num(o.npoId ?? o.npo_id),
     name,
     logoUrl: str(o.logoUrl ?? o.logo_url) || null,
     city: str(o.city) || null,
