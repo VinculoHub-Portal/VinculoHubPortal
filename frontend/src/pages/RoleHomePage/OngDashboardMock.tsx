@@ -1,5 +1,6 @@
 import AddIcon from "@mui/icons-material/Add"
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward"
+import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined"
 import CampaignOutlinedIcon from "@mui/icons-material/CampaignOutlined"
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined"
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined"
@@ -121,6 +122,16 @@ export function OngDashboardMock({
             >
               <FileUploadOutlinedIcon fontSize="small" />
               Upload de Documentos
+            </BaseButton>
+
+            <BaseButton
+              type="button"
+              variant="outline"
+              className="min-h-14 w-full border-slate-200 bg-white px-8 text-lg shadow-md hover:bg-slate-50 sm:w-fit"
+              onClick={() => navigate("/ong/perfil")}
+            >
+              <AccountCircleOutlinedIcon fontSize="small" />
+              Meu Perfil
             </BaseButton>
           </div>
         </section>
