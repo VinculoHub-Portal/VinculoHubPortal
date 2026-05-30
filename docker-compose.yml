@@ -36,7 +36,8 @@ services:
     image: flyway/flyway:9
     container_name: flyway
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - ./backend/src/main/resources/db/migration:/flyway/sql:ro
     command: >
