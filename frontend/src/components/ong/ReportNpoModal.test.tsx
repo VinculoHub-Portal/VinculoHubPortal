@@ -38,7 +38,7 @@ describe("ReportNpoModal", () => {
 
     expect(screen.getByRole("dialog", { name: "Denunciar ONG" })).toBeInTheDocument();
     expect(screen.getByLabelText(/Motivo da suspeita/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Cancelar" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Limpar Campos" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Enviar denúncia" })).toBeInTheDocument();
   });
 

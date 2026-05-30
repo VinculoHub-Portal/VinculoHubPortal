@@ -101,6 +101,7 @@ export function ReportNpoModal({
       onClose={isSubmitting ? undefined : handleClose}
       fullWidth
       maxWidth="sm"
+      aria-labelledby="report-npo-dialog-title"
       PaperProps={{
         sx: {
           borderRadius: "10px",
@@ -150,6 +151,7 @@ export function ReportNpoModal({
             </Box>
 
             <Typography
+              id="report-npo-dialog-title"
               sx={{
                 fontSize: 18,
                 fontWeight: 500,
@@ -222,6 +224,7 @@ export function ReportNpoModal({
             }
             inputProps={{
               maxLength: MAX_REASON_LENGTH,
+              "aria-label": "Motivo da suspeita",
             }}
             sx={{
               "& .MuiOutlinedInput-root": {
