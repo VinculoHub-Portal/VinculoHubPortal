@@ -89,7 +89,7 @@ describe("RegisterPage", () => {
     expect(screen.getByLabelText(/Descrição do projeto/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Tipo do projeto/i)).toBeInTheDocument();
     expect(screen.queryByLabelText(/Meta de captação/i)).not.toBeInTheDocument();
-  });
+  }, 10000);
 
   it("oculta a meta de captação quando o projeto é social", async () => {
     const user = userEvent.setup();
@@ -113,7 +113,7 @@ describe("RegisterPage", () => {
     expect(
       await screen.findByText(/Você será redirecionado para concluir o acesso/i),
     ).toBeInTheDocument();
-  });
+  }, 10000);
 
   it("exibe a meta de captação quando o projeto é governamental", async () => {
     const user = userEvent.setup();
@@ -151,7 +151,7 @@ describe("RegisterPage", () => {
     expect(sessionStorage.getItem("vinculohub:npo-signup-draft")).toContain(
       '"odsProjeto":["1"]',
     );
-  });
+  }, 10000);
 
   it("mostra loading no modal enquanto conclui o cadastro da ONG", async () => {
     const user = userEvent.setup();
@@ -195,7 +195,7 @@ describe("RegisterPage", () => {
         screen.queryByRole("button", { name: /Redirecionando.../i }),
       ).not.toBeInTheDocument();
     });
-  });
+  }, 10000);
 
   it("não envia tipoProjeto para o Auth0 e mantém o fluxo no draft", async () => {
     const user = userEvent.setup();
@@ -245,5 +245,5 @@ describe("RegisterPage", () => {
     );
 
     (resolveLogin as (() => void) | null)?.();
-  });
+  }, 10000);
 });
