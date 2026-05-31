@@ -39,10 +39,10 @@ interface UseOngDashboardResult {
   refetch: () => Promise<void>
 }
 
-const PROJECT_TYPE_DISPLAY: Record<
+const PROJECT_TYPE_DISPLAY: Partial<Record<
   ProjectType,
   { label: string; barClassName: string; trackClassName: string; iconClassName: string }
-> = {
+>> = {
   TAX_INCENTIVE_LAW: {
     label: "Leis de Incentivo",
     barClassName: "bg-vinculo-dark",
@@ -80,6 +80,11 @@ const PROJECT_TYPE_DISPLAY: Record<
     iconClassName: "bg-emerald-500",
   },
 }
+
+const DASHBOARD_PROJECT_TYPES: ProjectType[] = [
+  "TAX_INCENTIVE_LAW",
+  "SOCIAL_INVESTMENT_LAW",
+]
 
 const FALLBACK_TYPE_DISPLAY = {
   label: "Outros",
@@ -186,14 +191,15 @@ function mapProjectToDashboardProject(project: ProjectListItem): OngDashboardPro
 }
 
 function buildTypeMetrics(projects: ProjectListItem[]): OngProjectTypeMetric[] {
-  const total = projects.length
+  const dashboardProjects = projects.filter(
+    (project) => project.type && DASHBOARD_PROJECT_TYPES.includes(project.type),
+  )
+  const total = dashboardProjects.length
   if (total === 0) return []
 
-  const counts = projects.reduce<Map<string, { count: number; display: typeof FALLBACK_TYPE_DISPLAY }>>(
+  const counts = dashboardProjects.reduce<Map<string, { count: number; display: typeof FALLBACK_TYPE_DISPLAY }>>(
     (acc, project) => {
-      const display = project.type
-        ? PROJECT_TYPE_DISPLAY[project.type] ?? FALLBACK_TYPE_DISPLAY
-        : FALLBACK_TYPE_DISPLAY
+      const display = PROJECT_TYPE_DISPLAY[project.type!] ?? FALLBACK_TYPE_DISPLAY
       const current = acc.get(display.label) ?? { count: 0, display }
       acc.set(display.label, { ...current, count: current.count + 1 })
       return acc
