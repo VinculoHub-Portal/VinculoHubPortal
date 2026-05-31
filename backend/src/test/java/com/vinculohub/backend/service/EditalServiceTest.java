@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -39,7 +40,8 @@ class EditalServiceTest {
         when(file.getContentType()).thenReturn("application/pdf");
         when(file.getOriginalFilename()).thenReturn("edital.pdf");
 
-        EditalRequestDTO dto = new EditalRequestDTO("Edital 2026", "Descrição do edital", null);
+        EditalRequestDTO dto =
+                new EditalRequestDTO("Edital 2026", "Descrição do edital", null, null);
 
         when(s3Uploader.uploadFile(any(MultipartFile.class), eq("editais")))
                 .thenReturn("https://bucket.s3.amazonaws.com/editais/edital.pdf");
@@ -76,7 +78,7 @@ class EditalServiceTest {
         MultipartFile file = mock(MultipartFile.class);
         when(file.getSize()).thenReturn(11 * 1024 * 1024L);
 
-        EditalRequestDTO dto = new EditalRequestDTO("Edital", null, null);
+        EditalRequestDTO dto = new EditalRequestDTO("Edital", null, null, null);
 
         assertThrows(FileSizeValidationException.class, () -> editalService.create(file, dto));
 
@@ -89,7 +91,7 @@ class EditalServiceTest {
         when(file.getSize()).thenReturn(1024L);
         when(file.getContentType()).thenReturn("image/png");
 
-        EditalRequestDTO dto = new EditalRequestDTO("Edital", null, null);
+        EditalRequestDTO dto = new EditalRequestDTO("Edital", null, null, null);
 
         assertThrows(FileFormatValidationException.class, () -> editalService.create(file, dto));
 
@@ -105,7 +107,7 @@ class EditalServiceTest {
                         "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
         when(file.getOriginalFilename()).thenReturn("edital.docx");
 
-        EditalRequestDTO dto = new EditalRequestDTO("Edital", null, null);
+        EditalRequestDTO dto = new EditalRequestDTO("Edital", null, null, null);
 
         when(s3Uploader.uploadFile(any(MultipartFile.class), any())).thenReturn("https://url");
         when(editalRepository.save(any(Edital.class))).thenReturn(buildEdital(1L, "Edital"));
@@ -119,7 +121,7 @@ class EditalServiceTest {
         when(file.getSize()).thenReturn(1024L);
         when(file.getContentType()).thenReturn("application/pdf");
 
-        EditalRequestDTO dto = new EditalRequestDTO("Edital", null, null);
+        EditalRequestDTO dto = new EditalRequestDTO("Edital", null, null, null);
 
         when(s3Uploader.uploadFile(any(), any())).thenThrow(IOException.class);
 
@@ -148,7 +150,7 @@ class EditalServiceTest {
         when(file.getSize()).thenReturn(1024L);
         when(file.getContentType()).thenReturn("image/jpeg");
 
-        EditalRequestDTO dto = new EditalRequestDTO("Edital", null, null);
+        EditalRequestDTO dto = new EditalRequestDTO("Edital", null, null, null);
 
         assertThrows(FileFormatValidationException.class, () -> editalService.create(file, dto));
     }
@@ -160,7 +162,7 @@ class EditalServiceTest {
         when(file.getContentType()).thenReturn("application/pdf");
         when(file.getOriginalFilename()).thenReturn("edital.pdf");
 
-        EditalRequestDTO dto = new EditalRequestDTO("Edital", null, null);
+        EditalRequestDTO dto = new EditalRequestDTO("Edital", null, null, null);
 
         when(s3Uploader.uploadFile(any(MultipartFile.class), any())).thenReturn("https://url");
         when(editalRepository.save(any(Edital.class))).thenReturn(buildEdital(1L, "Edital"));
@@ -176,6 +178,33 @@ class EditalServiceTest {
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void shouldPersistExpiredAtWhenProvided() throws Exception {
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.getSize()).thenReturn(1024L);
+        when(file.getContentType()).thenReturn("application/pdf");
+        when(file.getOriginalFilename()).thenReturn("edital.pdf");
+
+        LocalDateTime expiredAt = LocalDateTime.of(2026, 12, 31, 23, 59);
+        EditalRequestDTO dto =
+                new EditalRequestDTO("Edital com Prazo", "Descrição", null, expiredAt);
+
+        when(s3Uploader.uploadFile(any(MultipartFile.class), eq("editais")))
+                .thenReturn("https://bucket.s3.amazonaws.com/editais/edital.pdf");
+
+        Edital saved = buildEdital(1L, "Edital com Prazo");
+        saved.setExpiredAt(expiredAt);
+        when(editalRepository.save(any(Edital.class))).thenReturn(saved);
+
+        ArgumentCaptor<Edital> captor = ArgumentCaptor.forClass(Edital.class);
+
+        EditalResponseDTO result = editalService.create(file, dto);
+
+        verify(editalRepository).save(captor.capture());
+        assertEquals(expiredAt, captor.getValue().getExpiredAt());
+        assertEquals(expiredAt, result.expiredAt());
     }
 
     private Edital buildEdital(Long id, String title) {
