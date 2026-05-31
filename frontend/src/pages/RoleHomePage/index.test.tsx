@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
 import { beforeEach, describe, expect, it, vi } from "vitest"
@@ -7,6 +7,8 @@ import { formatCurrencyValue } from "../../utils/formatCurrency"
 
 const mocks = vi.hoisted(() => ({
   getAccessTokenSilentlyMock: vi.fn(),
+  fetchAuthenticatedProfileMock: vi.fn(),
+  fetchProjectsMock: vi.fn(),
   fetchOdsCatalogMock: vi.fn(),
   createProjectMock: vi.fn(),
   showToastMock: vi.fn(),
@@ -15,6 +17,8 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@auth0/auth0-react", () => ({
   useAuth0: () => ({
     getAccessTokenSilently: mocks.getAccessTokenSilentlyMock,
+    isAuthenticated: true,
+    isLoading: false,
   }),
 }))
 
@@ -27,8 +31,60 @@ vi.mock("../../api/ods", () => ({
 }))
 
 vi.mock("../../api/projects", () => ({
+  fetchProjects: mocks.fetchProjectsMock,
   createProject: mocks.createProjectMock,
 }))
+
+vi.mock("../../api/me", () => ({
+  fetchAuthenticatedProfile: mocks.fetchAuthenticatedProfileMock,
+}))
+
+const dashboardProjectsPage = {
+  content: [
+    {
+      id: 1,
+      title: "Projeto Ativo",
+      status: "ACTIVE",
+      type: "TAX_INCENTIVE_LAW",
+      npoId: 42,
+      npoName: "ONG Teste",
+      npoPhone: "51999",
+      startDate: "2026-01-01",
+      budgetNeeded: 1000,
+      investedAmount: 750,
+    },
+    {
+      id: 2,
+      title: "Projeto Concluído",
+      status: "COMPLETED",
+      type: "SOCIAL_INVESTMENT_LAW",
+      npoId: 42,
+      npoName: "ONG Teste",
+      npoPhone: "51999",
+      startDate: "2026-01-01",
+      budgetNeeded: 1000,
+      investedAmount: 1000,
+    },
+    {
+      id: 3,
+      title: "Projeto Cancelado",
+      status: "CANCELLED",
+      type: "GOVERNMENTAL",
+      npoId: 42,
+      npoName: "ONG Teste",
+      npoPhone: "51999",
+      startDate: "2026-01-01",
+      budgetNeeded: 1000,
+      investedAmount: 250,
+    },
+  ],
+  totalElements: 3,
+  totalPages: 1,
+  number: 0,
+  size: 50,
+  first: true,
+  last: true,
+}
 
 function renderOngDashboard() {
   return render(
@@ -54,30 +110,43 @@ describe("RoleHomePage - dashboard da ONG", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.getAccessTokenSilentlyMock.mockResolvedValue("token")
+    mocks.fetchAuthenticatedProfileMock.mockResolvedValue({ npoId: 42 })
+    mocks.fetchProjectsMock.mockResolvedValue(dashboardProjectsPage)
     mocks.fetchOdsCatalogMock.mockResolvedValue([
       { id: 1, name: "ODS 1", description: "Erradicação da pobreza" },
     ])
     mocks.createProjectMock.mockResolvedValue({ id: 1 })
   })
 
-  it("renderiza o mock do dashboard da ONG", () => {
+  it("renderiza o dashboard da ONG com projetos reais", async () => {
     renderOngDashboard()
 
     expect(screen.getByText("Dashboard da ONG")).toBeInTheDocument()
     expect(screen.getByText("Projetos por Tipo")).toBeInTheDocument()
     expect(screen.getByText("Status dos Projetos")).toBeInTheDocument()
-    expect(screen.getByText("Educação Transformadora")).toBeInTheDocument()
+    expect(await screen.findByText("Projeto Ativo")).toBeInTheDocument()
+    expect(screen.getByText("Projeto Concluído")).toBeInTheDocument()
+    expect(screen.getAllByText("Leis de Incentivo").length).toBeGreaterThan(0)
+    expect(screen.getAllByText("Investimento Social Privado").length).toBeGreaterThan(0)
     expect(screen.getByText("Novas Oportunidades de Financiamento Disponíveis")).toBeInTheDocument()
+    expect(mocks.fetchAuthenticatedProfileMock).toHaveBeenCalledWith("token")
+    expect(mocks.fetchProjectsMock).toHaveBeenCalledWith(
+      { npoId: 42, size: 50 },
+      "token",
+    )
   })
 
-  it("filtra projetos por status", async () => {
+  it("filtra projetos pelos status reais da aplicação", async () => {
     renderOngDashboard()
 
-    await userEvent.click(screen.getByRole("button", { name: "Em Captação" }))
+    expect(await screen.findByText("Projeto Ativo")).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Em Captação" })).not.toBeInTheDocument()
 
-    expect(screen.getByText("Saúde Comunitária")).toBeInTheDocument()
-    expect(screen.queryByText("Educação Transformadora")).not.toBeInTheDocument()
-    expect(screen.queryByText("Cultura para Todos")).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole("button", { name: "Concluídos" }))
+
+    expect(screen.getByText("Projeto Concluído")).toBeInTheDocument()
+    expect(screen.queryByText("Projeto Ativo")).not.toBeInTheDocument()
+    expect(screen.queryByText("Projeto Cancelado")).not.toBeInTheDocument()
   })
 
   it("navega para meus projetos pelo link de todos os projetos", async () => {
@@ -105,6 +174,8 @@ describe("CreateProjectModal - cadastro de novo projeto", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.getAccessTokenSilentlyMock.mockResolvedValue("fake-token")
+    mocks.fetchAuthenticatedProfileMock.mockResolvedValue({ npoId: 42 })
+    mocks.fetchProjectsMock.mockResolvedValue(dashboardProjectsPage)
     mocks.fetchOdsCatalogMock.mockResolvedValue([
       { id: 1, name: "ODS 1", description: "Erradicação da pobreza" },
       { id: 2, name: "ODS 2", description: "Fome Zero" },
@@ -114,6 +185,7 @@ describe("CreateProjectModal - cadastro de novo projeto", () => {
 
   async function openModal() {
     renderOngDashboard()
+    await waitFor(() => expect(mocks.fetchOdsCatalogMock).toHaveBeenCalled())
     await userEvent.click(screen.getByRole("button", { name: /Novo Projeto/i }))
   }
 

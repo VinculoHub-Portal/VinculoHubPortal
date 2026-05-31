@@ -1,6 +1,7 @@
 /* (C)2026 */
 package com.vinculohub.backend.controller;
 
+import com.vinculohub.backend.dto.DocumentDownloadResponseDTO;
 import com.vinculohub.backend.dto.DocumentRequestDTO;
 import com.vinculohub.backend.dto.DocumentResponseDTO;
 import com.vinculohub.backend.service.DocumentService;
@@ -40,6 +41,16 @@ public class DocumentController {
         Page<DocumentResponseDTO> documents =
                 documentService.findAllByAuthenticatedNpo(jwt.getSubject(), pageable);
         return ResponseEntity.ok(documents);
+    }
+
+    @GetMapping("/my-ong/{documentId}/download")
+    @PreAuthorize("hasRole('NPO')")
+    public ResponseEntity<DocumentDownloadResponseDTO> downloadAuthenticatedNpoDocument(
+            @AuthenticationPrincipal Jwt jwt, @PathVariable Integer documentId) {
+        DocumentDownloadResponseDTO response =
+                documentService.generateDownloadUrlForAuthenticatedNpo(
+                        jwt.getSubject(), documentId);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping

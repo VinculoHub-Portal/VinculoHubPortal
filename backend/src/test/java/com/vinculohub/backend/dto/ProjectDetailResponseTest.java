@@ -25,6 +25,7 @@ class ProjectDetailResponseTest {
 
         Npo npo =
                 Npo.builder()
+                        .id(7)
                         .name("ONG Esperança")
                         .logoUrl("http://logo.com/img.png")
                         .description("Descrição da ONG")
@@ -47,6 +48,7 @@ class ProjectDetailResponseTest {
         ProjectDetailResponse response = ProjectDetailResponse.from(project, odsList);
 
         assertNotNull(response.responsibleInstitution());
+        assertEquals(Integer.valueOf(7), response.responsibleInstitution().npoId());
         assertEquals("ONG Esperança", response.responsibleInstitution().name());
         assertEquals("http://logo.com/img.png", response.responsibleInstitution().logoUrl());
         assertEquals("São Paulo", response.responsibleInstitution().city());
