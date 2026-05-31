@@ -6,6 +6,7 @@ import { useNpoProfile } from "../../hooks/useNpoProfile"
 import type { NpoAddressData, NpoContactData, NpoInstitutionalData, NpoProfileUpdateRequest, NpoResponsibleData } from "../../api/npo"
 import { OrganizationInfoCard } from "./OrganizationInfoCard"
 import { ProfileHeaderCard } from "./ProfileHeaderCard"
+import { PrivateDocumentsCard } from "./PrivateDocumentsCard"
 import { PublicProfileCard } from "./PublicProfileCard"
 import { ResponsibleCard } from "./ResponsibleCard"
 
@@ -193,7 +194,10 @@ export function OngProfilePage() {
         )}
 
         {editable && (
-          <PublicProfileCard id={profile.institutionalData.id} />
+          <>
+            <PrivateDocumentsCard />
+            <PublicProfileCard id={profile.institutionalData.id} />
+          </>
         )}
       </main>
     </div>

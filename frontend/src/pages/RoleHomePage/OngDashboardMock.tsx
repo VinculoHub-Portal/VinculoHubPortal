@@ -74,7 +74,7 @@ export function OngDashboardMock({
         token,
       )
 
-      showToast("Documento enviado com sucesso!")
+      showToast("Documento enviado com sucesso!", "success")
       setIsUploadModalOpen(false)
     } catch (error) {
       console.error("Upload Error:", error)
