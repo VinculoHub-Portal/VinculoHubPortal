@@ -34,7 +34,7 @@ export const mockOngProjects: OngProject[] = [
   },
   {
     id: 2,
-    status: "Em captação",
+    status: "Ativo",
     fundingModel: "directCapture",
     amountNeeded: 200000,
     title: "Saúde Comunitária",
