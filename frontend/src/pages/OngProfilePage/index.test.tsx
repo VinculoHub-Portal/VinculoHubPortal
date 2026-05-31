@@ -8,6 +8,9 @@ import type { NpoProfileResponse } from "../../api/npo"
 const mocks = vi.hoisted(() => ({
   useNpoProfile: vi.fn(),
   save: vi.fn(),
+  getAccessTokenSilently: vi.fn(),
+  fetchMyOngDocuments: vi.fn(),
+  getMyOngDocumentDownloadUrl: vi.fn(),
 }))
 
 vi.mock("../../hooks/useNpoProfile", () => ({
@@ -16,12 +19,17 @@ vi.mock("../../hooks/useNpoProfile", () => ({
 
 vi.mock("@auth0/auth0-react", () => ({
   useAuth0: () => ({
-    getAccessTokenSilently: vi.fn(),
+    getAccessTokenSilently: mocks.getAccessTokenSilently,
     isAuthenticated: true,
     loginWithRedirect: vi.fn(),
     logout: vi.fn(),
     user: { "https://vinculohub/roles": ["NPO"] },
   }),
+}))
+
+vi.mock("../../api/document", () => ({
+  fetchMyOngDocuments: mocks.fetchMyOngDocuments,
+  getMyOngDocumentDownloadUrl: mocks.getMyOngDocumentDownloadUrl,
 }))
 
 const ownerProfile: NpoProfileResponse = {
@@ -62,7 +70,36 @@ const ownerProfile: NpoProfileResponse = {
 }
 
 beforeEach(() => {
+  vi.clearAllMocks()
   mocks.save.mockResolvedValue(undefined)
+  mocks.getAccessTokenSilently.mockResolvedValue("fake-token")
+  mocks.fetchMyOngDocuments.mockResolvedValue({
+    content: [
+      {
+        id: 10,
+        npoId: 1,
+        title: "Backlog do Produto - VinculoHub Portal",
+        description: "Documento para teste",
+        fileUrl: "https://bucket/doc.pdf",
+        fileName: "backlog.pdf",
+        fileSize: 176742,
+        mimeType: "application/pdf",
+        createdAt: "2026-05-13T20:20:24",
+        updatedAt: "2026-05-13T20:20:24",
+        deletedAt: null,
+      },
+    ],
+    totalElements: 1,
+    totalPages: 1,
+    number: 0,
+    size: 20,
+  })
+  mocks.getMyOngDocumentDownloadUrl.mockResolvedValue({
+    downloadUrl: "https://signed-url.test/document.pdf",
+    fileName: "backlog.pdf",
+    mimeType: "application/pdf",
+    expiresAt: "2026-05-30T22:11:05Z",
+  })
   mocks.useNpoProfile.mockReturnValue({
     profile: ownerProfile,
     loading: false,
@@ -73,6 +110,7 @@ beforeEach(() => {
   Object.assign(navigator, {
     clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
   })
+  vi.spyOn(window, "open").mockImplementation(() => null)
 })
 
 function renderPage() {
@@ -136,6 +174,31 @@ describe("OngProfilePage — viewerContext OWNER", () => {
   it("exibe card de perfil público para OWNER", () => {
     renderPage()
     expect(screen.getByLabelText("Link do perfil público")).toBeInTheDocument()
+  })
+
+  it("lista documentos privados para OWNER", async () => {
+    renderPage()
+
+    expect(await screen.findByText("Documentos privados")).toBeInTheDocument()
+    expect(screen.getByText("Backlog do Produto - VinculoHub Portal")).toBeInTheDocument()
+    expect(screen.getByText("backlog.pdf")).toBeInTheDocument()
+    expect(mocks.fetchMyOngDocuments).toHaveBeenCalledWith("fake-token")
+  })
+
+  it("gera URL assinada ao baixar documento privado", async () => {
+    renderPage()
+
+    await screen.findByText("Backlog do Produto - VinculoHub Portal")
+    await userEvent.click(screen.getByRole("button", { name: "Baixar" }))
+
+    await waitFor(() => {
+      expect(mocks.getMyOngDocumentDownloadUrl).toHaveBeenCalledWith(10, "fake-token")
+    })
+    expect(window.open).toHaveBeenCalledWith(
+      "https://signed-url.test/document.pdf",
+      "_blank",
+      "noopener,noreferrer",
+    )
   })
 
   it("link público contém o id da ONG", () => {
@@ -220,5 +283,18 @@ describe("OngProfilePage — viewerContext EXTERNAL", () => {
     })
     renderPage()
     expect(screen.queryByLabelText("Link do perfil público")).not.toBeInTheDocument()
+  })
+
+  it("não exibe documentos privados para EXTERNAL", () => {
+    mocks.useNpoProfile.mockReturnValue({
+      profile: { ...ownerProfile, viewerContext: "EXTERNAL" },
+      loading: false,
+      error: null,
+      save: mocks.save,
+      refetch: vi.fn(),
+    })
+    renderPage()
+    expect(screen.queryByText("Documentos privados")).not.toBeInTheDocument()
+    expect(mocks.fetchMyOngDocuments).not.toHaveBeenCalled()
   })
 })

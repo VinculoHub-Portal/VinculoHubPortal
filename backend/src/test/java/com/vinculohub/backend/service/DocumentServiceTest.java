@@ -4,6 +4,7 @@ package com.vinculohub.backend.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.vinculohub.backend.dto.DocumentDownloadResponseDTO;
 import com.vinculohub.backend.dto.DocumentRequestDTO;
 import com.vinculohub.backend.dto.DocumentResponseDTO;
 import com.vinculohub.backend.exception.BadRequestException;
@@ -20,6 +21,7 @@ import com.vinculohub.backend.repository.ProjectRepository;
 import com.vinculohub.backend.repository.UserRepository;
 import com.vinculohub.backend.service.storage.S3Uploader;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -291,5 +293,55 @@ class DocumentServiceTest {
                 () ->
                         documentService.findAllByAuthenticatedNpo(
                                 "auth0|123", PageRequest.of(0, 20)));
+    }
+
+    @Test
+    void shouldGenerateDownloadUrlForAuthenticatedNpoDocument() {
+        User user = new User();
+        user.setId(20);
+
+        Npo npo = new Npo();
+        npo.setId(1);
+
+        Document document = new Document();
+        document.setId(10);
+        document.setNpo(npo);
+        document.setFileUrl("https://bucket.s3.amazonaws.com/npo/1/file.pdf");
+        document.setFileName("file.pdf");
+        document.setMimeType("application/pdf");
+
+        when(userRepository.findByAuth0Id("auth0|123")).thenReturn(Optional.of(user));
+        when(npoRepository.findByUserId(20)).thenReturn(Optional.of(npo));
+        when(documentRepository.findByIdAndNpo_Id(10, 1)).thenReturn(Optional.of(document));
+        when(s3Uploader.generatePresignedDownloadUrl(
+                        eq("https://bucket.s3.amazonaws.com/npo/1/file.pdf"), any(Duration.class)))
+                .thenReturn("https://signed-url");
+
+        DocumentDownloadResponseDTO result =
+                documentService.generateDownloadUrlForAuthenticatedNpo("auth0|123", 10);
+
+        assertEquals("https://signed-url", result.downloadUrl());
+        assertEquals("file.pdf", result.fileName());
+        assertEquals("application/pdf", result.mimeType());
+        assertNotNull(result.expiresAt());
+    }
+
+    @Test
+    void shouldNotGenerateDownloadUrlForDocumentFromAnotherNpo() {
+        User user = new User();
+        user.setId(20);
+
+        Npo npo = new Npo();
+        npo.setId(1);
+
+        when(userRepository.findByAuth0Id("auth0|123")).thenReturn(Optional.of(user));
+        when(npoRepository.findByUserId(20)).thenReturn(Optional.of(npo));
+        when(documentRepository.findByIdAndNpo_Id(10, 1)).thenReturn(Optional.empty());
+
+        assertThrows(
+                NotFoundException.class,
+                () -> documentService.generateDownloadUrlForAuthenticatedNpo("auth0|123", 10));
+
+        verify(s3Uploader, never()).generatePresignedDownloadUrl(anyString(), any());
     }
 }
