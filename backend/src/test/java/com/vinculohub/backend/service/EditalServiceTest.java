@@ -135,7 +135,7 @@ class EditalServiceTest {
         Edital e1 = buildEdital(1L, "Edital A");
         Edital e2 = buildEdital(2L, "Edital B");
 
-        when(editalRepository.findAll()).thenReturn(List.of(e1, e2));
+        when(editalRepository.findAllByOrderByCreatedAtDesc()).thenReturn(List.of(e1, e2));
 
         List<EditalResponseDTO> result = editalService.findAll();
 
@@ -172,7 +172,7 @@ class EditalServiceTest {
 
     @Test
     void shouldReturnEmptyListWhenNoEditaisExist() {
-        when(editalRepository.findAll()).thenReturn(List.of());
+        when(editalRepository.findAllByOrderByCreatedAtDesc()).thenReturn(List.of());
 
         List<EditalResponseDTO> result = editalService.findAll();
 
