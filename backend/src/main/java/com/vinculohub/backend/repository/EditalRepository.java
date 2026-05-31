@@ -15,6 +15,7 @@ public interface EditalRepository extends JpaRepository<Edital, Long> {
     List<Edital> findAllByOrderByCreatedAtDesc();
 
     @Query(
-            "SELECT e FROM Edital e WHERE e.expiredAt IS NULL OR e.expiredAt > :now ORDER BY e.createdAt DESC")
+            "SELECT e FROM Edital e WHERE e.expiredAt IS NULL OR e.expiredAt > :now ORDER BY"
+                    + " e.createdAt DESC")
     List<Edital> findAllActiveOrderByCreatedAtDesc(@Param("now") LocalDateTime now);
 }
