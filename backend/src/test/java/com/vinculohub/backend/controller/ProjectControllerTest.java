@@ -368,7 +368,8 @@ class ProjectControllerTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.fundraisingDeadline").value("6 meses"))
                 .andExpect(jsonPath("$.beneficiariesCount").value(300))
                 .andExpect(jsonPath("$.location").value("Porto Alegre, RS"))
-                .andExpect(jsonPath("$.mainObjective").value("Ampliar acesso à cultura."));
+                .andExpect(jsonPath("$.mainObjective").value("Ampliar acesso à cultura."))
+                .andExpect(jsonPath("$.responsibleInstitution.npoId").value(npo.getId()));
     }
 
     @Test

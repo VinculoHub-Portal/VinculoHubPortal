@@ -1,4 +1,5 @@
 export type ResponsibleInstitution = {
+  npoId?: number | null;
   name: string;
   logoUrl: string | null;
   city: string | null;
