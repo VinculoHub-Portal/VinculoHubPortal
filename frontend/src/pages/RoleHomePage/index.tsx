@@ -29,6 +29,7 @@ export function RoleHomePage({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [odsOptions, setOdsOptions] = useState<OdsCatalogItem[]>([]);
+  const [dashboardRefreshKey, setDashboardRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!showCreateProjectAction) {
@@ -71,6 +72,7 @@ export function RoleHomePage({
       );
       setIsCreateProjectModalOpen(false);
       setModalKey((k) => k + 1);
+      setDashboardRefreshKey((key) => key + 1);
       setSuccessMessage("Projeto cadastrado com sucesso!");
       setTimeout(() => setSuccessMessage(null), 5000);
     } catch {
@@ -86,6 +88,7 @@ export function RoleHomePage({
         <OngDashboardMock
           successMessage={successMessage}
           onCreateProject={openCreateProjectModal}
+          refreshKey={dashboardRefreshKey}
         />
         <CreateProjectModal
           key={modalKey}

@@ -14,12 +14,6 @@ Enum user_type {
   company
 }
 
-Enum project_status {
-  active
-  completed
-  cancelled
-}
-
 Enum relationship_status {
   pending
   active
@@ -27,15 +21,11 @@ Enum relationship_status {
   negotiation
 }
 
-Enum project_type {
-  social_investment_law
-  tax_incentive_law
-}
-
 Table users {
   id integer [primary key, increment]
   name varchar(255)
   email varchar(255) [unique]
+  auth0_id varchar(255) [unique]
   user_type user_type
   created_at timestamp
   updated_at timestamp
@@ -56,9 +46,10 @@ Table address {
   deleted_at timestamp
 }
 
-Table sdg {
+Table ods {
   id integer [primary key, increment]
   name varchar(50)
+  description varchar(255)
 }
 
 Table npo {
@@ -106,28 +97,36 @@ Table company {
 }
 
 Table project {
-  id integer [primary key, increment]
-  npo_id integer [ref: > npo.id]
-  title varchar(255)
-  description varchar(3000)
-  status project_status [default: 'active']
+  id bigint [primary key, increment]
+  npo_id integer [not null, ref: > npo.id]
+  title varchar(255) [not null]
+  description varchar(1000) [not null]
+  status varchar(20) [not null, default: 'ACTIVE', note: 'Values: ACTIVE, COMPLETED, CANCELLED']
+  project_type varchar(30) [note: 'Values: social_investment_law, tax_incentive_law']
   budget_needed decimal(15,2)
   invested_amount decimal(15,2)
   start_date date
   end_date date
+  focus_area varchar(50)
+  fundraising_deadline varchar(50)
+  beneficiaries_count integer
+  location varchar(255)
+  main_objective varchar(600)
   created_at timestamp
   updated_at timestamp
   deleted_at timestamp
 
   indexes {
     npo_id
+    deleted_at
+    status
   }
 }
 
 Table document {
   id integer [primary key, increment]
   npo_id integer [ref: > npo.id]
-  project_id integer [ref: > project.id]
+  project_id bigint [ref: > project.id]
   title varchar(255)
   description varchar(500)
   file_url varchar(500)
@@ -145,35 +144,65 @@ Table document {
 }
 
 Table edital {
-  id integer [primary key, increment]
-  title varchar(255)
+  id bigint [primary key, increment]
+  title varchar(255) [not null]
   description varchar(500)
-  file_url varchar(500)
-  file_name varchar(255)
-  file_size integer
-  mime_type varchar(100)
+  file_url varchar(500) [not null]
+  file_name varchar(255) [not null]
+  file_size bigint [not null]
+  mime_type varchar(100) [not null]
   expired_at timestamp
   created_at timestamp
   updated_at timestamp
   deleted_at timestamp
 }
 
-Table project_sdg {
-  project_id integer [ref: > project.id]
-  sdg_id integer [ref: > sdg.id]
+Table project_ods {
+  project_id bigint [ref: > project.id]
+  ods_id integer [ref: > ods.id]
+
   indexes {
-    (project_id, sdg_id) [pk]
+    (project_id, ods_id) [pk]
+  }
+}
+
+Table edital_ods {
+  edital_id bigint [ref: > edital.id]
+  ods_id integer [ref: > ods.id]
+
+  indexes {
+    (edital_id, ods_id) [pk]
   }
 }
 
 Table company_project {
   company_id integer [ref: > company.id]
-  project_id integer [ref: > project.id]
+  project_id bigint [ref: > project.id]
   status relationship_status [default: 'pending']
   created_at timestamp
   updated_at timestamp
   deleted_at timestamp
+
   indexes {
     (company_id, project_id) [pk]
+  }
+}
+
+Table npo_report {
+  id integer [primary key, increment]
+  npo_id integer [ref: > npo.id]
+  reporter_company_id integer [ref: > company.id]
+  reporter_user_id integer [ref: > users.id]
+  reason varchar(1000)
+  status varchar(20)
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+
+  indexes {
+    npo_id
+    reporter_company_id
+    status
+    created_at
   }
 }
