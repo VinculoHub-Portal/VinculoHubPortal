@@ -2,7 +2,9 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft"
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline"
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined"
 import { useAuth0 } from "@auth0/auth0-react"
+import { useState } from "react"
 import { Link } from "react-router-dom"
+import { CreateNoticeModal } from "../../announcement/CreateAnnouncementModal"
 import { EditalCard } from "../../components/editais/EditalCard"
 import { BaseButton } from "../../components/general/BaseButton"
 import { Header } from "../../components/general/Header"
@@ -21,9 +23,10 @@ function useIsAdmin(): boolean {
 
 export function EditaisMuralPage() {
   const { user } = useAuth0()
-  const { editais, loading, error } = useEditais()
   const isAdmin = useIsAdmin()
+  const { editais, loading, error, refetch } = useEditais(!isAdmin)
   const dashboardPath = resolveDashboardPath(user)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   return (
     <div className="min-h-screen bg-surface flex flex-col gap-10 pb-20">
@@ -41,10 +44,12 @@ export function EditaisMuralPage() {
         <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold leading-tight text-vinculo-dark sm:text-3xl">
-              Cadastro e Publicação de Editais
+              {isAdmin ? "Cadastro e Publicação de Editais" : "Mural de Editais"}
             </h1>
             <p className="mt-2 max-w-2xl text-base leading-6 text-slate-600">
-              Gerencie o mural de oportunidades de financiamento para as ONGs
+              {isAdmin
+                ? "Gerencie o mural de oportunidades de financiamento para as ONGs"
+                : "Oportunidades de financiamento disponíveis para sua organização"}
             </p>
           </div>
           {isAdmin ? (
@@ -52,6 +57,7 @@ export function EditaisMuralPage() {
               type="button"
               variant="secondary"
               className="shrink-0 shadow-sm"
+              onClick={() => setIsModalOpen(true)}
             >
               + Novo Edital
             </BaseButton>
@@ -66,7 +72,7 @@ export function EditaisMuralPage() {
             id="editais-publicados-heading"
             className="mb-6 text-lg font-semibold text-vinculo-dark"
           >
-            Editais Publicados ({loading ? "…" : editais.length})
+            {isAdmin ? "Editais Publicados" : "Editais Disponíveis"} ({loading ? "…" : editais.length})
           </h2>
 
           {loading ? (
@@ -118,6 +124,14 @@ export function EditaisMuralPage() {
           ) : null}
         </section>
       </main>
+
+      {isAdmin ? (
+        <CreateNoticeModal
+          open={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSuccess={refetch}
+        />
+      ) : null}
     </div>
   )
 }

@@ -33,7 +33,7 @@ const dashboardMetrics = [
     description: "Ativos no mural",
     icon: <DescriptionOutlinedIcon fontSize="small" />,
     variant: "success" as const,
-    href: "/admin/editais",
+    href: "/editais",
   },
   {
     label: "Vínculos Ativos",

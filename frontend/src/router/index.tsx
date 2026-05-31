@@ -89,7 +89,7 @@ export const AppRouter = () => (
       <Route
         path="/editais"
         element={
-          <ProtectedRoute requiredRole="ADMIN">
+          <ProtectedRoute requiredRoles={["ADMIN", "NPO"]}>
             <EditaisMuralPage />
           </ProtectedRoute>
         }

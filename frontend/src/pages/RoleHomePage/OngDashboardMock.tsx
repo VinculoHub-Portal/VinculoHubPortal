@@ -389,6 +389,7 @@ function DashboardCardState({
 }
 
 function FundingOpportunitiesBanner() {
+  const navigate = useNavigate()
   return (
     <section className="rounded-lg bg-linear-to-r from-vinculo-dark to-blue-600 p-6 text-white shadow-sm sm:p-8">
       <div className="flex flex-col gap-5 md:flex-row md:items-start">
@@ -406,6 +407,7 @@ function FundingOpportunitiesBanner() {
             <BaseButton
               variant="primary"
               className="min-h-12 bg-white! px-6 text-vinculo-dark! hover:bg-slate-100"
+              onClick={() => navigate('/editais')}
             >
               <DescriptionOutlinedIcon fontSize="small" />
               Acessar Mural de Editais
