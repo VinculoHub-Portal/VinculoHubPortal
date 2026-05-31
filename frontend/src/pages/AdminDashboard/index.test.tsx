@@ -1,12 +1,71 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AdminDashboard } from "./index";
+
+const mocks = vi.hoisted(() => ({
+  getAccessTokenSilentlyMock: vi.fn(),
+  fetchAdminNpoReportsMock: vi.fn(),
+  updateAdminNpoReportStatusMock: vi.fn(),
+}));
+
+vi.mock("@auth0/auth0-react", () => ({
+  useAuth0: () => ({
+    getAccessTokenSilently: mocks.getAccessTokenSilentlyMock,
+  }),
+}));
+
+vi.mock("../../api/npoReports", () => ({
+  fetchAdminNpoReports: mocks.fetchAdminNpoReportsMock,
+  updateAdminNpoReportStatus: mocks.updateAdminNpoReportStatusMock,
+}));
 
 vi.mock("../../components/general/Header", () => ({
   Header: () => <header data-testid="header" />,
 }));
 
 describe("AdminDashboard", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getAccessTokenSilentlyMock.mockResolvedValue("token");
+    mocks.updateAdminNpoReportStatusMock.mockResolvedValue({
+      id: 1,
+      npo: { id: 10, name: "ONG Reportada" },
+      reporterCompany: {
+        id: 20,
+        name: "Empresa Denunciante",
+        cnpj: "12345678000199",
+      },
+      reporterUser: {
+        id: 30,
+        name: "Pessoa Empresa",
+        email: "empresa@example.com",
+      },
+      reason: "Documentos inconsistentes apresentados no perfil.",
+      status: "RESOLVED",
+      createdAt: "2026-05-29T12:00:00",
+    });
+    mocks.fetchAdminNpoReportsMock.mockResolvedValue([
+      {
+        id: 1,
+        npo: { id: 10, name: "ONG Reportada" },
+        reporterCompany: {
+          id: 20,
+          name: "Empresa Denunciante",
+          cnpj: "12345678000199",
+        },
+        reporterUser: {
+          id: 30,
+          name: "Pessoa Empresa",
+          email: "empresa@example.com",
+        },
+        reason: "Documentos inconsistentes apresentados no perfil.",
+        status: "OPEN",
+        createdAt: "2026-05-29T12:00:00",
+      },
+    ]);
+  });
+
   it("renderiza o cabeçalho e o título da página", () => {
     render(<AdminDashboard />);
 
@@ -50,6 +109,74 @@ describe("AdminDashboard", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Mediações" }),
+    ).toBeInTheDocument();
+  });
+
+  it("renderiza as denúncias carregadas para o administrador", async () => {
+    render(<AdminDashboard />);
+
+    expect(screen.getByText("Denúncias de ONGs")).toBeInTheDocument();
+    expect(await screen.findByText("ONG Reportada")).toBeInTheDocument();
+    expect(screen.getByText("Empresa Denunciante")).toBeInTheDocument();
+    expect(screen.getByText("empresa@example.com")).toBeInTheDocument();
+    expect(
+      screen.getByText("Documentos inconsistentes apresentados no perfil."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Alterar status da denúncia 1" })).toHaveValue(
+      "OPEN",
+    );
+    expect(mocks.fetchAdminNpoReportsMock).toHaveBeenCalledWith("token");
+  });
+
+  it("atualiza o status de uma denúncia", async () => {
+    const user = userEvent.setup();
+    render(<AdminDashboard />);
+
+    const select = await screen.findByRole("combobox", {
+      name: "Alterar status da denúncia 1",
+    });
+    await user.selectOptions(select, "RESOLVED");
+
+    expect(mocks.updateAdminNpoReportStatusMock).toHaveBeenCalledWith(
+      1,
+      { status: "RESOLVED" },
+      "token",
+    );
+    expect(await screen.findByRole("combobox", { name: "Alterar status da denúncia 1" }))
+      .toHaveValue("RESOLVED");
+  });
+
+  it("mostra erro quando a atualização de status falha", async () => {
+    const user = userEvent.setup();
+    mocks.updateAdminNpoReportStatusMock.mockRejectedValue(new Error("Falha"));
+
+    render(<AdminDashboard />);
+
+    const select = await screen.findByRole("combobox", {
+      name: "Alterar status da denúncia 1",
+    });
+    await user.selectOptions(select, "DISMISSED");
+
+    expect(
+      await screen.findByText("Não foi possível atualizar o status da denúncia."),
+    ).toBeInTheDocument();
+  });
+
+  it("renderiza estado vazio quando não há denúncias", async () => {
+    mocks.fetchAdminNpoReportsMock.mockResolvedValue([]);
+
+    render(<AdminDashboard />);
+
+    expect(await screen.findByText("Nenhuma denúncia pendente.")).toBeInTheDocument();
+  });
+
+  it("renderiza erro quando não consegue carregar denúncias", async () => {
+    mocks.fetchAdminNpoReportsMock.mockRejectedValue(new Error("Falha"));
+
+    render(<AdminDashboard />);
+
+    expect(
+      await screen.findByText("Não foi possível carregar as denúncias."),
     ).toBeInTheDocument();
   });
 });

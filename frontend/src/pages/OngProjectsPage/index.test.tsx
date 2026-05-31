@@ -1,8 +1,9 @@
-import { render, screen } from "@testing-library/react"
+import { render, screen, waitFor } from "@testing-library/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import userEvent from "@testing-library/user-event"
+import axios from "axios"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { OngProjectsPage } from "."
 import { ProjectDetailsPage } from "../ProjectDetailsPage"
 import type { ProjectDetails } from "../ProjectDetailsPage/projectDetails.types"
@@ -12,6 +13,8 @@ const mocks = vi.hoisted(() => ({
   fetchProjectDetailsMock: vi.fn(),
   getAccessTokenSilentlyMock: vi.fn(),
   useOngProjectsMock: vi.fn(),
+  deleteProjectMock: vi.fn(),
+  showToastMock: vi.fn(),
 }))
 
 vi.mock("@auth0/auth0-react", () => ({
@@ -34,6 +37,14 @@ vi.mock("./useOngProjects", () => ({
   useOngProjects: mocks.useOngProjectsMock,
 }))
 
+vi.mock("../../api/projects", () => ({
+  deleteProject: mocks.deleteProjectMock,
+}))
+
+vi.mock("../../context/ToastContext", () => ({
+  useToast: () => ({ showToast: mocks.showToastMock }),
+}))
+
 const mockProjectDetails: ProjectDetails = {
   id: "1",
   fundingType: "Lei de Incentivo",
@@ -43,7 +54,10 @@ const mockProjectDetails: ProjectDetails = {
     "Programa de reforço escolar e formação profissionalizante para jovens em situação de vulnerabilidade social.",
   sdgLabels: ["Educação de Qualidade", "Redução das Desigualdades"],
   progressPercent: 75,
+  responsibleInstitution: null,
 }
+
+const mockRefetch = vi.fn()
 
 function renderPage() {
   const queryClient = new QueryClient({
@@ -61,6 +75,10 @@ function renderPage() {
           <Route path="/ong/projetos" element={<OngProjectsPage />} />
           <Route path="/ong/dashboard" element={<p>Dashboard da ONG</p>} />
           <Route path="/projeto/:projectId" element={<ProjectDetailsPage />} />
+          <Route
+            path="/ong/projetos/:projectId/editar"
+            element={<p>Página de Edição</p>}
+          />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -72,11 +90,18 @@ describe("OngProjectsPage", () => {
     vi.clearAllMocks()
     mocks.getAccessTokenSilentlyMock.mockResolvedValue("token-ong")
     mocks.fetchProjectDetailsMock.mockResolvedValue(mockProjectDetails)
+    mocks.deleteProjectMock.mockResolvedValue(undefined)
+    mockRefetch.mockResolvedValue(undefined)
     mocks.useOngProjectsMock.mockReturnValue({
       projects: mockOngProjects,
       loading: false,
       error: null,
+      refetch: mockRefetch,
     })
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
   it("renderiza header, resumo e lista de projetos", () => {
@@ -143,6 +168,7 @@ describe("OngProjectsPage", () => {
       projects: [],
       loading: true,
       error: null,
+      refetch: mockRefetch,
     })
 
     renderPage()
@@ -156,6 +182,7 @@ describe("OngProjectsPage", () => {
       projects: [],
       loading: false,
       error: "Não foi possível carregar os projetos.",
+      refetch: mockRefetch,
     })
 
     renderPage()
@@ -170,11 +197,139 @@ describe("OngProjectsPage", () => {
       projects: [],
       loading: false,
       error: null,
+      refetch: mockRefetch,
     })
 
     renderPage()
 
     expect(screen.getByText("Nenhum projeto encontrado")).toBeInTheDocument()
     expect(screen.getByLabelText("Total de Projetos: 0")).toBeInTheDocument()
+  })
+
+  it("navega para a página de edição ao clicar em Editar Projeto", async () => {
+    renderPage()
+
+    const editButtons = screen.getAllByRole("button", {
+      name: "Editar Projeto",
+    })
+    await userEvent.click(editButtons[0])
+
+    expect(screen.getByText("Página de Edição")).toBeInTheDocument()
+  })
+
+  it("renderiza botão Excluir Projeto habilitado em cada card", () => {
+    renderPage()
+
+    const deleteButtons = screen.getAllByRole("button", { name: "Excluir Projeto" })
+    expect(deleteButtons.length).toBe(mockOngProjects.length)
+    deleteButtons.forEach((btn) => expect(btn).not.toBeDisabled())
+  })
+
+  it("abre o modal de confirmação ao clicar em Excluir Projeto", async () => {
+    renderPage()
+
+    const deleteButtons = screen.getAllByRole("button", { name: "Excluir Projeto" })
+    await userEvent.click(deleteButtons[0])
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument()
+    expect(screen.getByText(/"Educação Transformadora"/)).toBeInTheDocument()
+  })
+
+  it("fecha o modal ao clicar em Cancelar sem chamar a API", async () => {
+    renderPage()
+
+    await userEvent.click(
+      screen.getAllByRole("button", { name: "Excluir Projeto" })[0],
+    )
+    expect(screen.getByRole("dialog")).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole("button", { name: "Cancelar" }))
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+    expect(mocks.deleteProjectMock).not.toHaveBeenCalled()
+  })
+
+  it("happy path: confirma exclusão, chama API, exibe toast de sucesso e refetch", async () => {
+    renderPage()
+
+    await userEvent.click(
+      screen.getAllByRole("button", { name: "Excluir Projeto" })[0],
+    )
+    await userEvent.click(screen.getByRole("button", { name: "Excluir" }))
+
+    await waitFor(() => {
+      expect(mocks.deleteProjectMock).toHaveBeenCalledWith(
+        mockOngProjects[0].id,
+        "token-ong",
+      )
+    })
+
+    expect(mocks.showToastMock).toHaveBeenCalledWith("Projeto excluído", "success")
+    expect(mockRefetch).toHaveBeenCalled()
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+  })
+
+  it("unhappy path: erro genérico exibe toast de falha e fecha modal", async () => {
+    mocks.deleteProjectMock.mockRejectedValue(new Error("Network Error"))
+    renderPage()
+
+    await userEvent.click(
+      screen.getAllByRole("button", { name: "Excluir Projeto" })[0],
+    )
+    await userEvent.click(screen.getByRole("button", { name: "Excluir" }))
+
+    await waitFor(() => {
+      expect(mocks.showToastMock).toHaveBeenCalledWith(
+        "Falha ao excluir projeto. Tente novamente.",
+        "error",
+      )
+    })
+
+    expect(mockRefetch).not.toHaveBeenCalled()
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+  })
+
+  it("unhappy path 403: exibe mensagem de permissão negada", async () => {
+    const err = Object.assign(new Error("Forbidden"), {
+      response: { status: 403 },
+    })
+    vi.spyOn(axios, "isAxiosError").mockReturnValue(true)
+    mocks.deleteProjectMock.mockRejectedValue(err)
+
+    renderPage()
+
+    await userEvent.click(
+      screen.getAllByRole("button", { name: "Excluir Projeto" })[0],
+    )
+    await userEvent.click(screen.getByRole("button", { name: "Excluir" }))
+
+    await waitFor(() => {
+      expect(mocks.showToastMock).toHaveBeenCalledWith(
+        "Você não tem permissão para excluir este projeto.",
+        "error",
+      )
+    })
+  })
+
+  it("unhappy path 404: exibe mensagem de projeto não encontrado", async () => {
+    const err = Object.assign(new Error("Not Found"), {
+      response: { status: 404 },
+    })
+    vi.spyOn(axios, "isAxiosError").mockReturnValue(true)
+    mocks.deleteProjectMock.mockRejectedValue(err)
+
+    renderPage()
+
+    await userEvent.click(
+      screen.getAllByRole("button", { name: "Excluir Projeto" })[0],
+    )
+    await userEvent.click(screen.getByRole("button", { name: "Excluir" }))
+
+    await waitFor(() => {
+      expect(mocks.showToastMock).toHaveBeenCalledWith(
+        "Projeto não encontrado.",
+        "error",
+      )
+    })
   })
 })

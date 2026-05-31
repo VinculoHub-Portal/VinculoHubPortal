@@ -187,3 +187,22 @@ Table company_project {
     (company_id, project_id) [pk]
   }
 }
+
+Table npo_report {
+  id integer [primary key, increment]
+  npo_id integer [ref: > npo.id]
+  reporter_company_id integer [ref: > company.id]
+  reporter_user_id integer [ref: > users.id]
+  reason varchar(1000)
+  status varchar(20)
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+
+  indexes {
+    npo_id
+    reporter_company_id
+    status
+    created_at
+  }
+}
