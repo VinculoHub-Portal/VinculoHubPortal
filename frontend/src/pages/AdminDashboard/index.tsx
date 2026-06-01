@@ -123,6 +123,7 @@ export function AdminDashboard() {
   const [statusFilter, setStatusFilter] = useState<NpoReportStatus>("OPEN");
   const [debouncedNpoName, setDebouncedNpoName] = useState("");
   const [debouncedCompanyName, setDebouncedCompanyName] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -176,7 +177,7 @@ export function AdminDashboard() {
     return () => {
       isMounted = false;
     };
-  }, [getAccessTokenSilently, debouncedNpoName, debouncedCompanyName, statusFilter, page]);
+  }, [getAccessTokenSilently, debouncedNpoName, debouncedCompanyName, statusFilter, page, refreshKey]);
 
   async function handleExport() {
     setExporting(true);
@@ -197,17 +198,13 @@ export function AdminDashboard() {
     const oldReport = reports.find((r) => r.id === reportId);
     try {
       const token = await getAccessTokenSilently();
-      const updatedReport = await updateAdminNpoReportStatus(reportId, { status: newStatus }, token);
-      setReports((currentReports) =>
-        currentReports.map((report) =>
-          report.id === updatedReport.id ? updatedReport : report,
-        ),
-      );
+      await updateAdminNpoReportStatus(reportId, { status: newStatus }, token);
       if (oldReport?.status === "OPEN" && newStatus !== "OPEN") {
         setOpenReportsCount((c) => Math.max(0, c - 1));
       } else if (oldReport?.status !== "OPEN" && newStatus === "OPEN") {
         setOpenReportsCount((c) => c + 1);
       }
+      setRefreshKey((k) => k + 1);
     } catch {
       setStatusUpdateError("Não foi possível atualizar o status da denúncia.");
     } finally {
