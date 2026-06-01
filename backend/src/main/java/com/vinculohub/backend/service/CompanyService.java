@@ -2,6 +2,7 @@
 package com.vinculohub.backend.service;
 
 import com.vinculohub.backend.dto.CompanyDTO;
+import com.vinculohub.backend.dto.CompanyExportDTO;
 import com.vinculohub.backend.dto.UserDTO;
 import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.CompanyAlreadyExistsException;
@@ -13,6 +14,7 @@ import com.vinculohub.backend.repository.CompanyRepository;
 import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.UserRepository;
 import com.vinculohub.backend.utils.DocumentValidator;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,28 @@ public class CompanyService {
     private final NpoRepository npoRepository;
     private final AddressService addressService;
     private final UserRepository userRepository;
+
+    @Transactional(readOnly = true)
+    public List<CompanyExportDTO> findAllForExport() {
+        return companyRepository.findAll().stream().map(this::toExportDTO).toList();
+    }
+
+    private CompanyExportDTO toExportDTO(Company company) {
+        var address = company.getAddress();
+        var user = company.getUser();
+        return CompanyExportDTO.builder()
+                .id(company.getId())
+                .legalName(company.getLegalName())
+                .socialName(company.getSocialName())
+                .cnpj(company.getCnpj())
+                .phone(company.getPhone())
+                .email(user != null ? user.getEmail() : null)
+                .city(address != null ? address.getCity() : null)
+                .state(address != null ? address.getState() : null)
+                .zipCode(address != null ? address.getZipCode() : null)
+                .createdAt(company.getCreatedAt())
+                .build();
+    }
 
     @Transactional
     public CompanyDTO createCompany(String auth0Id, String auth0Email, CompanyDTO companyDTO) {

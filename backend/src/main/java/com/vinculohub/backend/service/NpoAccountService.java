@@ -2,6 +2,7 @@
 package com.vinculohub.backend.service;
 
 import com.vinculohub.backend.dto.AddressSignupRequest;
+import com.vinculohub.backend.dto.NpoExportDTO;
 import com.vinculohub.backend.dto.NpoInstitutionalSignupRequest;
 import com.vinculohub.backend.dto.NpoInstitutionalSignupResponse;
 import com.vinculohub.backend.exception.DuplicateLoginException;
@@ -12,6 +13,7 @@ import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.model.enums.NpoSize;
 import com.vinculohub.backend.model.enums.UserType;
 import com.vinculohub.backend.repository.UserRepository;
+import java.util.List;
 import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,10 @@ public class NpoAccountService {
         this.projectService = projectService;
         this.npoDocumentService = npoDocumentService;
         this.npoEsgService = npoEsgService;
+    }
+
+    public List<NpoExportDTO> findAllForExport() {
+        return npoService.findAllForExport();
     }
 
     @Transactional
