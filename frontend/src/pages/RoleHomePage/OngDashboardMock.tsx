@@ -405,9 +405,6 @@ function FundingOpportunitiesBanner() {
               <DescriptionOutlinedIcon fontSize="small" />
               Acessar Mural de Editais
             </BaseButton>
-            <span className="w-fit rounded-full bg-vinculo-green px-4 py-2 text-sm font-semibold text-white">
-              3 editais ativos
-            </span>
           </div>
         </div>
       </div>
