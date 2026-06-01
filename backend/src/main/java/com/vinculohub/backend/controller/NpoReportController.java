@@ -54,7 +54,7 @@ public class NpoReportController {
             @RequestParam(required = false) String npoName,
             @RequestParam(required = false) String companyName,
             @RequestParam(required = false) NpoReportStatus status,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            @PageableDefault(size = 5, sort = "createdAt", direction = Sort.Direction.DESC)
                     Pageable pageable) {
         log.info(
                 "GET /api/admin/npo-reports | npoName={} companyName={} status={}",

@@ -21,7 +21,7 @@ import { Header } from "../../components/general/Header";
 import { MetricCard } from "../../components/general/MetricCard";
 import { downloadCsv } from "../../utils/exportCsv";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 5;
 
 const dashboardMetrics = [
   {
