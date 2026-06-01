@@ -24,7 +24,8 @@ function useIsAdmin(): boolean {
 export function EditaisMuralPage() {
   const { user } = useAuth0()
   const isAdmin = useIsAdmin()
-  const { editais, loading, error, refetch } = useEditais(!isAdmin)
+  const { editais, loading, error, refetch, page, totalPages, totalElements, setPage } =
+    useEditais(!isAdmin)
   const dashboardPath = resolveDashboardPath(user)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
@@ -72,7 +73,8 @@ export function EditaisMuralPage() {
             id="editais-publicados-heading"
             className="mb-6 text-lg font-semibold text-vinculo-dark"
           >
-            {isAdmin ? "Editais Publicados" : "Editais Disponíveis"} ({loading ? "…" : editais.length})
+            {isAdmin ? "Editais Publicados" : "Editais Disponíveis"}{" "}
+            ({loading ? "…" : totalElements})
           </h2>
 
           {loading ? (
@@ -101,26 +103,55 @@ export function EditaisMuralPage() {
           ) : null}
 
           {!loading && !error && editais.length > 0 ? (
-            <ul className="flex flex-col gap-5">
-              {editais.map((e) => {
-                const prazo = formatEditalDatePtBr(e.deadline)
-                const pub = formatEditalDatePtBr(e.publishedAt)
-                return (
-                  <li key={e.id}>
-                    <EditalCard
-                      title={e.title}
-                      isActive={e.isActive}
-                      description={e.description}
-                      odsLabel={e.odsLabel}
-                      deadlineLine={prazo ? `Prazo: ${prazo}` : null}
-                      fileUrl={e.fileUrl}
-                      fileName={e.fileName}
-                      publishedLine={pub ? `Publicado em ${pub}` : null}
-                    />
-                  </li>
-                )
-              })}
-            </ul>
+            <>
+              <ul className="flex flex-col gap-5">
+                {editais.map((e) => {
+                  const prazo = formatEditalDatePtBr(e.deadline)
+                  const pub = formatEditalDatePtBr(e.publishedAt)
+                  return (
+                    <li key={e.id}>
+                      <EditalCard
+                        title={e.title}
+                        isActive={e.isActive}
+                        description={e.description}
+                        odsLabel={e.odsLabel}
+                        deadlineLine={prazo ? `Prazo: ${prazo}` : null}
+                        fileUrl={e.fileUrl}
+                        fileName={e.fileName}
+                        publishedLine={pub ? `Publicado em ${pub}` : null}
+                      />
+                    </li>
+                  )
+                })}
+              </ul>
+
+              {totalPages > 1 ? (
+                <div className="mt-6 flex items-center justify-between text-sm text-slate-600">
+                  <span>
+                    {totalElements} edital{totalElements !== 1 ? "is" : ""}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setPage(page - 1)}
+                      disabled={page === 0}
+                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      ← Anterior
+                    </button>
+                    <span>
+                      Página {page + 1} de {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setPage(page + 1)}
+                      disabled={page >= totalPages - 1}
+                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Próxima →
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </>
           ) : null}
         </section>
       </main>

@@ -111,28 +111,52 @@ export function normalizeEditalRecord(raw: unknown): EditalListItem | null {
   }
 }
 
-function unwrapList(data: unknown): unknown[] {
-  if (Array.isArray(data)) return data
-  if (data && typeof data === "object" && "content" in data) {
-    const c = (data as { content?: unknown }).content
-    if (Array.isArray(c)) return c
-  }
-  return []
+export interface EditalPage {
+  content: EditalListItem[]
+  totalElements: number
+  totalPages: number
+  number: number
+  size: number
 }
 
-export async function fetchEditais(token?: string, activeOnly = false): Promise<EditalListItem[]> {
-  logger.info("EditaisAPI", "Fetching editais")
+export async function fetchEditais(
+  token?: string,
+  activeOnly = false,
+  page = 0,
+  size = 10,
+): Promise<EditalPage> {
+  logger.info("EditaisAPI", "Fetching editais", { page, size, activeOnly })
   try {
-    const url = activeOnly ? "/api/editais?active=true" : "/api/editais"
-    const { data } = await api.get<unknown>(url, {
+    const { data } = await api.get<unknown>("/api/editais", {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      params: { ...(activeOnly && { active: true }), page, size },
     })
-    const list = unwrapList(data)
-    const mapped = list
-      .map((item) => normalizeEditalRecord(item))
-      .filter((e): e is EditalListItem => e !== null)
-    logger.info("EditaisAPI", "Editais fetched", { count: mapped.length })
-    return mapped
+
+    if (data && typeof data === "object" && "content" in data) {
+      const paged = data as {
+        content: unknown[]
+        totalElements: number
+        totalPages: number
+        number: number
+        size: number
+      }
+      const content = paged.content
+        .map(normalizeEditalRecord)
+        .filter((e): e is EditalListItem => e !== null)
+      logger.info("EditaisAPI", "Editais fetched", { total: paged.totalElements, page: paged.number })
+      return {
+        content,
+        totalElements: paged.totalElements,
+        totalPages: paged.totalPages,
+        number: paged.number,
+        size: paged.size,
+      }
+    }
+
+    const list = Array.isArray(data) ? data : []
+    const content = list.map(normalizeEditalRecord).filter((e): e is EditalListItem => e !== null)
+    logger.info("EditaisAPI", "Editais fetched (non-paged)", { count: content.length })
+    return { content, totalElements: content.length, totalPages: 1, number: 0, size: content.length }
   } catch (error) {
     logger.error("EditaisAPI", "Failed to fetch editais", error)
     throw error

@@ -20,6 +20,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 @ExtendWith(MockitoExtension.class)
@@ -139,13 +142,14 @@ class EditalServiceTest {
         Edital e1 = buildEdital(1L, "Edital A");
         Edital e2 = buildEdital(2L, "Edital B");
 
-        when(editalRepository.findAllByOrderByCreatedAtDesc()).thenReturn(List.of(e1, e2));
+        when(editalRepository.findAllByOrderByCreatedAtDesc(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(e1, e2)));
 
-        List<EditalResponseDTO> result = editalService.findAll();
+        Page<EditalResponseDTO> result = editalService.findAll(Pageable.unpaged());
 
-        assertEquals(2, result.size());
-        assertEquals("Edital A", result.get(0).title());
-        assertEquals("Edital B", result.get(1).title());
+        assertEquals(2, result.getTotalElements());
+        assertEquals("Edital A", result.getContent().get(0).title());
+        assertEquals("Edital B", result.getContent().get(1).title());
     }
 
     @Test
@@ -176,9 +180,10 @@ class EditalServiceTest {
 
     @Test
     void shouldReturnEmptyListWhenNoEditaisExist() {
-        when(editalRepository.findAllByOrderByCreatedAtDesc()).thenReturn(List.of());
+        when(editalRepository.findAllByOrderByCreatedAtDesc(any(Pageable.class)))
+                .thenReturn(Page.empty());
 
-        List<EditalResponseDTO> result = editalService.findAll();
+        Page<EditalResponseDTO> result = editalService.findAll(Pageable.unpaged());
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
