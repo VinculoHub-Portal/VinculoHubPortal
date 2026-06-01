@@ -120,7 +120,7 @@ export function AdminDashboard() {
   const [openReportsCount, setOpenReportsCount] = useState(0);
   const [npoNameFilter, setNpoNameFilter] = useState("");
   const [companyNameFilter, setCompanyNameFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState<NpoReportStatus | "">("");
+  const [statusFilter, setStatusFilter] = useState<NpoReportStatus>("OPEN");
   const [debouncedNpoName, setDebouncedNpoName] = useState("");
   const [debouncedCompanyName, setDebouncedCompanyName] = useState("");
 
@@ -151,7 +151,7 @@ export function AdminDashboard() {
         const data = await fetchAdminNpoReports(token, {
           npoName: debouncedNpoName || undefined,
           companyName: debouncedCompanyName || undefined,
-          status: statusFilter || undefined,
+          status: statusFilter,
           page,
           size: PAGE_SIZE,
         });
@@ -159,6 +159,7 @@ export function AdminDashboard() {
           setReports(data.content);
           setTotalPages(data.totalPages);
           setTotalElements(data.totalElements);
+          if (statusFilter === "OPEN") setOpenReportsCount(data.totalElements);
         }
       } catch {
         if (isMounted) {
@@ -176,26 +177,6 @@ export function AdminDashboard() {
       isMounted = false;
     };
   }, [getAccessTokenSilently, debouncedNpoName, debouncedCompanyName, statusFilter, page]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadOpenCount() {
-      try {
-        const token = await getAccessTokenSilently();
-        const data = await fetchAdminNpoReports(token, { status: "OPEN", size: 1 });
-        if (isMounted) setOpenReportsCount(data.totalElements);
-      } catch {
-        // silent — badge não é crítico
-      }
-    }
-
-    void loadOpenCount();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [getAccessTokenSilently]);
 
   async function handleExport() {
     setExporting(true);
@@ -234,7 +215,7 @@ export function AdminDashboard() {
     }
   }
 
-  function handleStatusFilterChange(value: NpoReportStatus | "") {
+  function handleStatusFilterChange(value: NpoReportStatus) {
     setStatusFilter(value);
     setPage(0);
   }
@@ -336,34 +317,40 @@ export function AdminDashboard() {
             </span>
           </div>
 
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-            <input
-              type="text"
-              placeholder="Filtrar por ONG"
-              value={npoNameFilter}
-              onChange={(e) => setNpoNameFilter(e.target.value)}
-              className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 outline-none focus:border-vinculo-dark focus:ring-2 focus:ring-vinculo-dark/20"
-            />
-            <input
-              type="text"
-              placeholder="Filtrar por empresa"
-              value={companyNameFilter}
-              onChange={(e) => setCompanyNameFilter(e.target.value)}
-              className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 outline-none focus:border-vinculo-dark focus:ring-2 focus:ring-vinculo-dark/20"
-            />
-            <select
-              aria-label="Filtrar por status"
-              value={statusFilter}
-              onChange={(e) => handleStatusFilterChange(e.target.value as NpoReportStatus | "")}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-vinculo-dark focus:ring-2 focus:ring-vinculo-dark/20"
-            >
-              <option value="">Todos os status</option>
+          <div className="mt-4 flex flex-col gap-3">
+            <div className="flex gap-1" role="tablist" aria-label="Filtrar por status">
               {REPORT_STATUS_OPTIONS.map((s) => (
-                <option key={s} value={s}>
+                <button
+                  key={s}
+                  role="tab"
+                  aria-selected={statusFilter === s}
+                  onClick={() => handleStatusFilterChange(s)}
+                  className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                    statusFilter === s
+                      ? "bg-vinculo-dark text-white"
+                      : "border border-slate-300 text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
                   {REPORT_STATUS_LABELS[s]}
-                </option>
+                </button>
               ))}
-            </select>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <input
+                type="text"
+                placeholder="Filtrar por ONG"
+                value={npoNameFilter}
+                onChange={(e) => setNpoNameFilter(e.target.value)}
+                className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 outline-none focus:border-vinculo-dark focus:ring-2 focus:ring-vinculo-dark/20"
+              />
+              <input
+                type="text"
+                placeholder="Filtrar por empresa"
+                value={companyNameFilter}
+                onChange={(e) => setCompanyNameFilter(e.target.value)}
+                className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 outline-none focus:border-vinculo-dark focus:ring-2 focus:ring-vinculo-dark/20"
+              />
+            </div>
           </div>
 
           <div className="mt-6">
@@ -384,7 +371,11 @@ export function AdminDashboard() {
             )}
 
             {!isLoadingReports && !reportsError && reports.length === 0 && (
-              <p className="text-sm text-slate-600">Nenhuma denúncia encontrada.</p>
+              <p className="text-sm text-slate-600">
+                {statusFilter === "OPEN" && "Nenhuma denúncia aberta."}
+                {statusFilter === "RESOLVED" && "Nenhuma denúncia resolvida."}
+                {statusFilter === "DISMISSED" && "Nenhuma denúncia descartada."}
+              </p>
             )}
 
             {!isLoadingReports && !reportsError && reports.length > 0 && (
