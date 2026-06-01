@@ -26,9 +26,12 @@ public class DocumentController {
     private final DocumentService documentService;
 
     @PostMapping(consumes = "multipart/form-data")
+    @PreAuthorize("hasRole('NPO')")
     public ResponseEntity<?> uploadDocument(
-            @RequestPart("file") MultipartFile file, @RequestPart("data") DocumentRequestDTO dto) {
-        DocumentResponseDTO response = documentService.upload(file, dto);
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestPart("file") MultipartFile file,
+            @RequestPart("data") DocumentRequestDTO dto) {
+        DocumentResponseDTO response = documentService.upload(jwt.getSubject(), file, dto);
         return ResponseEntity.ok(response);
     }
 
@@ -54,12 +57,11 @@ public class DocumentController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<DocumentResponseDTO>> getDocuments(
             @RequestParam(required = false) Integer npoId,
             @RequestParam(required = false) Integer projectId) {
-
         List<DocumentResponseDTO> documents = documentService.findAll(npoId, projectId);
-
         return ResponseEntity.ok(documents);
     }
 }

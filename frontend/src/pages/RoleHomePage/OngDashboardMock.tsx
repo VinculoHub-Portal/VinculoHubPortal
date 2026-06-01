@@ -9,6 +9,7 @@ import { useAuth0 } from "@auth0/auth0-react"
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { useNavigate } from "react-router-dom"
 import { uploadDocument } from "../../api/document"
+import { logger } from "../../utils/logger"
 import type { ProjectStatus } from "../../api/projects"
 import { BaseButton } from "../../components/general/BaseButton"
 import { Header } from "../../components/general/Header"
@@ -64,20 +65,12 @@ export function OngDashboardMock({
     try {
       const token = await getAccessTokenSilently()
 
-      await uploadDocument(
-        file,
-        {
-          title,
-          description,
-          npoId: 1,
-        },
-        token,
-      )
+      await uploadDocument(file, { title, description }, token)
 
       showToast("Documento enviado com sucesso!", "success")
       setIsUploadModalOpen(false)
     } catch (error) {
-      console.error("Upload Error:", error)
+      logger.error("OngDashboard", "Falha no upload do documento", error)
       showToast("Não foi possível realizar o upload. Verifique sua conexão e tente novamente.")
     }
   }
