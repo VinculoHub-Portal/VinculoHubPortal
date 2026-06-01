@@ -109,13 +109,15 @@ class NpoReportControllerTest extends AbstractIntegrationTest {
                                         jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))
                                                 .jwt(jwt -> jwt.subject("auth0|admin"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].npo.name").value("ONG Reportada"))
-                .andExpect(jsonPath("$[0].reporterCompany.name").value("Empresa Denunciante"))
-                .andExpect(jsonPath("$[0].reporterUser.email").value("empresa@example.com"))
+                .andExpect(jsonPath("$.content[0].npo.name").value("ONG Reportada"))
+                .andExpect(jsonPath("$.content[0].reporterCompany.name").value("Empresa Denunciante"))
+                .andExpect(jsonPath("$.content[0].reporterUser.email").value("empresa@example.com"))
                 .andExpect(
-                        jsonPath("$[0].reason")
+                        jsonPath("$.content[0].reason")
                                 .value("A ONG não apresentou comprovantes suficientes."))
-                .andExpect(jsonPath("$[0].status").value("OPEN"));
+                .andExpect(jsonPath("$.content[0].status").value("OPEN"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1));
     }
 
     @Test

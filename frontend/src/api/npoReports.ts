@@ -32,6 +32,22 @@ export interface NpoReportResponse {
   createdAt: string
 }
 
+export interface NpoReportPage {
+  content: NpoReportResponse[]
+  totalElements: number
+  totalPages: number
+  number: number
+  size: number
+}
+
+export interface NpoReportFilters {
+  npoName?: string
+  companyName?: string
+  status?: NpoReportStatus
+  page?: number
+  size?: number
+}
+
 export async function createNpoReport(
   npoId: number,
   payload: NpoReportCreatePayload,
@@ -56,13 +72,25 @@ export async function createNpoReport(
 
 export async function fetchAdminNpoReports(
   token: string,
-): Promise<NpoReportResponse[]> {
-  logger.info("NpoReportsAPI", "Fetching admin NPO reports")
+  filters: NpoReportFilters = {},
+): Promise<NpoReportPage> {
+  const params = new URLSearchParams()
+  if (filters.npoName) params.set("npoName", filters.npoName)
+  if (filters.companyName) params.set("companyName", filters.companyName)
+  if (filters.status) params.set("status", filters.status)
+  if (filters.page !== undefined) params.set("page", String(filters.page))
+  if (filters.size !== undefined) params.set("size", String(filters.size))
+
+  logger.info("NpoReportsAPI", "Fetching admin NPO reports", { filters })
   try {
-    const { data } = await api.get<NpoReportResponse[]>("/api/admin/npo-reports", {
+    const { data } = await api.get<NpoReportPage>("/api/admin/npo-reports", {
       headers: { Authorization: `Bearer ${token}` },
+      params,
     })
-    logger.info("NpoReportsAPI", "Admin NPO reports fetched", { count: data.length })
+    logger.info("NpoReportsAPI", "Admin NPO reports fetched", {
+      total: data.totalElements,
+      page: data.number,
+    })
     return data
   } catch (error) {
     logger.error("NpoReportsAPI", "Failed to fetch admin NPO reports", error)
