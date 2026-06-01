@@ -396,8 +396,11 @@ export function AdminDashboard() {
                     <tbody className="divide-y divide-slate-100">
                       {reports.map((report) => (
                         <tr key={report.id} className="align-top text-slate-700">
-                          <td className="py-4 pr-4 font-semibold text-vinculo-dark">
-                            {report.npo.name}
+                          <td className="py-4 pr-4">
+                            <p className="font-semibold text-vinculo-dark">{report.npo.name}</p>
+                            {report.npo.email && (
+                              <p className="mt-1 text-xs text-slate-500">{report.npo.email}</p>
+                            )}
                           </td>
                           <td className="px-4 py-4">
                             <p className="font-medium text-slate-800">

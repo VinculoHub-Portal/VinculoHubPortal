@@ -28,9 +28,11 @@ public record NpoReportResponse(
                 report.getCreatedAt());
     }
 
-    public record ReportedNpo(Integer id, String name) {
+    public record ReportedNpo(Integer id, String name, String email) {
         static ReportedNpo from(Npo npo) {
-            return new ReportedNpo(npo.getId(), npo.getName());
+            String email =
+                    npo.getNpoUser() != null ? npo.getNpoUser().getEmail() : null;
+            return new ReportedNpo(npo.getId(), npo.getName(), email);
         }
     }
 

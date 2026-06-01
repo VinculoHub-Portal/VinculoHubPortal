@@ -15,6 +15,6 @@ public interface NpoReportRepository
         extends JpaRepository<NpoReport, Long>, JpaSpecificationExecutor<NpoReport> {
 
     @Override
-    @EntityGraph(attributePaths = {"npo", "reporterCompany", "reporterUser"})
+    @EntityGraph(attributePaths = {"npo", "npo.npoUser", "reporterCompany", "reporterUser"})
     Page<NpoReport> findAll(Specification<NpoReport> spec, Pageable pageable);
 }

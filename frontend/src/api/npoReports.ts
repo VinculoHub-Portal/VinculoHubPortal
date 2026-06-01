@@ -16,6 +16,7 @@ export interface NpoReportResponse {
   npo: {
     id: number
     name: string
+    email: string | null
   }
   reporterCompany: {
     id: number
