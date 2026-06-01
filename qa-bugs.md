@@ -6,7 +6,7 @@ Logins testados: ONG (`ong@ong.com`) e Empresa (`empresa@empresa.com`)
 
 ---
 
-## Bugs Encontrados
+## Bugs em aberto
 
 ### BUG-01 — Ícone 👁 na tabela do dashboard ONG não navega para detalhes do projeto
 
@@ -15,33 +15,6 @@ Logins testados: ONG (`ong@ong.com`) e Empresa (`empresa@empresa.com`)
 **Comportamento atual:** Clicar no ícone de olho (👁) não faz nada visível. A URL permanece em `/ong/dashboard`.  
 **Comportamento esperado:** Navegar para `/projeto/:id` com os detalhes do projeto correspondente.  
 **Severidade:** Média — a funcionalidade existe via `/ong/projetos`, mas o atalho direto do dashboard está quebrado.
-
----
-
-### BUG-02 — Botão "Ver Linha do Tempo" não abre nada
-
-**Página:** `/ong/projetos`  
-**Comportamento atual:** Clicar em "Ver Linha do Tempo" em qualquer card de projeto não abre modal, não navega, e não produz nenhuma ação visível. A página fica exatamente como estava.  
-**Comportamento esperado:** Abrir um modal ou navegar para uma página com a linha do tempo do projeto.  
-**Severidade:** Alta — feature inacessível.
-
----
-
-### BUG-03 — Botão "Editar Projeto" não abre nada
-
-**Página:** `/ong/projetos`  
-**Comportamento atual:** Clicar em "Editar Projeto" em qualquer card de projeto não abre modal, não navega, e não produz nenhuma ação visível.  
-**Comportamento esperado:** Abrir um formulário (modal ou página) para editar os dados do projeto.  
-**Severidade:** Alta — feature inacessível.
-
----
-
-### BUG-04 — Título da aba do browser é "frontend"
-
-**Páginas:** Todas  
-**Comportamento atual:** O `<title>` da página é literalmente `"frontend"` (nome do pacote npm), exibido na aba do browser.  
-**Comportamento esperado:** Um título descritivo como `"VinculoHub Portal"` ou `"VinculoHub | Dashboard"`.  
-**Severidade:** Baixa — cosmético, mas visível ao usuário final.
 
 ---
 
@@ -57,7 +30,9 @@ Logins testados: ONG (`ong@ong.com`) e Empresa (`empresa@empresa.com`)
 | Modal "Cadastrar Novo Projeto" — campos, validação obrigatória, erro "Selecione ao menos um ODS" | ✅ |
 | `/ong/projetos` — listagem, contadores (Total/Leis de Incentivo/Investimento Privado) | ✅ |
 | Botão "Detalhes do Projeto" → `/projeto/:id` | ✅ |
+| Botão "Editar Projeto" → `/ong/projetos/:id/editar` | ✅ |
 | `/projeto/:id` — tipo, valor, descrição, ODS tags, barra de progresso | ✅ |
 | Dashboard Empresa — investimento disponível, projetos apoiados, ESG, métricas | ✅ |
 | `/empresa/leis-de-incentivo` — listagem de projetos com progresso de captação | ✅ |
 | `/empresa/investimento-social-privado` — listagem + seção "Como funciona" | ✅ |
+| Título da aba do browser — "VinculoHub Portal" | ✅ |

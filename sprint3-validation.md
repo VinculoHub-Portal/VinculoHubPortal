@@ -170,6 +170,5 @@ Botão "Acessar Mural de Editais" no `OngDashboardMock` navega para `/editais` v
 2. **Aviso visual sem documentos** — banner no dashboard ONG quando ONG não tem documentos
 3. **Edição/exclusão de documentos** — CRUD completo em `OngProfilePage/PrivateDocumentsCard`
 4. **Vitrine geral de ONGs** — listagem e busca de ONGs para admin e empresas (rotas `/admin/ongs` e busca pública para empresas)
-5. **Ver Linha do Tempo** — botão em `OngProjectCard` não tem feature correspondente implementada
-6. **Dashboard admin com dados reais** — métricas do `AdminDashboard` estão hardcoded (87 ONGs, 24 Editais, 156 Vínculos, 5 Notificações); precisa de endpoint `GET /api/admin/metrics` e substituição dos valores fixos
-7. **Rotas do dashboard admin sem componente** — `/admin/ongs`, `/admin/vinculos`, `/admin/notificacoes` são linkadas pelos `MetricCard` mas não têm rota nem página implementada
+5. **Dashboard admin com dados reais** — métricas do `AdminDashboard` estão hardcoded (87 ONGs, 24 Editais, 156 Vínculos, 5 Notificações); precisa de endpoint `GET /api/admin/metrics` e substituição dos valores fixos
+6. **Rotas do dashboard admin sem componente** — `/admin/ongs`, `/admin/vinculos`, `/admin/notificacoes` são linkadas pelos `MetricCard` mas não têm rota nem página implementada
