@@ -19,6 +19,7 @@ import { CreateNoticeModal } from "../../announcement/CreateAnnouncementModal";
 import { FlexibleButton } from "../../components/general/FlexibleButton";
 import { Header } from "../../components/general/Header";
 import { MetricCard } from "../../components/general/MetricCard";
+import { useToast } from "../../context/ToastContext";
 import { downloadCsv } from "../../utils/exportCsv";
 
 const PAGE_SIZE = 5;
@@ -107,6 +108,7 @@ function formatReportDate(value: string) {
 
 export function AdminDashboard() {
   const { getAccessTokenSilently } = useAuth0();
+  const { showToast } = useToast();
   const [exporting, setExporting] = useState(false);
   const [reports, setReports] = useState<NpoReportResponse[]>([]);
   const [page, setPage] = useState(0);
@@ -114,7 +116,6 @@ export function AdminDashboard() {
   const [totalElements, setTotalElements] = useState(0);
   const [isLoadingReports, setIsLoadingReports] = useState(true);
   const [reportsError, setReportsError] = useState("");
-  const [statusUpdateError, setStatusUpdateError] = useState("");
   const [updatingReportId, setUpdatingReportId] = useState<number | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [openReportsCount, setOpenReportsCount] = useState(0);
@@ -193,7 +194,6 @@ export function AdminDashboard() {
   }
 
   async function handleStatusChange(reportId: number, newStatus: NpoReportStatus) {
-    setStatusUpdateError("");
     setUpdatingReportId(reportId);
     const oldReport = reports.find((r) => r.id === reportId);
     try {
@@ -204,9 +204,10 @@ export function AdminDashboard() {
       } else if (oldReport?.status !== "OPEN" && newStatus === "OPEN") {
         setOpenReportsCount((c) => c + 1);
       }
+      showToast(`Status atualizado para "${REPORT_STATUS_LABELS[newStatus]}" com sucesso.`, "success");
       setRefreshKey((k) => k + 1);
     } catch {
-      setStatusUpdateError("Não foi possível atualizar o status da denúncia.");
+      showToast("Não foi possível atualizar o status da denúncia.", "error");
     } finally {
       setUpdatingReportId(null);
     }
@@ -358,12 +359,6 @@ export function AdminDashboard() {
             {!isLoadingReports && reportsError && (
               <p className="text-sm font-medium text-vinculo-red" role="alert">
                 {reportsError}
-              </p>
-            )}
-
-            {!isLoadingReports && !reportsError && statusUpdateError && (
-              <p className="mb-4 text-sm font-medium text-vinculo-red" role="alert">
-                {statusUpdateError}
               </p>
             )}
 
