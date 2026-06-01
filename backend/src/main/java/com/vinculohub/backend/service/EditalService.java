@@ -11,6 +11,7 @@ import com.vinculohub.backend.model.Ods;
 import com.vinculohub.backend.repository.EditalRepository;
 import com.vinculohub.backend.service.storage.S3Uploader;
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -102,7 +103,7 @@ public class EditalService {
                 edital.getId(),
                 edital.getTitle(),
                 edital.getDescription(),
-                edital.getFileUrl(),
+                s3Uploader.generatePresignedDownloadUrl(edital.getFileUrl(), Duration.ofHours(1)),
                 edital.getFileName(),
                 edital.getFileSize(),
                 edital.getMimeType(),
