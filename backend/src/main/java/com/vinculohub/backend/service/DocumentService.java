@@ -51,59 +51,6 @@ public class DocumentService {
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     "application/vnd.ms-excel");
 
-    public DocumentResponseDTO upload(
-            String auth0Id, MultipartFile file, DocumentRequestDTO docReq) {
-        if (auth0Id == null || auth0Id.isBlank()) {
-            throw new BadRequestException("Não foi possível identificar o usuário autenticado.");
-        }
-        User user = userRepository.findByAuth0Id(auth0Id).orElseThrow(UserNotFoundException::new);
-        Npo npo =
-                npoRepository
-                        .findByUserId(user.getId())
-                        .orElseThrow(() -> new NotFoundException("ONG não encontrada"));
-
-        if (docReq == null) {
-            throw new BadRequestException("Document metadata is required");
-        }
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw new FileSizeValidationException("File exceeds 5MB limit");
-        }
-        if (!ALLOWED_TYPES.contains(file.getContentType())) {
-            throw new FileFormatValidationException("Unsupported file type");
-        }
-
-        Project project = null;
-        if (docReq.getProjectId() != null) {
-            project =
-                    projectRepository
-                            .findById(docReq.getProjectId().longValue())
-                            .orElseThrow(() -> new NotFoundException("Project not found"));
-        }
-
-        String fileUrl;
-        try {
-            String folder = "npo/" + npo.getId();
-            fileUrl = s3Uploader.uploadFile(file, folder);
-        } catch (IOException e) {
-            throw new RuntimeException("Storage upload failed: ", e);
-        }
-
-        String safeFileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-
-        Document document = new Document();
-        document.setNpo(npo);
-        document.setProject(project);
-        document.setTitle(docReq.getTitle());
-        document.setDescription(docReq.getDescription());
-        document.setFileUrl(fileUrl);
-        document.setFileName(safeFileName);
-        document.setFileSize((int) file.getSize());
-        document.setMimeType(file.getContentType());
-
-        Document saved = documentRepository.save(document);
-        return mapToResponse(saved);
-    }
-
     public DocumentResponseDTO upload(MultipartFile file, DocumentRequestDTO docReq) {
         if (docReq == null) {
             throw new BadRequestException("Document metadata is required");
