@@ -151,7 +151,7 @@ describe("OrganizationInfoCard — modo edição", () => {
       />,
     )
 
-    expect(screen.getByText(mockContact.email)).toBeInTheDocument()
+    expect(screen.getByText(mockContact.email!)).toBeInTheDocument()
   })
 
   it("chama onAddressChange ao editar a rua", async () => {
