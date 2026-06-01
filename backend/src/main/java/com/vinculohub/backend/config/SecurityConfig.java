@@ -59,6 +59,8 @@ public class SecurityConfig {
                                         .permitAll()
                                         .requestMatchers(HttpMethod.GET, "/api/editais")
                                         .permitAll()
+                                        .requestMatchers(HttpMethod.GET, "/api/npos/{id}")
+                                        .permitAll()
                                         .requestMatchers("/api/documents/**")
                                         .authenticated()
                                         .anyRequest()
