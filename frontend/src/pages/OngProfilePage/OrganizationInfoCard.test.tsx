@@ -118,7 +118,7 @@ describe("OrganizationInfoCard — modo edição", () => {
       />,
     )
 
-    expect(screen.getByLabelText("E-mail")).toBeInTheDocument()
+    expect(screen.getByText("E-mail")).toBeInTheDocument()
     expect(screen.getByLabelText("Telefone")).toBeInTheDocument()
   })
 
@@ -139,24 +139,19 @@ describe("OrganizationInfoCard — modo edição", () => {
     expect(screen.getByLabelText("CEP")).toBeInTheDocument()
   })
 
-  it("chama onContactChange ao editar o e-mail", async () => {
-    const onContactChange = vi.fn()
+  it("exibe e-mail como somente leitura em modo edição", () => {
     render(
       <OrganizationInfoCard
         institutionalData={mockInstitutionalData}
         contact={mockContact}
         address={mockAddress}
         isEditing={true}
-        onContactChange={onContactChange}
+        onContactChange={vi.fn()}
         onAddressChange={vi.fn()}
       />,
     )
 
-    const input = screen.getByLabelText("E-mail")
-    await userEvent.clear(input)
-    await userEvent.type(input, "a")
-
-    expect(onContactChange).toHaveBeenCalledWith("email", expect.any(String))
+    expect(screen.getByText(mockContact.email!)).toBeInTheDocument()
   })
 
   it("chama onAddressChange ao editar a rua", async () => {

@@ -213,7 +213,7 @@ function ProjectsByTypeCard({
       </DashboardCardState>
       <button
         type="button"
-        className="mx-auto mt-8 flex items-center gap-1 rounded-lg px-3 py-2 text-base font-semibold text-vinculo-dark transition hover:bg-blue-50"
+        className="mx-auto mt-8 flex cursor-pointer items-center gap-1 rounded-lg px-3 py-2 text-base font-semibold text-vinculo-dark transition hover:bg-blue-50"
         onClick={onDetails}
       >
         Ver detalhes
@@ -253,7 +253,7 @@ function ProjectStatusCard({
               <button
                 key={filter.id}
                 type="button"
-                className={`min-h-11 rounded-lg border px-5 text-sm font-semibold transition ${
+                className={`min-h-11 cursor-pointer rounded-lg border px-5 text-sm font-semibold transition ${
                   isSelected
                     ? "border-vinculo-dark bg-vinculo-dark text-white"
                     : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
@@ -310,7 +310,7 @@ function ProjectStatusCard({
               </div>
               <button
                 type="button"
-                className="flex h-10 w-10 items-center justify-center rounded-lg text-vinculo-dark transition hover:bg-blue-50"
+                className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg text-vinculo-dark transition hover:bg-blue-50"
                 onClick={() => onViewProject(project.id)}
               >
                 <VisibilityOutlinedIcon fontSize="small" />
@@ -412,9 +412,6 @@ function FundingOpportunitiesBanner() {
               <DescriptionOutlinedIcon fontSize="small" />
               Acessar Mural de Editais
             </BaseButton>
-            <span className="w-fit rounded-full bg-vinculo-green px-4 py-2 text-sm font-semibold text-white">
-              3 editais ativos
-            </span>
           </div>
         </div>
       </div>

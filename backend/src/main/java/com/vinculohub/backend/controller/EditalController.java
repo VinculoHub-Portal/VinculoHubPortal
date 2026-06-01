@@ -4,8 +4,11 @@ package com.vinculohub.backend.controller;
 import com.vinculohub.backend.dto.EditalRequestDTO;
 import com.vinculohub.backend.dto.EditalResponseDTO;
 import com.vinculohub.backend.service.EditalService;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,10 +31,15 @@ public class EditalController {
     }
 
     @GetMapping
-    public ResponseEntity<List<EditalResponseDTO>> listAll(
+    public ResponseEntity<Page<EditalResponseDTO>> listAll(
             @RequestParam(name = "active", required = false, defaultValue = "false")
-                    boolean activeOnly) {
-        var result = activeOnly ? editalService.findAllActive() : editalService.findAll();
+                    boolean activeOnly,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+                    Pageable pageable) {
+        var result =
+                activeOnly
+                        ? editalService.findAllActive(pageable)
+                        : editalService.findAll(pageable);
         return ResponseEntity.ok(result);
     }
 }

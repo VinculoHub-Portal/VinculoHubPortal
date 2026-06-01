@@ -11,6 +11,8 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:payload": "vitest run src/components/auth/AuthRoleRedirect.payload.test.tsx --reporter=verbose",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "preview": "vite preview",
     "prepare": "husky"
   },
@@ -29,6 +31,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/vite": "^4.2.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

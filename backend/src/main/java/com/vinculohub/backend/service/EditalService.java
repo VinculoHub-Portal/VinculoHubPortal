@@ -11,12 +11,14 @@ import com.vinculohub.backend.model.Ods;
 import com.vinculohub.backend.repository.EditalRepository;
 import com.vinculohub.backend.service.storage.S3Uploader;
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -78,17 +80,15 @@ public class EditalService {
     }
 
     @Transactional(readOnly = true)
-    public List<EditalResponseDTO> findAll() {
-        return editalRepository.findAllByOrderByCreatedAtDesc().stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    public Page<EditalResponseDTO> findAll(Pageable pageable) {
+        return editalRepository.findAllByOrderByCreatedAtDesc(pageable).map(this::mapToResponse);
     }
 
     @Transactional(readOnly = true)
-    public List<EditalResponseDTO> findAllActive() {
-        return editalRepository.findAllActiveOrderByCreatedAtDesc(LocalDateTime.now()).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    public Page<EditalResponseDTO> findAllActive(Pageable pageable) {
+        return editalRepository
+                .findAllActiveOrderByCreatedAtDesc(LocalDateTime.now(), pageable)
+                .map(this::mapToResponse);
     }
 
     private EditalResponseDTO mapToResponse(Edital edital) {
@@ -102,7 +102,7 @@ public class EditalService {
                 edital.getId(),
                 edital.getTitle(),
                 edital.getDescription(),
-                edital.getFileUrl(),
+                s3Uploader.generatePresignedDownloadUrl(edital.getFileUrl(), Duration.ofHours(1)),
                 edital.getFileName(),
                 edital.getFileSize(),
                 edital.getMimeType(),

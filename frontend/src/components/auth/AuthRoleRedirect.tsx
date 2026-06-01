@@ -150,6 +150,29 @@ export function AuthRoleRedirect() {
     void redirectByRole();
   }, [getAccessTokenSilently, isAuthenticated, isLoading, location.pathname, navigate, showToast, user]);
 
+  useEffect(() => {
+    const isLoginFlow = sessionStorage.getItem(loginCompletedKey) === "true";
+
+    if (isLoading || !isAuthenticated || isLoginFlow || location.pathname !== "/") {
+      return;
+    }
+
+    async function redirectRestoredSession() {
+      try {
+        const token = await getAccessTokenSilently();
+        const profile = await getAuthenticatedProfile(token);
+        const tokenRoles = getRolesFromToken(token);
+        const userRoles = getRolesFromUser(user);
+        const role = profileRole(profile) ?? resolvePrimaryRole([...tokenRoles, ...userRoles]);
+        navigate(redirectPathForRole(role), { replace: true });
+      } catch {
+        // silent — user stays on landing page
+      }
+    }
+
+    void redirectRestoredSession();
+  }, [getAccessTokenSilently, isAuthenticated, isLoading, location.pathname, navigate, user]);
+
   return null;
 }
 

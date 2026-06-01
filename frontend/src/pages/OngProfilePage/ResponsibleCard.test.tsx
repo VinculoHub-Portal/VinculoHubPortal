@@ -33,18 +33,17 @@ describe("ResponsibleCard — modo visualização", () => {
 })
 
 describe("ResponsibleCard — modo edição", () => {
-  it("exibe inputs para nome e e-mail", () => {
+  it("exibe input para nome e e-mail somente leitura", () => {
     render(
       <ResponsibleCard
         responsible={mockResponsible}
         isEditing={true}
         onNameChange={vi.fn()}
-        onEmailChange={vi.fn()}
       />,
     )
 
     expect(screen.getByLabelText("Nome Completo")).toBeInTheDocument()
-    expect(screen.getByLabelText("E-mail")).toBeInTheDocument()
+    expect(screen.getByText("maria@ong.org")).toBeInTheDocument()
   })
 
   it("chama onNameChange ao editar o nome", async () => {
@@ -54,7 +53,6 @@ describe("ResponsibleCard — modo edição", () => {
         responsible={mockResponsible}
         isEditing={true}
         onNameChange={onNameChange}
-        onEmailChange={vi.fn()}
       />,
     )
 
@@ -63,23 +61,5 @@ describe("ResponsibleCard — modo edição", () => {
     await userEvent.type(input, "A")
 
     expect(onNameChange).toHaveBeenCalled()
-  })
-
-  it("chama onEmailChange ao editar o e-mail", async () => {
-    const onEmailChange = vi.fn()
-    render(
-      <ResponsibleCard
-        responsible={mockResponsible}
-        isEditing={true}
-        onNameChange={vi.fn()}
-        onEmailChange={onEmailChange}
-      />,
-    )
-
-    const input = screen.getByLabelText("E-mail")
-    await userEvent.clear(input)
-    await userEvent.type(input, "a")
-
-    expect(onEmailChange).toHaveBeenCalled()
   })
 })

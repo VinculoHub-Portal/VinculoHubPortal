@@ -233,6 +233,7 @@ describe("CreateNoticeModal", () => {
       title: "Edital de Cultura 2026",
       description: "Edital para apoio a iniciativas culturais.",
       odsIds: [4],
+      expiredAt: "2026-12-31T23:59:59",
     });
     expect(onClose).toHaveBeenCalledOnce();
   });

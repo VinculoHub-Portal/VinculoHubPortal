@@ -5,6 +5,9 @@ import { fetchEditais, type EditalListItem } from "../api/editais"
 export function useEditais(activeOnly = false) {
   const { getAccessTokenSilently } = useAuth0()
   const [editais, setEditais] = useState<EditalListItem[]>([])
+  const [page, setPage] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const [totalElements, setTotalElements] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -15,9 +18,11 @@ export function useEditais(activeOnly = false) {
       try {
         setLoading(true)
         const token = await getAccessTokenSilently()
-        const data = await fetchEditais(token, activeOnly)
+        const data = await fetchEditais(token, activeOnly, page)
         if (!mounted) return
-        setEditais(data)
+        setEditais(data.content)
+        setTotalPages(data.totalPages)
+        setTotalElements(data.totalElements)
         setError(null)
       } catch (e) {
         if (!mounted) return
@@ -29,11 +34,15 @@ export function useEditais(activeOnly = false) {
     return () => {
       mounted = false
     }
-  }, [getAccessTokenSilently, activeOnly, refreshKey])
+  }, [getAccessTokenSilently, activeOnly, refreshKey, page])
 
   function refetch() {
     setRefreshKey((k) => k + 1)
   }
 
-  return { editais, loading, error, refetch }
+  function handlePageChange(newPage: number) {
+    setPage(newPage)
+  }
+
+  return { editais, loading, error, refetch, page, totalPages, totalElements, setPage: handlePageChange }
 }

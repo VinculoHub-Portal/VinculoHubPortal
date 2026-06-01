@@ -7,14 +7,12 @@ interface ResponsibleCardProps {
   responsible: NpoResponsibleData | null
   isEditing: boolean
   onNameChange?: (value: string) => void
-  onEmailChange?: (value: string) => void
 }
 
 export function ResponsibleCard({
   responsible,
   isEditing,
   onNameChange,
-  onEmailChange,
 }: ResponsibleCardProps) {
   if (!responsible) return null
 
@@ -40,15 +38,14 @@ export function ResponsibleCard({
                   onChange={(e) => onNameChange?.(e.target.value)}
                 />
               </div>
-              <div className="flex-1">
-                <Input
-                  id="responsible-email"
-                  label="E-mail"
-                  value={responsible.email ?? ""}
-                  icon={<MailOutlinedIcon fontSize="small" />}
-                  onChange={(e) => onEmailChange?.(e.target.value)}
-                />
-              </div>
+              {responsible.email && (
+                <div className="flex flex-1 flex-col gap-1 text-sm sm:items-end sm:justify-center">
+                  <span className="inline-flex items-center gap-1 text-slate-600">
+                    <MailOutlinedIcon fontSize="inherit" />
+                    {responsible.email}
+                  </span>
+                </div>
+              )}
             </div>
           ) : (
             <>

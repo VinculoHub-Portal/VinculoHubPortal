@@ -2,14 +2,19 @@
 package com.vinculohub.backend.repository;
 
 import com.vinculohub.backend.model.NpoReport;
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface NpoReportRepository extends JpaRepository<NpoReport, Long> {
+public interface NpoReportRepository
+        extends JpaRepository<NpoReport, Long>, JpaSpecificationExecutor<NpoReport> {
 
-    @EntityGraph(attributePaths = {"npo", "reporterCompany", "reporterUser"})
-    List<NpoReport> findAllByOrderByCreatedAtDesc();
+    @Override
+    @EntityGraph(attributePaths = {"npo", "npo.npoUser", "reporterCompany", "reporterUser"})
+    Page<NpoReport> findAll(Specification<NpoReport> spec, Pageable pageable);
 }

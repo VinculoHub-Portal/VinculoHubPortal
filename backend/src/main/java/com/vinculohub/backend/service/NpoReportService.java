@@ -9,12 +9,15 @@ import com.vinculohub.backend.model.Company;
 import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.model.NpoReport;
 import com.vinculohub.backend.model.User;
+import com.vinculohub.backend.model.enums.NpoReportStatus;
 import com.vinculohub.backend.repository.CompanyRepository;
 import com.vinculohub.backend.repository.NpoReportRepository;
 import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.UserRepository;
-import java.util.List;
+import com.vinculohub.backend.repository.specification.NpoReportSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,10 +58,11 @@ public class NpoReportService {
     }
 
     @Transactional(readOnly = true)
-    public List<NpoReportResponse> listReportsForAdmin() {
-        return npoReportRepository.findAllByOrderByCreatedAtDesc().stream()
-                .map(NpoReportResponse::from)
-                .toList();
+    public Page<NpoReportResponse> listReportsForAdmin(
+            String npoName, String companyName, NpoReportStatus status, Pageable pageable) {
+        return npoReportRepository
+                .findAll(NpoReportSpecification.from(npoName, companyName, status), pageable)
+                .map(NpoReportResponse::from);
     }
 
     @Transactional

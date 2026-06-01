@@ -163,9 +163,8 @@ export function OrganizationInfoCard({
               icon={<MailOutlinedIcon fontSize="small" />}
               label="E-mail"
               value={contact.email ?? ""}
-              isEditing={isEditing}
+              isEditing={false}
               inputId="ong-email"
-              onValueChange={(v) => onContactChange?.("email", v)}
             />
             <InfoItem
               icon={<PhoneOutlinedIcon fontSize="small" />}

@@ -36,6 +36,10 @@ public class Npo {
     @Column(name = "user_id")
     private Integer userId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private User npoUser;
+
     @Column(length = 3000)
     private String description;
 

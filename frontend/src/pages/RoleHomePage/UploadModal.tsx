@@ -111,7 +111,7 @@ const UploadModal = ({ isOpen, onClose, onUpload }: UploadDocumentModalProps) =>
               <input
                 type="file"
                 hidden
-                accept=".pdf,.doc,.xls,.jpg,.png"
+                accept=".pdf,.docx,.xlsx,.xls"
                 onChange={(e) => setFile(e.target.files?.[0] || null)}
               />
               <UploadIcon sx={{ fontSize: 40, color: '#3f51b5', mb: 1 }} />
@@ -119,7 +119,7 @@ const UploadModal = ({ isOpen, onClose, onUpload }: UploadDocumentModalProps) =>
                 Clique para fazer upload
               </Typography>
               <Typography variant="caption" color="textSecondary" sx={{ display: 'block', width: '100%' }}>
-                PDF, DOC, XLS, JPG ou PNG (máx. 10MB)
+                PDF, DOCX, XLS ou XLSX (máx. 5MB)
               </Typography>
               
               {file && (
