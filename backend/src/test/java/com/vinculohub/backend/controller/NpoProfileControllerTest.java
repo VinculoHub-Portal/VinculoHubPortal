@@ -137,13 +137,15 @@ class NpoProfileControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/npos/{id} sem autenticação retorna 401")
-    void shouldReturn401WithoutAuth() throws Exception {
+    @DisplayName("GET /api/npos/{id} sem autenticação retorna 200 com viewerContext EXTERNAL")
+    void shouldReturn200WithExternalContextWithoutAuth() throws Exception {
         Npo npo =
                 npoRepository.save(
                         Npo.builder().name("ONG Simples").npoSize(NpoSize.small).build());
 
-        mockMvc.perform(get("/api/npos/" + npo.getId())).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/npos/" + npo.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.viewerContext").value("EXTERNAL"));
     }
 
     @Test
