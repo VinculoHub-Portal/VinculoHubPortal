@@ -51,7 +51,8 @@ public class DocumentService {
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     "application/vnd.ms-excel");
 
-    public DocumentResponseDTO upload(String auth0Id, MultipartFile file, DocumentRequestDTO docReq) {
+    public DocumentResponseDTO upload(
+            String auth0Id, MultipartFile file, DocumentRequestDTO docReq) {
         if (auth0Id == null || auth0Id.isBlank()) {
             throw new BadRequestException("Não foi possível identificar o usuário autenticado.");
         }
