@@ -1,4 +1,3 @@
-import AccessTimeIcon from "@mui/icons-material/AccessTime"
 import TrendingUpIcon from "@mui/icons-material/TrendingUp"
 import { BaseButton } from "../general/BaseButton"
 import { ProgressBar } from "../general/ProgressBar"
@@ -13,7 +12,6 @@ export interface OngProjectCardProps {
   description: string
   progress: number
   tags: string[]
-  onTimeline?: (id: number) => void
   onDetails?: (id: number) => void
   onEdit?: (id: number) => void
   onDelete?: (id: number) => void
@@ -42,7 +40,6 @@ export function OngProjectCard({
   description,
   progress,
   tags,
-  onTimeline,
   onDetails,
   onEdit,
   onDelete,
@@ -107,17 +104,7 @@ export function OngProjectCard({
         </div>
       )}
 
-      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
-        <BaseButton
-          type="button"
-          variant="secondary"
-          fullWidth
-          className="min-h-12 py-3 hover:bg-emerald-600"
-          onClick={() => onTimeline?.(id)}
-        >
-          <AccessTimeIcon fontSize="small" />
-          Ver Linha do Tempo
-        </BaseButton>
+      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
         <BaseButton
           type="button"
           variant="outline"

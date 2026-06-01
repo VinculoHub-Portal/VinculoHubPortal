@@ -39,6 +39,7 @@ export function PrivateDocumentsCard() {
   const [documents, setDocuments] = useState<DocumentResponseDTO[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
   const [downloadingId, setDownloadingId] = useState<number | null>(null)
 
   useEffect(() => {
@@ -68,11 +69,12 @@ export function PrivateDocumentsCard() {
   async function handleDownload(documentId: number) {
     try {
       setDownloadingId(documentId)
+      setDownloadError(null)
       const token = await getAccessTokenSilently()
       const response = await getMyOngDocumentDownloadUrl(documentId, token)
       window.open(response.downloadUrl, "_blank", "noopener,noreferrer")
     } catch {
-      setError("Não foi possível gerar o link de download.")
+      setDownloadError("Não foi possível gerar o link de download. Tente novamente.")
     } finally {
       setDownloadingId(null)
     }
@@ -105,6 +107,12 @@ export function PrivateDocumentsCard() {
       {error && (
         <div className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-5 text-sm text-red-700">
           {error}
+        </div>
+      )}
+
+      {downloadError && (
+        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {downloadError}
         </div>
       )}
 

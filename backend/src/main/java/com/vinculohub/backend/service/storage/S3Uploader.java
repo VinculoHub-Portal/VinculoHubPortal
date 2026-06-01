@@ -30,7 +30,8 @@ public class S3Uploader {
     private String bucketName;
 
     public String uploadFile(MultipartFile file, String folder) throws IOException {
-        String fileName = folder + "/" + UUID.randomUUID() + "_" + file.getOriginalFilename();
+        String sanitized = file.getOriginalFilename().replaceAll("\\s+", "_");
+        String fileName = folder + "/" + UUID.randomUUID() + "_" + sanitized;
 
         PutObjectRequest putObjectRequest =
                 PutObjectRequest.builder()
