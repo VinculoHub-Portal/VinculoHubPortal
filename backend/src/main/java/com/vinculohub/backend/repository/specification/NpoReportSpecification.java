@@ -29,8 +29,7 @@ public class NpoReportSpecification {
     }
 
     public static Specification<NpoReport> hasStatus(NpoReportStatus status) {
-        return (root, query, cb) ->
-                status == null ? null : cb.equal(root.get("status"), status);
+        return (root, query, cb) -> status == null ? null : cb.equal(root.get("status"), status);
     }
 
     public static Specification<NpoReport> from(

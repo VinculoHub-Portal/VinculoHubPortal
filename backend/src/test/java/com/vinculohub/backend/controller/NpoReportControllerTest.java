@@ -110,7 +110,8 @@ class NpoReportControllerTest extends AbstractIntegrationTest {
                                                 .jwt(jwt -> jwt.subject("auth0|admin"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].npo.name").value("ONG Reportada"))
-                .andExpect(jsonPath("$.content[0].reporterCompany.name").value("Empresa Denunciante"))
+                .andExpect(
+                        jsonPath("$.content[0].reporterCompany.name").value("Empresa Denunciante"))
                 .andExpect(jsonPath("$.content[0].reporterUser.email").value("empresa@example.com"))
                 .andExpect(
                         jsonPath("$.content[0].reason")
