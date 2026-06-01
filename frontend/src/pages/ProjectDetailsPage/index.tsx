@@ -64,6 +64,7 @@ export function ProjectDetailsPage() {
   const isIncentiveLaw = project?.fundingType === "Lei de Incentivo";
   const reportableNpoId = project?.responsibleInstitution?.npoId ?? null;
   const canReportInstitution = companyUser && reportableNpoId != null;
+  const canViewPublicProfile = reportableNpoId != null;
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
@@ -131,15 +132,27 @@ export function ProjectDetailsPage() {
               <ResponsibleInstitutionCard
                 institution={project.responsibleInstitution}
                 headerAction={
-                  canReportInstitution ? (
-                    <FlexibleButton
-                      icon={<ReportProblemOutlinedIcon fontSize="small" />}
-                      variant="subtle"
-                      size="compact"
-                      onClick={() => setIsReportModalOpen(true)}
-                    >
-                      Denunciar
-                    </FlexibleButton>
+                  canViewPublicProfile || canReportInstitution ? (
+                    <div className="flex items-center gap-2">
+                      {canViewPublicProfile && (
+                        <Link
+                          to={`/ong/publico/${reportableNpoId}`}
+                          className="text-sm font-medium text-vinculo-dark underline-offset-2 hover:underline"
+                        >
+                          Ver perfil completo
+                        </Link>
+                      )}
+                      {canReportInstitution && (
+                        <FlexibleButton
+                          icon={<ReportProblemOutlinedIcon fontSize="small" />}
+                          variant="subtle"
+                          size="compact"
+                          onClick={() => setIsReportModalOpen(true)}
+                        >
+                          Denunciar
+                        </FlexibleButton>
+                      )}
+                    </div>
                   ) : null
                 }
               />
