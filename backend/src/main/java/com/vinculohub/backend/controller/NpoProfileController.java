@@ -23,10 +23,11 @@ public class NpoProfileController {
     private final NpoProfileService npoProfileService;
 
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<NpoProfileResponse> getProfile(
-            @PathVariable Integer id, @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(npoProfileService.getProfile(id, jwt.getSubject()));
+            @PathVariable Integer id,
+            @AuthenticationPrincipal(required = false) Jwt jwt) {
+        return ResponseEntity.ok(
+                npoProfileService.getProfile(id, jwt != null ? jwt.getSubject() : null));
     }
 
     @PutMapping("/{id}")

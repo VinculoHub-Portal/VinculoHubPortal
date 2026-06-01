@@ -30,12 +30,14 @@ export function useNpoProfile(targetId?: number): UseNpoProfileResult {
       try {
         setLoading(true)
         setError(null)
-        const token = await getAccessTokenSilently()
 
         let npoId: number
+        let token: string | undefined
+
         if (targetId !== undefined) {
           npoId = targetId
         } else {
+          token = await getAccessTokenSilently()
           const authProfile = await fetchAuthenticatedProfile(token)
           if (!authProfile.npoId) {
             throw new Error("ONG não encontrada para o usuário autenticado.")

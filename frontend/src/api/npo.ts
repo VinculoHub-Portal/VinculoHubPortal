@@ -91,12 +91,12 @@ export interface NpoProfileUpdateRequest {
 
 export async function fetchNpoProfile(
   id: number,
-  token: string,
+  token?: string,
 ): Promise<NpoProfileResponse> {
   logger.info("NpoAPI", `Fetching profile for npo ${id}`)
   try {
     const { data } = await api.get<NpoProfileResponse>(`/api/npos/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     })
     logger.info("NpoAPI", `Profile fetched for npo ${id}`, {
       viewerContext: data.viewerContext,
