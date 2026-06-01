@@ -175,18 +175,6 @@ export function OngProfilePage() {
                 : prev,
             )
           }
-          onEmailChange={(value) =>
-            setDraft((prev) =>
-              prev
-                ? {
-                    ...prev,
-                    responsible: prev.responsible
-                      ? { ...prev.responsible, email: value }
-                      : { id: null, name: null, email: value, auth0Id: null, userType: null },
-                  }
-                : prev,
-            )
-          }
         />
 
         {saveError && (

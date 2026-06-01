@@ -3,6 +3,16 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AdminDashboard } from "./index";
 
+vi.mock("../../announcement/CreateAnnouncementModal", () => ({
+  CreateNoticeModal: ({ open, onClose }: { open: boolean; onClose: () => void }) =>
+    open ? (
+      <div data-testid="create-notice-modal">
+        <p>Cadastrar Novo Edital</p>
+        <button onClick={onClose}>Fechar modal</button>
+      </div>
+    ) : null,
+}));
+
 const mocks = vi.hoisted(() => ({
   getAccessTokenSilentlyMock: vi.fn(),
   fetchAdminNpoReportsMock: vi.fn(),
@@ -110,6 +120,18 @@ describe("AdminDashboard", () => {
     expect(
       screen.getByRole("button", { name: "Mediações" }),
     ).toBeInTheDocument();
+  });
+
+  it("abre o modal de cadastro de edital ao clicar em 'Cadastrar Edital'", async () => {
+    const user = userEvent.setup();
+    render(<AdminDashboard />);
+
+    expect(screen.queryByTestId("create-notice-modal")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Cadastrar Edital" }));
+
+    expect(screen.getByTestId("create-notice-modal")).toBeInTheDocument();
+    expect(screen.getByText("Cadastrar Novo Edital")).toBeInTheDocument();
   });
 
   it("renderiza as denúncias carregadas para o administrador", async () => {

@@ -15,6 +15,7 @@ import {
   type NpoReportResponse,
   type NpoReportStatus,
 } from "../../api/npoReports";
+import { CreateNoticeModal } from "../../announcement/CreateAnnouncementModal";
 import { FlexibleButton } from "../../components/general/FlexibleButton";
 import { Header } from "../../components/general/Header";
 import { MetricCard } from "../../components/general/MetricCard";
@@ -110,6 +111,7 @@ export function AdminDashboard() {
   const [reportsError, setReportsError] = useState("");
   const [statusUpdateError, setStatusUpdateError] = useState("");
   const [updatingReportId, setUpdatingReportId] = useState<number | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const openReportsCount = reports.filter((report) => report.status === "OPEN").length;
 
   async function handleExport() {
@@ -189,12 +191,7 @@ export function AdminDashboard() {
             <FlexibleButton
               icon={<InsertDriveFileOutlinedIcon fontSize="small" />}
               variant="secondary"
-              onClick={() => {
-                document.getElementById("cadastrar-edital")?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "start",
-                });
-              }}
+              onClick={() => setIsCreateModalOpen(true)}
             >
               Cadastrar Edital
             </FlexibleButton>
@@ -363,6 +360,11 @@ export function AdminDashboard() {
         </section>
 
       </main>
+
+      <CreateNoticeModal
+        open={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
     </div>
   );
 }

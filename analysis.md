@@ -603,7 +603,35 @@ Unused exports and files:
 
 ---
 
-### 39. `useCompany` hook targets a non-existent endpoint
+### 39. Dashboard admin métricas hardcoded
+
+| | |
+|---|---|
+| **Files** | `frontend/src/pages/AdminDashboard/index.tsx` (lines 23–56) |
+| **Severity / Priority** | MEDIUM / P2 |
+| **Category** | Technical Debt |
+
+**Problem:** As 4 métricas do dashboard administrativo (Total de ONGs: 87, Editais Publicados: 24, Vínculos Ativos: 156, Notificações Pendentes: 5) são valores fixos hardcoded. Não há chamada de API para buscar dados reais.
+
+**Fix:** Criar endpoint `GET /api/admin/metrics` no backend que retorna contagens reais, e substituir o array `dashboardMetrics` estático por estado dinâmico com fetch no mount.
+
+---
+
+### 40. Rotas do dashboard admin sem página
+
+| | |
+|---|---|
+| **Files** | `frontend/src/router/index.tsx`, `frontend/src/pages/AdminDashboard/index.tsx` (lines 30, 46, 54) |
+| **Severity / Priority** | MEDIUM / P2 |
+| **Category** | Technical Debt |
+
+**Problem:** `MetricCard` no AdminDashboard linka para `/admin/ongs`, `/admin/vinculos`, e `/admin/notificacoes`, mas nenhuma dessas rotas existe no router. O link "Ver todos" leva a página 404/branca.
+
+**Fix:** Implementar as páginas e registrar as rotas no router, começando por `/admin/ongs` (listagem de ONGs).
+
+---
+
+### 41. `useCompany` hook targets a non-existent endpoint
 
 | | |
 |---|---|
@@ -664,10 +692,13 @@ number: (zipCodeData.complement ?? "").slice(0, 20) || prev.number,
 | 40 | ViaCEP complement > 20 chars crashes both registration endpoints with 500 | 2 min | ✅ Done |
 | 29 | "Já tenho login" navigates to blank page | 5 min | ✅ Done |
 | 30 | Rename `WizardSingUp` → `WizardSignUp` | 2 min | ✅ Done |
+| — | Botão "Cadastrar Edital" no AdminDashboard abre `CreateNoticeModal` (issue 5) | 5 min | ✅ Done |
 | 3 | Add `@Valid` to `CompanyController.createCompany` | 1 min | Pending |
 | 6–7 | Delete `Users.java`, `UsersRepository.java`, `UsersService.java`, `model/UserType.java` | 5 min | Pending |
 | 10 | Replace `IllegalArgumentException` with `BadRequestException` in `CompanyService` | 5 min | Pending |
 | 32 | Delete dead code (5 unused files) | 5 min | Pending |
+| 39 | Dashboard admin métricas hardcoded (issue 4) | — | Technical Debt |
+| 40 | Rotas do dashboard admin sem página (issue 6) | — | Technical Debt |
 
 ---
 

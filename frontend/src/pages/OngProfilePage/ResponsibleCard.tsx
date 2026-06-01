@@ -7,14 +7,12 @@ interface ResponsibleCardProps {
   responsible: NpoResponsibleData | null
   isEditing: boolean
   onNameChange?: (value: string) => void
-  onEmailChange?: (value: string) => void
 }
 
 export function ResponsibleCard({
   responsible,
   isEditing,
   onNameChange,
-  onEmailChange,
 }: ResponsibleCardProps) {
   if (!responsible) return null
 
