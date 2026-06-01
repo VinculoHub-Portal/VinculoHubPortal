@@ -18,7 +18,7 @@ export function useEditais(activeOnly = false) {
       try {
         setLoading(true)
         const token = await getAccessTokenSilently()
-        const data = await fetchEditais(token, activeOnly, page)
+        const data = await fetchEditais(token, activeOnly, page, 1)
         if (!mounted) return
         setEditais(data.content)
         setTotalPages(data.totalPages)

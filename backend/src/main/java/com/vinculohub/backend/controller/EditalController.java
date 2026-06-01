@@ -34,7 +34,7 @@ public class EditalController {
     public ResponseEntity<Page<EditalResponseDTO>> listAll(
             @RequestParam(name = "active", required = false, defaultValue = "false")
                     boolean activeOnly,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            @PageableDefault(size = 1, sort = "createdAt", direction = Sort.Direction.DESC)
                     Pageable pageable) {
         var result =
                 activeOnly
