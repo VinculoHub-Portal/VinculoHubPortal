@@ -30,8 +30,7 @@ public record NpoReportResponse(
 
     public record ReportedNpo(Integer id, String name, String email) {
         static ReportedNpo from(Npo npo) {
-            String email =
-                    npo.getNpoUser() != null ? npo.getNpoUser().getEmail() : null;
+            String email = npo.getNpoUser() != null ? npo.getNpoUser().getEmail() : null;
             return new ReportedNpo(npo.getId(), npo.getName(), email);
         }
     }
