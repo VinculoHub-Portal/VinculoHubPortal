@@ -1,8 +1,12 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { useQuery } from "@tanstack/react-query";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
+import { useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { Header } from "../../components/general/Header";
+import { FlexibleButton } from "../../components/general/FlexibleButton";
+import { ReportNpoModal } from "../../components/ong/ReportNpoModal";
 import { resolveDashboardPath } from "../../utils/dashboardPath";
 import { fetchProjectDetails } from "./fetchProjectDetails";
 import { FundingProgress } from "./FundingProgress";
@@ -10,6 +14,15 @@ import { OdsTags } from "./OdsTags";
 import { ProjectDetailsNotFound } from "./ProjectDetailsNotFound";
 import { ProjectDetailsSkeleton } from "./ProjectDetailsSkeleton";
 import { ProjectHeader } from "./ProjectHeader";
+import { ResponsibleInstitutionCard } from "./ResponsibleInstitutionCard";
+
+const ROLES_CLAIM = "https://vinculohub/roles";
+
+function isCompanyUser(user: unknown) {
+  const rawRoles = (user as Record<string, unknown> | undefined)?.[ROLES_CLAIM];
+  const userRoles: string[] = Array.isArray(rawRoles) ? rawRoles : [];
+  return userRoles.some((role) => String(role).toUpperCase() === "COMPANY");
+}
 
 function formatBrl(amount: number) {
   return new Intl.NumberFormat("pt-BR", {
@@ -21,8 +34,10 @@ function formatBrl(amount: number) {
 export function ProjectDetailsPage() {
   const { projectId = "" } = useParams<{ projectId: string }>();
   const { user, getAccessTokenSilently } = useAuth0();
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const location = useLocation();
   const dashboardPath = resolveDashboardPath(user);
+  const companyUser = isCompanyUser(user);
   const locationState = location.state as { returnTo?: unknown } | null;
   const returnTo =
     typeof locationState?.returnTo === "string"
@@ -47,6 +62,9 @@ export function ProjectDetailsPage() {
     (Boolean(projectId) && !query.isLoading && !query.isError && !project);
 
   const isIncentiveLaw = project?.fundingType === "Lei de Incentivo";
+  const reportableNpoId = project?.responsibleInstitution?.npoId ?? null;
+  const canReportInstitution = companyUser && reportableNpoId != null;
+  const canViewPublicProfile = reportableNpoId != null;
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
@@ -107,6 +125,46 @@ export function ProjectDetailsPage() {
                 <FundingProgress progressPercent={project.progressPercent} />
               )}
             </article>
+          )}
+
+          {Boolean(projectId) && !query.isLoading && !query.isError && project && (
+            <div className="mt-6">
+              <ResponsibleInstitutionCard
+                institution={project.responsibleInstitution}
+                headerAction={
+                  canViewPublicProfile || canReportInstitution ? (
+                    <div className="flex items-center gap-2">
+                      {canViewPublicProfile && (
+                        <Link
+                          to={`/ong/publico/${reportableNpoId}`}
+                          className="text-sm font-medium text-vinculo-dark underline-offset-2 hover:underline"
+                        >
+                          Ver perfil completo
+                        </Link>
+                      )}
+                      {canReportInstitution && (
+                        <FlexibleButton
+                          icon={<ReportProblemOutlinedIcon fontSize="small" />}
+                          variant="subtle"
+                          size="compact"
+                          onClick={() => setIsReportModalOpen(true)}
+                        >
+                          Denunciar
+                        </FlexibleButton>
+                      )}
+                    </div>
+                  ) : null
+                }
+              />
+            </div>
+          )}
+
+          {canReportInstitution && (
+            <ReportNpoModal
+              npoId={reportableNpoId}
+              open={isReportModalOpen}
+              onClose={() => setIsReportModalOpen(false)}
+            />
           )}
         </div>
       </div>

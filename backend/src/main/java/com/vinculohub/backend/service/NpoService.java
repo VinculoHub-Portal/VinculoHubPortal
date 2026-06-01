@@ -1,10 +1,12 @@
 /* (C)2026 */
 package com.vinculohub.backend.service;
 
+import com.vinculohub.backend.dto.NpoExportDTO;
 import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.repository.AddressRepository;
 import com.vinculohub.backend.repository.NpoRepository;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +33,30 @@ public class NpoService {
      * @param address endereço opcional da ONG
      * @return ONG persistida, já com a referência do endereço quando fornecido
      */
+    @Transactional(readOnly = true)
+    public List<NpoExportDTO> findAllForExport() {
+        return npoRepository.findAll().stream().map(this::toExportDTO).toList();
+    }
+
+    private NpoExportDTO toExportDTO(Npo npo) {
+        Address address = npo.getAddress();
+        return NpoExportDTO.builder()
+                .id(npo.getId())
+                .name(npo.getName())
+                .cnpj(npo.getCnpj())
+                .cpf(npo.getCpf())
+                .phone(npo.getPhone())
+                .npoSize(npo.getNpoSize())
+                .environmental(npo.getEnvironmental())
+                .social(npo.getSocial())
+                .governance(npo.getGovernance())
+                .city(address != null ? address.getCity() : null)
+                .state(address != null ? address.getState() : null)
+                .zipCode(address != null ? address.getZipCode() : null)
+                .createdAt(npo.getCreatedAt())
+                .build();
+    }
+
     @Transactional
     public Npo saveWithAddress(Npo npo, Address address) {
         if (npo == null) {

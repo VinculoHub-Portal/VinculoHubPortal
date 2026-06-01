@@ -66,6 +66,51 @@ Se preferir rodar os serviços individualmente para desenvolvimento mais focado:
 
 ---
 
+## 🧪 Testes
+
+### Unitários — Frontend (Vitest)
+
+Rodam sem precisar do Docker, diretamente na pasta `frontend`:
+
+```bash
+cd frontend
+npm run test:run          # roda uma vez e sai
+npm run test              # modo watch
+```
+
+### Unitários — Backend (JUnit)
+
+```bash
+cd backend
+./mvnw test               # Mac/Linux
+mvnw test                 # Windows
+```
+
+### E2E — Playwright
+
+**Pré-requisito:** Docker Compose rodando com a aplicação completa.
+
+```bash
+docker compose up -d --build   # sobe frontend + backend + banco
+```
+
+Depois, na pasta `frontend`:
+
+```bash
+cd frontend
+npm run test:e2e          # headless (CI)
+npm run test:e2e:ui       # abre o Playwright UI para depurar visualmente
+```
+
+Os testes cobrem:
+- Landing page pública (título, sem redirect)
+- Rotas protegidas redirecionam para Auth0 (`/ong/*`, `/empresa/*`, `/admin/*`, `/editais`)
+- Rota pública `/ong/publico/:id` acessível sem login
+- Segurança de API: endpoints protegidos retornam 401 sem token
+- Endpoints públicos (`GET /api/editais`, `GET /public/ping`) retornam 200
+
+---
+
 ## 📊 Cobertura de Testes (JaCoCo)
 O JaCoCo é utilizado para medir a porcentagem do código backend que está sendo validada pelos testes unitários.
 

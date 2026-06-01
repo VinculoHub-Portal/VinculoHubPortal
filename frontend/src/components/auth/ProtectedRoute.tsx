@@ -9,9 +9,10 @@ type UserRole = "ADMIN" | "NPO" | "COMPANY";
 type ProtectedRouteProps = {
   children: ReactNode;
   requiredRole?: UserRole;
+  requiredRoles?: UserRole[];
 };
 
-export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, requiredRole, requiredRoles }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, loginWithRedirect, user } = useAuth0();
 
   useEffect(() => {
@@ -31,11 +32,21 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     return <p>Carregando...</p>;
   }
 
+  const rawRoles = (user as Record<string, unknown> | undefined)?.[ROLES_CLAIM];
+  const userRoles: string[] = Array.isArray(rawRoles) ? rawRoles : [];
+
   if (requiredRole) {
-    const rawRoles = (user as Record<string, unknown> | undefined)?.[ROLES_CLAIM];
-    const userRoles: string[] = Array.isArray(rawRoles) ? rawRoles : [];
     const hasRole = userRoles.some((r) => r.toUpperCase() === requiredRole);
     if (!hasRole) {
+      return <Navigate to="/" replace />;
+    }
+  }
+
+  if (requiredRoles && requiredRoles.length > 0) {
+    const hasAny = userRoles.some((r) =>
+      requiredRoles.some((req) => r.toUpperCase() === req)
+    );
+    if (!hasAny) {
       return <Navigate to="/" replace />;
     }
   }

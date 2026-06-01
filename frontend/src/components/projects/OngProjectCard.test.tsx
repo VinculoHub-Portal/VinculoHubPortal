@@ -65,25 +65,30 @@ describe("OngProjectCard", () => {
   })
 
   it("aciona callbacks dos botões", () => {
-    const onTimeline = vi.fn()
     const onDetails = vi.fn()
     const onEdit = vi.fn()
+    const onDelete = vi.fn()
 
     render(
       <OngProjectCard
         {...baseProject}
-        onTimeline={onTimeline}
         onDetails={onDetails}
         onEdit={onEdit}
+        onDelete={onDelete}
       />,
     )
 
-    fireEvent.click(screen.getByRole("button", { name: /Ver Linha do Tempo/i }))
     fireEvent.click(screen.getByRole("button", { name: /Detalhes do Projeto/i }))
     fireEvent.click(screen.getByRole("button", { name: /Editar Projeto/i }))
+    fireEvent.click(screen.getByRole("button", { name: /Excluir Projeto/i }))
 
-    expect(onTimeline).toHaveBeenCalledWith(1)
     expect(onDetails).toHaveBeenCalledWith(1)
     expect(onEdit).toHaveBeenCalledWith(1)
+    expect(onDelete).toHaveBeenCalledWith(1)
+  })
+
+  it("renderiza botão Excluir Projeto habilitado", () => {
+    render(<OngProjectCard {...baseProject} />)
+    expect(screen.getByRole("button", { name: /Excluir Projeto/i })).not.toBeDisabled()
   })
 })

@@ -9,12 +9,6 @@ export interface InvestmentBudget {
   usedPercentage: number
 }
 
-export interface SupportedProjectsStats {
-  active: number
-  incentiveLaws: number
-  privateInvestment: number
-}
-
 export interface EsgPillar {
   label: string
   projects: number
@@ -23,13 +17,6 @@ export interface EsgPillar {
   iconBgClass: string
   iconColorClass: string
   barColorClass: string
-}
-
-export interface EsgFooterStats {
-  beneficiaries: string
-  communities: number
-  sdgs: number
-  states: number
 }
 
 // TODO(backend): substituir pelo nome da empresa logada.
@@ -48,17 +35,6 @@ export const mockBudget: InvestmentBudget = {
   totalDisplay: "R$ 250.000",
   usedDisplay: "R$ 150.000",
   usedPercentage: 60,
-}
-
-// TODO(backend): substituir pela contagem de projetos apoiados pela empresa.
-//   Endpoint a criar: GET /api/me/company/supported-projects/stats retornando
-//   { active: number, incentiveLaws: number, privateInvestment: number }.
-//   Requer relacionamento Empresa↔Projeto no modelo (não existe; ProjectController
-//   hoje só filtra por npoId/status/title/odsCodes/type, sem companyId).
-export const mockSupportedProjects: SupportedProjectsStats = {
-  active: 5,
-  incentiveLaws: 3,
-  privateInvestment: 2,
 }
 
 // TODO(backend): substituir pelas métricas de pilares ESG da empresa.
@@ -97,16 +73,3 @@ export const mockEsgPillars: EsgPillar[] = [
     barColorClass: "bg-red-700",
   },
 ]
-
-// TODO(backend): substituir pelos stats de impacto agregado da empresa.
-//   Endpoint a criar: GET /api/me/company/impact-stats retornando
-//   { beneficiaries: string, communities: number, sdgs: number, states: number }
-//   (beneficiaries formatado pt-BR pelo backend, ex.: "1.250").
-//   Requer modelar campos de impacto em Project (beneficiariesCount/communities/
-//   states) ou nova entidade ProjectImpact. Hoje só Project.odsCodes existe.
-export const mockEsgFooterStats: EsgFooterStats = {
-  beneficiaries: "1.250",
-  communities: 8,
-  sdgs: 5,
-  states: 3,
-}

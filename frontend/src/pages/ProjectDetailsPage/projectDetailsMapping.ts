@@ -1,4 +1,4 @@
-import type { ProjectDetails } from "./projectDetails.types";
+import type { ProjectDetails, ResponsibleInstitution } from "./projectDetails.types";
 
 const ODS_BY_CODE: Record<number, string> = {
   1: "Erradicação da Pobreza",
@@ -85,6 +85,21 @@ function computeProgress(invested: number | null, budget: number | null): number
   return Math.min(100, Math.round((invested / budget) * 100));
 }
 
+function mapResponsibleInstitution(v: unknown): ResponsibleInstitution | null {
+  if (!v || typeof v !== "object") return null;
+  const o = v as UnknownRecord;
+  const name = str(o.name);
+  if (!name) return null;
+  return {
+    npoId: num(o.npoId ?? o.npo_id),
+    name,
+    logoUrl: str(o.logoUrl ?? o.logo_url) || null,
+    city: str(o.city) || null,
+    stateCode: str(o.stateCode ?? o.state_code) || null,
+    description: str(o.description) || null,
+  };
+}
+
 /** Maps API payload (camelCase or snake_case) to view model. */
 export function mapApiPayloadToProjectDetails(raw: unknown, routeId: string): ProjectDetails {
   const o = raw && typeof raw === "object" ? (raw as UnknownRecord) : {};
@@ -120,6 +135,10 @@ export function mapApiPayloadToProjectDetails(raw: unknown, routeId: string): Pr
 
   const fundingType = projectTypeLabel(fundingTypeRaw || backendType);
 
+  const responsibleInstitution = mapResponsibleInstitution(
+    o.responsibleInstitution ?? o.responsible_institution,
+  );
+
   return {
     id,
     fundingType: fundingType || "—",
@@ -128,5 +147,6 @@ export function mapApiPayloadToProjectDetails(raw: unknown, routeId: string): Pr
     description: description || "",
     sdgLabels,
     progressPercent,
+    responsibleInstitution,
   };
 }

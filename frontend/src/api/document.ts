@@ -19,6 +19,21 @@ export interface DocumentResponseDTO {
   deletedAt?: string | null;
 }
 
+export interface DocumentDownloadResponseDTO {
+  downloadUrl: string;
+  fileName: string;
+  mimeType: string;
+  expiresAt: string;
+}
+
+export interface PaginatedDocumentsResponse {
+  content: DocumentResponseDTO[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+}
+
 /**
  * Interface baseada no DocumentRequestDTO
  */
@@ -62,7 +77,7 @@ export async function uploadDocument(
 
   try {
     const { data } = await api.post<DocumentResponseDTO>(
-      "api/documents",
+      "/api/documents",
       formData,
       {
         headers: {
@@ -75,6 +90,54 @@ export async function uploadDocument(
     return data;
   } catch (error) {
     logger.error("DocumentAPI", "Falha no upload do documento", error);
+    throw error;
+  }
+}
+
+export async function fetchMyOngDocuments(
+  token: string,
+  page = 0,
+  size = 20,
+): Promise<PaginatedDocumentsResponse> {
+  logger.info("DocumentAPI", "Buscando documentos privados da ONG", { page, size });
+
+  try {
+    const { data } = await api.get<PaginatedDocumentsResponse>(
+      "/api/documents/my-ong",
+      {
+        params: { page, size },
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+
+    logger.info("DocumentAPI", "Documentos privados carregados", {
+      totalElements: data.totalElements,
+    });
+    return data;
+  } catch (error) {
+    logger.error("DocumentAPI", "Falha ao buscar documentos privados da ONG", error);
+    throw error;
+  }
+}
+
+export async function getMyOngDocumentDownloadUrl(
+  documentId: number,
+  token: string,
+): Promise<DocumentDownloadResponseDTO> {
+  logger.info("DocumentAPI", "Solicitando URL de download do documento", { documentId });
+
+  try {
+    const { data } = await api.get<DocumentDownloadResponseDTO>(
+      `/api/documents/my-ong/${documentId}/download`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+
+    logger.info("DocumentAPI", "URL de download gerada com sucesso", { documentId });
+    return data;
+  } catch (error) {
+    logger.error("DocumentAPI", "Falha ao gerar URL de download do documento", error);
     throw error;
   }
 }
