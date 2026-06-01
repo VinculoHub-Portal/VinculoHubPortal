@@ -6,6 +6,7 @@ import com.vinculohub.backend.service.NpoProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,10 +25,12 @@ public class NpoProfileController {
 
     @GetMapping("/{id}")
     public ResponseEntity<NpoProfileResponse> getProfile(
-            @PathVariable Integer id,
-            @AuthenticationPrincipal(required = false) Jwt jwt) {
-        return ResponseEntity.ok(
-                npoProfileService.getProfile(id, jwt != null ? jwt.getSubject() : null));
+            @PathVariable Integer id, Authentication authentication) {
+        String subject =
+                authentication != null && authentication.getPrincipal() instanceof Jwt jwt
+                        ? jwt.getSubject()
+                        : null;
+        return ResponseEntity.ok(npoProfileService.getProfile(id, subject));
     }
 
     @PutMapping("/{id}")
