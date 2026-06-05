@@ -7,6 +7,7 @@ import com.vinculohub.backend.model.enums.RelationshipStatus;
 import com.vinculohub.backend.repository.projection.CompanySupportedProjectsSummaryProjection;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -34,8 +35,10 @@ public interface CompanyProjectRepository extends JpaRepository<CompanyProject, 
             SELECT cp
             FROM CompanyProject cp
             JOIN FETCH cp.company c
+            LEFT JOIN FETCH c.user
             JOIN FETCH cp.project p
             JOIN FETCH p.npo n
+            LEFT JOIN FETCH n.npoUser
             WHERE c.id = :companyId
               AND cp.status IN :statuses
             ORDER BY cp.updatedAt DESC, cp.createdAt DESC
@@ -49,8 +52,10 @@ public interface CompanyProjectRepository extends JpaRepository<CompanyProject, 
             SELECT cp
             FROM CompanyProject cp
             JOIN FETCH cp.company c
+            LEFT JOIN FETCH c.user
             JOIN FETCH cp.project p
             JOIN FETCH p.npo n
+            LEFT JOIN FETCH n.npoUser
             WHERE n.id = :npoId
               AND cp.status IN :statuses
             ORDER BY cp.updatedAt DESC, cp.createdAt DESC
@@ -58,6 +63,21 @@ public interface CompanyProjectRepository extends JpaRepository<CompanyProject, 
     List<CompanyProject> findRelationshipsByNpoIdAndStatusIn(
             @Param("npoId") Integer npoId,
             @Param("statuses") Collection<RelationshipStatus> statuses);
+
+    @Query(
+            """
+            SELECT cp
+            FROM CompanyProject cp
+            JOIN FETCH cp.company c
+            LEFT JOIN FETCH c.user
+            JOIN FETCH cp.project p
+            JOIN FETCH p.npo n
+            LEFT JOIN FETCH n.npoUser
+            WHERE c.id = :companyId
+              AND p.id = :projectId
+            """)
+    Optional<CompanyProject> findByIdWithGraph(
+            @Param("companyId") Integer companyId, @Param("projectId") Long projectId);
 
     @Query(
             value =
