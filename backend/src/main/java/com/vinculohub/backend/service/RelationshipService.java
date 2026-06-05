@@ -49,8 +49,7 @@ public class RelationshipService {
     private void validateStatus(RelationshipStatus status) {
         if (status != null
                 && !CompanyProjectRepository.VISIBLE_RELATIONSHIP_STATUSES.contains(status)) {
-            throw new BadRequestException(
-                    "Status inválido para Meus Vínculos.");
+            throw new BadRequestException("Status inválido para Meus Vínculos.");
         }
     }
 
