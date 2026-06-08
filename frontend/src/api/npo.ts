@@ -12,6 +12,7 @@ export interface NpoInstitutionalData {
   logoUrl: string | null
   npoSize: NpoSize | null
   cnpj: string | null
+  cpf: string | null
   environmental: boolean | null
   social: boolean | null
   governance: boolean | null
