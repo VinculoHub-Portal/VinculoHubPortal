@@ -1,0 +1,20 @@
+meta {
+  name: 04 - Reject (VNC-03)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/relationships/1/1/reject
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{bearerToken}}
+}
+
+docs {
+  1º aperto de mão (resposta). Apenas o receptor pode recusar. Path: /{companyId}/{projectId}/reject.
+  O vínculo é encerrado (status 'inactive') e some da listagem de vínculos visíveis.
+}

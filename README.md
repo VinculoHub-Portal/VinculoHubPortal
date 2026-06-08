@@ -111,6 +111,53 @@ Os testes cobrem:
 
 ---
 
+## 📬 API de Vínculos — Swagger e coleção Bruno
+
+A API do épico **Vínculos** (`/api/relationships`) pode ser explorada de duas formas.
+
+### Swagger / OpenAPI (app rodando)
+- UI interativa: **http://localhost:8080/swagger-ui.html**
+- Spec OpenAPI (JSON): **http://localhost:8080/v3/api-docs**
+
+Clique em **Authorize** e cole um JWT (`Bearer`) para chamar os endpoints autenticados. A mesma spec
+pode ser importada no Postman/Insomnia (Import → URL → `/v3/api-docs`).
+
+### Coleção Bruno
+A coleção fica versionada em `backend/docs/api/vinculos/` (arquivos `.bru`, amigáveis ao git) e cobre
+o ciclo completo (criar interesse → aceitar → efetivar → ativo).
+
+**Opção 1 — app desktop ([Bruno](https://www.usebruno.com/)):**
+1. Abra a pasta `backend/docs/api/vinculos` no Bruno.
+2. Selecione o environment **Local** e preencha `bearerToken` com um JWT válido.
+3. Rode as requisições na ordem `01 → 05`.
+
+**Opção 2 — CLI:**
+```bash
+npm i -g @usebruno/cli
+cd backend/docs/api/vinculos
+bru run --env Local --env-var bearerToken=<jwt>
+```
+
+### Como obter um `bearerToken` sem Auth0 (profile dev)
+Existe um stack de desenvolvimento com **auth local** (sem Auth0): ele assina o JWT localmente,
+expõe um emissor de tokens em `/dev/token` e semeia dados de exemplo (Empresa + ONG + Projeto).
+
+```bash
+# sobe Postgres + backend no profile dev (porta 8088)
+docker compose -f docker-compose.dev.yml up --build -d
+
+# emite um token (note o %7C, que é o "|" url-encodado)
+curl "http://localhost:8088/dev/token?sub=dev%7Ccompany&roles=COMPANY"   # empresa
+curl "http://localhost:8088/dev/token?sub=dev%7Cnpo&roles=NPO"           # ONG
+```
+Copie o `access_token` da resposta e use como `bearerToken` no Bruno (ou no `Authorize` do Swagger).
+Para encerrar: `docker compose -f docker-compose.dev.yml down -v`.
+
+> ⚠️ O profile `dev` e o `/dev/token` existem **apenas para desenvolvimento**. Em produção o app roda
+> no profile padrão, que continua validando JWTs reais do Auth0.
+
+---
+
 ## 📊 Cobertura de Testes (JaCoCo)
 O JaCoCo é utilizado para medir a porcentagem do código backend que está sendo validada pelos testes unitários.
 
