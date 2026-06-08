@@ -2,11 +2,13 @@
 package com.vinculohub.backend.service;
 
 import com.vinculohub.backend.dto.NpoProfileResponse;
+import com.vinculohub.backend.dto.OdsResponse;
 import com.vinculohub.backend.exception.ForbiddenException;
 import com.vinculohub.backend.exception.NotFoundException;
 import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.model.Document;
 import com.vinculohub.backend.model.Npo;
+import com.vinculohub.backend.model.Ods;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.repository.AddressRepository;
@@ -275,6 +277,7 @@ public class NpoProfileService {
                 project.getType(),
                 project.getBudgetNeeded(),
                 project.getInvestedAmount(),
+                mapProjectOds(project),
                 project.getStartDate(),
                 project.getEndDate(),
                 project.getFocusArea(),
@@ -282,6 +285,20 @@ public class NpoProfileService {
                 project.getBeneficiariesCount(),
                 project.getLocation(),
                 project.getMainObjective());
+    }
+
+    private List<OdsResponse> mapProjectOds(Project project) {
+        if (project.getOds() == null) {
+            return List.of();
+        }
+
+        return project.getOds().stream()
+                .filter(Objects::nonNull)
+                .sorted(
+                        Comparator.comparing(
+                                Ods::getId, Comparator.nullsLast(Integer::compareTo)))
+                .map(ods -> new OdsResponse(ods.getId(), ods.getName(), ods.getDescription()))
+                .toList();
     }
 
     private List<NpoProfileResponse.DocumentData> mapDocuments(Integer npoId) {

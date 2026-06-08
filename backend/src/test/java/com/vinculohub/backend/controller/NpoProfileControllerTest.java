@@ -12,6 +12,7 @@ import com.vinculohub.backend.database.AbstractIntegrationTest;
 import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.model.Document;
 import com.vinculohub.backend.model.Npo;
+import com.vinculohub.backend.model.Ods;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.model.enums.NpoSize;
@@ -20,8 +21,11 @@ import com.vinculohub.backend.repository.AddressRepository;
 import com.vinculohub.backend.repository.CompanyProjectRepository;
 import com.vinculohub.backend.repository.DocumentRepository;
 import com.vinculohub.backend.repository.NpoRepository;
+import com.vinculohub.backend.repository.OdsRepository;
 import com.vinculohub.backend.repository.ProjectRepository;
 import com.vinculohub.backend.repository.UserRepository;
+import java.util.LinkedHashSet;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,6 +47,7 @@ class NpoProfileControllerTest extends AbstractIntegrationTest {
     @Autowired private ProjectRepository projectRepository;
     @Autowired private CompanyProjectRepository companyProjectRepository;
     @Autowired private DocumentRepository documentRepository;
+    @Autowired private OdsRepository odsRepository;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private ObjectMapper objectMapper;
 
@@ -93,9 +98,15 @@ class NpoProfileControllerTest extends AbstractIntegrationTest {
                                 .description("Descrição ONG")
                                 .build());
 
+        Ods ods = odsRepository.findById(4).orElseThrow();
         Project project =
                 projectRepository.save(
-                        Project.builder().npo(npo).title("Projeto X").description("D").build());
+                        Project.builder()
+                                .npo(npo)
+                                .title("Projeto X")
+                                .description("D")
+                                .ods(new LinkedHashSet<>(List.of(ods)))
+                                .build());
 
         Document document = new Document();
         document.setNpo(npo);
@@ -120,6 +131,7 @@ class NpoProfileControllerTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.contact.phone").value("(11) 99999-0000"))
                 .andExpect(jsonPath("$.address.city").value("Porto Alegre"))
                 .andExpect(jsonPath("$.projects[0].title").value("Projeto X"))
+                .andExpect(jsonPath("$.projects[0].ods[0].id").value(4))
                 .andExpect(jsonPath("$.documents[0].title").value("Estatuto"));
     }
 

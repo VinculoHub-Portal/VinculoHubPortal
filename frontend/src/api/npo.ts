@@ -1,5 +1,6 @@
 import { api } from "../services/api"
 import { logger } from "../utils/logger"
+import type { ProjectOdsItem, ProjectStatus, ProjectType } from "./projects"
 
 export type ViewerContext = "OWNER" | "EXTERNAL"
 export type NpoSize = "small" | "medium" | "large"
@@ -42,12 +43,31 @@ export interface NpoResponsibleData {
   userType: NpoUserType | null
 }
 
+export interface NpoProfileProject {
+  id: number
+  title: string
+  description: string | null
+  status: ProjectStatus
+  type: ProjectType | null
+  budgetNeeded: number | null
+  investedAmount: number | null
+  ods: ProjectOdsItem[]
+  startDate: string | null
+  endDate: string | null
+  focusArea: string | null
+  fundraisingDeadline: string | null
+  beneficiariesCount: number | null
+  location: string | null
+  mainObjective: string | null
+}
+
 export interface NpoProfileResponse {
   viewerContext: ViewerContext
   institutionalData: NpoInstitutionalData
   contact: NpoContactData
   address: NpoAddressData | null
   responsible: NpoResponsibleData | null
+  projects: NpoProfileProject[]
 }
 
 export interface NpoInstitutionalUpdate {

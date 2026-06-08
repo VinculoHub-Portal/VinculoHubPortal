@@ -57,6 +57,31 @@ const externalProfile: NpoProfileResponse = {
     auth0Id: "auth0|owner",
     userType: "npo",
   },
+  projects: [
+    {
+      id: 100,
+      title: "Projeto Alfabetizacao",
+      description: "Aulas no contraturno.",
+      status: "ACTIVE",
+      type: "SOCIAL_INVESTMENT_LAW",
+      budgetNeeded: 50000,
+      investedAmount: 10000,
+      ods: [
+        {
+          id: 4,
+          name: "ODS 4 - Educacao de Qualidade",
+          description: "Educacao inclusiva e equitativa.",
+        },
+      ],
+      startDate: "2026-01-10",
+      endDate: null,
+      focusArea: null,
+      fundraisingDeadline: null,
+      beneficiariesCount: 120,
+      location: "Sao Paulo",
+      mainObjective: "Ampliar acesso a educacao.",
+    },
+  ],
 }
 
 function renderPage(id: string) {
@@ -109,6 +134,37 @@ describe("OngPublicProfilePage", () => {
     expect(screen.getByText("Maria Silva Santos")).toBeInTheDocument()
   })
 
+  it("renderiza os projetos da ONG com nome, status e ODS", () => {
+    mocks.useNpoProfile.mockReturnValue({
+      profile: externalProfile,
+      loading: false,
+      error: null,
+      save: vi.fn(),
+      refetch: vi.fn(),
+    })
+    renderPage("42")
+
+    expect(screen.getByText("Projetos da ONG")).toBeInTheDocument()
+    expect(screen.getByText("Projeto Alfabetizacao")).toBeInTheDocument()
+    expect(screen.getByText("Ativo")).toBeInTheDocument()
+    expect(screen.getByText("ODS 4 - Educacao de Qualidade")).toBeInTheDocument()
+  })
+
+  it("exibe estado vazio quando a ONG nao possui projetos", () => {
+    mocks.useNpoProfile.mockReturnValue({
+      profile: { ...externalProfile, projects: [] },
+      loading: false,
+      error: null,
+      save: vi.fn(),
+      refetch: vi.fn(),
+    })
+    renderPage("42")
+
+    expect(
+      screen.getByText("Esta ONG ainda não possui projetos publicados."),
+    ).toBeInTheDocument()
+  })
+
   it("chama useNpoProfile com o id numérico da URL", () => {
     mocks.useNpoProfile.mockReturnValue({
       profile: externalProfile,
@@ -131,6 +187,8 @@ describe("OngPublicProfilePage", () => {
     })
     renderPage("42")
     expect(screen.queryByText("Editar Perfil")).not.toBeInTheDocument()
+    expect(screen.queryByText("Editar Projeto")).not.toBeInTheDocument()
+    expect(screen.queryByText("Excluir Projeto")).not.toBeInTheDocument()
   })
 
   it("não exibe card 'Perfil Público'", () => {

@@ -59,6 +59,7 @@ public record NpoProfileResponse(
             ProjectType type,
             BigDecimal budgetNeeded,
             BigDecimal investedAmount,
+            List<OdsResponse> ods,
             LocalDate startDate,
             LocalDate endDate,
             String focusArea,

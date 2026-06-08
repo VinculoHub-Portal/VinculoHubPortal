@@ -3,6 +3,7 @@ import { useNpoProfile } from "../../hooks/useNpoProfile"
 import { OrganizationInfoCard } from "../OngProfilePage/OrganizationInfoCard"
 import { ProfileHeaderCard } from "../OngProfilePage/ProfileHeaderCard"
 import { ResponsibleCard } from "../OngProfilePage/ResponsibleCard"
+import { PublicProjectsSection } from "./PublicProjectsSection"
 
 export function OngPublicProfilePage() {
   const { id } = useParams<{ id: string }>()
@@ -53,6 +54,8 @@ export function OngPublicProfilePage() {
         />
 
         <ResponsibleCard responsible={profile.responsible} isEditing={false} />
+
+        <PublicProjectsSection projects={profile.projects ?? []} />
       </main>
     </div>
   )
