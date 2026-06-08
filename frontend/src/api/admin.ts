@@ -30,6 +30,80 @@ export interface CompanyExportData {
   createdAt: string
 }
 
+export type AdminNpoAreaFilter = "environmental" | "social" | "governance"
+export type AdminNpoStatusFilter = "all" | "active" | "inactive"
+
+export interface AdminNpoCard {
+  id: number
+  name: string
+  logoUrl: string | null
+  active: boolean
+  environmental: boolean
+  social: boolean
+  governance: boolean
+  city: string | null
+  stateCode: string | null
+  createdAt: string
+}
+
+export interface AdminNpoPage {
+  content: AdminNpoCard[]
+  totalElements: number
+  totalPages: number
+  number: number
+  size: number
+  first: boolean
+  last: boolean
+}
+
+export interface AdminNpoFilters {
+  search?: string
+  area?: AdminNpoAreaFilter | "all"
+  status?: AdminNpoStatusFilter
+  page?: number
+  size?: number
+}
+
+export type AdminRelationshipStatusFilter = "all" | "pending" | "negotiation" | "active" | "inactive"
+export type AdminRelationshipInitiator = "company" | "npo"
+
+export interface AdminRelationshipCard {
+  companyId: number
+  companyName: string
+  companyEmail: string | null
+  npoId: number
+  npoName: string
+  npoEmail: string | null
+  projectId: number
+  projectTitle: string
+  status: "pending" | "negotiation" | "active" | "inactive"
+  initiatorType: AdminRelationshipInitiator
+  createdAt: string
+  updatedAt: string
+  respondedAt: string | null
+  companyConfirmedAt: string | null
+  npoConfirmedAt: string | null
+}
+
+export interface AdminRelationshipPage {
+  content: AdminRelationshipCard[]
+  totalElements: number
+  totalPages: number
+  number: number
+  size: number
+  first: boolean
+  last: boolean
+}
+
+export interface AdminRelationshipFilters {
+  companyName?: string
+  npoName?: string
+  projectTitle?: string
+  status?: AdminRelationshipStatusFilter
+  page?: number
+  size?: number
+}
+
 export async function fetchAllNpos(token: string): Promise<NpoExportData[]> {
   logger.info("AdminAPI", "Fetching all NPOs for export")
   try {
@@ -54,6 +128,64 @@ export async function fetchAllCompanies(token: string): Promise<CompanyExportDat
     return data
   } catch (error) {
     logger.error("AdminAPI", "Failed to fetch companies", error)
+    throw error
+  }
+}
+
+export async function fetchAdminNpos(
+  token: string,
+  filters: AdminNpoFilters = {},
+): Promise<AdminNpoPage> {
+  const params = new URLSearchParams()
+  if (filters.search) params.set("search", filters.search)
+  if (filters.area && filters.area !== "all") params.set("area", filters.area)
+  if (filters.status === "active") params.set("active", "true")
+  if (filters.status === "inactive") params.set("active", "false")
+  if (filters.page !== undefined) params.set("page", String(filters.page))
+  if (filters.size !== undefined) params.set("size", String(filters.size))
+
+  logger.info("AdminAPI", "Fetching admin NPO cards", { filters })
+  try {
+    const { data } = await api.get<AdminNpoPage>("/api/admin/ongs", {
+      headers: { Authorization: `Bearer ${token}` },
+      params,
+    })
+    logger.info("AdminAPI", "Admin NPO cards fetched", {
+      total: data.totalElements,
+      page: data.number,
+    })
+    return data
+  } catch (error) {
+    logger.error("AdminAPI", "Failed to fetch admin NPO cards", error)
+    throw error
+  }
+}
+
+export async function fetchAdminRelationships(
+  token: string,
+  filters: AdminRelationshipFilters = {},
+): Promise<AdminRelationshipPage> {
+  const params = new URLSearchParams()
+  if (filters.companyName) params.set("companyName", filters.companyName)
+  if (filters.npoName) params.set("npoName", filters.npoName)
+  if (filters.projectTitle) params.set("projectTitle", filters.projectTitle)
+  if (filters.status && filters.status !== "all") params.set("status", filters.status)
+  if (filters.page !== undefined) params.set("page", String(filters.page))
+  if (filters.size !== undefined) params.set("size", String(filters.size))
+
+  logger.info("AdminAPI", "Fetching admin relationships", { filters })
+  try {
+    const { data } = await api.get<AdminRelationshipPage>("/api/admin/vinculos", {
+      headers: { Authorization: `Bearer ${token}` },
+      params,
+    })
+    logger.info("AdminAPI", "Admin relationships fetched", {
+      total: data.totalElements,
+      page: data.number,
+    })
+    return data
+  } catch (error) {
+    logger.error("AdminAPI", "Failed to fetch admin relationships", error)
     throw error
   }
 }

@@ -16,6 +16,9 @@ import { OngPublicProfilePage } from "../pages/OngPublicProfilePage"
 import { EditProjectPage } from "../pages/EditProjectPage"
 import { EditaisMuralPage } from "../pages/EditaisMuralPage"
 import { AdminDashboard } from "../pages/AdminDashboard"
+import { AdminNotificationsPage } from "../pages/AdminNotificationsPage"
+import { AdminOngsPage } from "../pages/AdminOngsPage"
+import { AdminVinculosPage } from "../pages/AdminVinculosPage"
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -39,6 +42,30 @@ export const AppRouter = () => (
         element={
           <ProtectedRoute requiredRole="ADMIN">
             <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/ongs"
+        element={
+          <ProtectedRoute requiredRole="ADMIN">
+            <AdminOngsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/vinculos"
+        element={
+          <ProtectedRoute requiredRole="ADMIN">
+            <AdminVinculosPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/notificacoes"
+        element={
+          <ProtectedRoute requiredRole="ADMIN">
+            <AdminNotificationsPage />
           </ProtectedRoute>
         }
       />

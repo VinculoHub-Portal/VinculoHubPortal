@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AdminDashboard } from "./index";
@@ -15,8 +15,10 @@ vi.mock("../../announcement/CreateAnnouncementModal", () => ({
 
 const mocks = vi.hoisted(() => ({
   getAccessTokenSilentlyMock: vi.fn(),
-  fetchAdminNpoReportsMock: vi.fn(),
-  updateAdminNpoReportStatusMock: vi.fn(),
+  fetchAllNposMock: vi.fn(),
+  fetchAllCompaniesMock: vi.fn(),
+  downloadCsvMock: vi.fn(),
+  navigateMock: vi.fn(),
 }));
 
 vi.mock("@auth0/auth0-react", () => ({
@@ -25,180 +27,88 @@ vi.mock("@auth0/auth0-react", () => ({
   }),
 }));
 
-vi.mock("../../api/npoReports", () => ({
-  fetchAdminNpoReports: mocks.fetchAdminNpoReportsMock,
-  updateAdminNpoReportStatus: mocks.updateAdminNpoReportStatusMock,
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual<typeof import("react-router-dom")>(
+    "react-router-dom",
+  );
+  return {
+    ...actual,
+    useNavigate: () => mocks.navigateMock,
+  };
+});
+
+vi.mock("../../api/admin", () => ({
+  fetchAllNpos: mocks.fetchAllNposMock,
+  fetchAllCompanies: mocks.fetchAllCompaniesMock,
 }));
 
 vi.mock("../../components/general/Header", () => ({
   Header: () => <header data-testid="header" />,
 }));
 
+vi.mock("../../utils/exportCsv", () => ({
+  downloadCsv: mocks.downloadCsvMock,
+}));
+
 describe("AdminDashboard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getAccessTokenSilentlyMock.mockResolvedValue("token");
-    mocks.updateAdminNpoReportStatusMock.mockResolvedValue({
-      id: 1,
-      npo: { id: 10, name: "ONG Reportada" },
-      reporterCompany: {
-        id: 20,
-        name: "Empresa Denunciante",
-        cnpj: "12345678000199",
-      },
-      reporterUser: {
-        id: 30,
-        name: "Pessoa Empresa",
-        email: "empresa@example.com",
-      },
-      reason: "Documentos inconsistentes apresentados no perfil.",
-      status: "RESOLVED",
-      createdAt: "2026-05-29T12:00:00",
-    });
-    mocks.fetchAdminNpoReportsMock.mockResolvedValue([
-      {
-        id: 1,
-        npo: { id: 10, name: "ONG Reportada" },
-        reporterCompany: {
-          id: 20,
-          name: "Empresa Denunciante",
-          cnpj: "12345678000199",
-        },
-        reporterUser: {
-          id: 30,
-          name: "Pessoa Empresa",
-          email: "empresa@example.com",
-        },
-        reason: "Documentos inconsistentes apresentados no perfil.",
-        status: "OPEN",
-        createdAt: "2026-05-29T12:00:00",
-      },
-    ]);
+    mocks.fetchAllNposMock.mockResolvedValue([]);
+    mocks.fetchAllCompaniesMock.mockResolvedValue([]);
   });
 
-  it("renderiza o cabeçalho e o título da página", () => {
+  it("renderiza o cabeçalho, as métricas e seus links", () => {
     render(<AdminDashboard />);
 
     expect(screen.getByTestId("header")).toBeInTheDocument();
     expect(screen.getByText("Painel administrativo")).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "Gerencie usuários, organizações e configurações da plataforma.",
-      ),
+      screen.getByText("Gerencie ONGs, vínculos, denúncias e configurações da plataforma."),
     ).toBeInTheDocument();
+
+    const metricLinks = screen.getAllByRole("link", { name: "Ver todos" });
+    expect(metricLinks).toHaveLength(4);
+    expect(metricLinks[0]).toHaveAttribute("href", "/admin/ongs");
+    expect(metricLinks[1]).toHaveAttribute("href", "/editais");
+    expect(metricLinks[2]).toHaveAttribute("href", "/admin/vinculos");
+    expect(metricLinks[3]).toHaveAttribute("href", "/admin/notificacoes");
   });
 
-  it("renderiza as métricas principais do dashboard", () => {
-    render(<AdminDashboard />);
-
-    expect(
-      screen.getByRole("article", { name: "Total de ONGs: 87" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("article", { name: "Editais Publicados: 24" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("article", { name: "Vínculos Ativos: 156" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("article", { name: "Notificações Pendentes: 5" }),
-    ).toBeInTheDocument();
-  });
-
-  it("renderiza as ações do topo", () => {
-    render(<AdminDashboard />);
-
-    expect(
-      screen.getByRole("button", { name: "Cadastrar Edital" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Exportar Dados" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Ver Denúncias" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Mediações" }),
-    ).toBeInTheDocument();
-  });
-
-  it("abre o modal de cadastro de edital ao clicar em 'Cadastrar Edital'", async () => {
+  it("abre o modal de cadastro e navega para as páginas administrativas", async () => {
     const user = userEvent.setup();
     render(<AdminDashboard />);
-
-    expect(screen.queryByTestId("create-notice-modal")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Cadastrar Edital" }));
-
     expect(screen.getByTestId("create-notice-modal")).toBeInTheDocument();
-    expect(screen.getByText("Cadastrar Novo Edital")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Ver Denúncias" }));
+    expect(mocks.navigateMock).toHaveBeenCalledWith("/admin/notificacoes");
+
+    await user.click(screen.getByRole("button", { name: "Vínculos" }));
+    expect(mocks.navigateMock).toHaveBeenCalledWith("/admin/vinculos");
   });
 
-  it("renderiza as denúncias carregadas para o administrador", async () => {
-    render(<AdminDashboard />);
-
-    expect(screen.getByText("Denúncias de ONGs")).toBeInTheDocument();
-    expect(await screen.findByText("ONG Reportada")).toBeInTheDocument();
-    expect(screen.getByText("Empresa Denunciante")).toBeInTheDocument();
-    expect(screen.getByText("empresa@example.com")).toBeInTheDocument();
-    expect(
-      screen.getByText("Documentos inconsistentes apresentados no perfil."),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("combobox", { name: "Alterar status da denúncia 1" })).toHaveValue(
-      "OPEN",
-    );
-    expect(mocks.fetchAdminNpoReportsMock).toHaveBeenCalledWith("token");
-  });
-
-  it("atualiza o status de uma denúncia", async () => {
+  it("exporta os dados administrativos", async () => {
     const user = userEvent.setup();
+
     render(<AdminDashboard />);
+    await user.click(screen.getByRole("button", { name: "Exportar Dados" }));
 
-    const select = await screen.findByRole("combobox", {
-      name: "Alterar status da denúncia 1",
-    });
-    await user.selectOptions(select, "RESOLVED");
+    await waitFor(() => expect(mocks.downloadCsvMock).toHaveBeenCalledTimes(2));
 
-    expect(mocks.updateAdminNpoReportStatusMock).toHaveBeenCalledWith(
-      1,
-      { status: "RESOLVED" },
-      "token",
+    expect(mocks.getAccessTokenSilentlyMock).toHaveBeenCalled();
+    expect(mocks.fetchAllNposMock).toHaveBeenCalledWith("token");
+    expect(mocks.fetchAllCompaniesMock).toHaveBeenCalledWith("token");
+    expect(mocks.downloadCsvMock).toHaveBeenCalledWith(
+      expect.stringMatching(/^ongs_\d{4}-\d{2}-\d{2}\.csv$/),
+      [],
+      expect.objectContaining({ name: "Nome", createdAt: "Data de Cadastro" }),
     );
-    expect(await screen.findByRole("combobox", { name: "Alterar status da denúncia 1" }))
-      .toHaveValue("RESOLVED");
-  });
-
-  it("mostra erro quando a atualização de status falha", async () => {
-    const user = userEvent.setup();
-    mocks.updateAdminNpoReportStatusMock.mockRejectedValue(new Error("Falha"));
-
-    render(<AdminDashboard />);
-
-    const select = await screen.findByRole("combobox", {
-      name: "Alterar status da denúncia 1",
-    });
-    await user.selectOptions(select, "DISMISSED");
-
-    expect(
-      await screen.findByText("Não foi possível atualizar o status da denúncia."),
-    ).toBeInTheDocument();
-  });
-
-  it("renderiza estado vazio quando não há denúncias", async () => {
-    mocks.fetchAdminNpoReportsMock.mockResolvedValue([]);
-
-    render(<AdminDashboard />);
-
-    expect(await screen.findByText("Nenhuma denúncia pendente.")).toBeInTheDocument();
-  });
-
-  it("renderiza erro quando não consegue carregar denúncias", async () => {
-    mocks.fetchAdminNpoReportsMock.mockRejectedValue(new Error("Falha"));
-
-    render(<AdminDashboard />);
-
-    expect(
-      await screen.findByText("Não foi possível carregar as denúncias."),
-    ).toBeInTheDocument();
+    expect(mocks.downloadCsvMock).toHaveBeenCalledWith(
+      expect.stringMatching(/^empresas_\d{4}-\d{2}-\d{2}\.csv$/),
+      [],
+      expect.objectContaining({ legalName: "Razão Social", createdAt: "Data de Cadastro" }),
+    );
   });
 });

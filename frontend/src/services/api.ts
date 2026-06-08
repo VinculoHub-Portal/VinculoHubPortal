@@ -1,14 +1,17 @@
-import axios from 'axios';
-import { logger } from '../utils/logger';
+import axios from "axios";
+import { logger } from "../utils/logger";
 
-const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:8088";
 
 export const api = axios.create({
   baseURL: apiBaseUrl,
 });
 
 api.interceptors.request.use((config) => {
-  logger.info("HTTP", `→ ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+  logger.info(
+    "HTTP",
+    `→ ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`,
+  );
   return config;
 });
 
