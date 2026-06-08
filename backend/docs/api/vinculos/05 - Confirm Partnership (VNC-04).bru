@@ -1,0 +1,21 @@
+meta {
+  name: 05 - Confirm Partnership (VNC-04)
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/relationships/1/1/confirm
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{bearerToken}}
+}
+
+docs {
+  2º aperto de mão. Cada parte chama este endpoint uma vez. Path: /{companyId}/{projectId}/confirm.
+  Após a confirmação das DUAS partes o status passa a 'active' e o vínculo alimenta o
+  Dashboard de Impacto ESG. Antes disso permanece em 'negotiation'.
+}

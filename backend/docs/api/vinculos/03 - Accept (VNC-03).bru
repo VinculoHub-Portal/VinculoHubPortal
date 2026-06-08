@@ -1,0 +1,20 @@
+meta {
+  name: 03 - Accept (VNC-03)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/relationships/1/1/accept
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{bearerToken}}
+}
+
+docs {
+  1º aperto de mão (resposta). Apenas o receptor pode aceitar. Path: /{companyId}/{projectId}/accept.
+  Status passa a 'negotiation' e os contatos de ambas as partes ficam visíveis na listagem.
+}

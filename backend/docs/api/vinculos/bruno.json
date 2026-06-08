@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "VinculoHub - Vínculos",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

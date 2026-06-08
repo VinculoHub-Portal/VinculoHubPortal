@@ -55,6 +55,15 @@ public class SecurityConfig {
                                         .permitAll()
                                         .requestMatchers("/public/**")
                                         .permitAll()
+                                        .requestMatchers(
+                                                "/v3/api-docs/**",
+                                                "/swagger-ui/**",
+                                                "/swagger-ui.html")
+                                        .permitAll()
+                                        // Apenas profile dev: o controller /dev/** só é
+                                        // registrado em dev; em produção a rota não existe.
+                                        .requestMatchers("/dev/**")
+                                        .permitAll()
                                         .requestMatchers("/cep/**", "/cnpj/**")
                                         .permitAll()
                                         .requestMatchers(HttpMethod.GET, "/api/editais")
