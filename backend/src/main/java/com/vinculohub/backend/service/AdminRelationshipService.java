@@ -2,8 +2,8 @@
 package com.vinculohub.backend.service;
 
 import com.vinculohub.backend.dto.AdminRelationshipResponse;
-import com.vinculohub.backend.model.CompanyProject;
 import com.vinculohub.backend.model.Company;
+import com.vinculohub.backend.model.CompanyProject;
 import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.model.enums.RelationshipStatus;
@@ -32,7 +32,11 @@ public class AdminRelationshipService {
         String normalizedProjectTitle = trimToNull(projectTitle);
         Page<CompanyProject> page =
                 companyProjectRepository.findAdminRelationships(
-                        normalizedCompanyName, normalizedNpoName, normalizedProjectTitle, status, pageable);
+                        normalizedCompanyName,
+                        normalizedNpoName,
+                        normalizedProjectTitle,
+                        status,
+                        pageable);
         return page.map(this::toResponse);
     }
 

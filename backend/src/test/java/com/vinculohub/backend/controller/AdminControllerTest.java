@@ -69,7 +69,8 @@ class AdminControllerTest {
                         PageRequest.of(2, 5, Sort.by(Sort.Direction.DESC, "createdAt")),
                         11);
 
-        when(adminNpoService.listNpos(eq("Verde"), eq("environmental"), eq(true), any(Pageable.class)))
+        when(adminNpoService.listNpos(
+                        eq("Verde"), eq("environmental"), eq(true), any(Pageable.class)))
                 .thenReturn(page);
 
         mockMvc.perform(
@@ -81,7 +82,8 @@ class AdminControllerTest {
                                 .param("size", "5"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].name").value("ONG Verde"))
-                .andExpect(jsonPath("$.content[0].logoUrl").value("https://cdn.example.com/logo.png"))
+                .andExpect(
+                        jsonPath("$.content[0].logoUrl").value("https://cdn.example.com/logo.png"))
                 .andExpect(jsonPath("$.content[0].active").value(true))
                 .andExpect(jsonPath("$.content[0].environmental").value(true))
                 .andExpect(jsonPath("$.content[0].city").value("Porto Alegre"))
@@ -120,13 +122,12 @@ class AdminControllerTest {
                         PageRequest.of(1, 7, Sort.by(Sort.Direction.DESC, "updatedAt")),
                         8);
 
-        when(
-                        adminRelationshipService.listRelationships(
-                                eq("Empresa Verde"),
-                                eq("ONG Verde"),
-                                eq("Projeto Impacto"),
-                                eq(RelationshipStatus.active),
-                                any(Pageable.class)))
+        when(adminRelationshipService.listRelationships(
+                        eq("Empresa Verde"),
+                        eq("ONG Verde"),
+                        eq("Projeto Impacto"),
+                        eq(RelationshipStatus.active),
+                        any(Pageable.class)))
                 .thenReturn(page);
 
         mockMvc.perform(
@@ -162,12 +163,11 @@ class AdminControllerTest {
     @Test
     @DisplayName("GET /api/admin/ongs sem filtros usa paginação padrão")
     void shouldUseDefaultPaginationForNpoList() throws Exception {
-        when(
-                        adminNpoService.listNpos(
-                                nullable(String.class),
-                                nullable(String.class),
-                                nullable(Boolean.class),
-                                any(Pageable.class)))
+        when(adminNpoService.listNpos(
+                        nullable(String.class),
+                        nullable(String.class),
+                        nullable(Boolean.class),
+                        any(Pageable.class)))
                 .thenReturn(
                         new PageImpl<>(
                                 List.of(),
