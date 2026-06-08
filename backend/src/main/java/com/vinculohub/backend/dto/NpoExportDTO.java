@@ -10,7 +10,6 @@ public record NpoExportDTO(
         Integer id,
         String name,
         String cnpj,
-        String cpf,
         String phone,
         NpoSize npoSize,
         Boolean environmental,

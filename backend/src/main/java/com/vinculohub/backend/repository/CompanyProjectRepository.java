@@ -4,6 +4,7 @@ package com.vinculohub.backend.repository;
 import com.vinculohub.backend.model.CompanyProject;
 import com.vinculohub.backend.model.CompanyProjectId;
 import com.vinculohub.backend.repository.projection.CompanySupportedProjectsSummaryProjection;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,6 +12,16 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CompanyProjectRepository extends JpaRepository<CompanyProject, CompanyProjectId> {
+
+    @Query(
+            """
+            SELECT cp FROM CompanyProject cp
+            JOIN FETCH cp.company c
+            JOIN FETCH cp.project p
+            JOIN FETCH p.npo n
+            ORDER BY c.legalName, n.name, p.title
+            """)
+    List<CompanyProject> findAllForExport();
 
     @Query(
             value =
