@@ -5,7 +5,6 @@ import com.vinculohub.backend.model.CompanyProject;
 import com.vinculohub.backend.model.CompanyProjectId;
 import com.vinculohub.backend.model.enums.RelationshipStatus;
 import com.vinculohub.backend.repository.projection.CompanySupportedProjectsSummaryProjection;
-import java.util.List;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
