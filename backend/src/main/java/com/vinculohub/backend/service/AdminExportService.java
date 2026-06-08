@@ -18,9 +18,7 @@ public class AdminExportService {
 
     @Transactional(readOnly = true)
     public List<VinculoExportDTO> findAllVinculosForExport() {
-        return companyProjectRepository.findAllForExport().stream()
-                .map(this::toExportDTO)
-                .toList();
+        return companyProjectRepository.findAllForExport().stream().map(this::toExportDTO).toList();
     }
 
     private VinculoExportDTO toExportDTO(CompanyProject companyProject) {
