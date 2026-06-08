@@ -294,9 +294,7 @@ public class NpoProfileService {
 
         return project.getOds().stream()
                 .filter(Objects::nonNull)
-                .sorted(
-                        Comparator.comparing(
-                                Ods::getId, Comparator.nullsLast(Integer::compareTo)))
+                .sorted(Comparator.comparing(Ods::getId, Comparator.nullsLast(Integer::compareTo)))
                 .map(ods -> new OdsResponse(ods.getId(), ods.getName(), ods.getDescription()))
                 .toList();
     }
