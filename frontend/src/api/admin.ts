@@ -4,8 +4,7 @@ import { logger } from "../utils/logger"
 export interface NpoExportData {
   id: number
   name: string
-  cnpj: string | null
-  cpf: string | null
+  cnpj: string | null 
   phone: string | null
   npoSize: "small" | "medium" | "large" | null
   environmental: boolean
