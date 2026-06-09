@@ -13,6 +13,7 @@ import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.model.enums.UserType;
 import com.vinculohub.backend.repository.CompanyRepository;
 import com.vinculohub.backend.repository.NpoRepository;
+import com.vinculohub.backend.repository.ProjectRepository;
 import com.vinculohub.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -28,11 +29,13 @@ class MeControllerTest extends AbstractIntegrationTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private UserRepository userRepository;
     @Autowired private NpoRepository npoRepository;
+        @Autowired private ProjectRepository projectRepository;
     @Autowired private CompanyRepository companyRepository;
 
     @BeforeEach
     void setup() {
         companyRepository.deleteAll();
+                projectRepository.deleteAll();
         npoRepository.deleteAll();
         userRepository.deleteAll();
     }
