@@ -2,8 +2,6 @@
 package com.vinculohub.backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -30,8 +28,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
 class NpoProfileServiceTest {
@@ -81,8 +77,7 @@ class NpoProfileServiceTest {
 
         when(npoRepository.findById(10)).thenReturn(Optional.of(npo));
         when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
-        when(projectRepository.findSomeByNpoId(eq(10L), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(project)));
+        when(projectRepository.findAllByNpoId(10L)).thenReturn(List.of(project));
         when(documentRepository.findByNpo_Id(10)).thenReturn(List.of());
 
         NpoProfileResponse response = npoProfileService.getProfile(10, null);
@@ -96,6 +91,6 @@ class NpoProfileServiceTest {
         assertEquals(4, projectData.ods().get(0).id());
         assertEquals("ODS 4 - Educacao de Qualidade", projectData.ods().get(0).name());
         assertEquals(LocalDateTime.of(2026, 3, 15, 10, 0), projectData.createdAt());
-        verify(projectRepository).findSomeByNpoId(10L, Pageable.ofSize(5));
+        verify(projectRepository).findAllByNpoId(10L);
     }
 }

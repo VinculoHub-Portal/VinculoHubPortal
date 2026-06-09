@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
 import { describe, expect, it, vi } from "vitest"
 import { OngPublicProfilePage } from "."
@@ -80,6 +81,7 @@ const externalProfile: NpoProfileResponse = {
       beneficiariesCount: 120,
       location: "Sao Paulo",
       mainObjective: "Ampliar acesso a educacao.",
+      createdAt: "2026-03-15T12:00:00",
     },
   ],
 }
@@ -104,7 +106,8 @@ describe("OngPublicProfilePage", () => {
       refetch: vi.fn(),
     })
     renderPage("42")
-    expect(screen.getByText("Carregando perfil…")).toBeInTheDocument()
+    expect(screen.getByText("Carregando perfil...")).toBeInTheDocument()
+    expect(screen.getAllByLabelText("Carregando projeto")).toHaveLength(3)
   })
 
   it("exibe estado de erro quando perfil não encontrado", () => {
@@ -144,10 +147,42 @@ describe("OngPublicProfilePage", () => {
     })
     renderPage("42")
 
-    expect(screen.getByText("Projetos da ONG")).toBeInTheDocument()
+    expect(screen.getByText("Projetos Publicados (1)")).toBeInTheDocument()
     expect(screen.getByText("Projeto Alfabetizacao")).toBeInTheDocument()
     expect(screen.getByText("Ativo")).toBeInTheDocument()
     expect(screen.getByText("ODS 4 - Educacao de Qualidade")).toBeInTheDocument()
+    expect(screen.getByText("Publicado em 15/03/2026")).toBeInTheDocument()
+  })
+
+  it("pagina os projetos em grupos de cinco cards", async () => {
+    const paginatedProfile: NpoProfileResponse = {
+      ...externalProfile,
+      projects: Array.from({ length: 6 }, (_, index) => ({
+        ...externalProfile.projects[0],
+        id: 100 + index,
+        title: `Projeto ${index + 1}`,
+        createdAt: `2026-03-${String(index + 1).padStart(2, "0")}T12:00:00`,
+      })),
+    }
+
+    mocks.useNpoProfile.mockReturnValue({
+      profile: paginatedProfile,
+      loading: false,
+      error: null,
+      save: vi.fn(),
+      refetch: vi.fn(),
+    })
+    renderPage("42")
+
+    expect(screen.getByText("Projetos Publicados (6)")).toBeInTheDocument()
+    expect(screen.getByText("Projeto 1")).toBeInTheDocument()
+    expect(screen.getByText("Projeto 5")).toBeInTheDocument()
+    expect(screen.queryByText("Projeto 6")).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole("button", { name: /próxima página/i }))
+
+    expect(screen.getByText("Projeto 6")).toBeInTheDocument()
+    expect(screen.queryByText("Projeto 1")).not.toBeInTheDocument()
   })
 
   it("exibe estado vazio quando a ONG nao possui projetos", () => {
@@ -161,7 +196,7 @@ describe("OngPublicProfilePage", () => {
     renderPage("42")
 
     expect(
-      screen.getByText("Esta ONG ainda não possui projetos publicados."),
+      screen.getByText("Esta ONG ainda não possui projetos cadastrados."),
     ).toBeInTheDocument()
   })
 

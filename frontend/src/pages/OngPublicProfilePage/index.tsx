@@ -12,8 +12,17 @@ export function OngPublicProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-sm text-slate-500">Carregando perfil…</p>
+      <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
+        <header className="bg-vinculo-dark px-6 py-4 shadow-md">
+          <span className="text-xl font-bold text-white">
+            VinculoHub<span className="text-vinculo-green">Portal</span>
+          </span>
+        </header>
+
+        <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 sm:px-6">
+          <p className="text-sm text-slate-500">Carregando perfil...</p>
+          <PublicProjectsSection loading projects={[]} />
+        </main>
       </div>
     )
   }

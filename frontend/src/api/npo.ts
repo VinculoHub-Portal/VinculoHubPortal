@@ -59,6 +59,7 @@ export interface NpoProfileProject {
   beneficiariesCount: number | null
   location: string | null
   mainObjective: string | null
+  createdAt: string | null
 }
 
 export interface NpoProfileResponse {
