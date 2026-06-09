@@ -62,6 +62,16 @@ export interface NpoProfileProject {
   createdAt: string | null
 }
 
+export interface NpoProfileProjectPage {
+  content: NpoProfileProject[]
+  totalElements: number
+  totalPages: number
+  number: number
+  size: number
+  first: boolean
+  last: boolean
+}
+
 export interface NpoProfileResponse {
   viewerContext: ViewerContext
   institutionalData: NpoInstitutionalData
@@ -125,6 +135,27 @@ export async function fetchNpoProfile(
     return data
   } catch (error) {
     logger.error("NpoAPI", `Failed to fetch profile for npo ${id}`, error)
+    throw error
+  }
+}
+
+export async function fetchNpoProfileProjects(
+  id: number,
+  page = 0,
+  size = 5,
+): Promise<NpoProfileProjectPage> {
+  logger.info("NpoAPI", `Fetching public projects for npo ${id}`, { page, size })
+  try {
+    const { data } = await api.get<NpoProfileProjectPage>(`/api/npos/${id}/projects`, {
+      params: { page, size },
+    })
+    logger.info("NpoAPI", `Public projects fetched for npo ${id}`, {
+      totalElements: data.totalElements,
+      page: data.number,
+    })
+    return data
+  } catch (error) {
+    logger.error("NpoAPI", `Failed to fetch public projects for npo ${id}`, error)
     throw error
   }
 }

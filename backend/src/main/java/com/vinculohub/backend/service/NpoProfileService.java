@@ -20,6 +20,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -73,6 +75,19 @@ public class NpoProfileService {
                 mapResponsible(responsibleUser),
                 mapProjects(npo.getId()),
                 mapDocuments(npo.getId()));
+    }
+
+    @Transactional(readOnly = true)
+    public NpoProfileResponse.ProjectPageData getPublicProjects(Integer npoId, Pageable pageable) {
+        if (npoId == null) {
+            throw new IllegalArgumentException("O id da ONG é obrigatório.");
+        }
+
+        if (!npoRepository.existsById(npoId)) {
+            throw new NotFoundException("ONG não encontrada.");
+        }
+
+        return mapProjectsPage(npoId, pageable);
     }
 
     @Transactional
@@ -266,6 +281,20 @@ public class NpoProfileService {
                                 Comparator.nullsLast(Comparator.reverseOrder())))
                 .map(this::mapProject)
                 .toList();
+    }
+
+    private NpoProfileResponse.ProjectPageData mapProjectsPage(Integer npoId, Pageable pageable) {
+        Page<NpoProfileResponse.ProjectData> page =
+                projectRepository.findByNpoId(npoId.longValue(), pageable).map(this::mapProject);
+
+        return new NpoProfileResponse.ProjectPageData(
+                page.getContent(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.getNumber(),
+                page.getSize(),
+                page.isFirst(),
+                page.isLast());
     }
 
     private NpoProfileResponse.ProjectData mapProject(Project project) {

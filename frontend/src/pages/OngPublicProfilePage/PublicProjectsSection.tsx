@@ -1,13 +1,16 @@
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined"
 import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined"
-import { useMemo, useState } from "react"
 import { Pagination } from "../../components/general/Pagination"
 import type { NpoProfileProject } from "../../api/npo"
 import type { ProjectStatus } from "../../api/projects"
 
 interface ProjectsSectionProps {
+  currentPage?: number
   loading?: boolean
+  onPageChange?: (page: number) => void
   projects: NpoProfileProject[]
+  totalElements?: number
+  totalPages?: number
 }
 
 interface ProjectCardProps {
@@ -29,8 +32,6 @@ const STATUS_CLASSES: Record<ProjectStatus, string> = {
   COMPLETED: "bg-slate-100 text-slate-700",
   CANCELLED: "bg-red-100 text-red-700",
 }
-
-const PROJECTS_PER_PAGE = 5
 
 function formatPublishedDate(value: string | null) {
   if (!value) return "data indisponível"
@@ -131,19 +132,19 @@ function ProjectCardSkeleton() {
   )
 }
 
-export function PublicProjectsSection({ loading = false, projects }: ProjectsSectionProps) {
-  const [currentPage, setCurrentPage] = useState(0)
-  const totalPages = Math.ceil(projects.length / PROJECTS_PER_PAGE)
-  const safeCurrentPage = totalPages > 0 ? Math.min(currentPage, totalPages - 1) : 0
-  const visibleProjects = useMemo(() => {
-    const start = safeCurrentPage * PROJECTS_PER_PAGE
-    return projects.slice(start, start + PROJECTS_PER_PAGE)
-  }, [safeCurrentPage, projects])
+export function PublicProjectsSection({
+  currentPage = 0,
+  loading = false,
+  onPageChange,
+  projects,
+  totalElements = projects.length,
+  totalPages = 1,
+}: ProjectsSectionProps) {
 
   return (
     <section aria-labelledby="public-projects-title">
       <h2 id="public-projects-title" className="mb-5 text-base font-semibold text-vinculo-dark">
-        Projetos Publicados ({loading ? 0 : projects.length})
+        Projetos Publicados ({loading ? 0 : totalElements})
       </h2>
 
       {loading ? (
@@ -152,21 +153,21 @@ export function PublicProjectsSection({ loading = false, projects }: ProjectsSec
             <ProjectCardSkeleton key={index} />
           ))}
         </div>
-      ) : projects.length === 0 ? (
+      ) : totalElements === 0 ? (
         <div className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-500 shadow-sm">
           Esta ONG ainda não possui projetos cadastrados.
         </div>
       ) : (
         <>
           <div className="flex flex-col gap-4">
-            {visibleProjects.map((project) => (
+            {projects.map((project) => (
               <ProjectCard key={project.id} project={project} />
             ))}
           </div>
           <Pagination
-            currentPage={safeCurrentPage}
+            currentPage={currentPage}
             totalPages={totalPages}
-            onChange={setCurrentPage}
+            onChange={onPageChange ?? (() => undefined)}
           />
         </>
       )}

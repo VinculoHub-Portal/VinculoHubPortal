@@ -2,6 +2,8 @@
 package com.vinculohub.backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -28,6 +30,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
 class NpoProfileServiceTest {
@@ -92,5 +96,37 @@ class NpoProfileServiceTest {
         assertEquals("ODS 4 - Educacao de Qualidade", projectData.ods().get(0).name());
         assertEquals(LocalDateTime.of(2026, 3, 15, 10, 0), projectData.createdAt());
         verify(projectRepository).findAllByNpoId(10L);
+    }
+
+    @Test
+    @DisplayName("Deve retornar projetos publicos paginados da ONG")
+    void shouldReturnPaginatedPublicProjects() {
+        Ods ods =
+                Ods.builder()
+                        .id(4)
+                        .name("ODS 4 - Educacao de Qualidade")
+                        .description("Educacao inclusiva e equitativa.")
+                        .build();
+        Project project =
+                Project.builder()
+                        .id(99L)
+                        .title("Projeto Alfabetizacao")
+                        .description("Aulas no contraturno.")
+                        .status(ProjectStatus.ACTIVE)
+                        .ods(new LinkedHashSet<>(List.of(ods)))
+                        .createdAt(LocalDateTime.of(2026, 3, 15, 10, 0))
+                        .build();
+
+        when(npoRepository.existsById(10)).thenReturn(true);
+        when(projectRepository.findByNpoId(eq(10L), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(project)));
+
+        NpoProfileResponse.ProjectPageData response =
+                npoProfileService.getPublicProjects(10, Pageable.ofSize(5));
+
+        assertEquals(1, response.content().size());
+        assertEquals(1, response.totalElements());
+        assertEquals("Projeto Alfabetizacao", response.content().get(0).title());
+        verify(projectRepository).findByNpoId(10L, Pageable.ofSize(5));
     }
 }

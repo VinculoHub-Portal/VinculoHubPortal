@@ -1,12 +1,17 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
-import { describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { OngPublicProfilePage } from "."
-import type { NpoProfileResponse } from "../../api/npo"
+import type { NpoProfileProjectPage, NpoProfileResponse } from "../../api/npo"
 
 const mocks = vi.hoisted(() => ({
+  fetchNpoProfileProjects: vi.fn(),
   useNpoProfile: vi.fn(),
+}))
+
+vi.mock("../../api/npo", () => ({
+  fetchNpoProfileProjects: mocks.fetchNpoProfileProjects,
 }))
 
 vi.mock("../../hooks/useNpoProfile", () => ({
@@ -58,7 +63,11 @@ const externalProfile: NpoProfileResponse = {
     auth0Id: "auth0|owner",
     userType: "npo",
   },
-  projects: [
+  projects: [],
+}
+
+const projectsPage: NpoProfileProjectPage = {
+  content: [
     {
       id: 100,
       title: "Projeto Alfabetizacao",
@@ -84,7 +93,18 @@ const externalProfile: NpoProfileResponse = {
       createdAt: "2026-03-15T12:00:00",
     },
   ],
+    totalElements: 1,
+    totalPages: 1,
+    number: 0,
+    size: 5,
+    first: true,
+    last: true,
 }
+
+beforeEach(() => {
+  vi.clearAllMocks()
+  mocks.fetchNpoProfileProjects.mockResolvedValue(projectsPage)
+})
 
 function renderPage(id: string) {
   return render(
@@ -137,7 +157,7 @@ describe("OngPublicProfilePage", () => {
     expect(screen.getByText("Maria Silva Santos")).toBeInTheDocument()
   })
 
-  it("renderiza os projetos da ONG com nome, status e ODS", () => {
+  it("renderiza os projetos da ONG com nome, status e ODS", async () => {
     mocks.useNpoProfile.mockReturnValue({
       profile: externalProfile,
       loading: false,
@@ -147,26 +167,31 @@ describe("OngPublicProfilePage", () => {
     })
     renderPage("42")
 
-    expect(screen.getByText("Projetos Publicados (1)")).toBeInTheDocument()
+    expect(await screen.findByText("Projetos Publicados (1)")).toBeInTheDocument()
     expect(screen.getByText("Projeto Alfabetizacao")).toBeInTheDocument()
     expect(screen.getByText("Ativo")).toBeInTheDocument()
     expect(screen.getByText("ODS 4 - Educacao de Qualidade")).toBeInTheDocument()
     expect(screen.getByText("Publicado em 15/03/2026")).toBeInTheDocument()
   })
 
-  it("pagina os projetos em grupos de cinco cards", async () => {
-    const paginatedProfile: NpoProfileResponse = {
-      ...externalProfile,
-      projects: Array.from({ length: 6 }, (_, index) => ({
-        ...externalProfile.projects[0],
+  it("solicita a proxima pagina de projetos ao clicar na paginacao", async () => {
+    mocks.fetchNpoProfileProjects.mockResolvedValueOnce({
+      content: Array.from({ length: 5 }, (_, index) => ({
+        ...projectsPage.content[0],
         id: 100 + index,
         title: `Projeto ${index + 1}`,
         createdAt: `2026-03-${String(index + 1).padStart(2, "0")}T12:00:00`,
       })),
-    }
+      totalElements: 6,
+      totalPages: 2,
+      number: 0,
+      size: 5,
+      first: true,
+      last: false,
+    })
 
     mocks.useNpoProfile.mockReturnValue({
-      profile: paginatedProfile,
+      profile: externalProfile,
       loading: false,
       error: null,
       save: vi.fn(),
@@ -174,20 +199,28 @@ describe("OngPublicProfilePage", () => {
     })
     renderPage("42")
 
-    expect(screen.getByText("Projetos Publicados (6)")).toBeInTheDocument()
+    expect(await screen.findByText("Projetos Publicados (6)")).toBeInTheDocument()
     expect(screen.getByText("Projeto 1")).toBeInTheDocument()
     expect(screen.getByText("Projeto 5")).toBeInTheDocument()
     expect(screen.queryByText("Projeto 6")).not.toBeInTheDocument()
 
     await userEvent.click(screen.getByRole("button", { name: /próxima página/i }))
 
-    expect(screen.getByText("Projeto 6")).toBeInTheDocument()
-    expect(screen.queryByText("Projeto 1")).not.toBeInTheDocument()
+    expect(mocks.fetchNpoProfileProjects).toHaveBeenLastCalledWith(42, 1, 5)
   })
 
-  it("exibe estado vazio quando a ONG nao possui projetos", () => {
+  it("exibe estado vazio quando a ONG nao possui projetos", async () => {
+    mocks.fetchNpoProfileProjects.mockResolvedValueOnce({
+      content: [],
+      totalElements: 0,
+      totalPages: 0,
+      number: 0,
+      size: 5,
+      first: true,
+      last: true,
+    })
     mocks.useNpoProfile.mockReturnValue({
-      profile: { ...externalProfile, projects: [] },
+      profile: externalProfile,
       loading: false,
       error: null,
       save: vi.fn(),
@@ -196,7 +229,7 @@ describe("OngPublicProfilePage", () => {
     renderPage("42")
 
     expect(
-      screen.getByText("Esta ONG ainda não possui projetos cadastrados."),
+      await screen.findByText("Esta ONG ainda não possui projetos cadastrados."),
     ).toBeInTheDocument()
   })
 

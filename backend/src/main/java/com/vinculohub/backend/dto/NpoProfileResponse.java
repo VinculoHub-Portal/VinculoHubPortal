@@ -69,6 +69,15 @@ public record NpoProfileResponse(
             String mainObjective,
             LocalDateTime createdAt) {}
 
+    public record ProjectPageData(
+            List<ProjectData> content,
+            long totalElements,
+            int totalPages,
+            int number,
+            int size,
+            boolean first,
+            boolean last) {}
+
     public record DocumentData(
             Integer id,
             String title,

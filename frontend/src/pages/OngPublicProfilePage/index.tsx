@@ -1,14 +1,65 @@
+import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
+import {
+  fetchNpoProfileProjects,
+  type NpoProfileProjectPage,
+} from "../../api/npo"
 import { useNpoProfile } from "../../hooks/useNpoProfile"
 import { OrganizationInfoCard } from "../OngProfilePage/OrganizationInfoCard"
 import { ProfileHeaderCard } from "../OngProfilePage/ProfileHeaderCard"
 import { ResponsibleCard } from "../OngProfilePage/ResponsibleCard"
 import { PublicProjectsSection } from "./PublicProjectsSection"
 
+const PROJECTS_PER_PAGE = 5
+const EMPTY_PROJECTS_PAGE: NpoProfileProjectPage = {
+  content: [],
+  totalElements: 0,
+  totalPages: 0,
+  number: 0,
+  size: PROJECTS_PER_PAGE,
+  first: true,
+  last: true,
+}
+
 export function OngPublicProfilePage() {
   const { id } = useParams<{ id: string }>()
   const numericId = id ? Number(id) : undefined
+  const [projectPage, setProjectPage] = useState(0)
+  const [projectsPage, setProjectsPage] =
+    useState<NpoProfileProjectPage>(EMPTY_PROJECTS_PAGE)
+  const [projectsLoading, setProjectsLoading] = useState(false)
   const { profile, loading, error } = useNpoProfile(numericId)
+
+  useEffect(() => {
+    if (numericId === undefined || Number.isNaN(numericId)) {
+      setProjectsPage(EMPTY_PROJECTS_PAGE)
+      return
+    }
+
+    let cancelled = false
+
+    async function loadProjects() {
+      try {
+        setProjectsLoading(true)
+        const data = await fetchNpoProfileProjects(
+          numericId!,
+          projectPage,
+          PROJECTS_PER_PAGE,
+        )
+        if (!cancelled) setProjectsPage(data)
+      } catch {
+        if (!cancelled) setProjectsPage(EMPTY_PROJECTS_PAGE)
+      } finally {
+        if (!cancelled) setProjectsLoading(false)
+      }
+    }
+
+    void loadProjects()
+
+    return () => {
+      cancelled = true
+    }
+  }, [numericId, projectPage])
 
   if (loading) {
     return (
@@ -64,7 +115,14 @@ export function OngPublicProfilePage() {
 
         <ResponsibleCard responsible={profile.responsible} isEditing={false} />
 
-        <PublicProjectsSection projects={profile.projects ?? []} />
+        <PublicProjectsSection
+          currentPage={projectsPage.number}
+          loading={projectsLoading}
+          onPageChange={setProjectPage}
+          projects={projectsPage.content}
+          totalElements={projectsPage.totalElements}
+          totalPages={projectsPage.totalPages}
+        />
       </main>
     </div>
   )
