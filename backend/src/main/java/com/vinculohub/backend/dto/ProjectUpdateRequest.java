@@ -3,6 +3,8 @@ package com.vinculohub.backend.dto;
 
 import com.vinculohub.backend.model.enums.ProjectType;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -20,6 +22,7 @@ public record ProjectUpdateRequest(
                 String description,
         @DecimalMin(value = "0.00", message = "Valor necessário não pode ser negativo")
                 BigDecimal budgetNeeded,
+        BigDecimal investedAmount,
         LocalDate startDate,
         LocalDate endDate,
         @NotEmpty(message = "ODS é obrigatório") List<Integer> odsIds,
@@ -29,4 +32,7 @@ public record ProjectUpdateRequest(
         Integer beneficiariesCount,
         String location,
         @Size(max = 600, message = "Objetivo principal deve ter no máximo 600 caracteres")
-                String mainObjective) {}
+                String mainObjective,
+        @Min(value = 0, message = "Progresso não pode ser negativo")
+                @Max(value = 100, message = "Progresso não pode ultrapassar 100")
+                Integer progress) {}

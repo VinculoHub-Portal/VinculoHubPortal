@@ -2,6 +2,7 @@
 package com.vinculohub.backend.repository;
 
 import com.vinculohub.backend.model.Project;
+import com.vinculohub.backend.model.enums.ProjectType;
 import com.vinculohub.backend.repository.projection.EsgPillarAggregationProjection;
 import com.vinculohub.backend.repository.projection.PortfolioTotalsProjection;
 import java.util.List;
@@ -11,10 +12,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+
 @Repository
 public interface ProjectRepository
         extends JpaRepository<Project, Long>, JpaSpecificationExecutor<Project> {
     List<Project> findAllByNpoId(Long npoId);
+
+    long countByNpoIdAndDeletedAtIsNull(Long npoId);
+
+    long countByNpoIdAndTypeAndDeletedAtIsNull(Long npoId, ProjectType type);
 
     @Query(
             value =

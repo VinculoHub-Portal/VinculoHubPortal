@@ -2,6 +2,7 @@
 package com.vinculohub.backend.service;
 
 import com.vinculohub.backend.dto.CompanyEsgImpactDashboardResponse;
+import com.vinculohub.backend.dto.NpoProjectSummaryResponse;
 import com.vinculohub.backend.dto.EsgPillarImpactDTO;
 import com.vinculohub.backend.dto.NpoFirstProjectSignupRequest;
 import com.vinculohub.backend.dto.OdsResponse;
@@ -21,6 +22,7 @@ import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.model.enums.EsgPillar;
 import com.vinculohub.backend.model.enums.ProjectStatus;
+import com.vinculohub.backend.model.enums.ProjectType;
 import com.vinculohub.backend.repository.CompanyRepository;
 import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.ProjectRepository;
@@ -145,6 +147,20 @@ public class ProjectService {
         project.setBeneficiariesCount(request.beneficiariesCount());
         project.setLocation(request.location());
         project.setMainObjective(request.mainObjective());
+        if (request.investedAmount() != null) {
+            BigDecimal current = project.getInvestedAmount() != null ? project.getInvestedAmount() : BigDecimal.ZERO;
+            BigDecimal updated = current.add(request.investedAmount());
+            if (updated.compareTo(BigDecimal.ZERO) < 0) {
+                updated = BigDecimal.ZERO;
+            }
+            if (project.getBudgetNeeded() != null && updated.compareTo(project.getBudgetNeeded()) > 0) {
+                throw new BadRequestException("O valor captado não pode ultrapassar o valor necessário do projeto.");
+            }
+            project.setInvestedAmount(updated);
+        }
+        if (request.progress() != null) {
+            project.setProgress(request.progress());
+        }
 
         Project updated = projectRepository.save(project);
         log.info("Project updated | id={} npoId={}", updated.getId(), npo.getId());
@@ -201,12 +217,32 @@ public class ProjectService {
                         .beneficiariesCount(request.beneficiariesCount())
                         .location(request.location())
                         .mainObjective(request.mainObjective())
+                        .progress(request.progress() != null ? request.progress() : 0)
                         .build();
 
         Project saved = projectRepository.save(project);
         log.info("Project persisted | id={} npoId={}", saved.getId(), npo.getId());
 
         return toCreateResponse(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public NpoProjectSummaryResponse getNpoProjectSummary(String auth0Id) {
+        if (auth0Id == null || auth0Id.isBlank()) {
+            throw new BadRequestException("Não foi possível identificar o usuário autenticado.");
+        }
+        User user = userRepository.findByAuth0Id(auth0Id).orElseThrow(UserNotFoundException::new);
+        Npo npo =
+                npoRepository
+                        .findByUserId(user.getId())
+                        .orElseThrow(() -> new NotFoundException("ONG não encontrada"));
+        long npoId = npo.getId().longValue();
+        long total = projectRepository.countByNpoIdAndDeletedAtIsNull(npoId);
+        long taxIncentiveLaw = projectRepository.countByNpoIdAndTypeAndDeletedAtIsNull(
+                npoId, ProjectType.TAX_INCENTIVE_LAW);
+        long socialInvestmentLaw = projectRepository.countByNpoIdAndTypeAndDeletedAtIsNull(
+                npoId, ProjectType.SOCIAL_INVESTMENT_LAW);
+        return new NpoProjectSummaryResponse(total, taxIncentiveLaw, socialInvestmentLaw);
     }
 
     @Transactional(readOnly = true)
@@ -353,6 +389,7 @@ public class ProjectService {
                 .beneficiariesCount(project.getBeneficiariesCount())
                 .location(project.getLocation())
                 .mainObjective(project.getMainObjective())
+                .progress(project.getProgress())
                 .build();
     }
 }
