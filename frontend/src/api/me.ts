@@ -10,6 +10,7 @@ export interface AuthenticatedProfile {
   userType: AuthenticatedUserType | null
   npoId: number | null
   companyId: number | null
+  companyName: string | null
   registrationCompleted: boolean
 }
 
@@ -25,6 +26,7 @@ export async function fetchAuthenticatedProfile(
       userType: data.userType,
       npoId: data.npoId,
       companyId: data.companyId,
+      companyName: data.companyName,
     })
     return data
   } catch (error) {
