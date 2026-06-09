@@ -1,8 +1,10 @@
 import { useAuth0 } from "@auth0/auth0-react";
+import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { registerCompany, type CompanyRegistrationPayload } from "../../api/company";
+import { AUTH_PROFILE_QUERY_KEY } from "../../hooks/useAuthProfile";
 import { api } from "../../services/api";
 import type { WizardFormData } from "../../types/wizard.types";
 import { logger } from "../../utils/logger";
@@ -47,6 +49,7 @@ export function AuthRoleRedirect() {
   const location = useLocation();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const shouldRedirect = sessionStorage.getItem(loginCompletedKey) === "true";
@@ -143,6 +146,10 @@ export function AuthRoleRedirect() {
 
         const justSubmittedDraft =
           npoDraftSubmitted || companyDraftSubmitted || hasNpoDraft || hasCompanyDraft
+
+        if (justSubmittedDraft) {
+          void queryClient.invalidateQueries({ queryKey: AUTH_PROFILE_QUERY_KEY });
+        }
 
         if (returnTo && !justSubmittedDraft) {
           logger.info("AuthRedirect", `Restoring deep-link to ${returnTo}`);
