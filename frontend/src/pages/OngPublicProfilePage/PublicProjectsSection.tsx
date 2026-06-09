@@ -1,6 +1,6 @@
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined"
 import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { Pagination } from "../../components/general/Pagination"
 import type { NpoProfileProject } from "../../api/npo"
 import type { ProjectStatus } from "../../api/projects"
@@ -134,14 +134,11 @@ function ProjectCardSkeleton() {
 export function PublicProjectsSection({ loading = false, projects }: ProjectsSectionProps) {
   const [currentPage, setCurrentPage] = useState(0)
   const totalPages = Math.ceil(projects.length / PROJECTS_PER_PAGE)
+  const safeCurrentPage = totalPages > 0 ? Math.min(currentPage, totalPages - 1) : 0
   const visibleProjects = useMemo(() => {
-    const start = currentPage * PROJECTS_PER_PAGE
+    const start = safeCurrentPage * PROJECTS_PER_PAGE
     return projects.slice(start, start + PROJECTS_PER_PAGE)
-  }, [currentPage, projects])
-
-  useEffect(() => {
-    setCurrentPage(0)
-  }, [projects])
+  }, [safeCurrentPage, projects])
 
   return (
     <section aria-labelledby="public-projects-title">
@@ -167,7 +164,7 @@ export function PublicProjectsSection({ loading = false, projects }: ProjectsSec
             ))}
           </div>
           <Pagination
-            currentPage={currentPage}
+            currentPage={safeCurrentPage}
             totalPages={totalPages}
             onChange={setCurrentPage}
           />
