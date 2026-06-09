@@ -2,8 +2,8 @@
 package com.vinculohub.backend.service;
 
 import com.vinculohub.backend.dto.CompanyEsgImpactDashboardResponse;
-import com.vinculohub.backend.dto.NpoProjectSummaryResponse;
 import com.vinculohub.backend.dto.EsgPillarImpactDTO;
+import com.vinculohub.backend.dto.NpoProjectSummaryResponse;
 import com.vinculohub.backend.dto.NpoFirstProjectSignupRequest;
 import com.vinculohub.backend.dto.OdsResponse;
 import com.vinculohub.backend.dto.ProjectCreateRequest;
@@ -148,13 +148,18 @@ public class ProjectService {
         project.setLocation(request.location());
         project.setMainObjective(request.mainObjective());
         if (request.investedAmount() != null) {
-            BigDecimal current = project.getInvestedAmount() != null ? project.getInvestedAmount() : BigDecimal.ZERO;
+            BigDecimal current =
+                    project.getInvestedAmount() != null
+                            ? project.getInvestedAmount()
+                            : BigDecimal.ZERO;
             BigDecimal updated = current.add(request.investedAmount());
             if (updated.compareTo(BigDecimal.ZERO) < 0) {
                 updated = BigDecimal.ZERO;
             }
-            if (project.getBudgetNeeded() != null && updated.compareTo(project.getBudgetNeeded()) > 0) {
-                throw new BadRequestException("O valor captado não pode ultrapassar o valor necessário do projeto.");
+            if (project.getBudgetNeeded() != null
+                    && updated.compareTo(project.getBudgetNeeded()) > 0) {
+                throw new BadRequestException(
+                        "O valor captado não pode ultrapassar o valor necessário do projeto.");
             }
             project.setInvestedAmount(updated);
         }
