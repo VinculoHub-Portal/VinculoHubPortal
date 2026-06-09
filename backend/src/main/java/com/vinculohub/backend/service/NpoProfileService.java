@@ -20,6 +20,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,7 +72,7 @@ public class NpoProfileService {
                         npo.getPhone()),
                 mapAddress(npo.getAddress()),
                 mapResponsible(responsibleUser),
-                mapProjects(npo.getId()),
+                mapProjects(npo.getId(), Pageable.ofSize(5)),
                 mapDocuments(npo.getId()));
     }
 
@@ -257,8 +258,8 @@ public class NpoProfileService {
                 user.getUserType());
     }
 
-    private List<NpoProfileResponse.ProjectData> mapProjects(Integer npoId) {
-        return projectRepository.findAllByNpoId(npoId.longValue()).stream()
+    private List<NpoProfileResponse.ProjectData> mapProjects(Integer npoId, Pageable pageable) {
+        return projectRepository.findSomeByNpoId(npoId.longValue(), pageable).stream()
                 .filter(Objects::nonNull)
                 .sorted(
                         Comparator.comparing(
