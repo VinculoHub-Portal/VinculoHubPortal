@@ -29,13 +29,13 @@ class MeControllerTest extends AbstractIntegrationTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private UserRepository userRepository;
     @Autowired private NpoRepository npoRepository;
-        @Autowired private ProjectRepository projectRepository;
+    @Autowired private ProjectRepository projectRepository;
     @Autowired private CompanyRepository companyRepository;
 
     @BeforeEach
     void setup() {
         companyRepository.deleteAll();
-                projectRepository.deleteAll();
+        projectRepository.deleteAll();
         npoRepository.deleteAll();
         userRepository.deleteAll();
     }
