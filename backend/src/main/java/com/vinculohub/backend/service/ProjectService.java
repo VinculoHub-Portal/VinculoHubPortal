@@ -3,8 +3,8 @@ package com.vinculohub.backend.service;
 
 import com.vinculohub.backend.dto.CompanyEsgImpactDashboardResponse;
 import com.vinculohub.backend.dto.EsgPillarImpactDTO;
-import com.vinculohub.backend.dto.NpoProjectSummaryResponse;
 import com.vinculohub.backend.dto.NpoFirstProjectSignupRequest;
+import com.vinculohub.backend.dto.NpoProjectSummaryResponse;
 import com.vinculohub.backend.dto.OdsResponse;
 import com.vinculohub.backend.dto.ProjectCreateRequest;
 import com.vinculohub.backend.dto.ProjectCreateResponse;
@@ -243,10 +243,12 @@ public class ProjectService {
                         .orElseThrow(() -> new NotFoundException("ONG não encontrada"));
         long npoId = npo.getId().longValue();
         long total = projectRepository.countByNpoIdAndDeletedAtIsNull(npoId);
-        long taxIncentiveLaw = projectRepository.countByNpoIdAndTypeAndDeletedAtIsNull(
-                npoId, ProjectType.TAX_INCENTIVE_LAW);
-        long socialInvestmentLaw = projectRepository.countByNpoIdAndTypeAndDeletedAtIsNull(
-                npoId, ProjectType.SOCIAL_INVESTMENT_LAW);
+        long taxIncentiveLaw =
+                projectRepository.countByNpoIdAndTypeAndDeletedAtIsNull(
+                        npoId, ProjectType.TAX_INCENTIVE_LAW);
+        long socialInvestmentLaw =
+                projectRepository.countByNpoIdAndTypeAndDeletedAtIsNull(
+                        npoId, ProjectType.SOCIAL_INVESTMENT_LAW);
         return new NpoProjectSummaryResponse(total, taxIncentiveLaw, socialInvestmentLaw);
     }
 
