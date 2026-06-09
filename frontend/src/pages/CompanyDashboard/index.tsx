@@ -1,5 +1,6 @@
 import { useAuth0 } from "@auth0/auth0-react"
 import { useEffect, useState } from "react"
+import { Link } from "react-router-dom"
 import { fetchCompanyEsgImpactDashboard } from "../../api/companyPortfolio"
 import { Header } from "../../components/general/Header"
 import { EsgImpactSection } from "./EsgImpactSection"
@@ -51,13 +52,21 @@ export const CompanyDashboard = () => {
     <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
       <Header />
       <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 flex flex-col gap-8">
-        <header>
-          <h1 className="text-2xl font-medium leading-9 text-vinculo-dark">
-            Dashboard Empresarial
-          </h1>
-          <p className="text-base font-normal leading-6 text-slate-600">
-            Bem-vindo de volta, {mockCompanyName}
-          </p>
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-medium leading-9 text-vinculo-dark">
+              Dashboard Empresarial
+            </h1>
+            <p className="text-base font-normal leading-6 text-slate-600">
+              Bem-vindo de volta, {mockCompanyName}
+            </p>
+          </div>
+          <Link
+            to="/vinculos"
+            className="w-fit rounded-lg border-2 border-vinculo-dark px-6 py-2 font-semibold text-vinculo-dark transition-all duration-200 hover:bg-vinculo-dark/5"
+          >
+            Ver vínculos
+          </Link>
         </header>
 
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">

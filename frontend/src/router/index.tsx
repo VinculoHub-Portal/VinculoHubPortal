@@ -16,6 +16,7 @@ import { OngPublicProfilePage } from "../pages/OngPublicProfilePage"
 import { EditProjectPage } from "../pages/EditProjectPage"
 import { EditaisMuralPage } from "../pages/EditaisMuralPage"
 import { AdminDashboard } from "../pages/AdminDashboard"
+import { RelationshipsPage } from "../pages/RelationshipsPage"
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -84,6 +85,14 @@ export const AppRouter = () => (
         element={
           <ProtectedRoute requiredRoles={["ADMIN", "NPO"]}>
             <EditaisMuralPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/vinculos"
+        element={
+          <ProtectedRoute requiredRoles={["NPO", "COMPANY"]}>
+            <RelationshipsPage />
           </ProtectedRoute>
         }
       />

@@ -101,6 +101,7 @@ function renderOngDashboard() {
           }
         />
         <Route path="/ong/projetos" element={<p>Meus Projetos</p>} />
+        <Route path="/vinculos" element={<p>Página de Vínculos</p>} />
       </Routes>
     </MemoryRouter>,
   )
@@ -157,6 +158,14 @@ describe("RoleHomePage - dashboard da ONG", () => {
     )
 
     expect(screen.getByText("Meus Projetos")).toBeInTheDocument()
+  })
+
+  it("navega para a página de vínculos", async () => {
+    renderOngDashboard()
+
+    await userEvent.click(screen.getByRole("button", { name: "Ver vínculos" }))
+
+    expect(screen.getByText("Página de Vínculos")).toBeInTheDocument()
   })
 
   it("abre o modal de novo projeto", async () => {

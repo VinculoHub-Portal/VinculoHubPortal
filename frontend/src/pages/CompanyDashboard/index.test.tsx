@@ -63,7 +63,15 @@ describe("CompanyDashboard", () => {
     await renderCompanyDashboard()
     expect(screen.getByText(/Bem-vindo de volta, Empresa ABC/)).toBeInTheDocument()
   })
-  
+
+  it("renderiza acesso para a página de vínculos", async () => {
+    await renderCompanyDashboard()
+    expect(screen.getByRole("link", { name: "Ver vínculos" })).toHaveAttribute(
+      "href",
+      "/vinculos",
+    )
+  })
+
   it("renderiza as opções de modalidades de investimento", async () => {
     await renderCompanyDashboard()
     expect(screen.getByText("Leis de Incentivo")).toBeInTheDocument()

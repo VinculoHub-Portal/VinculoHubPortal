@@ -4,6 +4,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward"
 import CampaignOutlinedIcon from "@mui/icons-material/CampaignOutlined"
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined"
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined"
+import LinkOutlinedIcon from "@mui/icons-material/LinkOutlined"
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined"
 import { useAuth0 } from "@auth0/auth0-react"
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
@@ -97,7 +98,7 @@ export function OngDashboardMock({
             </p>
           </div>
 
-          <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-fit">
+          <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap lg:w-fit lg:flex-nowrap">
             <BaseButton
               type="button"
               variant="secondary"
@@ -126,6 +127,16 @@ export function OngDashboardMock({
             >
               <AccountCircleOutlinedIcon fontSize="small" />
               Meu Perfil
+            </BaseButton>
+
+            <BaseButton
+              type="button"
+              variant="outline"
+              className="min-h-14 w-full border-slate-200 bg-white px-8 text-lg shadow-md hover:bg-slate-50 sm:w-fit"
+              onClick={() => navigate("/vinculos")}
+            >
+              <LinkOutlinedIcon fontSize="small" />
+              Ver vínculos
             </BaseButton>
           </div>
         </section>
