@@ -285,7 +285,8 @@ public class NpoProfileService {
                 project.getFundraisingDeadline(),
                 project.getBeneficiariesCount(),
                 project.getLocation(),
-                project.getMainObjective());
+                project.getMainObjective(),
+                project.getCreatedAt());
     }
 
     private List<OdsResponse> mapProjectOds(Project project) {

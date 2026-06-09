@@ -66,7 +66,8 @@ public record NpoProfileResponse(
             String fundraisingDeadline,
             Integer beneficiariesCount,
             String location,
-            String mainObjective) {}
+            String mainObjective,
+            LocalDateTime createdAt) {}
 
     public record DocumentData(
             Integer id,

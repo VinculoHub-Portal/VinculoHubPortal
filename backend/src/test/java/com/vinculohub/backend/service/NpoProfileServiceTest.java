@@ -20,6 +20,7 @@ import com.vinculohub.backend.repository.DocumentRepository;
 import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.ProjectRepository;
 import com.vinculohub.backend.repository.UserRepository;
+import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -75,6 +76,7 @@ class NpoProfileServiceTest {
                         .description("Aulas no contraturno.")
                         .status(ProjectStatus.ACTIVE)
                         .ods(new LinkedHashSet<>(List.of(ods)))
+                        .createdAt(LocalDateTime.of(2026, 3, 15, 10, 0))
                         .build();
 
         when(npoRepository.findById(10)).thenReturn(Optional.of(npo));
@@ -93,6 +95,7 @@ class NpoProfileServiceTest {
         assertEquals(1, projectData.ods().size());
         assertEquals(4, projectData.ods().get(0).id());
         assertEquals("ODS 4 - Educacao de Qualidade", projectData.ods().get(0).name());
+        assertEquals(LocalDateTime.of(2026, 3, 15, 10, 0), projectData.createdAt());
         verify(projectRepository).findSomeByNpoId(10L, Pageable.ofSize(5));
     }
 }
