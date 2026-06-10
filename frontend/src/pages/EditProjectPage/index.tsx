@@ -1,11 +1,12 @@
 import axios from "axios"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useAuth0 } from "@auth0/auth0-react"
 import { BackLink } from "../../components/general/BackLink"
 import { BaseButton } from "../../components/general/BaseButton"
 import { Header } from "../../components/general/Header"
 import { Input } from "../../components/general/Input"
+import { ProgressBar } from "../../components/general/ProgressBar"
 import { TextArea } from "../../components/general/TextArea"
 import { ProjectOdsChips } from "../../components/ong/ProjectOdsChips"
 import { useToast } from "../../context/ToastContext"
@@ -20,12 +21,16 @@ import {
   normalizeCurrencyValue,
 } from "../../utils/formatCurrency"
 
+const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" })
+
 type EditProjectFormData = {
   projectName: string
   projectDescription: string
   projectType: string
   budgetNeeded: string
+  investedAmount: string
   odsSelection: number[]
+  progress: string
 }
 
 type FormErrors = Partial<Record<keyof EditProjectFormData, string>>
@@ -40,7 +45,7 @@ const TYPE_MAP: Record<string, UpdateProjectPayload["type"]> = {
   tax_incentive_law: "TAX_INCENTIVE_LAW",
 }
 
-function validateProject(data: EditProjectFormData): FormErrors {
+function validateProject(data: EditProjectFormData, currentInvestedAmount: number): FormErrors {
   const errors: FormErrors = {}
 
   if (!data.projectName.trim()) {
@@ -66,6 +71,24 @@ function validateProject(data: EditProjectFormData): FormErrors {
     }
   }
 
+  const progressNum = Number(data.progress)
+  if (data.progress.trim() !== "" && (!Number.isInteger(progressNum) || progressNum < 0 || progressNum > 100)) {
+    errors.progress = "O progresso deve ser um número inteiro entre 0 e 100."
+  }
+
+  if (data.projectType === "tax_incentive_law" && data.investedAmount.trim() !== "") {
+    const delta = Number(data.investedAmount)
+    if (!Number.isFinite(delta)) {
+      errors.investedAmount = "Informe um valor válido."
+    } else {
+      const newTotal = Math.max(0, currentInvestedAmount + delta)
+      const budget = Number(data.budgetNeeded) || 0
+      if (budget > 0 && newTotal > budget) {
+        errors.investedAmount = `O total captado (${BRL.format(newTotal)}) não pode ultrapassar a meta (${BRL.format(budget)}).`
+      }
+    }
+  }
+
   if (data.odsSelection.length === 0) {
     errors.odsSelection = "Selecione ao menos um ODS."
   }
@@ -87,12 +110,15 @@ export function EditProjectPage() {
     projectDescription: "",
     projectType: "",
     budgetNeeded: "",
+    investedAmount: "",
     odsSelection: [],
+    progress: "0",
   })
   const [errors, setErrors] = useState<FormErrors>({})
   const [odsOptions, setOdsOptions] = useState<OdsCatalogItem[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [currentInvestedAmount, setCurrentInvestedAmount] = useState(0)
   const budgetNeededInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
@@ -126,13 +152,16 @@ export function EditProjectPage() {
               ? "tax_incentive_law"
               : ""
 
+        setCurrentInvestedAmount(project.investedAmount != null ? Number(project.investedAmount) : 0)
+
         setFormData({
           projectName: project.title ?? "",
           projectDescription: project.description ?? "",
           projectType: formType,
-          budgetNeeded:
-            project.budgetNeeded != null ? String(project.budgetNeeded) : "",
+          budgetNeeded: project.budgetNeeded != null ? String(project.budgetNeeded) : "",
+          investedAmount: "",
           odsSelection: project.ods?.map((o) => o.id) ?? [],
+          progress: project.progress != null ? String(project.progress) : "0",
         })
         setLoadState("ready")
       } catch (err) {
@@ -151,6 +180,12 @@ export function EditProjectPage() {
       active = false
     }
   }, [projectId, getAccessTokenSilently])
+
+  const previewInvestedTotal = useMemo(() => {
+    const delta = Number(formData.investedAmount)
+    if (!formData.investedAmount.trim() || !Number.isFinite(delta)) return null
+    return Math.max(0, currentInvestedAmount + delta)
+  }, [formData.investedAmount, currentInvestedAmount])
 
   function updateField<K extends keyof EditProjectFormData>(
     field: K,
@@ -177,7 +212,7 @@ export function EditProjectPage() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    const nextErrors = validateProject(formData)
+    const nextErrors = validateProject(formData, currentInvestedAmount)
     setErrors(nextErrors)
 
     if (Object.keys(nextErrors).length > 0) return
@@ -190,6 +225,9 @@ export function EditProjectPage() {
       const apiType = TYPE_MAP[formData.projectType] ?? "SOCIAL_INVESTMENT_LAW"
       const budgetRaw = normalizeCurrencyValue(formData.budgetNeeded)
 
+      const progressValue = formData.progress.trim() !== "" ? Number(formData.progress) : 0
+      const investedDelta = formData.investedAmount.trim() ? Number(formData.investedAmount) : null
+
       await updateProject(
         Number(projectId),
         {
@@ -199,8 +237,13 @@ export function EditProjectPage() {
             apiType === "TAX_INCENTIVE_LAW" && budgetRaw
               ? Number(budgetRaw)
               : null,
+          investedAmount:
+            apiType === "TAX_INCENTIVE_LAW" && investedDelta != null
+              ? investedDelta
+              : null,
           odsIds: formData.odsSelection,
           type: apiType,
+          progress: progressValue,
         },
         token,
       )
@@ -333,6 +376,7 @@ export function EditProjectPage() {
               />
 
               {formData.projectType === "tax_incentive_law" && (
+                <>
                 <Input
                   id="budgetNeeded"
                   label="Valor Necessário (R$)"
@@ -398,6 +442,56 @@ export function EditProjectPage() {
                   onMouseUp={(e) => moveCaretToEnd(e.currentTarget)}
                   error={errors.budgetNeeded}
                 />
+
+                <div className="flex flex-col gap-2">
+                  <label
+                    htmlFor="investedAmount"
+                    className="text-sm font-semibold text-vinculo-dark"
+                  >
+                    Registrar aporte captado (R$)
+                  </label>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                    Captado atual:{" "}
+                    <strong className="text-vinculo-dark">
+                      {BRL.format(currentInvestedAmount)}
+                    </strong>
+                    {" · "}
+                    Meta:{" "}
+                    <strong className="text-vinculo-dark">
+                      {BRL.format(Number(formData.budgetNeeded) || 0)}
+                    </strong>
+                  </div>
+                  <p className="text-sm text-slate-500">
+                    Informe o valor do aporte. Use um número negativo para corrigir o total para baixo.
+                  </p>
+                  <input
+                    id="investedAmount"
+                    type="number"
+                    step="0.01"
+                    placeholder="Ex: 5000 ou -2000"
+                    value={formData.investedAmount}
+                    onChange={(e) => updateField("investedAmount", e.target.value)}
+                    className={`w-full rounded-xl border border-vinculo-gray bg-white px-4 py-3 text-slate-900 outline-none transition-all focus:border-vinculo-dark focus:ring-1 focus:ring-vinculo-dark${
+                      errors.investedAmount
+                        ? " !border !border-error focus:!border-error focus:!ring-error"
+                        : ""
+                    }`}
+                  />
+                  {previewInvestedTotal != null && (
+                    <p className="text-sm text-slate-500">
+                      Novo total após ajuste:{" "}
+                      <strong className="text-vinculo-dark">
+                        {BRL.format(previewInvestedTotal)}
+                      </strong>
+                    </p>
+                  )}
+                  {errors.investedAmount && (
+                    <p className="text-sm text-error" role="alert">
+                      {errors.investedAmount}
+                    </p>
+                  )}
+                </div>
+                </>
               )}
 
               <fieldset>
@@ -419,6 +513,53 @@ export function EditProjectPage() {
                   </p>
                 )}
               </fieldset>
+
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="progress"
+                  className="text-sm font-semibold text-vinculo-dark"
+                >
+                  Progresso do Projeto (%)
+                </label>
+                <p className="text-sm text-slate-500">
+                  Informe o percentual de conclusão geral do projeto (0 a 100).
+                </p>
+                <ProgressBar
+                  value={Number(formData.progress)}
+                  ariaLabel="Progresso do projeto"
+                />
+                <div className="flex items-center gap-3 mt-3">
+                  <input
+                    id="progress"
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={formData.progress}
+                    onChange={(e) => updateField("progress", e.target.value)}
+                    aria-hidden
+                    className="flex-1 accent-vinculo-green"
+                  />
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={formData.progress}
+                    onChange={(e) => updateField("progress", e.target.value)}
+                    className={`w-20 rounded-xl border border-vinculo-gray bg-white px-3 py-2 text-center text-slate-900 outline-none transition-all focus:border-vinculo-dark focus:ring-1 focus:ring-vinculo-dark ${
+                      errors.progress
+                        ? "!border !border-error focus:!border-error focus:!ring-error"
+                        : ""
+                    }`}
+                  />
+                  <span className="text-sm text-slate-500">%</span>
+                </div>
+                {errors.progress && (
+                  <p className="mt-1 text-sm text-error" role="alert">
+                    {errors.progress}
+                  </p>
+                )}
+              </div>
 
               <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
                 <BaseButton

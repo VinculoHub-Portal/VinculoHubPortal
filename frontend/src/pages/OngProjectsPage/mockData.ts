@@ -10,7 +10,8 @@ export interface OngProject {
   amountNeeded: number
   title: string
   description: string
-  progress: number
+  generalProgress: number
+  captureProgress: number
   tags: string[]
 }
 
@@ -29,7 +30,8 @@ export const mockOngProjects: OngProject[] = [
     title: "Educação Transformadora",
     description:
       "Programa de reforço escolar e formação profissionalizante para jovens em situação de vulnerabilidade social, oferecendo capacitação e desenvolvimento de habilidades.",
-    progress: 75,
+    generalProgress: 75,
+    captureProgress: 60,
     tags: ["Educação", "Capacitação"],
   },
   {
@@ -40,7 +42,8 @@ export const mockOngProjects: OngProject[] = [
     title: "Saúde Comunitária",
     description:
       "Unidade móvel de saúde para atendimento médico e odontológico em comunidades rurais com difícil acesso a serviços de saúde básica.",
-    progress: 45,
+    generalProgress: 45,
+    captureProgress: 0,
     tags: ["Saúde", "Desenvolvimento Comunitário"],
   },
   {
@@ -51,7 +54,8 @@ export const mockOngProjects: OngProject[] = [
     title: "Cultura para Todos",
     description:
       "Programa de incentivo à cultura e arte com oficinas de música, teatro e artes plásticas para crianças e adolescentes em situação de vulnerabilidade.",
-    progress: 60,
+    generalProgress: 60,
+    captureProgress: 0,
     tags: ["Cultura", "Arte e Educação"],
   },
 ]
