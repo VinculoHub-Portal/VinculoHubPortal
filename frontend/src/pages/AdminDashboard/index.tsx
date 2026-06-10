@@ -20,6 +20,7 @@ import { FlexibleButton } from "../../components/general/FlexibleButton";
 import { Header } from "../../components/general/Header";
 import { MetricCard } from "../../components/general/MetricCard";
 import { useToast } from "../../context/ToastContext";
+import { mapNposForCsvExport, mapVinculosForCsvExport } from "../../utils/adminExportDisplay";
 import { downloadCsv } from "../../utils/exportCsv";
 
 const PAGE_SIZE = 5;
@@ -196,9 +197,9 @@ export function AdminDashboard() {
         fetchAllVinculos(token),
       ]);
       const date = new Date().toISOString().slice(0, 10);
-      downloadCsv(`ongs_${date}.csv`, npos, NPO_HEADERS);
+      downloadCsv(`ongs_${date}.csv`, mapNposForCsvExport(npos), NPO_HEADERS);
       downloadCsv(`empresas_${date}.csv`, companies, COMPANY_HEADERS);
-      downloadCsv(`vinculos_${date}.csv`, vinculos, VINCULOS_HEADERS);
+      downloadCsv(`vinculos_${date}.csv`, mapVinculosForCsvExport(vinculos), VINCULOS_HEADERS);
     } finally {
       setExporting(false);
     }
