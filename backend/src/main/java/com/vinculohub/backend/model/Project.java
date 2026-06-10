@@ -82,6 +82,10 @@ public class Project {
     @Column(name = "main_objective", length = 600)
     private String mainObjective;
 
+    @Column(name = "progress", nullable = false)
+    @Builder.Default
+    private Integer progress = 0;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
