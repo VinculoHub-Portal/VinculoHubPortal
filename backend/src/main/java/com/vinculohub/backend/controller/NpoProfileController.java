@@ -4,6 +4,9 @@ package com.vinculohub.backend.controller;
 import com.vinculohub.backend.dto.NpoProfileResponse;
 import com.vinculohub.backend.service.NpoProfileService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -31,6 +34,14 @@ public class NpoProfileController {
                         ? jwt.getSubject()
                         : null;
         return ResponseEntity.ok(npoProfileService.getProfile(id, subject));
+    }
+
+    @GetMapping("/{id}/projects")
+    public ResponseEntity<NpoProfileResponse.ProjectPageData> getPublicProjects(
+            @PathVariable Integer id,
+            @PageableDefault(size = 5, sort = "createdAt", direction = Sort.Direction.DESC)
+                    Pageable pageable) {
+        return ResponseEntity.ok(npoProfileService.getPublicProjects(id, pageable));
     }
 
     @PutMapping("/{id}")
