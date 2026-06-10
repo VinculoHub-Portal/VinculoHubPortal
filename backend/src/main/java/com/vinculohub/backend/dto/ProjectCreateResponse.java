@@ -25,4 +25,5 @@ public record ProjectCreateResponse(
         String fundraisingDeadline,
         Integer beneficiariesCount,
         String location,
-        String mainObjective) {}
+        String mainObjective,
+        Integer progress) {}

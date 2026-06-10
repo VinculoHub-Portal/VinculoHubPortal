@@ -23,6 +23,7 @@ public record ProjectDetailResponse(
         Integer beneficiariesCount,
         String location,
         String mainObjective,
+        Integer progress,
         ProjectResponsibleInstitutionResponse responsibleInstitution) {
 
     public static ProjectDetailResponse from(Project project, List<OdsResponse> odsList) {
@@ -68,6 +69,7 @@ public record ProjectDetailResponse(
                 project.getBeneficiariesCount(),
                 project.getLocation(),
                 project.getMainObjective(),
+                project.getProgress(),
                 institutionResponse);
     }
 }

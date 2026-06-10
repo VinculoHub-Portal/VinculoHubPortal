@@ -15,5 +15,6 @@ export type ProjectDetails = {
   description: string;
   sdgLabels: string[];
   progressPercent: number;
+  generalProgress: number;
   responsibleInstitution: ResponsibleInstitution | null;
 };
