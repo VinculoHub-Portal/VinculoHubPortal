@@ -2,6 +2,7 @@
 package com.vinculohub.backend.repository;
 
 import com.vinculohub.backend.model.Project;
+import com.vinculohub.backend.model.enums.ProjectType;
 import com.vinculohub.backend.repository.projection.EsgPillarAggregationProjection;
 import com.vinculohub.backend.repository.projection.PortfolioTotalsProjection;
 import java.util.List;
@@ -19,6 +20,9 @@ public interface ProjectRepository
     List<Project> findAllByNpoId(Long npoId);
 
     Page<Project> findByNpoId(Long npoId, Pageable pageable);
+    long countByNpoIdAndDeletedAtIsNull(Long npoId);
+
+    long countByNpoIdAndTypeAndDeletedAtIsNull(Long npoId, ProjectType type);
 
     @Query(
             value =
