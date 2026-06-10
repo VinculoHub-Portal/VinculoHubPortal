@@ -5,6 +5,7 @@ export type ProjectCardProps = {
   fundingType?: "lei-incentivo" | "investimento-social-privado";
   targetAmount?: number | null;
   progressPercent?: number | null;
+  generalProgress?: number | null;
   onDetails?: (id: number | string) => void;
 };
 
@@ -23,12 +24,16 @@ export function ProjectCard({
   fundingType = "lei-incentivo",
   targetAmount,
   progressPercent,
+  generalProgress,
   onDetails,
 }: ProjectCardProps) {
   const isIncentiveLaw = fundingType === "lei-incentivo";
   const showBudget = isIncentiveLaw && targetAmount != null;
-  const percent = isIncentiveLaw
+  const capturePercent = isIncentiveLaw
     ? Math.max(0, Math.min(100, Math.round(progressPercent ?? 0)))
+    : null;
+  const generalPercent = generalProgress != null
+    ? Math.max(0, Math.min(100, Math.round(generalProgress)))
     : null;
 
   return (
@@ -54,23 +59,45 @@ export function ProjectCard({
         <p className="text-slate-600 text-sm mb-4 line-clamp-3">{description}</p>
       )}
 
-      {percent != null && (
+      {generalPercent != null && (
         <>
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-slate-600">Progresso da captação</span>
-            <span className="text-sm text-vinculo-green font-medium">{percent}%</span>
+            <span className="text-sm text-slate-600">Progresso</span>
+            <span className="text-sm text-vinculo-green font-medium">{generalPercent}%</span>
           </div>
           <div className="w-full bg-slate-100 rounded-full h-2 mb-4 overflow-hidden">
             <div
               className="bg-vinculo-green h-2"
-              style={{ width: `${percent}%`, transition: "width 400ms ease" }}
-              aria-valuenow={percent}
+              style={{ width: `${generalPercent}%`, transition: "width 400ms ease" }}
+              aria-valuenow={generalPercent}
               aria-valuemin={0}
               aria-valuemax={100}
               role="progressbar"
+              aria-label="Progresso do projeto"
             />
           </div>
-          <span className="sr-only">{`Progresso ${percent} por cento`}</span>
+          <span className="sr-only">{`Progresso ${generalPercent} por cento`}</span>
+        </>
+      )}
+
+      {capturePercent != null && (
+        <>
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-slate-600">Progresso de captação</span>
+            <span className="text-sm text-vinculo-green font-medium">{capturePercent}%</span>
+          </div>
+          <div className="w-full bg-slate-100 rounded-full h-2 mb-4 overflow-hidden">
+            <div
+              className="bg-vinculo-green h-2"
+              style={{ width: `${capturePercent}%`, transition: "width 400ms ease" }}
+              aria-valuenow={capturePercent}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              role="progressbar"
+              aria-label="Progresso de captação do projeto"
+            />
+          </div>
+          <span className="sr-only">{`Progresso de captação ${capturePercent} por cento`}</span>
         </>
       )}
 
