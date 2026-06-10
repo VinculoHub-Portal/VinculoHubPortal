@@ -15,12 +15,9 @@ import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.model.enums.NpoSize;
 import com.vinculohub.backend.model.enums.UserType;
-import com.vinculohub.backend.repository.AddressRepository;
 import com.vinculohub.backend.repository.CompanyRepository;
-import com.vinculohub.backend.repository.DocumentRepository;
 import com.vinculohub.backend.repository.NpoReportRepository;
 import com.vinculohub.backend.repository.NpoRepository;
-import com.vinculohub.backend.repository.ProjectRepository;
 import com.vinculohub.backend.repository.UserRepository;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,21 +38,18 @@ class NpoReportControllerTest extends AbstractIntegrationTest {
     @Autowired private NpoRepository npoRepository;
     @Autowired private CompanyRepository companyRepository;
     @Autowired private NpoReportRepository npoReportRepository;
-    @Autowired private ProjectRepository projectRepository;
-    @Autowired private DocumentRepository documentRepository;
-    @Autowired private AddressRepository addressRepository;
 
     @BeforeEach
     void setup() {
         jdbcTemplate.update("DELETE FROM npo_report");
         jdbcTemplate.update("DELETE FROM company_project");
         jdbcTemplate.update("DELETE FROM project_ods");
-        documentRepository.deleteAll();
-        projectRepository.deleteAll();
-        npoRepository.deleteAll();
-        companyRepository.deleteAll();
-        addressRepository.deleteAll();
-        userRepository.deleteAll();
+        jdbcTemplate.update("DELETE FROM document");
+        jdbcTemplate.update("DELETE FROM project");
+        jdbcTemplate.update("DELETE FROM npo");
+        jdbcTemplate.update("DELETE FROM company");
+        jdbcTemplate.update("DELETE FROM address");
+        jdbcTemplate.update("DELETE FROM users");
     }
 
     @Test

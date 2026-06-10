@@ -34,11 +34,15 @@ class ProjectRepositoryTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void cleanup() {
-        jdbcTemplate.execute("DELETE FROM project_ods");
+        jdbcTemplate.execute("DELETE FROM npo_report");
         jdbcTemplate.execute("DELETE FROM company_project");
+        jdbcTemplate.execute("DELETE FROM project_ods");
         jdbcTemplate.execute("DELETE FROM document");
         jdbcTemplate.execute("DELETE FROM project");
         jdbcTemplate.execute("DELETE FROM npo");
+        jdbcTemplate.execute("DELETE FROM company");
+        jdbcTemplate.execute("DELETE FROM address");
+        jdbcTemplate.execute("DELETE FROM users");
     }
 
     @Test

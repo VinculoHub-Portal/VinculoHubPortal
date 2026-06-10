@@ -53,6 +53,7 @@ class NpoProfileControllerTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void setup() {
+        jdbcTemplate.update("DELETE FROM npo_report");
         jdbcTemplate.update("DELETE FROM company_project");
         jdbcTemplate.update("DELETE FROM project_ods");
         jdbcTemplate.update("DELETE FROM document");
