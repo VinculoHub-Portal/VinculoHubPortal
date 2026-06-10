@@ -1,17 +1,18 @@
 import axios from "axios"
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline"
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined"
-import { useCallback, useMemo, useState, type ReactNode } from "react"
+import { useCallback, useState, type ReactNode } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth0 } from "@auth0/auth0-react"
 import { BackLink } from "../../components/general/BackLink"
 import { Header } from "../../components/general/Header"
+import { Pagination } from "../../components/general/Pagination"
 import { ConfirmDeleteProjectModal } from "../../components/ong/ConfirmDeleteProjectModal"
 import { OngProjectCard } from "../../components/projects/OngProjectCard"
 import { useToast } from "../../context/ToastContext"
 import { deleteProject } from "../../api/projects"
 import { useProjectDetailsNavigation } from "../ProjectDetailsPage/projectDetailsNavigation"
-import { getOngProjectSummary, type OngProject } from "./mockData"
+import { type OngProject } from "./mockData"
 import { SummaryCard } from "./SummaryCard"
 import { useOngProjects } from "./useOngProjects"
 
@@ -24,8 +25,7 @@ export function OngProjectsPage() {
     (id: number) => navigate(`/ong/projetos/${id}/editar`),
     [navigate],
   )
-  const { projects, loading, error, refetch } = useOngProjects()
-  const summary = useMemo(() => getOngProjectSummary(projects), [projects])
+  const { projects, summary, loading, error, currentPage, totalPages, setCurrentPage, refetch } = useOngProjects()
 
   const [projectToDelete, setProjectToDelete] = useState<OngProject | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -86,15 +86,15 @@ export function OngProjectsPage() {
         >
           <SummaryCard
             label="Total de Projetos"
-            value={loading ? "..." : summary.totalProjects}
+            value={loading ? "..." : summary.total}
           />
           <SummaryCard
             label="Leis de Incentivo"
-            value={loading ? "..." : summary.incentiveLawProjects}
+            value={loading ? "..." : summary.taxIncentiveLaw}
           />
           <SummaryCard
             label="Investimento Privado"
-            value={loading ? "..." : summary.privateInvestmentProjects}
+            value={loading ? "..." : summary.socialInvestmentLaw}
           />
         </section>
 
@@ -113,14 +113,25 @@ export function OngProjectsPage() {
                 amountNeeded={project.amountNeeded}
                 title={project.title}
                 description={project.description}
-                progress={project.progress}
+                generalProgress={project.generalProgress}
+                captureProgress={project.captureProgress}
                 tags={project.tags}
                 onDetails={openProjectDetails}
                 onEdit={editProject}
                 onDelete={handleDeleteClick}
               />
             ))}
+
           </section>
+
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onChange={(page) => {
+              setCurrentPage(page)
+              window.scrollTo({ top: 0, behavior: "smooth" })
+            }}
+          />
         </ProjectListState>
       </main>
 

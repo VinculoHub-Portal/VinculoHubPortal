@@ -39,6 +39,7 @@ const baseProject: ProjectDetails = {
   requiredAmount: 75000,
   sdgLabels: ["Saúde e Bem-Estar"],
   progressPercent: 40,
+  generalProgress: 0,
   responsibleInstitution: null,
 };
 

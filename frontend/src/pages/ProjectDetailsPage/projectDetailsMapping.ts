@@ -114,6 +114,7 @@ export function mapApiPayloadToProjectDetails(raw: unknown, routeId: string): Pr
   const budget = num(o.budgetNeeded ?? o.budget_needed ?? o.requiredAmount ?? o.required_amount);
   const invested = num(o.investedAmount ?? o.invested_amount);
   const progressOverride = num(o.progressPercent ?? o.progress_percent);
+  const generalProgressRaw = num(o.progress);
 
   const sdgFromApi = strArr(o.sdgLabels ?? o.sdg_labels);
   const sdgFromOds = labelsFromOds(o.ods);
@@ -139,6 +140,11 @@ export function mapApiPayloadToProjectDetails(raw: unknown, routeId: string): Pr
     o.responsibleInstitution ?? o.responsible_institution,
   );
 
+  const generalProgress =
+    generalProgressRaw != null && generalProgressRaw >= 0
+      ? Math.min(100, Math.round(generalProgressRaw))
+      : 0;
+
   return {
     id,
     fundingType: fundingType || "—",
@@ -147,6 +153,7 @@ export function mapApiPayloadToProjectDetails(raw: unknown, routeId: string): Pr
     description: description || "",
     sdgLabels,
     progressPercent,
+    generalProgress,
     responsibleInstitution,
   };
 }

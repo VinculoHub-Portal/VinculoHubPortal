@@ -10,6 +10,7 @@ import { ReportNpoModal } from "../../components/ong/ReportNpoModal";
 import { resolveDashboardPath } from "../../utils/dashboardPath";
 import { fetchProjectDetails } from "./fetchProjectDetails";
 import { FundingProgress } from "./FundingProgress";
+import { GeneralProgress } from "./GeneralProgress";
 import { OdsTags } from "./OdsTags";
 import { ProjectDetailsNotFound } from "./ProjectDetailsNotFound";
 import { ProjectDetailsSkeleton } from "./ProjectDetailsSkeleton";
@@ -120,6 +121,8 @@ export function ProjectDetailsPage() {
               </section>
 
               <OdsTags labels={project.sdgLabels} />
+
+              <GeneralProgress generalProgress={project.generalProgress} />
 
               {isIncentiveLaw && (
                 <FundingProgress progressPercent={project.progressPercent} />

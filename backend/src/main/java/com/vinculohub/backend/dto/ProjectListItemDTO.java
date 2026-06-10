@@ -23,7 +23,8 @@ public record ProjectListItemDTO(
         String fundraisingDeadline,
         Integer beneficiariesCount,
         String location,
-        String mainObjective) {
+        String mainObjective,
+        Integer progress) {
 
     public static ProjectListItemDTO from(Project project) {
         return new ProjectListItemDTO(
@@ -42,6 +43,7 @@ public record ProjectListItemDTO(
                 project.getFundraisingDeadline(),
                 project.getBeneficiariesCount(),
                 project.getLocation(),
-                project.getMainObjective());
+                project.getMainObjective(),
+                project.getProgress());
     }
 }
