@@ -4,18 +4,21 @@ import { useNavigate } from "react-router-dom"
 import { useAuth0 } from "@auth0/auth0-react"
 import { BaseButton } from "./BaseButton"
 import { AuthRedirectModal } from "../auth/AuthRedirectModal"
+import LinkIcon from "@mui/icons-material/Link"
 import LanguageIcon from "@mui/icons-material/Language"
 import MenuIcon from "@mui/icons-material/Menu"
 import CloseIcon from "@mui/icons-material/Close"
 import { resolveDashboardPath } from "../../utils/dashboardPath"
 
 const auth0Audience = import.meta.env.VITE_AUTH0_AUDIENCE
+const ROLES_CLAIM = "https://vinculohub/roles"
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isAuthRedirectModalOpen, setIsAuthRedirectModalOpen] = useState(false)
   const navigate = useNavigate()
   const { isAuthenticated, loginWithRedirect, logout, user } = useAuth0()
+  const canAccessVinculos = isAuthenticated && hasConnectionsAccess(user)
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
   const openLoginRedirectNotice = () => {
@@ -67,7 +70,16 @@ export function Header() {
           VinculoHub<span className="text-vinculo-green">Portal</span>
         </Link>
 
-        <div className="hidden md:flex gap-4">
+        <div className="hidden items-center gap-4 md:flex">
+          {canAccessVinculos && (
+            <Link
+              to="/meus-vinculos"
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+            >
+              <LinkIcon fontSize="small" />
+              Vínculos
+            </Link>
+          )}
           {!isAuthenticated && (
             <Link to="/cadastro/instituicao">
               <BaseButton
@@ -97,6 +109,17 @@ export function Header() {
 
       {isMenuOpen && (
         <div className="md:hidden bg-vinculo-dark border-t border-white/10 px-6 py-8 flex flex-col gap-4 animate-in slide-in-from-top duration-300">
+          {canAccessVinculos && (
+            <Link
+              to="/meus-vinculos"
+              onClick={() => setIsMenuOpen(false)}
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-3 text-base font-medium text-white transition hover:bg-white/10"
+            >
+              <LinkIcon fontSize="small" />
+              Vínculos
+            </Link>
+          )}
+
           {!isAuthenticated && (
             <BaseButton
               variant="outline"
@@ -128,4 +151,18 @@ export function Header() {
       />
     </header>
   )
+}
+
+function hasConnectionsAccess(user: unknown) {
+  if (!user || typeof user !== "object") {
+    return false
+  }
+
+  const rawRoles = (user as Record<string, unknown>)[ROLES_CLAIM]
+  const roles = Array.isArray(rawRoles) ? rawRoles : []
+
+  return roles.some((role) => {
+    const normalizedRole = String(role).toUpperCase()
+    return normalizedRole === "COMPANY" || normalizedRole === "NPO"
+  })
 }
