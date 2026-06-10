@@ -45,11 +45,14 @@ class CompanyPortfolioControllerTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void setup() {
+        jdbcTemplate.update("DELETE FROM npo_report");
         jdbcTemplate.update("DELETE FROM company_project");
         jdbcTemplate.update("DELETE FROM project_ods");
+        jdbcTemplate.update("DELETE FROM document");
         jdbcTemplate.update("DELETE FROM project");
-        jdbcTemplate.update("DELETE FROM company");
         jdbcTemplate.update("DELETE FROM npo");
+        jdbcTemplate.update("DELETE FROM company");
+        jdbcTemplate.update("DELETE FROM address");
         jdbcTemplate.update("DELETE FROM users");
 
         User companyUser =

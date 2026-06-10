@@ -32,6 +32,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -44,6 +45,7 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     @Autowired private NpoRepository npoRepository;
     @Autowired private OdsRepository odsRepository;
     @Autowired private UserRepository userRepository;
+    @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private ObjectMapper objectMapper;
 
     private Npo npo;
@@ -54,9 +56,15 @@ class ProjectControllerTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void setup() {
-        projectRepository.deleteAll();
-        npoRepository.deleteAll();
-        userRepository.deleteAll();
+        jdbcTemplate.update("DELETE FROM npo_report");
+        jdbcTemplate.update("DELETE FROM company_project");
+        jdbcTemplate.update("DELETE FROM project_ods");
+        jdbcTemplate.update("DELETE FROM document");
+        jdbcTemplate.update("DELETE FROM project");
+        jdbcTemplate.update("DELETE FROM npo");
+        jdbcTemplate.update("DELETE FROM company");
+        jdbcTemplate.update("DELETE FROM address");
+        jdbcTemplate.update("DELETE FROM users");
 
         userDono =
                 userRepository.save(
