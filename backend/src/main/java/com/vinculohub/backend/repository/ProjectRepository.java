@@ -20,6 +20,7 @@ public interface ProjectRepository
     List<Project> findAllByNpoId(Long npoId);
 
     Page<Project> findByNpoId(Long npoId, Pageable pageable);
+
     long countByNpoIdAndDeletedAtIsNull(Long npoId);
 
     long countByNpoIdAndTypeAndDeletedAtIsNull(Long npoId, ProjectType type);
