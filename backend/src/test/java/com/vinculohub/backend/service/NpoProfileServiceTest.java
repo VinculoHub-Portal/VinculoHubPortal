@@ -2,12 +2,15 @@
 package com.vinculohub.backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.vinculohub.backend.dto.NpoProfileResponse;
+import com.vinculohub.backend.exception.NotFoundException;
 import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.model.Ods;
 import com.vinculohub.backend.model.Project;
@@ -30,6 +33,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
@@ -128,5 +132,36 @@ class NpoProfileServiceTest {
         assertEquals(1, response.totalElements());
         assertEquals("Projeto Alfabetizacao", response.content().get(0).title());
         verify(projectRepository).findByNpoId(10L, Pageable.ofSize(5));
+    }
+
+    @Test
+    @DisplayName("Deve lançar NotFoundException quando a ONG dos projetos públicos não existir")
+    void shouldThrowNotFoundWhenPublicProjectsNpoDoesNotExist() {
+        when(npoRepository.existsById(999)).thenReturn(false);
+
+        assertThrows(
+                NotFoundException.class,
+                () -> npoProfileService.getPublicProjects(999, Pageable.ofSize(5)));
+
+        verify(projectRepository, never()).findByNpoId(eq(999L), any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("Deve retornar página vazia quando a ONG não possuir projetos públicos")
+    void shouldReturnEmptyPageWhenNpoHasNoPublicProjects() {
+        Pageable pageable = Pageable.ofSize(5);
+
+        when(npoRepository.existsById(10)).thenReturn(true);
+        when(projectRepository.findByNpoId(10L, pageable)).thenReturn(Page.empty(pageable));
+
+        NpoProfileResponse.ProjectPageData response =
+                npoProfileService.getPublicProjects(10, pageable);
+
+        assertEquals(0, response.content().size());
+        assertEquals(0, response.totalElements());
+        assertEquals(0, response.totalPages());
+        assertEquals(0, response.number());
+        assertEquals(5, response.size());
+        verify(projectRepository).findByNpoId(10L, pageable);
     }
 }

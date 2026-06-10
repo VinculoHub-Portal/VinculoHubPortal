@@ -6,6 +6,7 @@ import type { ProjectStatus } from "../../api/projects"
 
 interface ProjectsSectionProps {
   currentPage?: number
+  error?: string | null
   loading?: boolean
   onPageChange?: (page: number) => void
   projects: NpoProfileProject[]
@@ -134,6 +135,7 @@ function ProjectCardSkeleton() {
 
 export function PublicProjectsSection({
   currentPage = 0,
+  error = null,
   loading = false,
   onPageChange,
   projects,
@@ -152,6 +154,13 @@ export function PublicProjectsSection({
           {Array.from({ length: 3 }).map((_, index) => (
             <ProjectCardSkeleton key={index} />
           ))}
+        </div>
+      ) : error ? (
+        <div
+          className="rounded-xl border border-red-200 bg-red-50 px-4 py-8 text-center text-sm font-medium text-red-700 shadow-sm"
+          role="alert"
+        >
+          {error}
         </div>
       ) : totalElements === 0 ? (
         <div className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-500 shadow-sm">

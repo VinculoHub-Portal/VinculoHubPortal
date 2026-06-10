@@ -233,6 +233,25 @@ describe("OngPublicProfilePage", () => {
     ).toBeInTheDocument()
   })
 
+  it("exibe erro quando nao consegue carregar os projetos", async () => {
+    mocks.fetchNpoProfileProjects.mockRejectedValueOnce(new Error("Unauthorized"))
+    mocks.useNpoProfile.mockReturnValue({
+      profile: externalProfile,
+      loading: false,
+      error: null,
+      save: vi.fn(),
+      refetch: vi.fn(),
+    })
+    renderPage("42")
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Não foi possível carregar os projetos desta ONG.",
+    )
+    expect(
+      screen.queryByText("Esta ONG ainda não possui projetos cadastrados."),
+    ).not.toBeInTheDocument()
+  })
+
   it("chama useNpoProfile com o id numérico da URL", () => {
     mocks.useNpoProfile.mockReturnValue({
       profile: externalProfile,

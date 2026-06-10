@@ -27,12 +27,14 @@ export function OngPublicProfilePage() {
   const [projectPage, setProjectPage] = useState(0)
   const [projectsPage, setProjectsPage] =
     useState<NpoProfileProjectPage>(EMPTY_PROJECTS_PAGE)
+  const [projectsError, setProjectsError] = useState<string | null>(null)
   const [projectsLoading, setProjectsLoading] = useState(false)
   const { profile, loading, error } = useNpoProfile(numericId)
 
   useEffect(() => {
     if (numericId === undefined || Number.isNaN(numericId)) {
       setProjectsPage(EMPTY_PROJECTS_PAGE)
+      setProjectsError(null)
       return
     }
 
@@ -41,6 +43,7 @@ export function OngPublicProfilePage() {
     async function loadProjects() {
       try {
         setProjectsLoading(true)
+        setProjectsError(null)
         const data = await fetchNpoProfileProjects(
           numericId!,
           projectPage,
@@ -48,7 +51,10 @@ export function OngPublicProfilePage() {
         )
         if (!cancelled) setProjectsPage(data)
       } catch {
-        if (!cancelled) setProjectsPage(EMPTY_PROJECTS_PAGE)
+        if (!cancelled) {
+          setProjectsPage(EMPTY_PROJECTS_PAGE)
+          setProjectsError("Não foi possível carregar os projetos desta ONG.")
+        }
       } finally {
         if (!cancelled) setProjectsLoading(false)
       }
@@ -117,6 +123,7 @@ export function OngPublicProfilePage() {
 
         <PublicProjectsSection
           currentPage={projectsPage.number}
+          error={projectsError}
           loading={projectsLoading}
           onPageChange={setProjectPage}
           projects={projectsPage.content}
