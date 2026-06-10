@@ -29,6 +29,13 @@ export interface CompanyExportData {
   createdAt: string
 }
 
+export interface VinculoExportData {
+  companyName: string
+  npoName: string
+  projectTitle: string
+  status: "pending" | "active" | "inactive" | "negotiation"
+}
+
 export async function fetchAllNpos(token: string): Promise<NpoExportData[]> {
   logger.info("AdminAPI", "Fetching all NPOs for export")
   try {
@@ -53,6 +60,20 @@ export async function fetchAllCompanies(token: string): Promise<CompanyExportDat
     return data
   } catch (error) {
     logger.error("AdminAPI", "Failed to fetch companies", error)
+    throw error
+  }
+}
+
+export async function fetchAllVinculos(token: string): Promise<VinculoExportData[]> {
+  logger.info("AdminAPI", "Fetching all vinculos for export")
+  try {
+    const { data } = await api.get<VinculoExportData[]>("/api/admin/export/vinculos", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    logger.info("AdminAPI", "Vinculos fetched", { count: data.length })
+    return data
+  } catch (error) {
+    logger.error("AdminAPI", "Failed to fetch vinculos", error)
     throw error
   }
 }
