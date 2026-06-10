@@ -1,6 +1,7 @@
 /* (C)2026 */
 package com.vinculohub.backend.controller;
 
+import com.vinculohub.backend.dto.NpoProjectSummaryResponse;
 import com.vinculohub.backend.dto.OdsResponse;
 import com.vinculohub.backend.dto.ProjectCreateRequest;
 import com.vinculohub.backend.dto.ProjectCreateResponse;
@@ -50,6 +51,14 @@ public class ProjectController {
         ProjectCreateResponse response = projectService.createProject(jwt.getSubject(), request);
         log.info("Project created | id={} npoId={}", response.id(), response.npoId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/my-summary")
+    @PreAuthorize("hasRole('NPO')")
+    public ResponseEntity<NpoProjectSummaryResponse> getMyProjectSummary(
+            @AuthenticationPrincipal Jwt jwt) {
+        log.info("GET /api/projects/my-summary | sub={}", jwt.getSubject());
+        return ResponseEntity.ok(projectService.getNpoProjectSummary(jwt.getSubject()));
     }
 
     @GetMapping

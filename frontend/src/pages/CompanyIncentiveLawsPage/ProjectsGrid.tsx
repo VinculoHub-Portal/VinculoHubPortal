@@ -47,6 +47,7 @@ export function ProjectsGrid({ projects, loading, error, onDetails }: ProjectsGr
               fundingType="lei-incentivo"
               targetAmount={project.budgetNeeded}
               progressPercent={project.progressPercent}
+              generalProgress={project.progress}
               onDetails={onDetails}
             />
           ))}

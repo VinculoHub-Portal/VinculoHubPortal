@@ -38,7 +38,7 @@ function HookConsumer() {
           <h2>{project.title}</h2>
           <span>{project.status}</span>
           <span data-testid={`funding-${project.id}`}>{project.fundingModel}</span>
-          <span>{project.progress}%</span>
+          <span>{project.generalProgress}%</span>
         </article>
       ))}
     </div>
@@ -63,6 +63,7 @@ describe("useOngProjects", () => {
           type: "SOCIAL_INVESTMENT_LAW",
           budgetNeeded: 1000,
           investedAmount: 250,
+          progress: 30,
         },
       ],
       totalElements: 1,
@@ -88,7 +89,7 @@ describe("useOngProjects", () => {
     )
     expect(screen.getByText("Projeto Integrado")).toBeInTheDocument()
     expect(screen.getByText("Ativo")).toBeInTheDocument()
-    expect(screen.getByText("25%")).toBeInTheDocument()
+    expect(screen.getByText("30%")).toBeInTheDocument()
   })
 
   it("mapeia SOCIAL_INVESTMENT_LAW para privateInvestment", async () => {
