@@ -8,6 +8,7 @@ import LanguageIcon from "@mui/icons-material/Language"
 import MenuIcon from "@mui/icons-material/Menu"
 import CloseIcon from "@mui/icons-material/Close"
 import { resolveDashboardPath } from "../../utils/dashboardPath"
+import { useAuthProfile } from "../../hooks/useAuthProfile"
 
 const auth0Audience = import.meta.env.VITE_AUTH0_AUDIENCE
 
@@ -16,6 +17,10 @@ export function Header() {
   const [isAuthRedirectModalOpen, setIsAuthRedirectModalOpen] = useState(false)
   const navigate = useNavigate()
   const { isAuthenticated, loginWithRedirect, logout, user } = useAuth0()
+  const { data: profile } = useAuthProfile()
+
+  // A user is a platform user only when Auth0-authenticated AND has a DB record
+  const isPlatformUser = isAuthenticated && profile?.userId != null
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
   const openLoginRedirectNotice = () => {
@@ -49,9 +54,9 @@ export function Header() {
     })
   }
 
-  const handleAuthClick = isAuthenticated ? handleLogout : openLoginRedirectNotice
-  const authButtonLabel = isAuthenticated ? "Sair" : "Entrar"
-  const homePath = isAuthenticated ? resolveDashboardPath(user) : "/"
+  const handleAuthClick = isPlatformUser ? handleLogout : openLoginRedirectNotice
+  const authButtonLabel = isPlatformUser ? "Sair" : "Entrar"
+  const homePath = isPlatformUser ? resolveDashboardPath(user) : "/"
 
   return (
     <header className="bg-vinculo-dark w-full shadow-md relative z-50">
@@ -68,7 +73,7 @@ export function Header() {
         </Link>
 
         <div className="hidden md:flex gap-4">
-          {!isAuthenticated && (
+          {!isPlatformUser && (
             <Link to="/cadastro/instituicao">
               <BaseButton
                 variant="outline"
@@ -97,7 +102,7 @@ export function Header() {
 
       {isMenuOpen && (
         <div className="md:hidden bg-vinculo-dark border-t border-white/10 px-6 py-8 flex flex-col gap-4 animate-in slide-in-from-top duration-300">
-          {!isAuthenticated && (
+          {!isPlatformUser && (
             <BaseButton
               variant="outline"
               fullWidth
