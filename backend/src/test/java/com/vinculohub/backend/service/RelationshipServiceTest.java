@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.vinculohub.backend.dto.CreateRelationshipRequest;
+import com.vinculohub.backend.dto.OverduePartnershipAlertResponse;
 import com.vinculohub.backend.dto.RelationshipListItemResponse;
 import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.ForbiddenException;
@@ -300,5 +301,71 @@ class RelationshipServiceTest {
                         relationshipService.confirmRelationship(
                                 COMPANY_AUTH, company.getId(), project.getId()));
         assertFalse(rel.getStatus() == RelationshipStatus.active);
+    }
+
+    // ------------------------------------------------------------------------------- overdue (admin)
+
+    @Test
+    @DisplayName("ADM-06: mapeia parcerias pendentes em atraso para o alerta do admin")
+    void listOverdueMapsRelationshipsToAlert() {
+        LocalDateTime requestedAt = LocalDateTime.now().minusDays(10);
+        CompanyProject rel = relationship(RelationshipStatus.pending, InitiatorType.company);
+        rel.setCreatedAt(requestedAt);
+        when(companyProjectRepository.findOverduePendingRelationships(any()))
+                .thenReturn(List.of(rel));
+
+        List<OverduePartnershipAlertResponse> result =
+                relationshipService.listOverdueRelationshipsForAdmin();
+
+        assertEquals(1, result.size());
+        OverduePartnershipAlertResponse alert = result.get(0);
+        assertEquals(company.getId(), alert.companyId());
+        assertEquals("Corp S.A.", alert.companyName());
+        assertEquals(npo.getId(), alert.npoId());
+        assertEquals("ONG Boa", alert.npoName());
+        assertEquals(project.getId(), alert.projectId());
+        assertEquals("Projeto Verde", alert.projectName());
+        assertEquals(requestedAt, alert.requestedAt());
+    }
+
+    @Test
+    @DisplayName("ADM-06: sem parcerias em atraso retorna lista vazia")
+    void listOverdueReturnsEmptyWhenNone() {
+        when(companyProjectRepository.findOverduePendingRelationships(any()))
+                .thenReturn(List.of());
+
+        assertTrue(relationshipService.listOverdueRelationshipsForAdmin().isEmpty());
+    }
+
+    @Test
+    @DisplayName("ADM-06: usa o limite de 7 dias atrás como corte de atraso")
+    void listOverdueUsesSevenDayThreshold() {
+        when(companyProjectRepository.findOverduePendingRelationships(any()))
+                .thenReturn(List.of());
+
+        LocalDateTime before = LocalDateTime.now().minusDays(7);
+        relationshipService.listOverdueRelationshipsForAdmin();
+        LocalDateTime after = LocalDateTime.now().minusDays(7);
+
+        ArgumentCaptor<LocalDateTime> captor = ArgumentCaptor.forClass(LocalDateTime.class);
+        verify(companyProjectRepository).findOverduePendingRelationships(captor.capture());
+        LocalDateTime threshold = captor.getValue();
+        assertFalse(threshold.isBefore(before), "limite não pode ser anterior a agora-7d");
+        assertFalse(threshold.isAfter(after), "limite não pode ser posterior a agora-7d");
+    }
+
+    @Test
+    @DisplayName("ADM-06: nome da empresa cai para a razão social quando o nome fantasia é vazio")
+    void listOverdueFallsBackToLegalName() {
+        company.setSocialName("  ");
+        CompanyProject rel = relationship(RelationshipStatus.pending, InitiatorType.company);
+        rel.setCreatedAt(LocalDateTime.now().minusDays(8));
+        when(companyProjectRepository.findOverduePendingRelationships(any()))
+                .thenReturn(List.of(rel));
+
+        List<OverduePartnershipAlertResponse> result =
+                relationshipService.listOverdueRelationshipsForAdmin();
+
+        assertEquals("Corporation Ltda", result.get(0).companyName());
     }
 }
