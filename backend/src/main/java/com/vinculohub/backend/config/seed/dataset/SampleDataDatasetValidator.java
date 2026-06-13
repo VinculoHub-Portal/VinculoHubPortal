@@ -1,10 +1,13 @@
 /* (C)2026 */
 package com.vinculohub.backend.config.seed.dataset;
 
+import com.vinculohub.backend.model.enums.RelationshipStatus;
 import com.vinculohub.backend.model.enums.UserType;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import org.springframework.stereotype.Component;
 
@@ -61,17 +64,90 @@ public class SampleDataDatasetValidator {
                         "must be between 1 and 17");
             }
         }
+        requireUniqueProjectOds(dataset.projectOds());
         for (SeedRow<CompanyProjectSeedRow> row : dataset.companyProjects()) {
             requireReference(row.source(), "company_key", row.value().companyKey(), companies);
             requireReference(row.source(), "project_key", row.value().projectKey(), projects);
+            validateRelationshipLifecycle(row);
         }
+        requireUniqueCompanyProjects(dataset.companyProjects());
         for (SeedRow<NpoReportSeedRow> row : dataset.npoReports()) {
             NpoReportSeedRow report = row.value();
             requireReference(row.source(), "npo_key", report.npoKey(), npos);
             requireReference(
                     row.source(), "reporter_company_key", report.reporterCompanyKey(), companies);
             requireReference(row.source(), "reporter_user_key", report.reporterUserKey(), users);
+            CompanySeedRow reporterCompany = companies.get(report.reporterCompanyKey()).value();
+            if (!reporterCompany.userKey().equals(report.reporterUserKey())) {
+                throw SeedDatasetException.at(
+                        row.source().fileName(),
+                        row.source().lineNumber(),
+                        "reporter_user_key",
+                        "must reference the user owned by reporter_company_key");
+            }
         }
+    }
+
+    private void requireUniqueProjectOds(List<SeedRow<ProjectOdsSeedRow>> rows) {
+        Set<String> pairs = new HashSet<>();
+        for (SeedRow<ProjectOdsSeedRow> row : rows) {
+            String pair = row.value().projectKey() + ":" + row.value().odsId();
+            if (!pairs.add(pair)) {
+                throw SeedDatasetException.at(
+                        row.source().fileName(),
+                        row.source().lineNumber(),
+                        "project_key/ods_id",
+                        "duplicates project and ODS pair '%s'".formatted(pair));
+            }
+        }
+    }
+
+    private void requireUniqueCompanyProjects(List<SeedRow<CompanyProjectSeedRow>> rows) {
+        Set<String> pairs = new HashSet<>();
+        for (SeedRow<CompanyProjectSeedRow> row : rows) {
+            String pair = row.value().companyKey() + ":" + row.value().projectKey();
+            if (!pairs.add(pair)) {
+                throw SeedDatasetException.at(
+                        row.source().fileName(),
+                        row.source().lineNumber(),
+                        "company_key/project_key",
+                        "duplicates company and project pair '%s'".formatted(pair));
+            }
+        }
+    }
+
+    private void validateRelationshipLifecycle(SeedRow<CompanyProjectSeedRow> seedRow) {
+        CompanyProjectSeedRow row = seedRow.value();
+        boolean responded = row.respondedAt() != null;
+        boolean companyConfirmed = row.companyConfirmedAt() != null;
+        boolean npoConfirmed = row.npoConfirmedAt() != null;
+        boolean bothConfirmed = companyConfirmed && npoConfirmed;
+
+        if (row.status() == RelationshipStatus.pending
+                && (responded || companyConfirmed || npoConfirmed)) {
+            throw relationshipError(
+                    seedRow, "pending relationship cannot be answered or confirmed");
+        }
+        if (row.status() == RelationshipStatus.inactive
+                && (!responded || companyConfirmed || npoConfirmed)) {
+            throw relationshipError(
+                    seedRow, "inactive relationship must be answered and cannot be confirmed");
+        }
+        if (row.status() == RelationshipStatus.negotiation && (!responded || bothConfirmed)) {
+            throw relationshipError(
+                    seedRow,
+                    "negotiation relationship must be answered and cannot have both confirmations");
+        }
+        if (row.status() == RelationshipStatus.active && (!responded || !bothConfirmed)) {
+            throw relationshipError(
+                    seedRow, "active relationship must be answered and confirmed by both sides");
+        }
+    }
+
+    private SeedDatasetException relationshipError(
+            SeedRow<CompanyProjectSeedRow> row, String message) {
+        return SeedDatasetException.at(
+                row.source().fileName(), row.source().lineNumber(), "status", message);
     }
 
     private <T> Map<String, SeedRow<T>> unique(

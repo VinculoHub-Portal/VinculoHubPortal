@@ -21,6 +21,7 @@ public class DefaultSampleDataSeedProcessor implements SampleDataSeedProcessor {
     private final SampleDataDatabaseGuard databaseGuard;
     private final Auth0ManagementClient auth0ManagementClient;
     private final CoreSampleDataPersister corePersister;
+    private final DomainRelationSampleDataPersister relationPersister;
 
     @Override
     public SampleDataSeedResult process(SampleDataSeedProperties properties) {
@@ -28,7 +29,8 @@ public class DefaultSampleDataSeedProcessor implements SampleDataSeedProcessor {
         databaseGuard.requireEmptyFunctionalDatabase();
         ResolvedAuth0Users auth0Users =
                 auth0ManagementClient.resolveExistingUsers(loaded.dataset().users());
-        corePersister.persist(loaded.dataset(), auth0Users);
+        PersistedSampleData persisted = corePersister.persist(loaded.dataset(), auth0Users);
+        relationPersister.persist(loaded.dataset(), persisted);
         return new SampleDataSeedResult(loaded.checksum());
     }
 }

@@ -26,24 +26,31 @@ class DefaultSampleDataSeedProcessorTest {
         SampleDataDatabaseGuard guard = mock(SampleDataDatabaseGuard.class);
         Auth0ManagementClient auth0Client = mock(Auth0ManagementClient.class);
         CoreSampleDataPersister persister = mock(CoreSampleDataPersister.class);
+        DomainRelationSampleDataPersister relationPersister =
+                mock(DomainRelationSampleDataPersister.class);
         SampleDataDataset dataset = emptyDataset();
         ResolvedAuth0Users auth0Users = new ResolvedAuth0Users(Map.of());
+        PersistedSampleData persisted =
+                new PersistedSampleData(Map.of(), Map.of(), Map.of(), Map.of(), Map.of());
         SampleDataSeedProperties properties =
                 new SampleDataSeedProperties(true, "e2e", "classpath:seed/e2e");
         when(loader.load(properties.location()))
                 .thenReturn(new LoadedSampleDataDataset(dataset, "checksum"));
         when(auth0Client.resolveExistingUsers(dataset.users())).thenReturn(auth0Users);
+        when(persister.persist(dataset, auth0Users)).thenReturn(persisted);
 
         SampleDataSeedResult result =
-                new DefaultSampleDataSeedProcessor(loader, guard, auth0Client, persister)
+                new DefaultSampleDataSeedProcessor(
+                                loader, guard, auth0Client, persister, relationPersister)
                         .process(properties);
 
         assertThat(result.checksum()).isEqualTo("checksum");
-        InOrder order = inOrder(loader, guard, auth0Client, persister);
+        InOrder order = inOrder(loader, guard, auth0Client, persister, relationPersister);
         order.verify(loader).load(properties.location());
         order.verify(guard).requireEmptyFunctionalDatabase();
         order.verify(auth0Client).resolveExistingUsers(dataset.users());
         order.verify(persister).persist(dataset, auth0Users);
+        order.verify(relationPersister).persist(dataset, persisted);
     }
 
     private SampleDataDataset emptyDataset() {
