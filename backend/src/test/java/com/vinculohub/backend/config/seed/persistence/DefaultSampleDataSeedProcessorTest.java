@@ -16,12 +16,16 @@ import com.vinculohub.backend.config.seed.lifecycle.SampleDataSeedResult;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 
+@ExtendWith(OutputCaptureExtension.class)
 class DefaultSampleDataSeedProcessorTest {
 
     @Test
-    void orchestratesValidationAndCorePersistenceInOrder() {
+    void orchestratesValidationAndCorePersistenceInOrder(CapturedOutput output) {
         SampleDataDatasetLoader loader = mock(SampleDataDatasetLoader.class);
         SampleDataDatabaseGuard guard = mock(SampleDataDatabaseGuard.class);
         Auth0ManagementClient auth0Client = mock(Auth0ManagementClient.class);
@@ -51,6 +55,13 @@ class DefaultSampleDataSeedProcessorTest {
         order.verify(auth0Client).resolveExistingUsers(dataset.users());
         order.verify(persister).persist(dataset, auth0Users);
         order.verify(relationPersister).persist(dataset, persisted);
+        assertThat(output)
+                .contains("Sample data dataset validated")
+                .contains("datasetId=e2e")
+                .contains("users=0")
+                .contains("projectOds=0")
+                .doesNotContain("%d")
+                .contains("Sample data entities persisted");
     }
 
     private SampleDataDataset emptyDataset() {

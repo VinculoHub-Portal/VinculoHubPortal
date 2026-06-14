@@ -34,4 +34,18 @@ public record SampleDataDataset(
                 + companyProjects.size()
                 + npoReports.size();
     }
+
+    public String summary() {
+        return ("users=%d addresses=%d companies=%d npos=%d projects=%d projectOds=%d "
+                        + "companyProjects=%d npoReports=%d")
+                .formatted(
+                        users.size(),
+                        addresses.size(),
+                        companies.size(),
+                        npos.size(),
+                        projects.size(),
+                        projectOds.size(),
+                        companyProjects.size(),
+                        npoReports.size());
+    }
 }

@@ -27,6 +27,7 @@ public class SampleDataSeedLifecycle {
             return;
         }
 
+        log.info("Sample data seed starting | datasetId={}", datasetId);
         SampleDataSeedResult result = processor.process(properties);
         historyRepository.save(
                 new SampleDataSeedHistory(datasetId, result.checksum(), LocalDateTime.now()));
