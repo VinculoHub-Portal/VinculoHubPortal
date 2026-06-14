@@ -1,6 +1,5 @@
 import { useAuth0 } from "@auth0/auth0-react"
 import { useEffect, useState } from "react"
-import { USE_COMPANY_MOCKS, mockFetchCompaniesForNpo } from "../api/companies.mocks"
 import { fetchCompaniesForNpo, type CompanyListItem } from "../api/companies"
 
 interface UsePaginatedCompaniesOptions {
@@ -39,18 +38,11 @@ export function usePaginatedCompanies({
     async function load() {
       try {
         setLoading(true)
-        let data
-
-        if (USE_COMPANY_MOCKS) {
-          data = mockFetchCompaniesForNpo({ page: currentPage, size: pageSize })
-        } else {
-          const token = await getAccessTokenSilently()
-          data = await fetchCompaniesForNpo(
-            { page: currentPage, size: pageSize, name },
-            token,
-          )
-        }
-
+        const token = await getAccessTokenSilently()
+        const data = await fetchCompaniesForNpo(
+          { page: currentPage, size: pageSize, name },
+          token,
+        )
         if (cancelled) return
         setCompanies(data.content)
         setTotalPages(data.totalPages)
