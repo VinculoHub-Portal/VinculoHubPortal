@@ -47,6 +47,41 @@ Para parar todos os serviços, execute: `docker compose down`.
 
 ---
 
+## Sample data seed para testes E2E
+
+O compose principal pode popular um banco vazio a partir de CSVs e associar os usuários locais a
+contas que já existem no Auth0. A seed é opt-in e nunca cria contas no Auth0.
+
+1. Crie uma pasta local com os oito CSVs descritos em
+   `backend/src/main/resources/db/sample-data/default/README.md`.
+2. Mantenha no Auth0 uma conta para cada e-mail declarado em `users.csv`.
+3. Crie uma aplicação Machine-to-Machine no Auth0, autorize-a na Management API com o escopo
+   `read:users` e configure no `.env`:
+
+```dotenv
+APP_SAMPLE_DATA_ENABLED=true
+APP_SAMPLE_DATA_DATASET_ID=e2e-local-v1
+APP_SAMPLE_DATA_HOST_PATH=./sample-data/e2e-local
+APP_SAMPLE_DATA_AUTH0_DOMAIN=your-tenant.us.auth0.com
+APP_SAMPLE_DATA_AUTH0_CLIENT_ID=your-management-m2m-client-id
+APP_SAMPLE_DATA_AUTH0_CLIENT_SECRET=your-management-m2m-client-secret
+```
+
+Depois suba a stack normalmente:
+
+```bash
+docker compose up -d --build
+```
+
+A seed valida todos os arquivos e contas Auth0 antes da persistência. Ela falha se todos os CSVs
+estiverem vazios ou se o banco funcional já contiver dados. Uma execução concluída é registrada por
+`APP_SAMPLE_DATA_DATASET_ID`; reinícios preservam os dados e não executam a seed novamente. Para
+recriar o ambiente local do zero, remova o volume do banco com `docker compose down -v`.
+
+Nunca versione o arquivo `.env`, credenciais M2M ou datasets que contenham dados sensíveis.
+
+---
+
 ## 🛠️ Rodando Manualmente (Sem Docker)
 
 Se preferir rodar os serviços individualmente para desenvolvimento mais focado:

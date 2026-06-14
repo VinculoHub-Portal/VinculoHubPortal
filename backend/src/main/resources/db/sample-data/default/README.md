@@ -31,6 +31,10 @@ stories after the seed infrastructure is complete.
 
 The seed resolves the Auth0 `user_id`; it is not supplied by the CSV.
 
+The Auth0 Machine-to-Machine application used by the seed needs `read:users` permission for the
+tenant Management API. The seed validates existing accounts only; it never creates or updates Auth0
+users.
+
 ### `addresses.csv`
 
 | Column | Required | Description |
@@ -127,3 +131,14 @@ The seed resolves the Auth0 `user_id`; it is not supplied by the CSV.
 | `reporter_user_key` | yes | Reference to `users.csv`. |
 | `reason` | yes | Report reason. |
 | `status` | yes | A `NpoReportStatus` enum constant. |
+
+## Docker Compose
+
+The repository copy intentionally remains header-only. To run a populated dataset, copy this
+directory outside `backend/src/main/resources`, add scenario rows, and point
+`APP_SAMPLE_DATA_HOST_PATH` to that directory. Docker mounts it at `/sample-data` as read-only and
+the backend reads it from `file:/sample-data`.
+
+The required environment variables are documented in the root `.env.example`. Keep
+`APP_SAMPLE_DATA_ENABLED=false` unless the database is disposable and the Auth0 Management API
+credentials are configured.

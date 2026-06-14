@@ -18,6 +18,14 @@ services:
       - AUTH0_ISSUER_URI=${AUTH0_ISSUER_URI}
       - AUTH0_AUDIENCE=${AUTH0_AUDIENCE}
       - AUTH0_ROLES_CLAIM=${AUTH0_ROLES_CLAIM:-https://vinculohub/roles}
+      - APP_SAMPLE_DATA_ENABLED=${APP_SAMPLE_DATA_ENABLED:-false}
+      - APP_SAMPLE_DATA_DATASET_ID=${APP_SAMPLE_DATA_DATASET_ID:-default}
+      - APP_SAMPLE_DATA_LOCATION=${APP_SAMPLE_DATA_LOCATION:-file:/sample-data}
+      - APP_SAMPLE_DATA_AUTH0_DOMAIN=${APP_SAMPLE_DATA_AUTH0_DOMAIN:-}
+      - APP_SAMPLE_DATA_AUTH0_CLIENT_ID=${APP_SAMPLE_DATA_AUTH0_CLIENT_ID:-}
+      - APP_SAMPLE_DATA_AUTH0_CLIENT_SECRET=${APP_SAMPLE_DATA_AUTH0_CLIENT_SECRET:-}
+    volumes:
+      - ${APP_SAMPLE_DATA_HOST_PATH:-./backend/src/main/resources/db/sample-data/default}:/sample-data:ro
     depends_on:
       db:
         condition: service_healthy
