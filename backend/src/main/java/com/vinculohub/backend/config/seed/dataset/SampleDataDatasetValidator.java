@@ -1,18 +1,32 @@
 /* (C)2026 */
 package com.vinculohub.backend.config.seed.dataset;
 
-import com.vinculohub.backend.model.enums.RelationshipStatus;
+import com.vinculohub.backend.dto.NpoReportCreateRequest;
+import com.vinculohub.backend.dto.ProjectCreateRequest;
 import com.vinculohub.backend.model.enums.UserType;
+import com.vinculohub.backend.service.NpoEsgService;
+import com.vinculohub.backend.utils.DocumentValidator;
+import com.vinculohub.backend.utils.RelationshipLifecyclePolicy;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class SampleDataDatasetValidator {
+
+    private final NpoEsgService npoEsgService;
+    private final Validator beanValidator;
 
     public void validate(SampleDataDataset dataset) {
         if (dataset.rowCount() == 0) {
@@ -29,12 +43,15 @@ public class SampleDataDatasetValidator {
         Map<String, SeedRow<ProjectSeedRow>> projects =
                 unique(dataset.projects(), row -> row.value().key());
         unique(dataset.npoReports(), row -> row.value().key());
+        requireUniqueUserEmails(dataset.users());
+        requireUniqueProfileUsers(dataset.companies(), dataset.npos());
 
         for (SeedRow<CompanySeedRow> row : dataset.companies()) {
             CompanySeedRow company = row.value();
             requireReference(row.source(), "user_key", company.userKey(), users);
             requireUserType(row.source(), company.userKey(), users, UserType.company);
             requireOptionalReference(row.source(), "address_key", company.addressKey(), addresses);
+            validateCompanyDocument(row);
         }
         for (SeedRow<NpoSeedRow> row : dataset.npos()) {
             NpoSeedRow npo = row.value();
@@ -42,17 +59,13 @@ public class SampleDataDatasetValidator {
             requireUserType(row.source(), npo.userKey(), users, UserType.npo);
             requireOptionalReference(row.source(), "address_key", npo.addressKey(), addresses);
             validateNpoDocument(row);
+            validateNpoEsg(row);
         }
+        requireUniqueDocuments(dataset.companies(), dataset.npos());
+        Map<String, List<Integer>> odsIdsByProject = indexProjectOds(dataset.projectOds());
         for (SeedRow<ProjectSeedRow> row : dataset.projects()) {
             requireReference(row.source(), "npo_key", row.value().npoKey(), npos);
-            int progress = row.value().progress();
-            if (progress < 0 || progress > 100) {
-                throw SeedDatasetException.at(
-                        row.source().fileName(),
-                        row.source().lineNumber(),
-                        "progress",
-                        "must be between 0 and 100");
-            }
+            validateProject(row, odsIdsByProject.getOrDefault(row.value().key(), List.of()));
         }
         for (SeedRow<ProjectOdsSeedRow> row : dataset.projectOds()) {
             requireReference(row.source(), "project_key", row.value().projectKey(), projects);
@@ -76,15 +89,95 @@ public class SampleDataDatasetValidator {
             requireReference(row.source(), "npo_key", report.npoKey(), npos);
             requireReference(
                     row.source(), "reporter_company_key", report.reporterCompanyKey(), companies);
-            requireReference(row.source(), "reporter_user_key", report.reporterUserKey(), users);
-            CompanySeedRow reporterCompany = companies.get(report.reporterCompanyKey()).value();
-            if (!reporterCompany.userKey().equals(report.reporterUserKey())) {
+            validateBean(
+                    row.source(),
+                    new NpoReportCreateRequest(report.reason()),
+                    Map.of("reason", "reason"));
+        }
+    }
+
+    private Map<String, List<Integer>> indexProjectOds(
+            List<SeedRow<ProjectOdsSeedRow>> projectOds) {
+        Map<String, List<Integer>> idsByProject = new LinkedHashMap<>();
+        for (SeedRow<ProjectOdsSeedRow> seedRow : projectOds) {
+            idsByProject
+                    .computeIfAbsent(seedRow.value().projectKey(), ignored -> new ArrayList<>())
+                    .add(seedRow.value().odsId());
+        }
+        return idsByProject;
+    }
+
+    private void requireUniqueUserEmails(List<SeedRow<UserSeedRow>> rows) {
+        Map<String, SeedRowSource> sources = new HashMap<>();
+        for (SeedRow<UserSeedRow> row : rows) {
+            String normalized = row.value().email().toLowerCase(java.util.Locale.ROOT);
+            SeedRowSource previous = sources.putIfAbsent(normalized, row.source());
+            if (previous != null) {
                 throw SeedDatasetException.at(
                         row.source().fileName(),
                         row.source().lineNumber(),
-                        "reporter_user_key",
-                        "must reference the user owned by reporter_company_key");
+                        "email",
+                        "duplicates email first declared at line " + previous.lineNumber());
             }
+        }
+    }
+
+    private void requireUniqueProfileUsers(
+            List<SeedRow<CompanySeedRow>> companies, List<SeedRow<NpoSeedRow>> npos) {
+        requireUniqueReference(companies, row -> row.value().userKey(), "user_key", "company user");
+        requireUniqueReference(npos, row -> row.value().userKey(), "user_key", "NPO user");
+    }
+
+    private <T> void requireUniqueReference(
+            List<SeedRow<T>> rows,
+            Function<SeedRow<T>, String> reference,
+            String column,
+            String description) {
+        Map<String, SeedRowSource> sources = new HashMap<>();
+        for (SeedRow<T> row : rows) {
+            String key = reference.apply(row);
+            SeedRowSource previous = sources.putIfAbsent(key, row.source());
+            if (previous != null) {
+                throw SeedDatasetException.at(
+                        row.source().fileName(),
+                        row.source().lineNumber(),
+                        column,
+                        "duplicates %s first declared at line %d"
+                                .formatted(description, previous.lineNumber()));
+            }
+        }
+    }
+
+    private void requireUniqueDocuments(
+            List<SeedRow<CompanySeedRow>> companies, List<SeedRow<NpoSeedRow>> npos) {
+        Map<String, SeedRowSource> cnpjSources = new HashMap<>();
+        Map<String, SeedRowSource> cpfSources = new HashMap<>();
+        for (SeedRow<CompanySeedRow> row : companies) {
+            registerDocument(cnpjSources, row.source(), "cnpj", row.value().cnpj());
+        }
+        for (SeedRow<NpoSeedRow> row : npos) {
+            registerDocument(cnpjSources, row.source(), "cnpj", row.value().cnpj());
+            registerDocument(cpfSources, row.source(), "cpf", row.value().cpf());
+        }
+    }
+
+    private void registerDocument(
+            Map<String, SeedRowSource> sources,
+            SeedRowSource source,
+            String column,
+            String document) {
+        String normalized = DocumentValidator.sanitize(document);
+        if (normalized == null || normalized.isBlank()) {
+            return;
+        }
+        SeedRowSource previous = sources.putIfAbsent(normalized, source);
+        if (previous != null) {
+            throw SeedDatasetException.at(
+                    source.fileName(),
+                    source.lineNumber(),
+                    column,
+                    "duplicates document first declared at %s:%d"
+                            .formatted(previous.fileName(), previous.lineNumber()));
         }
     }
 
@@ -118,29 +211,14 @@ public class SampleDataDatasetValidator {
 
     private void validateRelationshipLifecycle(SeedRow<CompanyProjectSeedRow> seedRow) {
         CompanyProjectSeedRow row = seedRow.value();
-        boolean responded = row.respondedAt() != null;
-        boolean companyConfirmed = row.companyConfirmedAt() != null;
-        boolean npoConfirmed = row.npoConfirmedAt() != null;
-        boolean bothConfirmed = companyConfirmed && npoConfirmed;
-
-        if (row.status() == RelationshipStatus.pending
-                && (responded || companyConfirmed || npoConfirmed)) {
-            throw relationshipError(
-                    seedRow, "pending relationship cannot be answered or confirmed");
-        }
-        if (row.status() == RelationshipStatus.inactive
-                && (!responded || companyConfirmed || npoConfirmed)) {
-            throw relationshipError(
-                    seedRow, "inactive relationship must be answered and cannot be confirmed");
-        }
-        if (row.status() == RelationshipStatus.negotiation && (!responded || bothConfirmed)) {
-            throw relationshipError(
-                    seedRow,
-                    "negotiation relationship must be answered and cannot have both confirmations");
-        }
-        if (row.status() == RelationshipStatus.active && (!responded || !bothConfirmed)) {
-            throw relationshipError(
-                    seedRow, "active relationship must be answered and confirmed by both sides");
+        String violation =
+                RelationshipLifecyclePolicy.validate(
+                        row.status(),
+                        row.companyConfirmedAt(),
+                        row.npoConfirmedAt(),
+                        row.respondedAt());
+        if (violation != null) {
+            throw relationshipError(seedRow, violation);
         }
     }
 
@@ -185,15 +263,141 @@ public class SampleDataDatasetValidator {
     }
 
     private void validateNpoDocument(SeedRow<NpoSeedRow> row) {
-        boolean hasCnpj = row.value().cnpj() != null;
-        boolean hasCpf = row.value().cpf() != null;
-        if (hasCnpj == hasCpf) {
+        String cnpj = DocumentValidator.sanitize(row.value().cnpj());
+        String cpf = DocumentValidator.sanitize(row.value().cpf());
+        boolean hasCnpj = cnpj != null && !cnpj.isBlank();
+        boolean hasCpf = cpf != null && !cpf.isBlank();
+        if (!hasCnpj && !hasCpf) {
             throw SeedDatasetException.at(
                     row.source().fileName(),
                     row.source().lineNumber(),
                     "cnpj/cpf",
-                    "exactly one of cnpj or cpf must be provided");
+                    "at least one of cnpj or cpf must be provided");
         }
+        if (hasCnpj && !DocumentValidator.isValidCnpj(cnpj)) {
+            throw SeedDatasetException.at(
+                    row.source().fileName(), row.source().lineNumber(), "cnpj", "is invalid");
+        }
+        if (hasCpf && !DocumentValidator.isValidCpf(cpf)) {
+            throw SeedDatasetException.at(
+                    row.source().fileName(), row.source().lineNumber(), "cpf", "is invalid");
+        }
+    }
+
+    private void validateCompanyDocument(SeedRow<CompanySeedRow> row) {
+        String cnpj = DocumentValidator.sanitize(row.value().cnpj());
+        if (cnpj != null && !cnpj.isBlank() && !DocumentValidator.isValidCnpj(cnpj)) {
+            throw SeedDatasetException.at(
+                    row.source().fileName(), row.source().lineNumber(), "cnpj", "is invalid");
+        }
+    }
+
+    private void validateNpoEsg(SeedRow<NpoSeedRow> row) {
+        try {
+            npoEsgService.validateEsgSelection(
+                    row.value().environmental(), row.value().social(), row.value().governance());
+        } catch (RuntimeException exception) {
+            throw SeedDatasetException.at(
+                    row.source().fileName(),
+                    row.source().lineNumber(),
+                    "environmental/social/governance",
+                    exception.getMessage());
+        }
+    }
+
+    private void validateProject(SeedRow<ProjectSeedRow> seedRow, List<Integer> odsIds) {
+        ProjectSeedRow row = seedRow.value();
+        ProjectCreateRequest request =
+                ProjectCreateRequest.builder()
+                        .title(row.title())
+                        .description(row.description())
+                        .budgetNeeded(row.budgetNeeded())
+                        .startDate(row.startDate())
+                        .endDate(row.endDate())
+                        .odsIds(odsIds)
+                        .type(row.type())
+                        .focusArea(row.focusArea())
+                        .fundraisingDeadline(row.fundraisingDeadline())
+                        .beneficiariesCount(row.beneficiariesCount())
+                        .location(row.location())
+                        .mainObjective(row.mainObjective())
+                        .progress(row.progress())
+                        .build();
+        validateBean(
+                seedRow.source(),
+                request,
+                Map.of(
+                        "title", "title",
+                        "description", "description",
+                        "budgetNeeded", "budget_needed",
+                        "odsIds", "project_ods.csv",
+                        "type", "type",
+                        "mainObjective", "main_objective",
+                        "progress", "progress"));
+        requireNonNegative(seedRow, "invested_amount", row.investedAmount());
+        if (row.beneficiariesCount() != null && row.beneficiariesCount() < 0) {
+            throw SeedDatasetException.at(
+                    seedRow.source().fileName(),
+                    seedRow.source().lineNumber(),
+                    "beneficiaries_count",
+                    "must not be negative");
+        }
+        if (row.startDate() != null
+                && row.endDate() != null
+                && row.endDate().isBefore(row.startDate())) {
+            throw SeedDatasetException.at(
+                    seedRow.source().fileName(),
+                    seedRow.source().lineNumber(),
+                    "end_date",
+                    "must not precede start_date");
+        }
+        requireMaxLength(seedRow, "focus_area", row.focusArea(), 50);
+        requireMaxLength(seedRow, "fundraising_deadline", row.fundraisingDeadline(), 50);
+        requireMaxLength(seedRow, "location", row.location(), 255);
+    }
+
+    private void requireNonNegative(SeedRow<ProjectSeedRow> row, String column, BigDecimal value) {
+        if (value != null && value.compareTo(BigDecimal.ZERO) < 0) {
+            throw SeedDatasetException.at(
+                    row.source().fileName(),
+                    row.source().lineNumber(),
+                    column,
+                    "must not be negative");
+        }
+    }
+
+    private void requireMaxLength(
+            SeedRow<ProjectSeedRow> row, String column, String value, int maxLength) {
+        if (value != null && value.length() > maxLength) {
+            throw SeedDatasetException.at(
+                    row.source().fileName(),
+                    row.source().lineNumber(),
+                    column,
+                    "must contain at most %d characters".formatted(maxLength));
+        }
+    }
+
+    private void validateBean(
+            SeedRowSource source, Object value, Map<String, String> columnsByProperty) {
+        Set<ConstraintViolation<Object>> violations = beanValidator.validate(value);
+        if (violations.isEmpty()) {
+            return;
+        }
+        ConstraintViolation<Object> violation =
+                violations.stream()
+                        .sorted(
+                                (left, right) ->
+                                        left.getPropertyPath()
+                                                .toString()
+                                                .compareTo(right.getPropertyPath().toString()))
+                        .findFirst()
+                        .orElseThrow();
+        String property = violation.getPropertyPath().toString();
+        throw SeedDatasetException.at(
+                source.fileName(),
+                source.lineNumber(),
+                columnsByProperty.getOrDefault(property, property),
+                violation.getMessage());
     }
 
     private <T> void requireOptionalReference(

@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 
 class SampleDataRelationshipValidatorTest {
 
-    private final SampleDataDatasetValidator validator = new SampleDataDatasetValidator();
+    private final SampleDataDatasetValidator validator = TestSeedRows.validator();
     private final SeedRowSource source = new SeedRowSource("company_projects.csv", 2);
 
     @Test
@@ -66,7 +66,7 @@ class SampleDataRelationshipValidatorTest {
                 List.of(new SeedRow<>(source, TestSeedRows.company())),
                 List.of(new SeedRow<>(source, TestSeedRows.npo())),
                 List.of(new SeedRow<>(source, TestSeedRows.project())),
-                List.of(),
+                List.of(new SeedRow<>(source, new ProjectOdsSeedRow("project", 1))),
                 relationships,
                 List.of());
     }

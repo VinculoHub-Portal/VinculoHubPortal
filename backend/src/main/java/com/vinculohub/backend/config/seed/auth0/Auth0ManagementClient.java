@@ -95,20 +95,18 @@ public class Auth0ManagementClient {
                             .body(Auth0UserResponse[].class);
         } catch (RestClientException exception) {
             throw new SampleDataSeedException(
-                    "Could not validate Auth0 account for seed user '%s' (%s)."
-                            .formatted(seedUser.key(), seedUser.email()),
+                    "Could not validate Auth0 account for seed user '%s'."
+                            .formatted(seedUser.key()),
                     exception);
         }
 
         if (matches == null || matches.length == 0) {
             throw new SampleDataSeedException(
-                    "No Auth0 account found for seed user '%s' with email '%s'."
-                            .formatted(seedUser.key(), seedUser.email()));
+                    "No Auth0 account found for seed user '%s'.".formatted(seedUser.key()));
         }
         if (matches.length > 1) {
             throw new SampleDataSeedException(
-                    "Multiple Auth0 accounts found for seed user '%s' with email '%s'."
-                            .formatted(seedUser.key(), seedUser.email()));
+                    "Multiple Auth0 accounts found for seed user '%s'.".formatted(seedUser.key()));
         }
 
         Auth0UserResponse match = matches[0];

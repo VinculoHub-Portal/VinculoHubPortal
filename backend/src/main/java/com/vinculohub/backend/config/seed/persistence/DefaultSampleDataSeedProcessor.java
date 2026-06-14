@@ -6,6 +6,8 @@ import com.vinculohub.backend.config.seed.auth0.Auth0ManagementClient;
 import com.vinculohub.backend.config.seed.auth0.ResolvedAuth0Users;
 import com.vinculohub.backend.config.seed.dataset.LoadedSampleDataDataset;
 import com.vinculohub.backend.config.seed.dataset.SampleDataDatasetLoader;
+import com.vinculohub.backend.config.seed.lifecycle.SampleDataSeedHistory;
+import com.vinculohub.backend.config.seed.lifecycle.SampleDataSeedHistoryRepository;
 import com.vinculohub.backend.config.seed.lifecycle.SampleDataSeedProcessor;
 import com.vinculohub.backend.config.seed.lifecycle.SampleDataSeedResult;
 import lombok.RequiredArgsConstructor;
@@ -20,10 +22,9 @@ import org.springframework.stereotype.Component;
 public class DefaultSampleDataSeedProcessor implements SampleDataSeedProcessor {
 
     private final SampleDataDatasetLoader datasetLoader;
-    private final SampleDataDatabaseGuard databaseGuard;
     private final Auth0ManagementClient auth0ManagementClient;
-    private final CoreSampleDataPersister corePersister;
-    private final DomainRelationSampleDataPersister relationPersister;
+    private final SampleDataSeedHistoryRepository historyRepository;
+    private final SampleDataSeedTransactionExecutor transactionExecutor;
 
     @Override
     public SampleDataSeedResult process(SampleDataSeedProperties properties) {
@@ -34,22 +35,16 @@ public class DefaultSampleDataSeedProcessor implements SampleDataSeedProcessor {
                 loaded.dataset().rowCount(),
                 loaded.dataset().summary(),
                 loaded.checksum());
-        databaseGuard.requireEmptyFunctionalDatabase();
+        SampleDataSeedHistory existing =
+                historyRepository.findById(properties.datasetId()).orElse(null);
+        if (existing != null) {
+            SampleDataSeedTransactionExecutor.requireMatchingChecksum(
+                    properties.datasetId(), existing.getChecksum(), loaded.checksum());
+            return SampleDataSeedResult.skipped(loaded.checksum());
+        }
+
         ResolvedAuth0Users auth0Users =
                 auth0ManagementClient.resolveExistingUsers(loaded.dataset().users());
-        PersistedSampleData persisted = corePersister.persist(loaded.dataset(), auth0Users);
-        relationPersister.persist(loaded.dataset(), persisted);
-        log.info(
-                "Sample data entities persisted | datasetId={} users={} addresses={} companies={} "
-                        + "npos={} projects={} companyProjects={} npoReports={}",
-                properties.datasetId(),
-                persisted.users().size(),
-                persisted.addresses().size(),
-                persisted.companies().size(),
-                persisted.npos().size(),
-                persisted.projects().size(),
-                loaded.dataset().companyProjects().size(),
-                loaded.dataset().npoReports().size());
-        return new SampleDataSeedResult(loaded.checksum());
+        return transactionExecutor.execute(properties.datasetId(), loaded, auth0Users);
     }
 }

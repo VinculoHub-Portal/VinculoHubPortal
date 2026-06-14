@@ -22,6 +22,7 @@ import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.ProjectRepository;
 import com.vinculohub.backend.repository.UserRepository;
 import com.vinculohub.backend.service.notification.NotificationService;
+import com.vinculohub.backend.utils.RelationshipLifecyclePolicy;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -154,7 +155,7 @@ public class RelationshipService {
         relationship.setRespondedAt(null);
         relationship.setCompanyConfirmedAt(null);
         relationship.setNpoConfirmedAt(null);
-        companyProjectRepository.save(relationship);
+        saveValidRelationship(relationship);
 
         // Notify the receptor (the party that did NOT initiate).
         Npo npo = project.getNpo();
@@ -198,7 +199,7 @@ public class RelationshipService {
         relationship.setRespondedAt(LocalDateTime.now());
         relationship.setStatus(
                 accept ? RelationshipStatus.negotiation : RelationshipStatus.inactive);
-        companyProjectRepository.save(relationship);
+        saveValidRelationship(relationship);
 
         // Notify the initiator.
         String initiatorEmail = companyInitiated ? companyEmail(company) : npoEmail(npo);
@@ -244,7 +245,7 @@ public class RelationshipService {
         if (bothConfirmed) {
             relationship.setStatus(RelationshipStatus.active);
         }
-        companyProjectRepository.save(relationship);
+        saveValidRelationship(relationship);
 
         if (bothConfirmed) {
             notificationService.partnershipActivated(
@@ -258,6 +259,14 @@ public class RelationshipService {
             notificationService.confirmationRequested(
                     companyEmail(company), projectName, npoName(npo));
         }
+    }
+
+    private void saveValidRelationship(CompanyProject relationship) {
+        String violation = RelationshipLifecyclePolicy.validate(relationship);
+        if (violation != null) {
+            throw new BadRequestException(violation);
+        }
+        companyProjectRepository.save(relationship);
     }
 
     // ----------------------------------------------------------------------------------------

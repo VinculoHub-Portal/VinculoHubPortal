@@ -23,7 +23,7 @@ class SampleDataDatasetLoaderTest {
     @BeforeEach
     void setUp() {
         SampleDataDatasetReader reader = new SampleDataDatasetReader(new DefaultResourceLoader());
-        loader = new SampleDataDatasetLoader(reader, new SampleDataDatasetValidator());
+        loader = new SampleDataDatasetLoader(reader, TestSeedRows.validator());
     }
 
     @Test

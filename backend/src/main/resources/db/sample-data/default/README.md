@@ -73,12 +73,14 @@ users.
 | `description` | no | Institutional description. |
 | `logo_url` | no | Public logo URL. |
 | `npo_size` | yes | `small`, `medium`, or `large`. |
-| `cnpj` | conditional | CNPJ, mutually exclusive with CPF. |
-| `cpf` | conditional | CPF, mutually exclusive with CNPJ. |
+| `cnpj` | conditional | Valid CNPJ; at least CPF or CNPJ must be supplied. |
+| `cpf` | conditional | Valid CPF; at least CPF or CNPJ must be supplied. |
 | `phone` | no | Contact phone. |
 | `environmental` | yes | Environmental ESG flag. |
 | `social` | yes | Social ESG flag. |
 | `governance` | yes | Governance ESG flag. |
+
+At least one ESG flag must be `true`. CPF and CNPJ are normalized to digits before persistence.
 
 ### `projects.csv`
 
@@ -87,11 +89,11 @@ users.
 | `key` | yes | Logical project key. |
 | `npo_key` | yes | Reference to `npos.csv`. |
 | `title` | yes | Project title. |
-| `description` | yes | Project description. |
+| `description` | yes | Project description, from 50 through 500 characters. |
 | `status` | yes | `ACTIVE`, `COMPLETED`, or `CANCELLED`. |
-| `type` | no | A `ProjectType` enum constant. |
-| `budget_needed` | no | Requested budget. |
-| `invested_amount` | no | Amount already invested. |
+| `type` | yes | A `ProjectType` enum constant. |
+| `budget_needed` | no | Non-negative requested budget. |
+| `invested_amount` | no | Non-negative amount already invested. |
 | `start_date` | no | Project start date. |
 | `end_date` | no | Project end date. |
 | `focus_area` | no | Project focus area. |
@@ -107,6 +109,8 @@ users.
 | --- | --- | --- |
 | `project_key` | yes | Reference to `projects.csv`. |
 | `ods_id` | yes | Existing ODS catalog ID. |
+
+Every project must reference at least one existing ODS.
 
 ### `company_projects.csv`
 
@@ -128,9 +132,10 @@ users.
 | `key` | yes | Logical report key. |
 | `npo_key` | yes | Reference to `npos.csv`. |
 | `reporter_company_key` | yes | Reference to `companies.csv`. |
-| `reporter_user_key` | yes | Reference to `users.csv`. |
-| `reason` | yes | Report reason. |
+| `reason` | yes | Report reason, from 10 through 1000 characters. |
 | `status` | yes | A `NpoReportStatus` enum constant. |
+
+The reporter user is derived from `reporter_company_key`; it is not repeated in the CSV.
 
 ## Docker Compose
 

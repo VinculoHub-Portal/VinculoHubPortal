@@ -103,6 +103,10 @@ class RelationshipServiceTest {
                 .project(project)
                 .status(status)
                 .initiatorType(initiator)
+                .respondedAt(
+                        status == RelationshipStatus.pending
+                                ? null
+                                : LocalDateTime.now().minusMinutes(1))
                 .build();
     }
 

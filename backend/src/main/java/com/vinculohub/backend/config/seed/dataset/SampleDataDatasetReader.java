@@ -194,7 +194,6 @@ public class SampleDataDatasetReader {
                 row.logicalKey("key"),
                 row.logicalKey("npo_key"),
                 row.logicalKey("reporter_company_key"),
-                row.logicalKey("reporter_user_key"),
                 row.requiredText("reason"),
                 row.requiredEnum("status", NpoReportStatus.class));
     }

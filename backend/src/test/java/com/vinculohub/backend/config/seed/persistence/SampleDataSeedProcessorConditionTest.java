@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mock;
 
 import com.vinculohub.backend.config.seed.auth0.Auth0ManagementClient;
 import com.vinculohub.backend.config.seed.dataset.SampleDataDatasetLoader;
+import com.vinculohub.backend.config.seed.lifecycle.SampleDataSeedHistoryRepository;
 import com.vinculohub.backend.config.seed.lifecycle.SampleDataSeedProcessor;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -18,16 +19,13 @@ class SampleDataSeedProcessorConditionTest {
                     .withBean(
                             SampleDataDatasetLoader.class,
                             () -> mock(SampleDataDatasetLoader.class))
-                    .withBean(
-                            SampleDataDatabaseGuard.class,
-                            () -> mock(SampleDataDatabaseGuard.class))
                     .withBean(Auth0ManagementClient.class, () -> mock(Auth0ManagementClient.class))
                     .withBean(
-                            CoreSampleDataPersister.class,
-                            () -> mock(CoreSampleDataPersister.class))
+                            SampleDataSeedHistoryRepository.class,
+                            () -> mock(SampleDataSeedHistoryRepository.class))
                     .withBean(
-                            DomainRelationSampleDataPersister.class,
-                            () -> mock(DomainRelationSampleDataPersister.class));
+                            SampleDataSeedTransactionExecutor.class,
+                            () -> mock(SampleDataSeedTransactionExecutor.class));
 
     @Test
     void doesNotRegisterProcessorWhenSeedIsDisabled() {

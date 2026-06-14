@@ -28,9 +28,9 @@ import com.vinculohub.backend.model.enums.UserType;
 import com.vinculohub.backend.repository.AddressRepository;
 import com.vinculohub.backend.repository.CompanyRepository;
 import com.vinculohub.backend.repository.NpoRepository;
-import com.vinculohub.backend.repository.OdsRepository;
 import com.vinculohub.backend.repository.ProjectRepository;
 import com.vinculohub.backend.repository.UserRepository;
+import com.vinculohub.backend.service.OdsService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -46,9 +46,10 @@ class CoreSampleDataPersisterTest {
         CompanyRepository companies = mock(CompanyRepository.class);
         NpoRepository npos = mock(NpoRepository.class);
         ProjectRepository projects = mock(ProjectRepository.class);
-        OdsRepository ods = mock(OdsRepository.class);
+        OdsService ods = mock(OdsService.class);
         assignIds(users, addresses, companies, npos, projects);
-        when(ods.findAllById(any())).thenReturn(List.of(new Ods(1, "ODS 1", "Description")));
+        when(ods.resolveSelection(List.of("1")))
+                .thenReturn(java.util.Set.of(new Ods(1, "ODS 1", "Description")));
 
         PersistedSampleData persisted =
                 new CoreSampleDataPersister(users, addresses, companies, npos, projects, ods)
@@ -65,6 +66,7 @@ class CoreSampleDataPersisterTest {
         assertThat(npo.getUserId()).isEqualTo(user.getId());
         assertThat(npo.getNpoUser()).isSameAs(user);
         assertThat(npo.getAddress()).isSameAs(address);
+        assertThat(npo.getCnpj()).isEqualTo("11222333000181");
         assertThat(project.getNpo()).isSameAs(npo);
         assertThat(project.getProgress()).isEqualTo(45);
         assertThat(project.getOds()).extracting(Ods::getId).containsExactly(1);
@@ -145,7 +147,7 @@ class CoreSampleDataPersisterTest {
                                         "Description",
                                         null,
                                         NpoSize.small,
-                                        "00.000.000/0001-00",
+                                        "11.222.333/0001-81",
                                         null,
                                         null,
                                         true,

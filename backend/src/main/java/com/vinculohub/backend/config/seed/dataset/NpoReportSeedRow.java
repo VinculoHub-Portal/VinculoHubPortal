@@ -7,6 +7,5 @@ public record NpoReportSeedRow(
         String key,
         String npoKey,
         String reporterCompanyKey,
-        String reporterUserKey,
         String reason,
         NpoReportStatus status) {}

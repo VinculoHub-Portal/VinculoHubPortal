@@ -20,9 +20,10 @@ import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.repository.AddressRepository;
 import com.vinculohub.backend.repository.CompanyRepository;
 import com.vinculohub.backend.repository.NpoRepository;
-import com.vinculohub.backend.repository.OdsRepository;
 import com.vinculohub.backend.repository.ProjectRepository;
 import com.vinculohub.backend.repository.UserRepository;
+import com.vinculohub.backend.service.OdsService;
+import com.vinculohub.backend.utils.DocumentValidator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -40,7 +41,7 @@ public class CoreSampleDataPersister {
     private final CompanyRepository companyRepository;
     private final NpoRepository npoRepository;
     private final ProjectRepository projectRepository;
-    private final OdsRepository odsRepository;
+    private final OdsService odsService;
 
     public PersistedSampleData persist(
             SampleDataDataset dataset, ResolvedAuth0Users resolvedAuth0Users) {
@@ -103,7 +104,7 @@ public class CoreSampleDataPersister {
             company.setSocialName(row.socialName());
             company.setDescription(row.description());
             company.setLogoUrl(row.logoUrl());
-            company.setCnpj(row.cnpj());
+            company.setCnpj(DocumentValidator.sanitize(row.cnpj()));
             company.setPhone(row.phone());
             companies.put(row.key(), companyRepository.save(company));
         }
@@ -126,8 +127,8 @@ public class CoreSampleDataPersister {
                             .description(row.description())
                             .logoUrl(row.logoUrl())
                             .npoSize(row.npoSize())
-                            .cnpj(row.cnpj())
-                            .cpf(row.cpf())
+                            .cnpj(DocumentValidator.sanitize(row.cnpj()))
+                            .cpf(DocumentValidator.sanitize(row.cpf()))
                             .phone(row.phone())
                             .address(optional(addresses, row.addressKey()))
                             .environmental(row.environmental())
@@ -144,14 +145,14 @@ public class CoreSampleDataPersister {
             List<SeedRow<ProjectOdsSeedRow>> odsRows,
             Map<String, Npo> npos) {
         Map<String, Set<Integer>> odsIdsByProject = indexOdsIds(odsRows);
-        Map<Integer, Ods> odsById = loadOds(odsIdsByProject);
         Map<String, Project> projects = new LinkedHashMap<>();
         for (SeedRow<ProjectSeedRow> seedRow : rows) {
             ProjectSeedRow row = seedRow.value();
-            Set<Ods> projectOds = new LinkedHashSet<>();
-            for (Integer odsId : odsIdsByProject.getOrDefault(row.key(), Set.of())) {
-                projectOds.add(required(odsById, odsId, "ODS"));
-            }
+            List<String> selectedOds =
+                    odsIdsByProject.getOrDefault(row.key(), Set.of()).stream()
+                            .map(String::valueOf)
+                            .toList();
+            Set<Ods> projectOds = odsService.resolveSelection(selectedOds);
             Project project =
                     Project.builder()
                             .npo(required(npos, row.npoKey(), "NPO"))
@@ -185,20 +186,6 @@ public class CoreSampleDataPersister {
                     .add(row.odsId());
         }
         return odsIdsByProject;
-    }
-
-    private Map<Integer, Ods> loadOds(Map<String, Set<Integer>> odsIdsByProject) {
-        Set<Integer> ids = new LinkedHashSet<>();
-        odsIdsByProject.values().forEach(ids::addAll);
-        Map<Integer, Ods> odsById = new LinkedHashMap<>();
-        odsRepository.findAllById(ids).forEach(ods -> odsById.put(ods.getId(), ods));
-        if (odsById.size() != ids.size()) {
-            Set<Integer> missing = new LinkedHashSet<>(ids);
-            missing.removeAll(odsById.keySet());
-            throw new SampleDataSeedException(
-                    "ODS records are missing from the database: " + missing);
-        }
-        return odsById;
     }
 
     private <K, V> V required(Map<K, V> values, K key, String entityName) {

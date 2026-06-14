@@ -39,9 +39,7 @@ class SampleDataContractTest {
                 "company_projects.csv",
                 "company_key,project_key,status,initiator_type,company_confirmed_at,"
                         + "npo_confirmed_at,responded_at,expires_at");
-        expectedHeaders.put(
-                "npo_reports.csv",
-                "key,npo_key,reporter_company_key,reporter_user_key,reason,status");
+        expectedHeaders.put("npo_reports.csv", "key,npo_key,reporter_company_key,reason,status");
 
         for (Map.Entry<String, String> entry : expectedHeaders.entrySet()) {
             try (BufferedReader reader = open(entry.getKey())) {

@@ -38,6 +38,7 @@ class DomainRelationSampleDataPersisterTest {
         Project project = Project.builder().id(20L).build();
         Npo npo = Npo.builder().id(30).build();
         User reporter = User.builder().id(40).build();
+        company.setUser(reporter);
         PersistedSampleData persisted =
                 new PersistedSampleData(
                         Map.of("reporter", reporter),
@@ -99,8 +100,7 @@ class DomainRelationSampleDataPersisterTest {
                                         "report",
                                         "npo",
                                         "company",
-                                        "reporter",
-                                        "Reason",
+                                        "A valid report reason",
                                         NpoReportStatus.OPEN))));
     }
 }

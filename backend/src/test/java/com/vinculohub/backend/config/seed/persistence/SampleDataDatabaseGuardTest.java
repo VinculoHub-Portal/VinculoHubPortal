@@ -7,53 +7,23 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.vinculohub.backend.config.seed.lifecycle.SampleDataSeedException;
-import com.vinculohub.backend.repository.AddressRepository;
-import com.vinculohub.backend.repository.CompanyProjectRepository;
-import com.vinculohub.backend.repository.CompanyRepository;
-import com.vinculohub.backend.repository.DocumentRepository;
-import com.vinculohub.backend.repository.EditalRepository;
-import com.vinculohub.backend.repository.NpoReportRepository;
-import com.vinculohub.backend.repository.NpoRepository;
-import com.vinculohub.backend.repository.ProjectRepository;
-import com.vinculohub.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 class SampleDataDatabaseGuardTest {
 
-    private UserRepository users;
-    private AddressRepository addresses;
-    private CompanyRepository companies;
-    private NpoRepository npos;
-    private ProjectRepository projects;
-    private CompanyProjectRepository companyProjects;
-    private NpoReportRepository reports;
-    private DocumentRepository documents;
-    private EditalRepository editals;
+    private JdbcTemplate jdbcTemplate;
     private SampleDataDatabaseGuard guard;
 
     @BeforeEach
     void setUp() {
-        users = mock(UserRepository.class);
-        addresses = mock(AddressRepository.class);
-        companies = mock(CompanyRepository.class);
-        npos = mock(NpoRepository.class);
-        projects = mock(ProjectRepository.class);
-        companyProjects = mock(CompanyProjectRepository.class);
-        reports = mock(NpoReportRepository.class);
-        documents = mock(DocumentRepository.class);
-        editals = mock(EditalRepository.class);
-        guard =
-                new SampleDataDatabaseGuard(
-                        users,
-                        addresses,
-                        companies,
-                        npos,
-                        projects,
-                        companyProjects,
-                        reports,
-                        documents,
-                        editals);
+        jdbcTemplate = mock(JdbcTemplate.class);
+        guard = new SampleDataDatabaseGuard(jdbcTemplate);
+        when(jdbcTemplate.queryForObject(
+                        org.mockito.ArgumentMatchers.anyString(),
+                        org.mockito.ArgumentMatchers.eq(Long.class)))
+                .thenReturn(0L);
     }
 
     @Test
@@ -63,8 +33,10 @@ class SampleDataDatabaseGuardTest {
 
     @Test
     void rejectsDatabaseWithExistingFunctionalData() {
-        when(users.count()).thenReturn(2L);
-        when(projects.count()).thenReturn(3L);
+        when(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM \"users\"", Long.class))
+                .thenReturn(2L);
+        when(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM \"project\"", Long.class))
+                .thenReturn(3L);
 
         assertThatThrownBy(guard::requireEmptyFunctionalDatabase)
                 .isInstanceOf(SampleDataSeedException.class)

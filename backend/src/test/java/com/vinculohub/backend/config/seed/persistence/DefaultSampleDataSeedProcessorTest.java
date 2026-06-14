@@ -12,9 +12,11 @@ import com.vinculohub.backend.config.seed.auth0.ResolvedAuth0Users;
 import com.vinculohub.backend.config.seed.dataset.LoadedSampleDataDataset;
 import com.vinculohub.backend.config.seed.dataset.SampleDataDataset;
 import com.vinculohub.backend.config.seed.dataset.SampleDataDatasetLoader;
+import com.vinculohub.backend.config.seed.lifecycle.SampleDataSeedHistoryRepository;
 import com.vinculohub.backend.config.seed.lifecycle.SampleDataSeedResult;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
@@ -27,41 +29,39 @@ class DefaultSampleDataSeedProcessorTest {
     @Test
     void orchestratesValidationAndCorePersistenceInOrder(CapturedOutput output) {
         SampleDataDatasetLoader loader = mock(SampleDataDatasetLoader.class);
-        SampleDataDatabaseGuard guard = mock(SampleDataDatabaseGuard.class);
         Auth0ManagementClient auth0Client = mock(Auth0ManagementClient.class);
-        CoreSampleDataPersister persister = mock(CoreSampleDataPersister.class);
-        DomainRelationSampleDataPersister relationPersister =
-                mock(DomainRelationSampleDataPersister.class);
+        SampleDataSeedHistoryRepository historyRepository =
+                mock(SampleDataSeedHistoryRepository.class);
+        SampleDataSeedTransactionExecutor transactionExecutor =
+                mock(SampleDataSeedTransactionExecutor.class);
         SampleDataDataset dataset = emptyDataset();
         ResolvedAuth0Users auth0Users = new ResolvedAuth0Users(Map.of());
-        PersistedSampleData persisted =
-                new PersistedSampleData(Map.of(), Map.of(), Map.of(), Map.of(), Map.of());
         SampleDataSeedProperties properties =
                 new SampleDataSeedProperties(true, "e2e", "classpath:seed/e2e");
-        when(loader.load(properties.location()))
-                .thenReturn(new LoadedSampleDataDataset(dataset, "checksum"));
+        LoadedSampleDataDataset loaded = new LoadedSampleDataDataset(dataset, "checksum");
+        when(loader.load(properties.location())).thenReturn(loaded);
+        when(historyRepository.findById("e2e")).thenReturn(Optional.empty());
         when(auth0Client.resolveExistingUsers(dataset.users())).thenReturn(auth0Users);
-        when(persister.persist(dataset, auth0Users)).thenReturn(persisted);
+        when(transactionExecutor.execute("e2e", loaded, auth0Users))
+                .thenReturn(new SampleDataSeedResult("checksum"));
 
         SampleDataSeedResult result =
                 new DefaultSampleDataSeedProcessor(
-                                loader, guard, auth0Client, persister, relationPersister)
+                                loader, auth0Client, historyRepository, transactionExecutor)
                         .process(properties);
 
         assertThat(result.checksum()).isEqualTo("checksum");
-        InOrder order = inOrder(loader, guard, auth0Client, persister, relationPersister);
+        InOrder order = inOrder(loader, historyRepository, auth0Client, transactionExecutor);
         order.verify(loader).load(properties.location());
-        order.verify(guard).requireEmptyFunctionalDatabase();
+        order.verify(historyRepository).findById("e2e");
         order.verify(auth0Client).resolveExistingUsers(dataset.users());
-        order.verify(persister).persist(dataset, auth0Users);
-        order.verify(relationPersister).persist(dataset, persisted);
+        order.verify(transactionExecutor).execute("e2e", loaded, auth0Users);
         assertThat(output)
                 .contains("Sample data dataset validated")
                 .contains("datasetId=e2e")
                 .contains("users=0")
                 .contains("projectOds=0")
-                .doesNotContain("%d")
-                .contains("Sample data entities persisted");
+                .doesNotContain("%d");
     }
 
     private SampleDataDataset emptyDataset() {

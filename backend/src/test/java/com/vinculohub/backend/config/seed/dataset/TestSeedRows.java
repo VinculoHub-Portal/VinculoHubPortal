@@ -3,7 +3,10 @@ package com.vinculohub.backend.config.seed.dataset;
 
 import com.vinculohub.backend.model.enums.NpoSize;
 import com.vinculohub.backend.model.enums.ProjectStatus;
+import com.vinculohub.backend.model.enums.ProjectType;
 import com.vinculohub.backend.model.enums.UserType;
+import com.vinculohub.backend.service.NpoEsgService;
+import jakarta.validation.Validation;
 
 final class TestSeedRows {
 
@@ -20,7 +23,15 @@ final class TestSeedRows {
 
     static CompanySeedRow company() {
         return new CompanySeedRow(
-                "company", "company_user", null, "Company", null, null, null, null, null);
+                "company",
+                "company_user",
+                null,
+                "Company Legal Name",
+                "Company",
+                null,
+                null,
+                "11.222.333/0001-81",
+                null);
     }
 
     static NpoSeedRow npo() {
@@ -32,8 +43,8 @@ final class TestSeedRows {
                 null,
                 null,
                 NpoSize.small,
-                "00.000.000/0001-00",
                 null,
+                "529.982.247-25",
                 null,
                 true,
                 false,
@@ -45,9 +56,9 @@ final class TestSeedRows {
                 "project",
                 "npo",
                 "Project",
-                "Description",
+                "Project description with enough detail for the normal application validation.",
                 ProjectStatus.ACTIVE,
-                null,
+                ProjectType.SOCIAL,
                 null,
                 null,
                 null,
@@ -58,5 +69,10 @@ final class TestSeedRows {
                 null,
                 null,
                 0);
+    }
+
+    static SampleDataDatasetValidator validator() {
+        return new SampleDataDatasetValidator(
+                new NpoEsgService(), Validation.buildDefaultValidatorFactory().getValidator());
     }
 }

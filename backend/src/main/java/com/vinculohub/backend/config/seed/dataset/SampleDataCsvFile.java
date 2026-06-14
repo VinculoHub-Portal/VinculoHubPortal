@@ -70,14 +70,7 @@ public enum SampleDataCsvFile {
             "npo_confirmed_at",
             "responded_at",
             "expires_at"),
-    NPO_REPORTS(
-            "npo_reports.csv",
-            "key",
-            "npo_key",
-            "reporter_company_key",
-            "reporter_user_key",
-            "reason",
-            "status");
+    NPO_REPORTS("npo_reports.csv", "key", "npo_key", "reporter_company_key", "reason", "status");
 
     private final String fileName;
     private final List<String> headers;

@@ -58,7 +58,12 @@ public class DomainRelationSampleDataPersister {
             Npo reportTarget = required(persisted.npos(), row.npoKey(), "NPO");
             Company reporterCompany =
                     required(persisted.companies(), row.reporterCompanyKey(), "Company");
-            User reporterUser = required(persisted.users(), row.reporterUserKey(), "User");
+            User reporterUser = reporterCompany.getUser();
+            if (reporterUser == null) {
+                throw new SampleDataSeedException(
+                        "Reporter company '%s' has no associated user"
+                                .formatted(row.reporterCompanyKey()));
+            }
             NpoReport report =
                     NpoReport.builder()
                             .npo(reportTarget)

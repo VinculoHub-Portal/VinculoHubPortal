@@ -75,8 +75,11 @@ docker compose up -d --build
 
 A seed valida todos os arquivos e contas Auth0 antes da persistência. Ela falha se todos os CSVs
 estiverem vazios ou se o banco funcional já contiver dados. Uma execução concluída é registrada por
-`APP_SAMPLE_DATA_DATASET_ID`; reinícios preservam os dados e não executam a seed novamente. Para
-recriar o ambiente local do zero, remova o volume do banco com `docker compose down -v`.
+`APP_SAMPLE_DATA_DATASET_ID`; reinícios preservam os dados e não executam a seed novamente. O
+conteúdo associado a um identificador é imutável: se o checksum dos CSVs mudar, use um novo
+`APP_SAMPLE_DATA_DATASET_ID`. A validação do Auth0 ocorre fora da transação de persistência, e um
+lock do PostgreSQL impede duas instâncias de aplicarem o mesmo dataset simultaneamente. Para recriar
+o ambiente local do zero, remova o volume do banco com `docker compose down -v`.
 
 Nunca versione o arquivo `.env`, credenciais M2M ou datasets que contenham dados sensíveis.
 
