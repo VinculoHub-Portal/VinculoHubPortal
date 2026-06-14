@@ -8,6 +8,7 @@ import com.vinculohub.backend.config.seed.lifecycle.SampleDataSeedException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 @Component
+@Slf4j
 @ConditionalOnProperty(name = "app.sample-data.enabled", havingValue = "true")
 public class Auth0ManagementClient {
 
@@ -45,6 +47,7 @@ public class Auth0ManagementClient {
         for (SeedRow<UserSeedRow> row : users) {
             resolved.put(row.value().key(), resolveAuth0Id(row.value(), accessToken));
         }
+        log.info("Sample data Auth0 accounts validated | users={}", resolved.size());
         return new ResolvedAuth0Users(resolved);
     }
 

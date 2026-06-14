@@ -1,6 +1,7 @@
 /* (C)2026 */
 package com.vinculohub.backend.config.seed.lifecycle;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -54,5 +55,18 @@ class SampleDataSeedLifecycleTest {
                                         history.getDatasetId().equals("default")
                                                 && history.getChecksum().equals("checksum")
                                                 && history.getExecutedAt() != null));
+    }
+
+    @Test
+    void doesNotRegisterHistoryWhenProcessingFails() {
+        when(historyRepository.existsById("default")).thenReturn(false);
+        when(processor.process(properties))
+                .thenThrow(new SampleDataSeedException("dataset validation failed"));
+
+        assertThatThrownBy(lifecycle::executeIfNeeded)
+                .isInstanceOf(SampleDataSeedException.class)
+                .hasMessage("dataset validation failed");
+
+        verify(historyRepository, never()).save(ArgumentMatchers.any());
     }
 }
