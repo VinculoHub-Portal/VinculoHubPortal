@@ -24,17 +24,17 @@ import {
   type OngProjectTypeMetric,
 } from "./useOngDashboard"
 
-interface OngDashboardMockProps {
+interface OngDashboardProps {
   onCreateProject: () => void
   successMessage?: string | null
   refreshKey?: number
 }
 
-export function OngDashboardMock({
+export function OngDashboard({
   onCreateProject,
   successMessage = null,
   refreshKey = 0,
-}: OngDashboardMockProps) {
+}: OngDashboardProps) {
   const navigate = useNavigate()
   const { showToast } = useToast()
   const { getAccessTokenSilently } = useAuth0()
