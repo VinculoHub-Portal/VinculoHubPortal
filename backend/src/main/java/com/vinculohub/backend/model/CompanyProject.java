@@ -52,6 +52,14 @@ public class CompanyProject {
     @Builder.Default
     private RelationshipStatus status = RelationshipStatus.pending;
 
+    @Column(name = "company_confirmed", nullable = false)
+    @Builder.Default
+    private Boolean companyConfirmed = false;
+
+    @Column(name = "npo_confirmed", nullable = false)
+    @Builder.Default
+    private Boolean npoConfirmed = false;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

@@ -1,0 +1,3 @@
+ALTER TABLE company_project
+    ADD COLUMN company_confirmed BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN npo_confirmed     BOOLEAN NOT NULL DEFAULT FALSE;

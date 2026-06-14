@@ -16,6 +16,7 @@ import { OngPublicProfilePage } from "../pages/OngPublicProfilePage"
 import { EditProjectPage } from "../pages/EditProjectPage"
 import { EditaisMuralPage } from "../pages/EditaisMuralPage"
 import { AdminDashboard } from "../pages/AdminDashboard"
+import { VinculosPage } from "../pages/VinculosPage"
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -108,6 +109,22 @@ export const AppRouter = () => (
         element={
           <ProtectedRoute requiredRole="COMPANY">
             <CompanyPrivateInvestmentPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/empresa/vinculos"
+        element={
+          <ProtectedRoute requiredRole="COMPANY">
+            <VinculosPage role="COMPANY" dashboardPath="/empresa/dashboard" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/ong/vinculos"
+        element={
+          <ProtectedRoute requiredRole="NPO">
+            <VinculosPage role="NPO" dashboardPath="/ong/dashboard" />
           </ProtectedRoute>
         }
       />

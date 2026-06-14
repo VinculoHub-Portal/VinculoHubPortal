@@ -4,6 +4,8 @@ package com.vinculohub.backend.repository;
 import com.vinculohub.backend.model.CompanyProject;
 import com.vinculohub.backend.model.CompanyProjectId;
 import com.vinculohub.backend.repository.projection.CompanySupportedProjectsSummaryProjection;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -36,4 +38,35 @@ public interface CompanyProjectRepository extends JpaRepository<CompanyProject, 
             nativeQuery = true)
     CompanySupportedProjectsSummaryProjection getSupportedProjectsSummaryByCompanyId(
             @Param("companyId") Integer companyId);
+
+    @Query(
+            "SELECT cp FROM CompanyProject cp"
+                    + " JOIN FETCH cp.company c"
+                    + " LEFT JOIN FETCH c.user cu"
+                    + " JOIN FETCH cp.project p"
+                    + " JOIN FETCH p.npo n"
+                    + " LEFT JOIN FETCH n.npoUser nu"
+                    + " WHERE cp.id.companyId = :companyId")
+    List<CompanyProject> findAllByIdCompanyId(@Param("companyId") Integer companyId);
+
+    @Query(
+            "SELECT cp FROM CompanyProject cp"
+                    + " JOIN FETCH cp.company c"
+                    + " LEFT JOIN FETCH c.user cu"
+                    + " JOIN FETCH cp.project p"
+                    + " JOIN FETCH p.npo n"
+                    + " LEFT JOIN FETCH n.npoUser nu"
+                    + " WHERE n.id = :npoId")
+    List<CompanyProject> findAllByNpoId(@Param("npoId") Integer npoId);
+
+    @Query(
+            "SELECT cp FROM CompanyProject cp"
+                    + " JOIN FETCH cp.company c"
+                    + " LEFT JOIN FETCH c.user cu"
+                    + " JOIN FETCH cp.project p"
+                    + " JOIN FETCH p.npo n"
+                    + " LEFT JOIN FETCH n.npoUser nu"
+                    + " WHERE cp.id.companyId = :companyId AND cp.id.projectId = :projectId")
+    Optional<CompanyProject> findByIdCompanyIdAndIdProjectId(
+            @Param("companyId") Integer companyId, @Param("projectId") Long projectId);
 }
