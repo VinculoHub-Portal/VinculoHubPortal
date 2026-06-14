@@ -19,6 +19,7 @@ backend/.settings/
 .env
 .env.*
 !.env.example
+/sample-data/
 node_modules
 
 ### Terraform ###
