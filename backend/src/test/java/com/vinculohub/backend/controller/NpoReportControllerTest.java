@@ -50,8 +50,11 @@ class NpoReportControllerTest extends AbstractIntegrationTest {
         jdbcTemplate.update("DELETE FROM npo_report");
         jdbcTemplate.update("DELETE FROM company_project");
         jdbcTemplate.update("DELETE FROM project_ods");
-        documentRepository.deleteAll();
-        projectRepository.deleteAll();
+        jdbcTemplate.update("DELETE FROM document");
+        // DELETE direto: projectRepository.deleteAll() não enxerga projetos com
+        // soft delete (@SQLRestriction "deleted_at IS NULL"), deixando linhas
+        // remanescentes que violam project_npo_id_fkey ao apagar a npo.
+        jdbcTemplate.update("DELETE FROM project");
         npoRepository.deleteAll();
         companyRepository.deleteAll();
         addressRepository.deleteAll();
