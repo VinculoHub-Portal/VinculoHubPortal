@@ -43,9 +43,7 @@ public class VinculoService {
                     companyRepository
                             .findByUserId(user.getId())
                             .orElseThrow(() -> new NotFoundException("Empresa não encontrada"));
-            return companyProjectRepository
-                    .findAllByIdCompanyId(company.getId())
-                    .stream()
+            return companyProjectRepository.findAllByIdCompanyId(company.getId()).stream()
                     .map(cp -> toResponse(cp, UserType.company))
                     .toList();
         }
@@ -55,9 +53,7 @@ public class VinculoService {
                     npoRepository
                             .findByUserId(user.getId())
                             .orElseThrow(() -> new NotFoundException("ONG não encontrada"));
-            return companyProjectRepository
-                    .findAllByNpoId(npo.getId())
-                    .stream()
+            return companyProjectRepository.findAllByNpoId(npo.getId()).stream()
                     .map(cp -> toResponse(cp, UserType.npo))
                     .toList();
         }
@@ -110,7 +106,8 @@ public class VinculoService {
         String npoEmail = cp.getProject().getNpo().getNpoUser().getEmail();
         String npoName = cp.getProject().getNpo().getName();
         String projectTitle = cp.getProject().getTitle();
-        String companyName = company.getSocialName() != null ? company.getSocialName() : company.getLegalName();
+        String companyName =
+                company.getSocialName() != null ? company.getSocialName() : company.getLegalName();
 
         if (Boolean.TRUE.equals(cp.getNpoConfirmed())) {
             cp.setStatus(RelationshipStatus.active);

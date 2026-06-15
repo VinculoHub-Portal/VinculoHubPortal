@@ -27,8 +27,7 @@ public class VinculoController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('COMPANY', 'NPO')")
-    public ResponseEntity<List<VinculoResponse>> listVinculos(
-            @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<List<VinculoResponse>> listVinculos(@AuthenticationPrincipal Jwt jwt) {
         log.info("GET /api/me/vinculos | sub={}", jwt.getSubject());
         return ResponseEntity.ok(vinculoService.listVinculosForUser(jwt.getSubject()));
     }

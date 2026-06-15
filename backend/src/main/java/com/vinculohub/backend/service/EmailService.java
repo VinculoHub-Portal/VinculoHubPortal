@@ -39,21 +39,13 @@ public class EmailService {
         String subject = "VínculoHub – Confirmação de Efetivação de Parceria";
         String body =
                 String.format(
-                        "Olá, %s!%n%n"
-                                + "%s confirmou a efetivação da parceria referente ao projeto \"%s\"."
-                                + "%n%nPara que o vínculo seja ativado no sistema, você também precisa"
-                                + " confirmar acessando o portal:%n%n"
-                                + "  %s%s%n%n"
-                                + "Após a confirmação de ambas as partes, o vínculo passará para o"
-                                + " status Ativo e os dados de impacto serão contabilizados no"
-                                + " Dashboard ESG.%n%n"
-                                + "Atenciosamente,%n"
-                                + "Equipe VínculoHub",
-                        recipientName,
-                        confirmerName,
-                        projectTitle,
-                        portalUrl,
-                        vinculosPath);
+                        "Olá, %s!%n%n%s confirmou a efetivação da parceria referente ao projeto"
+                            + " \"%s\".%n%nPara que o vínculo seja ativado no sistema, você também"
+                            + " precisa confirmar acessando o portal:%n%n  %s%s%n%nApós a"
+                            + " confirmação de ambas as partes, o vínculo passará para o status"
+                            + " Ativo e os dados de impacto serão contabilizados no Dashboard"
+                            + " ESG.%n%nAtenciosamente,%nEquipe VínculoHub",
+                        recipientName, confirmerName, projectTitle, portalUrl, vinculosPath);
 
         try {
             SimpleMailMessage message = new SimpleMailMessage();
@@ -71,8 +63,7 @@ public class EmailService {
     public void sendPartnershipActivated(
             String toEmail, String recipientName, String projectTitle) {
         if (mailSender == null) {
-            log.warn(
-                    "JavaMailSender not configured – skipping activation e-mail to {}", toEmail);
+            log.warn("JavaMailSender not configured – skipping activation e-mail to {}", toEmail);
             return;
         }
 
@@ -88,9 +79,7 @@ public class EmailService {
                                 + "  %s%n%n"
                                 + "Atenciosamente,%n"
                                 + "Equipe VínculoHub",
-                        recipientName,
-                        projectTitle,
-                        portalUrl);
+                        recipientName, projectTitle, portalUrl);
 
         try {
             SimpleMailMessage message = new SimpleMailMessage();
