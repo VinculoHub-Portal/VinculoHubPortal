@@ -40,11 +40,12 @@ vi.mock("../../components/general/Header", () => ({
 
 const npoProfile: AuthenticatedProfile = {
   auth0Id: "auth0|npo",
-  email: "ong@example.com",
+  email: "npo@teste.com",
   userId: 1,
   userType: "npo",
   npoId: 10,
   companyId: null,
+  companyName: null,
   registrationCompleted: true,
 }
 
