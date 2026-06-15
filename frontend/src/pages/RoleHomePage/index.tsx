@@ -5,7 +5,7 @@ import {
   CreateProjectModal,
   type CreateProjectFormData,
 } from "../../components/ong/CreateProjectModal";
-import { OngDashboardMock } from "./OngDashboardMock";
+import { OngDashboard } from "./OngDashboard";
 import { createProject, type CreateProjectPayload } from "../../api/projects";
 import { fetchOdsCatalog, type OdsCatalogItem } from "../../api/ods";
 import { normalizeCurrencyValue } from "../../utils/formatCurrency";
@@ -85,7 +85,7 @@ export function RoleHomePage({
   if (showCreateProjectAction) {
     return (
       <>
-        <OngDashboardMock
+        <OngDashboard
           successMessage={successMessage}
           onCreateProject={openCreateProjectModal}
           refreshKey={dashboardRefreshKey}
