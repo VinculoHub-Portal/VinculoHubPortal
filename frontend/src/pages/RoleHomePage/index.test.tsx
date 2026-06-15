@@ -144,12 +144,23 @@ describe("RoleHomePage - dashboard da ONG", () => {
     expect(screen.getByText("Novas Oportunidades de Financiamento Disponíveis")).toBeInTheDocument()
     expect(mocks.fetchAuthenticatedProfileMock).toHaveBeenCalledWith("token")
     expect(mocks.fetchProjectsMock).toHaveBeenCalledWith(
-      { npoId: 42, size: 50 },
+      { npoId: 42, size: 3, page: 0, status: undefined },
+      "token",
+    )
+    expect(mocks.fetchProjectsMock).toHaveBeenCalledWith(
+      { npoId: 42, size: 100 },
       "token",
     )
   })
 
   it("filtra projetos pelos status reais da aplicação", async () => {
+    mocks.fetchProjectsMock.mockImplementation(({ status }: { status?: string }) => {
+      const content = status
+        ? dashboardProjectsPage.content.filter((p) => p.status === status)
+        : dashboardProjectsPage.content
+      return Promise.resolve({ ...dashboardProjectsPage, content, totalElements: content.length })
+    })
+
     renderOngDashboard()
 
     expect(await screen.findByText("Projeto Ativo")).toBeInTheDocument()
@@ -157,7 +168,7 @@ describe("RoleHomePage - dashboard da ONG", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Concluídos" }))
 
-    expect(screen.getByText("Projeto Concluído")).toBeInTheDocument()
+    expect(await screen.findByText("Projeto Concluído")).toBeInTheDocument()
     expect(screen.queryByText("Projeto Ativo")).not.toBeInTheDocument()
     expect(screen.queryByText("Projeto Cancelado")).not.toBeInTheDocument()
   })
