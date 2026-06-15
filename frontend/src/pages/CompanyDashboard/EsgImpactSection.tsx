@@ -1,5 +1,5 @@
 import { ProgressBar } from "./ProgressBar"
-import type { EsgPillar } from "./mockData"
+import type { EsgPillar } from "./types"
 
 interface EsgImpactSectionProps {
   pillars: EsgPillar[]
