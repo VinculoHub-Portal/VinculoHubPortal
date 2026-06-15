@@ -89,6 +89,9 @@ public interface CompanyProjectRepository extends JpaRepository<CompanyProject, 
             ORDER BY c.legalName, n.name, p.title
             """)
     List<CompanyProject> findAllForExport();
+
+    @Query(
+            """
             SELECT cp
             FROM CompanyProject cp
             JOIN FETCH cp.company c
