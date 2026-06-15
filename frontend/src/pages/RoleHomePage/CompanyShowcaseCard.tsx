@@ -63,7 +63,7 @@ export function CompanyShowcaseCard() {
         <span className="text-center">Ações</span>
       </div>
 
-      <div className={`min-h-80 transition-opacity duration-200 ${isFiltering ? "opacity-40" : "opacity-100"}`}>
+      <div className={`transition-opacity duration-200 ${isFiltering ? "opacity-40" : "opacity-100"}`}>
         {loading && (
           <div className="flex h-80 flex-col items-center justify-center gap-3 text-slate-400">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-vinculo-dark" />
