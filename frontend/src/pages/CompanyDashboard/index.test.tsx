@@ -7,6 +7,7 @@ import { CompanyDashboard } from "./index"
 const mocks = vi.hoisted(() => ({
   getAccessTokenSilentlyMock: vi.fn(),
   fetchCompanyEsgImpactDashboardMock: vi.fn(),
+  fetchAuthenticatedProfileMock: vi.fn(),
 }))
 
 vi.mock("react-router-dom", async () => {
@@ -24,6 +25,10 @@ vi.mock("../../api/companyPortfolio", () => ({
   fetchCompanyEsgImpactDashboard: mocks.fetchCompanyEsgImpactDashboardMock,
 }))
 
+vi.mock("../../api/me", () => ({
+  fetchAuthenticatedProfile: mocks.fetchAuthenticatedProfileMock,
+}))
+
 vi.mock("../../components/general/Header", () => ({
   Header: () => <header data-testid="header" />,
 }))
@@ -37,6 +42,16 @@ describe("CompanyDashboard", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.getAccessTokenSilentlyMock.mockResolvedValue("token")
+    mocks.fetchAuthenticatedProfileMock.mockResolvedValue({
+      auth0Id: "auth0|123",
+      email: "empresa@teste.com",
+      userId: 1,
+      userType: "company",
+      npoId: null,
+      companyId: 42,
+      companyName: "Empresa Teste",
+      registrationCompleted: true,
+    })
     mocks.fetchCompanyEsgImpactDashboardMock.mockResolvedValue({
       projectCount: 1,
       totalInvested: 3000,
@@ -59,9 +74,16 @@ describe("CompanyDashboard", () => {
     expect(screen.getByText("Dashboard Empresarial")).toBeInTheDocument()
   })
 
-  it("renderiza a saudação com o nome mockado", async () => {
+  it("renderiza a saudação com o nome real da empresa", async () => {
     await renderCompanyDashboard()
-    expect(screen.getByText(/Bem-vindo de volta, Empresa ABC/)).toBeInTheDocument()
+    expect(screen.getByText(/Bem-vindo de volta, Empresa Teste/)).toBeInTheDocument()
+    expect(mocks.fetchAuthenticatedProfileMock).toHaveBeenCalledWith("token")
+  })
+
+  it("renderiza a saudação com fallback quando o perfil falha", async () => {
+    mocks.fetchAuthenticatedProfileMock.mockRejectedValue(new Error("network error"))
+    await renderCompanyDashboard()
+    expect(screen.getByText(/Bem-vindo de volta, Empresa/)).toBeInTheDocument()
   })
   
   it("renderiza as opções de modalidades de investimento", async () => {
