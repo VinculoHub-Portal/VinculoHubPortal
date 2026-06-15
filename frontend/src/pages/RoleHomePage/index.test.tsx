@@ -39,6 +39,19 @@ vi.mock("../../api/me", () => ({
   fetchAuthenticatedProfile: mocks.fetchAuthenticatedProfileMock,
 }))
 
+vi.mock("../../hooks/usePaginatedCompanies", () => ({
+  usePaginatedCompanies: () => ({
+    companies: [],
+    loading: false,
+    error: null,
+    currentPage: 0,
+    totalPages: 0,
+    totalElements: 0,
+    setCurrentPage: vi.fn(),
+    refetch: vi.fn(),
+  }),
+}))
+
 const dashboardProjectsPage = {
   content: [
     {
