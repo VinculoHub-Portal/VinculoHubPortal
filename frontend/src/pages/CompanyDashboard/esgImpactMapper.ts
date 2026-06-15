@@ -5,7 +5,7 @@ import type {
   CompanyEsgImpactDashboardResponse,
   EsgPillarCode,
 } from "../../api/companyPortfolio"
-import type { EsgPillar } from "./mockData"
+import type { EsgPillar } from "./types"
 
 const ESG_PILLAR_VISUALS: Record<
   EsgPillarCode,
