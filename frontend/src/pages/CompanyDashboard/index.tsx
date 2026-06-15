@@ -1,52 +1,66 @@
-import { useAuth0 } from "@auth0/auth0-react"
-import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
-import { fetchCompanyEsgImpactDashboard } from "../../api/companyPortfolio"
-import { Header } from "../../components/general/Header"
-import { EsgImpactSection } from "./EsgImpactSection"
-import { InvestmentModalitiesSection } from "./InvestmentModalitiesSection"
-import { SupportedProjectsCard } from "./SupportedProjectsCard"
-import { mapEsgImpactDashboardToPillars } from "./esgImpactMapper"
-import {
-  mockCompanyName,
-  type EsgPillar,
-} from "./mockData"
-import { useSupportedProjectsSummary } from "./useSupportedProjectsSummary"
+import { useAuth0 } from "@auth0/auth0-react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { fetchAuthenticatedProfile } from "../../api/me";
+import { fetchCompanyEsgImpactDashboard } from "../../api/companyPortfolio";
+import { Header } from "../../components/general/Header";
+import { EsgImpactSection } from "./EsgImpactSection";
+import { InvestmentModalitiesSection } from "./InvestmentModalitiesSection";
+import { SupportedProjectsCard } from "./SupportedProjectsCard";
+import { mapEsgImpactDashboardToPillars } from "./esgImpactMapper";
+import { type EsgPillar } from "./mockData";
+import { useSupportedProjectsSummary } from "./useSupportedProjectsSummary";
 
 export const CompanyDashboard = () => {
-  const { getAccessTokenSilently } = useAuth0()
-  const supportedProjectsSummary = useSupportedProjectsSummary()
-  const [esgPillars, setEsgPillars] = useState<EsgPillar[]>([])
-  const [esgLoading, setEsgLoading] = useState(true)
-  const [esgError, setEsgError] = useState<string | null>(null)
+  const { getAccessTokenSilently } = useAuth0();
+  const supportedProjectsSummary = useSupportedProjectsSummary();
+  const [esgPillars, setEsgPillars] = useState<EsgPillar[]>([]);
+  const [esgLoading, setEsgLoading] = useState(true);
+  const [esgError, setEsgError] = useState<string | null>(null);
+  const [companyName, setCompanyName] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false
+    let cancelled = false;
 
-    async function loadEsgImpactDashboard() {
+    async function loadAuthenticatedProfile() {
       try {
-        setEsgLoading(true)
-        const token = await getAccessTokenSilently()
-        const dashboard = await fetchCompanyEsgImpactDashboard(token)
+        const token = await getAccessTokenSilently();
+        const profile = await fetchAuthenticatedProfile(token);
 
-        if (cancelled) return
-        setEsgPillars(mapEsgImpactDashboardToPillars(dashboard))
-        setEsgError(null)
+        if (cancelled) return;
+        setCompanyName(profile.companyName || profile.email || "Empresa");
       } catch {
         if (!cancelled) {
-          setEsgError("Não foi possível carregar o impacto ESG.")
+          setCompanyName("Empresa");
         }
-      } finally {
-        if (!cancelled) setEsgLoading(false)
       }
     }
 
-    void loadEsgImpactDashboard()
+    async function loadEsgImpactDashboard() {
+      try {
+        setEsgLoading(true);
+        const token = await getAccessTokenSilently();
+        const dashboard = await fetchCompanyEsgImpactDashboard(token);
+
+        if (cancelled) return;
+        setEsgPillars(mapEsgImpactDashboardToPillars(dashboard));
+        setEsgError(null);
+      } catch {
+        if (!cancelled) {
+          setEsgError("Não foi possível carregar o impacto ESG.");
+        }
+      } finally {
+        if (!cancelled) setEsgLoading(false);
+      }
+    }
+
+    void loadAuthenticatedProfile();
+    void loadEsgImpactDashboard();
 
     return () => {
-      cancelled = true
-    }
-  }, [getAccessTokenSilently])
+      cancelled = true;
+    };
+  }, [getAccessTokenSilently]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
@@ -58,7 +72,7 @@ export const CompanyDashboard = () => {
               Dashboard Empresarial
             </h1>
             <p className="text-base font-normal leading-6 text-slate-600">
-              Bem-vindo de volta, {mockCompanyName}
+              Bem-vindo de volta, {companyName ?? "Empresa"}
             </p>
           </div>
           <Link
@@ -92,5 +106,5 @@ export const CompanyDashboard = () => {
         )}
       </main>
     </div>
-  )
-}
+  );
+};
