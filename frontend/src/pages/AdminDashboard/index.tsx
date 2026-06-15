@@ -6,13 +6,20 @@ import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
 import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
 import PendingActionsOutlinedIcon from "@mui/icons-material/PendingActionsOutlined";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchAllCompanies, fetchAllNpos } from "../../api/admin";
+import {
+  fetchAdminNpoReports,
+  updateAdminNpoReportStatus,
+  type NpoReportResponse,
+  type NpoReportStatus,
+} from "../../api/npoReports";
 import { CreateNoticeModal } from "../../announcement/CreateAnnouncementModal";
 import { FlexibleButton } from "../../components/general/FlexibleButton";
 import { Header } from "../../components/general/Header";
 import { MetricCard } from "../../components/general/MetricCard";
+import { useToast } from "../../context/ToastContext";
 import { downloadCsv } from "../../utils/exportCsv";
 
 const dashboardMetrics = [
@@ -79,11 +86,114 @@ const COMPANY_HEADERS = {
   createdAt: "Data de Cadastro",
 };
 
+const PAGE_SIZE = 5;
+
+const REPORT_STATUS_LABELS: Record<NpoReportResponse["status"], string> = {
+  OPEN: "Aberta",
+  RESOLVED: "Resolvida",
+  DISMISSED: "Descartada",
+};
+
+const REPORT_STATUS_OPTIONS: NpoReportStatus[] = ["OPEN", "RESOLVED", "DISMISSED"];
+
+function formatReportDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Data indisponível";
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(date);
+}
+
 export function AdminDashboard() {
   const navigate = useNavigate();
   const { getAccessTokenSilently } = useAuth0();
+  const { showToast } = useToast();
+  const [reports, setReports] = useState<NpoReportResponse[]>([]);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [isLoadingReports, setIsLoadingReports] = useState(true);
+  const [reportsError, setReportsError] = useState("");
+  const [updatingReportId, setUpdatingReportId] = useState<number | null>(null);
+  const [npoNameFilter, setNpoNameFilter] = useState("");
+  const [companyNameFilter, setCompanyNameFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState<NpoReportStatus>("OPEN");
   const [exporting, setExporting] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadReports() {
+      setIsLoadingReports(true);
+      setReportsError("");
+      try {
+        const token = await getAccessTokenSilently();
+        const data = await fetchAdminNpoReports(token, {
+          npoName: npoNameFilter || undefined,
+          companyName: companyNameFilter || undefined,
+          status: statusFilter,
+          page,
+          size: PAGE_SIZE,
+        });
+        if (!isMounted) return;
+        setReports(data.content);
+        setTotalPages(data.totalPages);
+        setTotalElements(data.totalElements);
+      } catch {
+        if (isMounted) {
+          setReportsError("Não foi possível carregar as denúncias.");
+          setReports([]);
+          setTotalPages(0);
+          setTotalElements(0);
+        }
+      } finally {
+        if (isMounted) setIsLoadingReports(false);
+      }
+    }
+
+    void loadReports();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [getAccessTokenSilently, npoNameFilter, companyNameFilter, statusFilter, page]);
+
+  const openReportsCount = reports.filter((report) => report.status === "OPEN").length;
+
+  async function handleStatusChange(reportId: number, newStatus: NpoReportStatus) {
+    setUpdatingReportId(reportId);
+    try {
+      const token = await getAccessTokenSilently();
+      const updatedReport = await updateAdminNpoReportStatus(reportId, { status: newStatus }, token);
+      showToast(`Status atualizado para "${REPORT_STATUS_LABELS[newStatus]}" com sucesso.`, "success");
+      setReports((currentReports) => {
+        const nextReports = currentReports.map((report) =>
+          report.id === updatedReport.id ? updatedReport : report,
+        );
+
+        if (statusFilter !== updatedReport.status) {
+          return nextReports.filter((report) => report.id !== updatedReport.id);
+        }
+
+        return nextReports;
+      });
+      if (statusFilter !== updatedReport.status) {
+        setTotalElements((value) => Math.max(0, value - 1));
+      }
+    } catch {
+      showToast("Não foi possível atualizar o status da denúncia.", "error");
+    } finally {
+      setUpdatingReportId(null);
+    }
+  }
+
+  function handleStatusFilterChange(value: NpoReportStatus) {
+    setStatusFilter(value);
+    setPage(0);
+  }
 
   async function handleExport() {
     setExporting(true);
@@ -208,14 +318,20 @@ export function AdminDashboard() {
                 type="text"
                 placeholder="Filtrar por ONG"
                 value={npoNameFilter}
-                onChange={(e) => setNpoNameFilter(e.target.value)}
+                onChange={(e) => {
+                  setPage(0);
+                  setNpoNameFilter(e.target.value);
+                }}
                 className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 outline-none focus:border-vinculo-dark focus:ring-2 focus:ring-vinculo-dark/20"
               />
               <input
                 type="text"
                 placeholder="Filtrar por empresa"
                 value={companyNameFilter}
-                onChange={(e) => setCompanyNameFilter(e.target.value)}
+                onChange={(e) => {
+                  setPage(0);
+                  setCompanyNameFilter(e.target.value);
+                }}
                 className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 outline-none focus:border-vinculo-dark focus:ring-2 focus:ring-vinculo-dark/20"
               />
             </div>

@@ -45,6 +45,11 @@ vi.mock("../../api/admin", () => ({
   fetchAllCompanies: mocks.fetchAllCompaniesMock,
 }));
 
+vi.mock("../../api/npoReports", () => ({
+  fetchAdminNpoReports: mocks.fetchAdminNpoReportsMock,
+  updateAdminNpoReportStatus: mocks.updateAdminNpoReportStatusMock,
+}));
+
 vi.mock("../../context/ToastContext", () => ({
   useToast: () => ({ showToast: mocks.showToastMock }),
 }));
@@ -56,9 +61,14 @@ vi.mock("../../components/general/Header", () => ({
 vi.mock("../../utils/exportCsv", () => ({
   downloadCsv: mocks.downloadCsvMock,
 }));
+
 const reportFixture = {
   id: 1,
-  npo: { id: 10, name: "ONG Reportada" },
+  npo: {
+    id: 10,
+    name: "ONG Reportada",
+    email: "contato@ong.org",
+  },
   reporterCompany: {
     id: 20,
     name: "Empresa Denunciante",
@@ -70,17 +80,26 @@ const reportFixture = {
     email: "empresa@example.com",
   },
   reason: "Documentos inconsistentes apresentados no perfil.",
-  status: "OPEN",
+  status: "OPEN" as const,
   createdAt: "2026-05-29T12:00:00",
 };
 
-function reportsPage(content = [reportFixture]) {
+function reportsPage(
+  content = [reportFixture],
+  overrides: Partial<{
+    totalElements: number;
+    totalPages: number;
+    number: number;
+    size: number;
+  }> = {},
+) {
   return {
     content,
     totalElements: content.length,
-    totalPages: content.length > 0 ? 1 : 0,
+    totalPages: content.length > 0 ? 2 : 0,
     number: 0,
     size: 5,
+    ...overrides,
   };
 }
 
@@ -90,24 +109,11 @@ describe("AdminDashboard", () => {
     mocks.getAccessTokenSilentlyMock.mockResolvedValue("token");
     mocks.fetchAllNposMock.mockResolvedValue([]);
     mocks.fetchAllCompaniesMock.mockResolvedValue([]);
-    mocks.updateAdminNpoReportStatusMock.mockResolvedValue({
-      id: 1,
-      npo: { id: 10, name: "ONG Reportada" },
-      reporterCompany: {
-        id: 20,
-        name: "Empresa Denunciante",
-        cnpj: "12345678000199",
-      },
-      reporterUser: {
-        id: 30,
-        name: "Pessoa Empresa",
-        email: "empresa@example.com",
-      },
-      reason: "Documentos inconsistentes apresentados no perfil.",
-      status: "RESOLVED",
-      createdAt: "2026-05-29T12:00:00",
-    });
     mocks.fetchAdminNpoReportsMock.mockResolvedValue(reportsPage());
+    mocks.updateAdminNpoReportStatusMock.mockResolvedValue({
+      ...reportFixture,
+      status: "RESOLVED",
+    });
   });
 
   it("renderiza o cabeçalho, as métricas e seus links", () => {
@@ -134,69 +140,16 @@ describe("AdminDashboard", () => {
     await user.click(screen.getByRole("button", { name: "Cadastrar Edital" }));
     expect(screen.getByTestId("create-notice-modal")).toBeInTheDocument();
     expect(screen.getByText("Cadastrar Novo Edital")).toBeInTheDocument();
-  });
-
-  it("renderiza as denúncias carregadas para o administrador", async () => {
-    render(<AdminDashboard />);
-
-    expect(screen.getByText("Denúncias de ONGs")).toBeInTheDocument();
-    expect(await screen.findByText("ONG Reportada")).toBeInTheDocument();
-    expect(screen.getByText("Empresa Denunciante")).toBeInTheDocument();
-    expect(screen.getByText("empresa@example.com")).toBeInTheDocument();
-    expect(
-      screen.getByText("Documentos inconsistentes apresentados no perfil."),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("combobox", { name: "Alterar status da denúncia 1" })).toHaveValue(
-      "OPEN",
-    );
-    expect(mocks.fetchAdminNpoReportsMock).toHaveBeenCalledWith("token", {
-      companyName: undefined,
-      npoName: undefined,
-      page: 0,
-      size: 5,
-      status: "OPEN",
-    });
-  });
-
-  it("atualiza o status de uma denúncia", async () => {
-    const user = userEvent.setup();
-    render(<AdminDashboard />);
 
     await user.click(screen.getByRole("button", { name: "Ver Denúncias" }));
     expect(mocks.navigateMock).toHaveBeenCalledWith("/admin/notificacoes");
 
     await user.click(screen.getByRole("button", { name: "Vínculos" }));
     expect(mocks.navigateMock).toHaveBeenCalledWith("/admin/vinculos");
-    expect(mocks.updateAdminNpoReportStatusMock).toHaveBeenCalledWith(
-      1,
-      { status: "RESOLVED" },
-      "token",
-    );
-    expect(mocks.showToastMock).toHaveBeenCalledWith(
-      'Status atualizado para "Resolvida" com sucesso.',
-      "success",
-    );
   });
 
   it("exporta os dados administrativos", async () => {
     const user = userEvent.setup();
-    mocks.updateAdminNpoReportStatusMock.mockRejectedValue(new Error("Falha"));
-
-    render(<AdminDashboard />);
-
-    const select = await screen.findByRole("combobox", {
-      name: "Alterar status da denúncia 1",
-    });
-    await user.selectOptions(select, "DISMISSED");
-
-    expect(mocks.showToastMock).toHaveBeenCalledWith(
-      "Não foi possível atualizar o status da denúncia.",
-      "error",
-    );
-  });
-
-  it("renderiza estado vazio quando não há denúncias", async () => {
-    mocks.fetchAdminNpoReportsMock.mockResolvedValue(reportsPage([]));
 
     render(<AdminDashboard />);
     await user.click(screen.getByRole("button", { name: "Exportar Dados" }));
@@ -215,6 +168,79 @@ describe("AdminDashboard", () => {
       expect.stringMatching(/^empresas_\d{4}-\d{2}-\d{2}\.csv$/),
       [],
       expect.objectContaining({ legalName: "Razão Social", createdAt: "Data de Cadastro" }),
+    );
+  });
+
+  it("renderiza as denúncias carregadas e permite atualizar o status", async () => {
+    const user = userEvent.setup();
+
+    render(<AdminDashboard />);
+
+    expect(screen.getByText("Denúncias de ONGs")).toBeInTheDocument();
+    expect(await screen.findByText("ONG Reportada")).toBeInTheDocument();
+    expect(screen.getByText("contato@ong.org")).toBeInTheDocument();
+    expect(screen.getByText("Empresa Denunciante")).toBeInTheDocument();
+    expect(screen.getByText("empresa@example.com")).toBeInTheDocument();
+    expect(
+      screen.getByText("Documentos inconsistentes apresentados no perfil."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("1 pendentes")).toBeInTheDocument();
+    expect(screen.getByText("Página 1 de 2")).toBeInTheDocument();
+
+    const select = screen.getByRole("combobox", {
+      name: "Alterar status da denúncia 1",
+    });
+    expect(select).toHaveValue("OPEN");
+
+    await user.selectOptions(select, "RESOLVED");
+
+    await waitFor(() =>
+      expect(mocks.updateAdminNpoReportStatusMock).toHaveBeenCalledWith(
+        1,
+        { status: "RESOLVED" },
+        "token",
+      ),
+    );
+    expect(mocks.showToastMock).toHaveBeenCalledWith(
+      'Status atualizado para "Resolvida" com sucesso.',
+      "success",
+    );
+  });
+
+  it("pagina para o próximo lote de denúncias", async () => {
+    const user = userEvent.setup();
+
+    render(<AdminDashboard />);
+    expect(await screen.findByText("ONG Reportada")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Próxima →" }));
+
+    await waitFor(() =>
+      expect(mocks.fetchAdminNpoReportsMock).toHaveBeenLastCalledWith("token", {
+        npoName: undefined,
+        companyName: undefined,
+        status: "OPEN",
+        page: 1,
+        size: 5,
+      }),
+    );
+  });
+
+  it("renderiza estado vazio quando não há denúncias", async () => {
+    mocks.fetchAdminNpoReportsMock.mockResolvedValue(reportsPage([], { totalPages: 0 }));
+
+    render(<AdminDashboard />);
+
+    expect(await screen.findByText("Nenhuma denúncia pendente.")).toBeInTheDocument();
+  });
+
+  it("renderiza erro quando não consegue carregar denúncias", async () => {
+    mocks.fetchAdminNpoReportsMock.mockRejectedValue(new Error("Falha"));
+
+    render(<AdminDashboard />);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Não foi possível carregar as denúncias.",
     );
   });
 });
