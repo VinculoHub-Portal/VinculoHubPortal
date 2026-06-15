@@ -10,4 +10,5 @@ public record AuthenticatedProfileResponse(
         UserType userType,
         Integer npoId,
         Integer companyId,
+        String companyName,
         boolean registrationCompleted) {}
