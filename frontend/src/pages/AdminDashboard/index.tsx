@@ -8,7 +8,7 @@ import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
 import PendingActionsOutlinedIcon from "@mui/icons-material/PendingActionsOutlined";
 import { useEffect, useState } from "react";
-import { fetchAllCompanies, fetchAllNpos } from "../../api/admin";
+import { fetchAllCompanies, fetchAllNpos, fetchAdminMetrics, type AdminMetrics } from "../../api/admin";
 import {
   fetchAdminNpoReports,
   updateAdminNpoReportStatus,
@@ -23,41 +23,6 @@ import { useToast } from "../../context/ToastContext";
 import { downloadCsv } from "../../utils/exportCsv";
 
 const PAGE_SIZE = 5;
-
-const dashboardMetrics = [
-  {
-    label: "Total de ONGs",
-    value: 87,
-    description: "Cadastradas no sistema",
-    icon: <CorporateFareOutlinedIcon fontSize="small" />,
-    variant: "brand" as const,
-    href: "/admin/ongs",
-  },
-  {
-    label: "Editais Publicados",
-    value: 24,
-    description: "Ativos no mural",
-    icon: <DescriptionOutlinedIcon fontSize="small" />,
-    variant: "success" as const,
-    href: "/editais",
-  },
-  {
-    label: "Vínculos Ativos",
-    value: 156,
-    description: "Empresas e ONGs conectadas",
-    icon: <HubOutlinedIcon fontSize="small" />,
-    variant: "accent" as const,
-    href: "/admin/vinculos",
-  },
-  {
-    label: "Notificações Pendentes",
-    value: 5,
-    description: "Mediações necessárias",
-    icon: <PendingActionsOutlinedIcon fontSize="small" />,
-    variant: "warning" as const,
-    href: "/admin/notificacoes",
-  },
-];
 
 const NPO_HEADERS = {
   id: "ID",
@@ -110,6 +75,9 @@ export function AdminDashboard() {
   const { getAccessTokenSilently } = useAuth0();
   const { showToast } = useToast();
   const [exporting, setExporting] = useState(false);
+  const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
+  const [metricsLoading, setMetricsLoading] = useState(true);
+  const [metricsError, setMetricsError] = useState("");
   const [reports, setReports] = useState<NpoReportResponse[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -125,6 +93,29 @@ export function AdminDashboard() {
   const [debouncedNpoName, setDebouncedNpoName] = useState("");
   const [debouncedCompanyName, setDebouncedCompanyName] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadMetrics() {
+      setMetricsLoading(true);
+      setMetricsError("");
+      try {
+        const token = await getAccessTokenSilently();
+        const data = await fetchAdminMetrics(token);
+        if (isMounted) setMetrics(data);
+      } catch {
+        if (isMounted) setMetricsError("Não foi possível carregar as métricas.");
+      } finally {
+        if (isMounted) setMetricsLoading(false);
+      }
+    }
+
+    void loadMetrics();
+    return () => {
+      isMounted = false;
+    };
+  }, [getAccessTokenSilently]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -283,17 +274,64 @@ export function AdminDashboard() {
           className="grid grid-cols-1 gap-4 sm:grid-cols-2"
           aria-label="Métricas do dashboard"
         >
-          {dashboardMetrics.map((metric) => (
-            <MetricCard
-              key={metric.label}
-              label={metric.label}
-              value={metric.value}
-              description={metric.description}
-              icon={metric.icon}
-              variant={metric.variant}
-              href={metric.href}
-            />
-          ))}
+          {metricsError && (
+            <p className="col-span-full text-sm font-medium text-vinculo-red" role="alert">
+              {metricsError}
+            </p>
+          )}
+          {metricsLoading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-36 animate-pulse rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                  aria-hidden="true"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-3">
+                      <div className="h-3 w-28 rounded bg-slate-200" />
+                      <div className="h-7 w-16 rounded bg-slate-200" />
+                    </div>
+                    <div className="h-12 w-12 rounded-2xl bg-slate-200" />
+                  </div>
+                  <div className="mt-5 h-3 w-40 rounded bg-slate-200" />
+                </div>
+              ))
+            : !metricsError && metrics && (
+                <>
+                  <MetricCard
+                    label="Total de ONGs"
+                    value={metrics.totalNpos}
+                    description="Cadastradas no sistema"
+                    icon={<CorporateFareOutlinedIcon fontSize="small" />}
+                    variant="brand"
+                    href="/admin/ongs"
+                  />
+                  <MetricCard
+                    label="Editais Publicados"
+                    value={metrics.publishedEditais}
+                    description="Ativos no mural"
+                    icon={<DescriptionOutlinedIcon fontSize="small" />}
+                    variant="success"
+                    href="/editais"
+                  />
+                  <MetricCard
+                    label="Vínculos Ativos"
+                    value={metrics.activeVinculos}
+                    description="Empresas e ONGs conectadas"
+                    icon={<HubOutlinedIcon fontSize="small" />}
+                    variant="accent"
+                    href="/admin/vinculos"
+                  />
+                  <MetricCard
+                    label="Notificações Pendentes"
+                    value={metrics.pendingNotifications}
+                    description="Mediações necessárias"
+                    icon={<PendingActionsOutlinedIcon fontSize="small" />}
+                    variant="warning"
+                    href="/admin/notificacoes"
+                  />
+                </>
+              )}
         </section>
 
         <section
