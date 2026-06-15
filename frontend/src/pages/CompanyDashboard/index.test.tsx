@@ -7,6 +7,7 @@ import { CompanyDashboard } from "./index"
 const mocks = vi.hoisted(() => ({
   getAccessTokenSilentlyMock: vi.fn(),
   fetchCompanyEsgImpactDashboardMock: vi.fn(),
+  fetchAuthenticatedProfileMock: vi.fn(),
 }))
 
 vi.mock("react-router-dom", async () => {
@@ -18,6 +19,10 @@ vi.mock("@auth0/auth0-react", () => ({
   useAuth0: () => ({
     getAccessTokenSilently: mocks.getAccessTokenSilentlyMock,
   }),
+}))
+
+vi.mock("../../api/me", () => ({
+  fetchAuthenticatedProfile: mocks.fetchAuthenticatedProfileMock,
 }))
 
 vi.mock("../../api/companyPortfolio", () => ({
@@ -35,9 +40,20 @@ async function renderCompanyDashboard() {
 
 describe("CompanyDashboard", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    mocks.getAccessTokenSilentlyMock.mockResolvedValue("token")
-    mocks.fetchCompanyEsgImpactDashboardMock.mockResolvedValue({
+  vi.clearAllMocks()
+  mocks.getAccessTokenSilentlyMock.mockResolvedValue("token")
+  mocks.fetchAuthenticatedProfileMock.mockResolvedValue({
+    auth0Id: "auth0|company",
+    email: "empresa@teste.com",
+    userId: 1,
+    userType: "company",
+    npoId: null,
+    companyId: 1,
+    companyName: "Empresa ABC",
+    registrationCompleted: true,
+  })
+
+  mocks.fetchCompanyEsgImpactDashboardMock.mockResolvedValue({
       projectCount: 1,
       totalInvested: 3000,
       totalBudgetNeeded: 5000,
@@ -94,4 +110,6 @@ describe("CompanyDashboard", () => {
     expect(screen.getByText("1 projetos apoiados")).toBeInTheDocument()
     expect(mocks.fetchCompanyEsgImpactDashboardMock).toHaveBeenCalledWith("token")
   })
+
+
 })
