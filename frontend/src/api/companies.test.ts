@@ -1,0 +1,79 @@
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import { fetchCompaniesForNpo } from "./companies"
+
+const mocks = vi.hoisted(() => ({
+  apiGetMock: vi.fn(),
+}))
+
+vi.mock("../services/api", () => ({
+  api: { get: mocks.apiGetMock },
+}))
+
+vi.mock("../utils/logger", () => ({
+  logger: { info: vi.fn(), error: vi.fn() },
+}))
+
+const mockPage = {
+  content: [
+    {
+      id: 1,
+      legalName: "Empresa A LTDA",
+      socialName: "Empresa A",
+      description: "Desc",
+      logoUrl: null,
+      city: "São Paulo",
+      state: "SP",
+    },
+  ],
+  totalElements: 1,
+  totalPages: 1,
+  number: 0,
+  size: 10,
+  first: true,
+  last: true,
+}
+
+describe("fetchCompaniesForNpo", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.apiGetMock.mockResolvedValue({ data: mockPage })
+  })
+
+  it("chama GET /api/npo/companies com os params corretos (page, size)", async () => {
+    await fetchCompaniesForNpo({ page: 0, size: 10 })
+    expect(mocks.apiGetMock).toHaveBeenCalledWith("/api/npo/companies", {
+      params: { page: 0, size: 10 },
+      headers: undefined,
+    })
+  })
+
+  it("inclui header Authorization quando token é fornecido", async () => {
+    await fetchCompaniesForNpo({ page: 0, size: 10 }, "meu-token")
+    expect(mocks.apiGetMock).toHaveBeenCalledWith("/api/npo/companies", {
+      params: { page: 0, size: 10 },
+      headers: { Authorization: "Bearer meu-token" },
+    })
+  })
+
+  it("omite header Authorization quando token não é fornecido", async () => {
+    await fetchCompaniesForNpo({ page: 0, size: 10 })
+    expect(mocks.apiGetMock).toHaveBeenCalledWith("/api/npo/companies", {
+      params: { page: 0, size: 10 },
+      headers: undefined,
+    })
+  })
+
+  it("retorna os dados do PageResponse corretamente", async () => {
+    const result = await fetchCompaniesForNpo({ page: 0, size: 10 })
+    expect(result).toEqual(mockPage)
+    expect(result.content).toHaveLength(1)
+    expect(result.content[0].legalName).toBe("Empresa A LTDA")
+    expect(result.totalElements).toBe(1)
+    expect(result.totalPages).toBe(1)
+  })
+
+  it("propaga o erro quando api.get rejeita", async () => {
+    mocks.apiGetMock.mockRejectedValue(new Error("Network error"))
+    await expect(fetchCompaniesForNpo({ page: 0, size: 10 })).rejects.toThrow("Network error")
+  })
+})
