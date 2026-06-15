@@ -60,6 +60,7 @@ public class CompanyProject {
     @Column(name = "npo_confirmed", nullable = false)
     @Builder.Default
     private Boolean npoConfirmed = false;
+
     @Enumerated(EnumType.STRING)
     @JdbcType(PostgreSQLEnumJdbcType.class)
     @Column(name = "initiator_type", columnDefinition = "initiator_type")
