@@ -1,15 +1,13 @@
 import { useAuth0 } from "@auth0/auth0-react"
 import { useEffect, useState } from "react"
+import { fetchAuthenticatedProfile } from "../../api/me"
 import { fetchCompanyEsgImpactDashboard } from "../../api/companyPortfolio"
 import { Header } from "../../components/general/Header"
 import { EsgImpactSection } from "./EsgImpactSection"
 import { InvestmentModalitiesSection } from "./InvestmentModalitiesSection"
 import { SupportedProjectsCard } from "./SupportedProjectsCard"
 import { mapEsgImpactDashboardToPillars } from "./esgImpactMapper"
-import {
-  mockCompanyName,
-  type EsgPillar,
-} from "./mockData"
+import { type EsgPillar } from "./types"
 import { useSupportedProjectsSummary } from "./useSupportedProjectsSummary"
 
 export const CompanyDashboard = () => {
@@ -18,9 +16,24 @@ export const CompanyDashboard = () => {
   const [esgPillars, setEsgPillars] = useState<EsgPillar[]>([])
   const [esgLoading, setEsgLoading] = useState(true)
   const [esgError, setEsgError] = useState<string | null>(null)
+  const [companyName, setCompanyName] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
+
+    async function loadAuthenticatedProfile() {
+      try {
+        const token = await getAccessTokenSilently()
+        const profile = await fetchAuthenticatedProfile(token)
+
+        if (cancelled) return
+        setCompanyName(profile.companyName || profile.email || "Empresa")
+      } catch {
+        if (!cancelled) {
+          setCompanyName("Empresa")
+        }
+      }
+    }
 
     async function loadEsgImpactDashboard() {
       try {
@@ -40,6 +53,7 @@ export const CompanyDashboard = () => {
       }
     }
 
+    void loadAuthenticatedProfile()
     void loadEsgImpactDashboard()
 
     return () => {
@@ -56,7 +70,7 @@ export const CompanyDashboard = () => {
             Dashboard Empresarial
           </h1>
           <p className="text-base font-normal leading-6 text-slate-600">
-            Bem-vindo de volta, {mockCompanyName}
+            Bem-vindo de volta, {companyName ?? "Empresa"}
           </p>
         </header>
 
