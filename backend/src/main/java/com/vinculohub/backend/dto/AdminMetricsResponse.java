@@ -2,7 +2,4 @@
 package com.vinculohub.backend.dto;
 
 public record AdminMetricsResponse(
-        long totalNpos,
-        long publishedEditais,
-        long activeVinculos,
-        long pendingNotifications) {}
+        long totalNpos, long publishedEditais, long activeVinculos, long pendingNotifications) {}

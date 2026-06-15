@@ -37,9 +37,14 @@ public class AdminMetricsController {
     public ResponseEntity<Page<AdminVinculoListItemResponse>> listVinculos(
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
                     Pageable pageable) {
-        log.info("GET /api/admin/vinculos | page={} size={}", pageable.getPageNumber(), pageable.getPageSize());
+        log.info(
+                "GET /api/admin/vinculos | page={} size={}",
+                pageable.getPageNumber(),
+                pageable.getPageSize());
         Page<AdminVinculoListItemResponse> page =
-                companyProjectRepository.findAllForAdmin(pageable).map(AdminVinculoListItemResponse::from);
+                companyProjectRepository
+                        .findAllForAdmin(pageable)
+                        .map(AdminVinculoListItemResponse::from);
         return ResponseEntity.ok(page);
     }
 }
