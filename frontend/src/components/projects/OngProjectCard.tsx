@@ -10,7 +10,8 @@ export interface OngProjectCardProps {
   amountNeeded: number
   title: string
   description: string
-  progress: number
+  generalProgress: number
+  captureProgress: number
   tags: string[]
   onDetails?: (id: number) => void
   onEdit?: (id: number) => void
@@ -38,13 +39,15 @@ export function OngProjectCard({
   amountNeeded,
   title,
   description,
-  progress,
+  generalProgress,
+  captureProgress,
   tags,
   onDetails,
   onEdit,
   onDelete,
 }: OngProjectCardProps) {
-  const percent = clampProgress(progress)
+  const generalPercent = clampProgress(generalProgress)
+  const capturePercent = clampProgress(captureProgress)
   const isIncentiveLaw = fundingModel === "incentiveLaw"
 
   return (
@@ -69,27 +72,47 @@ export function OngProjectCard({
 
       <p className="mt-4 text-sm leading-6 text-slate-600">{description}</p>
 
-      {isIncentiveLaw && (
-        <div className="mt-6 rounded-lg bg-slate-50 p-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-slate-950">
-            <TrendingUpIcon className="text-vinculo-green" fontSize="small" />
-            <span>Progresso do Projeto</span>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between gap-4 text-sm">
-            <span className="text-slate-500">Conclusão</span>
-            <span className="font-medium text-vinculo-green">{percent}%</span>
-          </div>
-
-          <div className="mt-3">
-            <ProgressBar
-              value={percent}
-              trackClass="bg-slate-200"
-              ariaLabel={`Progresso de ${title}`}
-            />
-          </div>
+      <div className="mt-6 rounded-lg bg-slate-50 p-4">
+        <div className="flex items-center gap-2 text-sm font-semibold text-slate-950">
+          <TrendingUpIcon className="text-vinculo-green" fontSize="small" />
+          <span>Progresso do Projeto</span>
         </div>
-      )}
+
+        <div className="mt-4 flex items-center justify-between gap-4 text-sm">
+          <span className="text-slate-500">Conclusão</span>
+          <span className="font-medium text-vinculo-green">{generalPercent}%</span>
+        </div>
+
+        <div className="mt-3">
+          <ProgressBar
+            value={generalPercent}
+            trackClass="bg-slate-200"
+            ariaLabel={`Progresso de ${title}`}
+          />
+        </div>
+
+        {isIncentiveLaw && (
+          <>
+            <div className="mt-5 flex items-center gap-2 text-sm font-semibold text-slate-950">
+              <TrendingUpIcon className="text-vinculo-green" fontSize="small" />
+              <span>Progresso de Captação</span>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between gap-4 text-sm">
+              <span className="text-slate-500">Meta de investimento</span>
+              <span className="font-medium text-vinculo-green">{capturePercent}%</span>
+            </div>
+
+            <div className="mt-3">
+              <ProgressBar
+                value={capturePercent}
+                trackClass="bg-slate-200"
+                ariaLabel={`Progresso de captação de ${title}`}
+              />
+            </div>
+          </>
+        )}
+      </div>
 
       {tags.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2">

@@ -1,6 +1,7 @@
 /* (C)2026 */
 package com.vinculohub.backend.model;
 
+import com.vinculohub.backend.model.enums.InitiatorType;
 import com.vinculohub.backend.model.enums.RelationshipStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
@@ -59,6 +60,23 @@ public class CompanyProject {
     @Column(name = "npo_confirmed", nullable = false)
     @Builder.Default
     private Boolean npoConfirmed = false;
+    @Enumerated(EnumType.STRING)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(name = "initiator_type", columnDefinition = "initiator_type")
+    @Builder.Default
+    private InitiatorType initiatorType = InitiatorType.company;
+
+    @Column(name = "company_confirmed_at")
+    private LocalDateTime companyConfirmedAt;
+
+    @Column(name = "npo_confirmed_at")
+    private LocalDateTime npoConfirmedAt;
+
+    @Column(name = "responded_at")
+    private LocalDateTime respondedAt;
+
+    @Column(name = "expires_at")
+    private LocalDateTime expiresAt;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

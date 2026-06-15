@@ -66,6 +66,7 @@ class FlywayMigrationTest extends AbstractIntegrationTest {
                         "user_type",
                         "project_status",
                         "relationship_status",
-                        "project_type");
+                        "project_type",
+                        "initiator_type");
     }
 }

@@ -2,73 +2,109 @@ import { useAuth0 } from "@auth0/auth0-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { fetchAuthenticatedProfile } from "../../api/me"
 import {
+  fetchNpoProjectSummary,
   fetchProjects,
+  type NpoProjectSummary,
   type ProjectListItem,
   type ProjectStatus,
   type ProjectType,
 } from "../../api/projects"
 import type { OngProject, OngProjectFundingModel } from "./mockData"
 
+const PAGE_SIZE = 10
+
 interface UseOngProjectsResult {
   projects: OngProject[]
+  summary: NpoProjectSummary
   loading: boolean
   error: string | null
+  currentPage: number
+  totalPages: number
+  setCurrentPage: (page: number) => void
   refetch: () => Promise<void>
 }
 
 export function useOngProjects(): UseOngProjectsResult {
   const { getAccessTokenSilently, isAuthenticated, isLoading } = useAuth0()
   const [projects, setProjects] = useState<OngProject[]>([])
+  const [summary, setSummary] = useState<NpoProjectSummary>({ total: 0, taxIncentiveLaw: 0, socialInvestmentLaw: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [currentPage, setCurrentPageState] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
   const requestIdRef = useRef(0)
 
-  const refetch = useCallback(async () => {
-    if (isLoading) {
-      return
-    }
+  const fetchPage = useCallback(
+    async (page: number) => {
+      if (isLoading) return
 
-    const requestId = ++requestIdRef.current
-    const isCurrent = () => requestIdRef.current === requestId
+      const requestId = ++requestIdRef.current
+      const isCurrent = () => requestIdRef.current === requestId
 
-    if (!isAuthenticated) {
-      if (!isCurrent()) return
-      setProjects([])
-      setError("Faça login para visualizar seus projetos.")
-      setLoading(false)
-      return
-    }
-
-    try {
-      setLoading(true)
-      setError(null)
-      const token = await getAccessTokenSilently()
-      const profile = await fetchAuthenticatedProfile(token)
-      if (!isCurrent()) return
-
-      if (!profile.npoId) {
-        throw new Error("ONG não encontrada para o usuário autenticado.")
-      }
-
-      const data = await fetchProjects({ npoId: profile.npoId, size: 50 }, token)
-      if (!isCurrent()) return
-      setProjects(data.content.map(mapProjectListItemToOngProject))
-    } catch {
-      if (!isCurrent()) return
-      setError("Não foi possível carregar os projetos.")
-      setProjects([])
-    } finally {
-      if (isCurrent()) {
+      if (!isAuthenticated) {
+        if (!isCurrent()) return
+        setProjects([])
+        setError("Faça login para visualizar seus projetos.")
         setLoading(false)
+        return
       }
-    }
-  }, [getAccessTokenSilently, isAuthenticated, isLoading])
+
+      try {
+        setLoading(true)
+        setError(null)
+
+        const token = await getAccessTokenSilently()
+        const profile = await fetchAuthenticatedProfile(token)
+        if (!isCurrent()) return
+
+        if (!profile.npoId) {
+          throw new Error("ONG não encontrada para o usuário autenticado.")
+        }
+
+        const [projectsResult, summaryResult] = await Promise.allSettled([
+          fetchProjects({ npoId: profile.npoId, size: PAGE_SIZE, page }, token),
+          page === 0 ? fetchNpoProjectSummary(token) : Promise.resolve(null),
+        ])
+        if (!isCurrent()) return
+
+        if (projectsResult.status === "rejected") throw projectsResult.reason
+
+        setProjects(projectsResult.value.content.map(mapProjectListItemToOngProject))
+        setTotalPages(projectsResult.value.totalPages)
+
+        if (summaryResult.status === "fulfilled" && summaryResult.value) {
+          setSummary(summaryResult.value)
+        }
+      } catch {
+        if (!isCurrent()) return
+        setError("Não foi possível carregar os projetos.")
+        setProjects([])
+      } finally {
+        if (isCurrent()) setLoading(false)
+      }
+    },
+    [getAccessTokenSilently, isAuthenticated, isLoading],
+  )
+
+  const setCurrentPage = useCallback(
+    (page: number) => {
+      setCurrentPageState(page)
+      void fetchPage(page)
+    },
+    [fetchPage],
+  )
+
+  const refetch = useCallback(async () => {
+    setCurrentPageState(0)
+    await fetchPage(0)
+  }, [fetchPage])
 
   useEffect(() => {
-    void refetch()
-  }, [refetch])
+    void fetchPage(currentPage)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchPage])
 
-  return { projects, loading, error, refetch }
+  return { projects, summary, loading, error, currentPage, totalPages, setCurrentPage, refetch }
 }
 
 function mapProjectListItemToOngProject(project: ProjectListItem): OngProject {
@@ -84,7 +120,8 @@ function mapProjectListItemToOngProject(project: ProjectListItem): OngProject {
     description:
       project.description ||
       "Descrição indisponível na listagem. Acesse os detalhes do projeto para mais informações.",
-    progress: project.progressPercent ?? calculateProgress(investedAmount, amountNeeded),
+    generalProgress: project.progress ?? 0,
+    captureProgress: calculateProgress(investedAmount, amountNeeded),
     tags: projectTags(project),
   }
 }
