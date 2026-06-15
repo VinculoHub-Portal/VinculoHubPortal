@@ -2,11 +2,13 @@
 package com.vinculohub.backend.service;
 
 import com.vinculohub.backend.dto.NpoProfileResponse;
+import com.vinculohub.backend.dto.OdsResponse;
 import com.vinculohub.backend.exception.ForbiddenException;
 import com.vinculohub.backend.exception.NotFoundException;
 import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.model.Document;
 import com.vinculohub.backend.model.Npo;
+import com.vinculohub.backend.model.Ods;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.repository.AddressRepository;
@@ -18,6 +20,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,6 +75,19 @@ public class NpoProfileService {
                 mapResponsible(responsibleUser),
                 mapProjects(npo.getId()),
                 mapDocuments(npo.getId()));
+    }
+
+    @Transactional(readOnly = true)
+    public NpoProfileResponse.ProjectPageData getPublicProjects(Integer npoId, Pageable pageable) {
+        if (npoId == null) {
+            throw new IllegalArgumentException("O id da ONG é obrigatório.");
+        }
+
+        if (!npoRepository.existsById(npoId)) {
+            throw new NotFoundException("ONG não encontrada.");
+        }
+
+        return mapProjectsPage(npoId, pageable);
     }
 
     @Transactional
@@ -266,6 +283,20 @@ public class NpoProfileService {
                 .toList();
     }
 
+    private NpoProfileResponse.ProjectPageData mapProjectsPage(Integer npoId, Pageable pageable) {
+        Page<NpoProfileResponse.ProjectData> page =
+                projectRepository.findByNpoId(npoId.longValue(), pageable).map(this::mapProject);
+
+        return new NpoProfileResponse.ProjectPageData(
+                page.getContent(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.getNumber(),
+                page.getSize(),
+                page.isFirst(),
+                page.isLast());
+    }
+
     private NpoProfileResponse.ProjectData mapProject(Project project) {
         return new NpoProfileResponse.ProjectData(
                 project.getId(),
@@ -275,13 +306,27 @@ public class NpoProfileService {
                 project.getType(),
                 project.getBudgetNeeded(),
                 project.getInvestedAmount(),
+                mapProjectOds(project),
                 project.getStartDate(),
                 project.getEndDate(),
                 project.getFocusArea(),
                 project.getFundraisingDeadline(),
                 project.getBeneficiariesCount(),
                 project.getLocation(),
-                project.getMainObjective());
+                project.getMainObjective(),
+                project.getCreatedAt());
+    }
+
+    private List<OdsResponse> mapProjectOds(Project project) {
+        if (project.getOds() == null) {
+            return List.of();
+        }
+
+        return project.getOds().stream()
+                .filter(Objects::nonNull)
+                .sorted(Comparator.comparing(Ods::getId, Comparator.nullsLast(Integer::compareTo)))
+                .map(ods -> new OdsResponse(ods.getId(), ods.getName(), ods.getDescription()))
+                .toList();
     }
 
     private List<NpoProfileResponse.DocumentData> mapDocuments(Integer npoId) {

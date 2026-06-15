@@ -165,6 +165,178 @@ export function AdminDashboard() {
             />
           ))}
         </section>
+
+        <section
+          id="denuncias"
+          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+          aria-labelledby="denuncias-title"
+        >
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 id="denuncias-title" className="text-xl font-bold text-vinculo-dark">
+                Denúncias de ONGs
+              </h2>
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                Acompanhe suspeitas reportadas por empresas para análise administrativa.
+              </p>
+            </div>
+            <span className="inline-flex w-fit items-center rounded-full bg-vinculo-red/10 px-3 py-1 text-sm font-semibold text-vinculo-red">
+              {openReportsCount} pendentes
+            </span>
+          </div>
+
+          <div className="mt-4 flex flex-col gap-3">
+            <div className="flex gap-1" role="tablist" aria-label="Filtrar por status">
+              {REPORT_STATUS_OPTIONS.map((s) => (
+                <button
+                  key={s}
+                  role="tab"
+                  aria-selected={statusFilter === s}
+                  onClick={() => handleStatusFilterChange(s)}
+                  className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                    statusFilter === s
+                      ? "bg-vinculo-dark text-white"
+                      : "border border-slate-300 text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  {REPORT_STATUS_LABELS[s]}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <input
+                type="text"
+                placeholder="Filtrar por ONG"
+                value={npoNameFilter}
+                onChange={(e) => setNpoNameFilter(e.target.value)}
+                className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 outline-none focus:border-vinculo-dark focus:ring-2 focus:ring-vinculo-dark/20"
+              />
+              <input
+                type="text"
+                placeholder="Filtrar por empresa"
+                value={companyNameFilter}
+                onChange={(e) => setCompanyNameFilter(e.target.value)}
+                className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 outline-none focus:border-vinculo-dark focus:ring-2 focus:ring-vinculo-dark/20"
+              />
+            </div>
+          </div>
+
+          <div className="mt-6">
+            {isLoadingReports && (
+              <p className="text-sm text-slate-600">Carregando denúncias...</p>
+            )}
+
+            {!isLoadingReports && reportsError && (
+              <p className="text-sm font-medium text-vinculo-red" role="alert">
+                {reportsError}
+              </p>
+            )}
+
+            {!isLoadingReports && !reportsError && reports.length === 0 && (
+              <p className="text-sm text-slate-600">
+                {statusFilter === "OPEN" && "Nenhuma denúncia pendente."}
+                {statusFilter === "RESOLVED" && "Nenhuma denúncia resolvida."}
+                {statusFilter === "DISMISSED" && "Nenhuma denúncia descartada."}
+              </p>
+            )}
+
+            {!isLoadingReports && !reportsError && reports.length > 0 && (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
+                    <thead>
+                      <tr className="text-slate-500">
+                        <th scope="col" className="py-3 pr-4 font-semibold">
+                          ONG
+                        </th>
+                        <th scope="col" className="px-4 py-3 font-semibold">
+                          Empresa
+                        </th>
+                        <th scope="col" className="px-4 py-3 font-semibold">
+                          Motivo
+                        </th>
+                        <th scope="col" className="px-4 py-3 font-semibold">
+                          Status
+                        </th>
+                        <th scope="col" className="py-3 pl-4 font-semibold">
+                          Recebida em
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {reports.map((report) => (
+                        <tr key={report.id} className="align-top text-slate-700">
+                          <td className="py-4 pr-4">
+                            <p className="font-semibold text-vinculo-dark">{report.npo.name}</p>
+                            {report.npo.email && (
+                              <p className="mt-1 text-xs text-slate-500">{report.npo.email}</p>
+                            )}
+                          </td>
+                          <td className="px-4 py-4">
+                            <p className="font-medium text-slate-800">
+                              {report.reporterCompany.name}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-500">
+                              {report.reporterUser.email}
+                            </p>
+                          </td>
+                          <td className="max-w-md px-4 py-4 leading-6">{report.reason}</td>
+                          <td className="px-4 py-4">
+                            <select
+                              aria-label={`Alterar status da denúncia ${report.id}`}
+                              value={report.status}
+                              disabled={updatingReportId === report.id}
+                              onChange={(event) =>
+                                void handleStatusChange(
+                                  report.id,
+                                  event.target.value as NpoReportStatus,
+                                )
+                              }
+                              className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-none focus:border-vinculo-dark focus:ring-2 focus:ring-vinculo-dark/20 disabled:opacity-60"
+                            >
+                              {REPORT_STATUS_OPTIONS.map((s) => (
+                                <option key={s} value={s}>
+                                  {REPORT_STATUS_LABELS[s]}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="py-4 pl-4 text-slate-500">
+                            {formatReportDate(report.createdAt)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
+                  <span>{totalElements} resultado{totalElements !== 1 ? "s" : ""}</span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setPage((p) => p - 1)}
+                      disabled={page === 0}
+                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      ← Anterior
+                    </button>
+                    <span>
+                      Página {page + 1} de {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setPage((p) => p + 1)}
+                      disabled={page >= totalPages - 1}
+                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Próxima →
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+
       </main>
 
       <CreateNoticeModal

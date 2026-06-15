@@ -20,6 +20,7 @@ import com.vinculohub.backend.model.enums.NpoSize;
 import com.vinculohub.backend.model.enums.ProjectStatus;
 import com.vinculohub.backend.model.enums.ProjectType;
 import com.vinculohub.backend.model.enums.UserType;
+import com.vinculohub.backend.repository.CompanyRepository;
 import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.OdsRepository;
 import com.vinculohub.backend.repository.ProjectRepository;
@@ -41,6 +42,7 @@ class ProjectControllerTest extends AbstractIntegrationTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ProjectRepository projectRepository;
+    @Autowired private CompanyRepository companyRepository;
     @Autowired private NpoRepository npoRepository;
     @Autowired private OdsRepository odsRepository;
     @Autowired private UserRepository userRepository;
@@ -55,6 +57,7 @@ class ProjectControllerTest extends AbstractIntegrationTest {
     @BeforeEach
     void setup() {
         projectRepository.deleteAll();
+        companyRepository.deleteAll();
         npoRepository.deleteAll();
         userRepository.deleteAll();
 
