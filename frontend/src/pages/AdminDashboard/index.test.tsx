@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   getAccessTokenSilentlyMock: vi.fn(),
   fetchAdminNpoReportsMock: vi.fn(),
   updateAdminNpoReportStatusMock: vi.fn(),
+  showToastMock: vi.fn(),
 }));
 
 vi.mock("@auth0/auth0-react", () => ({
@@ -30,9 +31,41 @@ vi.mock("../../api/npoReports", () => ({
   updateAdminNpoReportStatus: mocks.updateAdminNpoReportStatusMock,
 }));
 
+vi.mock("../../context/ToastContext", () => ({
+  useToast: () => ({ showToast: mocks.showToastMock }),
+}));
+
 vi.mock("../../components/general/Header", () => ({
   Header: () => <header data-testid="header" />,
 }));
+
+const reportFixture = {
+  id: 1,
+  npo: { id: 10, name: "ONG Reportada" },
+  reporterCompany: {
+    id: 20,
+    name: "Empresa Denunciante",
+    cnpj: "12345678000199",
+  },
+  reporterUser: {
+    id: 30,
+    name: "Pessoa Empresa",
+    email: "empresa@example.com",
+  },
+  reason: "Documentos inconsistentes apresentados no perfil.",
+  status: "OPEN",
+  createdAt: "2026-05-29T12:00:00",
+};
+
+function reportsPage(content = [reportFixture]) {
+  return {
+    content,
+    totalElements: content.length,
+    totalPages: content.length > 0 ? 1 : 0,
+    number: 0,
+    size: 5,
+  };
+}
 
 describe("AdminDashboard", () => {
   beforeEach(() => {
@@ -55,25 +88,7 @@ describe("AdminDashboard", () => {
       status: "RESOLVED",
       createdAt: "2026-05-29T12:00:00",
     });
-    mocks.fetchAdminNpoReportsMock.mockResolvedValue([
-      {
-        id: 1,
-        npo: { id: 10, name: "ONG Reportada" },
-        reporterCompany: {
-          id: 20,
-          name: "Empresa Denunciante",
-          cnpj: "12345678000199",
-        },
-        reporterUser: {
-          id: 30,
-          name: "Pessoa Empresa",
-          email: "empresa@example.com",
-        },
-        reason: "Documentos inconsistentes apresentados no perfil.",
-        status: "OPEN",
-        createdAt: "2026-05-29T12:00:00",
-      },
-    ]);
+    mocks.fetchAdminNpoReportsMock.mockResolvedValue(reportsPage());
   });
 
   it("renderiza o cabeçalho e o título da página", () => {
@@ -147,7 +162,13 @@ describe("AdminDashboard", () => {
     expect(screen.getByRole("combobox", { name: "Alterar status da denúncia 1" })).toHaveValue(
       "OPEN",
     );
-    expect(mocks.fetchAdminNpoReportsMock).toHaveBeenCalledWith("token");
+    expect(mocks.fetchAdminNpoReportsMock).toHaveBeenCalledWith("token", {
+      companyName: undefined,
+      npoName: undefined,
+      page: 0,
+      size: 5,
+      status: "OPEN",
+    });
   });
 
   it("atualiza o status de uma denúncia", async () => {
@@ -164,8 +185,10 @@ describe("AdminDashboard", () => {
       { status: "RESOLVED" },
       "token",
     );
-    expect(await screen.findByRole("combobox", { name: "Alterar status da denúncia 1" }))
-      .toHaveValue("RESOLVED");
+    expect(mocks.showToastMock).toHaveBeenCalledWith(
+      'Status atualizado para "Resolvida" com sucesso.',
+      "success",
+    );
   });
 
   it("mostra erro quando a atualização de status falha", async () => {
@@ -179,13 +202,14 @@ describe("AdminDashboard", () => {
     });
     await user.selectOptions(select, "DISMISSED");
 
-    expect(
-      await screen.findByText("Não foi possível atualizar o status da denúncia."),
-    ).toBeInTheDocument();
+    expect(mocks.showToastMock).toHaveBeenCalledWith(
+      "Não foi possível atualizar o status da denúncia.",
+      "error",
+    );
   });
 
   it("renderiza estado vazio quando não há denúncias", async () => {
-    mocks.fetchAdminNpoReportsMock.mockResolvedValue([]);
+    mocks.fetchAdminNpoReportsMock.mockResolvedValue(reportsPage([]));
 
     render(<AdminDashboard />);
 

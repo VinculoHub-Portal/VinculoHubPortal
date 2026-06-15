@@ -54,6 +54,7 @@ const mockProjectDetails: ProjectDetails = {
     "Programa de reforço escolar e formação profissionalizante para jovens em situação de vulnerabilidade social.",
   sdgLabels: ["Educação de Qualidade", "Redução das Desigualdades"],
   progressPercent: 75,
+  generalProgress: 0,
   responsibleInstitution: null,
 }
 
