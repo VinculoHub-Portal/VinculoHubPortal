@@ -34,26 +34,29 @@ vi.mock("../../components/general/Header", () => ({
 }))
 
 async function renderCompanyDashboard() {
-  render(<MemoryRouter><CompanyDashboard /></MemoryRouter>)
+  render(
+    <MemoryRouter>
+      <CompanyDashboard />
+    </MemoryRouter>,
+  )
   await screen.findByText("Impacto ESG")
 }
 
 describe("CompanyDashboard", () => {
   beforeEach(() => {
-  vi.clearAllMocks()
-  mocks.getAccessTokenSilentlyMock.mockResolvedValue("token")
-  mocks.fetchAuthenticatedProfileMock.mockResolvedValue({
-    auth0Id: "auth0|company",
-    email: "empresa@teste.com",
-    userId: 1,
-    userType: "company",
-    npoId: null,
-    companyId: 1,
-    companyName: "Empresa ABC",
-    registrationCompleted: true,
-  })
-
-  mocks.fetchCompanyEsgImpactDashboardMock.mockResolvedValue({
+    vi.clearAllMocks()
+    mocks.getAccessTokenSilentlyMock.mockResolvedValue("token")
+    mocks.fetchAuthenticatedProfileMock.mockResolvedValue({
+      auth0Id: "auth0|123",
+      email: "empresa@teste.com",
+      userId: 1,
+      userType: "company",
+      npoId: null,
+      companyId: 42,
+      companyName: "Empresa Teste",
+      registrationCompleted: true,
+    })
+    mocks.fetchCompanyEsgImpactDashboardMock.mockResolvedValue({
       projectCount: 1,
       totalInvested: 3000,
       totalBudgetNeeded: 5000,
@@ -75,9 +78,16 @@ describe("CompanyDashboard", () => {
     expect(screen.getByText("Dashboard Empresarial")).toBeInTheDocument()
   })
 
-  it("renderiza a saudação com o nome mockado", async () => {
+  it("renderiza a saudação com o nome real da empresa", async () => {
     await renderCompanyDashboard()
-    expect(screen.getByText(/Bem-vindo de volta, Empresa ABC/)).toBeInTheDocument()
+    expect(screen.getByText(/Bem-vindo de volta, Empresa Teste/)).toBeInTheDocument()
+    expect(mocks.fetchAuthenticatedProfileMock).toHaveBeenCalledWith("token")
+  })
+
+  it("renderiza a saudação com fallback quando o perfil falha", async () => {
+    mocks.fetchAuthenticatedProfileMock.mockRejectedValue(new Error("network error"))
+    await renderCompanyDashboard()
+    expect(screen.getByText(/Bem-vindo de volta, Empresa/)).toBeInTheDocument()
   })
 
   it("renderiza acesso para a página de vínculos", async () => {
@@ -110,6 +120,4 @@ describe("CompanyDashboard", () => {
     expect(screen.getByText("1 projetos apoiados")).toBeInTheDocument()
     expect(mocks.fetchCompanyEsgImpactDashboardMock).toHaveBeenCalledWith("token")
   })
-
-
 })
