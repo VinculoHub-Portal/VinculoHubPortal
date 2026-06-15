@@ -20,7 +20,7 @@ import { FlexibleButton } from "../../components/general/FlexibleButton";
 import { Header } from "../../components/general/Header";
 import { MetricCard } from "../../components/general/MetricCard";
 import { useToast } from "../../context/ToastContext";
-import { mapNposForCsvExport, mapVinculosForCsvExport } from "../../utils/adminExportDisplay";
+import{ mapNposForCsvExport, mapVinculosForCsvExport } from "../../utils/adminExportDisplay";
 import { downloadCsv } from "../../utils/exportCsv";
 
 const PAGE_SIZE = 5;
