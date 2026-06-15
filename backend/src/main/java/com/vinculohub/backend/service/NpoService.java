@@ -44,6 +44,7 @@ public class NpoService {
                 .id(npo.getId())
                 .name(npo.getName())
                 .cnpj(npo.getCnpj())
+                .cpf(npo.getCpf())
                 .phone(npo.getPhone())
                 .npoSize(npo.getNpoSize())
                 .environmental(npo.getEnvironmental())
