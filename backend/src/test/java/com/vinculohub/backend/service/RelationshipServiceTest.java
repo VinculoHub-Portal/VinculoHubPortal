@@ -303,7 +303,8 @@ class RelationshipServiceTest {
         assertFalse(rel.getStatus() == RelationshipStatus.active);
     }
 
-    // ------------------------------------------------------------------------------- overdue (admin)
+    // ------------------------------------------------------------------------------- overdue
+    // (admin)
 
     @Test
     @DisplayName("ADM-06: mapeia parcerias pendentes em atraso para o alerta do admin")
@@ -331,8 +332,7 @@ class RelationshipServiceTest {
     @Test
     @DisplayName("ADM-06: sem parcerias em atraso retorna lista vazia")
     void listOverdueReturnsEmptyWhenNone() {
-        when(companyProjectRepository.findOverduePendingRelationships(any()))
-                .thenReturn(List.of());
+        when(companyProjectRepository.findOverduePendingRelationships(any())).thenReturn(List.of());
 
         assertTrue(relationshipService.listOverdueRelationshipsForAdmin().isEmpty());
     }
@@ -340,8 +340,7 @@ class RelationshipServiceTest {
     @Test
     @DisplayName("ADM-06: usa o limite de 7 dias atrás como corte de atraso")
     void listOverdueUsesSevenDayThreshold() {
-        when(companyProjectRepository.findOverduePendingRelationships(any()))
-                .thenReturn(List.of());
+        when(companyProjectRepository.findOverduePendingRelationships(any())).thenReturn(List.of());
 
         LocalDateTime before = LocalDateTime.now().minusDays(7);
         relationshipService.listOverdueRelationshipsForAdmin();
