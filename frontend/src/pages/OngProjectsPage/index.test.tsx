@@ -95,8 +95,12 @@ describe("OngProjectsPage", () => {
     mockRefetch.mockResolvedValue(undefined)
     mocks.useOngProjectsMock.mockReturnValue({
       projects: mockOngProjects,
+      summary: { total: 3, taxIncentiveLaw: 1, socialInvestmentLaw: 0 },
       loading: false,
       error: null,
+      currentPage: 0,
+      totalPages: 1,
+      setCurrentPage: vi.fn(),
       refetch: mockRefetch,
     })
   })
@@ -181,8 +185,12 @@ describe("OngProjectsPage", () => {
   it("exibe feedback de erro", () => {
     mocks.useOngProjectsMock.mockReturnValue({
       projects: [],
+      summary: { total: 0, taxIncentiveLaw: 0, socialInvestmentLaw: 0 },
       loading: false,
       error: "Não foi possível carregar os projetos.",
+      currentPage: 0,
+      totalPages: 0,
+      setCurrentPage: vi.fn(),
       refetch: mockRefetch,
     })
 
@@ -196,8 +204,12 @@ describe("OngProjectsPage", () => {
   it("exibe estado vazio", () => {
     mocks.useOngProjectsMock.mockReturnValue({
       projects: [],
+      summary: { total: 0, taxIncentiveLaw: 0, socialInvestmentLaw: 0 },
       loading: false,
       error: null,
+      currentPage: 0,
+      totalPages: 0,
+      setCurrentPage: vi.fn(),
       refetch: mockRefetch,
     })
 
