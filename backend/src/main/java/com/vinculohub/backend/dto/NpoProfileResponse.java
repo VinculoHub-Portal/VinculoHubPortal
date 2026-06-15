@@ -59,13 +59,24 @@ public record NpoProfileResponse(
             ProjectType type,
             BigDecimal budgetNeeded,
             BigDecimal investedAmount,
+            List<OdsResponse> ods,
             LocalDate startDate,
             LocalDate endDate,
             String focusArea,
             String fundraisingDeadline,
             Integer beneficiariesCount,
             String location,
-            String mainObjective) {}
+            String mainObjective,
+            LocalDateTime createdAt) {}
+
+    public record ProjectPageData(
+            List<ProjectData> content,
+            long totalElements,
+            int totalPages,
+            int number,
+            int size,
+            boolean first,
+            boolean last) {}
 
     public record DocumentData(
             Integer id,

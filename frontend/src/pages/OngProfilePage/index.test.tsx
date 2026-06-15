@@ -67,6 +67,7 @@ const ownerProfile: NpoProfileResponse = {
     auth0Id: "auth0|owner",
     userType: "npo",
   },
+  projects: [],
 }
 
 beforeEach(() => {

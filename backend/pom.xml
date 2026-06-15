@@ -149,6 +149,23 @@
 			</plugin>
 
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<!--
+						Ordem de execução determinística das classes de teste.
+						Sem isso o Surefire usa runOrder=filesystem, que varia entre
+						sistemas operacionais (Linux do CI vs. macOS local). Como os
+						testes de integração compartilham um único container Postgres
+						e só limpam o estado no @BeforeEach, uma ordem diferente pode
+						expor (ou esconder) violações de FK entre classes. Fixar a
+						ordem garante que "passou no CI" signifique "passa em todo lugar".
+					-->
+					<runOrder>alphabetical</runOrder>
+				</configuration>
+			</plugin>
+
+			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
