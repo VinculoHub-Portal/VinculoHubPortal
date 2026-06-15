@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { render, screen } from "@testing-library/react"
 import type { SvgIconComponent } from "@mui/icons-material"
 import { EsgImpactSection } from "./EsgImpactSection"
-import type { EsgPillar } from "./mockData"
+import type { EsgPillar } from "./types"
 
 const mockIcon = (() => <svg data-testid="mock-icon" />) as unknown as SvgIconComponent
 
