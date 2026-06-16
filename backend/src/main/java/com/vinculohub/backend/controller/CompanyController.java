@@ -3,11 +3,16 @@ package com.vinculohub.backend.controller;
 
 import com.vinculohub.backend.dto.CompanyDTO;
 import com.vinculohub.backend.dto.CompanyExportDTO;
+import com.vinculohub.backend.dto.CompanyListItemResponse;
 import com.vinculohub.backend.service.CompanyService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,6 +31,18 @@ public class CompanyController {
     public ResponseEntity<List<CompanyExportDTO>> listAll() {
         log.info("GET /api/companies");
         return ResponseEntity.ok(companyService.findAllForExport());
+    }
+
+    @GetMapping("/api/npo/companies")
+    @PreAuthorize("hasRole('NPO')")
+    public ResponseEntity<Page<CompanyListItemResponse>> listCompaniesForNpo(
+            @PageableDefault(size = 10, sort = "legalName", direction = Sort.Direction.ASC)
+                    Pageable pageable) {
+        log.info(
+                "GET /api/npo/companies | page={} size={}",
+                pageable.getPageNumber(),
+                pageable.getPageSize());
+        return ResponseEntity.ok(companyService.findAllForNpoListing(pageable));
     }
 
     @PostMapping("/api/company-accounts")

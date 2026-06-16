@@ -70,6 +70,8 @@ public class SecurityConfig {
                                         .permitAll()
                                         .requestMatchers(HttpMethod.GET, "/api/npos/{id}")
                                         .permitAll()
+                                        .requestMatchers(HttpMethod.GET, "/api/npos/{id}/projects")
+                                        .permitAll()
                                         .requestMatchers("/api/documents/**")
                                         .authenticated()
                                         .anyRequest()

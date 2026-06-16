@@ -50,6 +50,7 @@ export function ProjectsGrid({ projects, loading, error, onDetails }: ProjectsGr
               title={project.title}
               description={project.description}
               fundingType="investimento-social-privado"
+              generalProgress={project.progress}
               onDetails={onDetails}
             />
           ))}

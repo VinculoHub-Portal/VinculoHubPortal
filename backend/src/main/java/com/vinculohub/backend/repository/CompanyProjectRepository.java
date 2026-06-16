@@ -5,6 +5,7 @@ import com.vinculohub.backend.model.CompanyProject;
 import com.vinculohub.backend.model.CompanyProjectId;
 import com.vinculohub.backend.model.enums.RelationshipStatus;
 import com.vinculohub.backend.repository.projection.CompanySupportedProjectsSummaryProjection;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -78,6 +79,22 @@ public interface CompanyProjectRepository extends JpaRepository<CompanyProject, 
             """)
     Optional<CompanyProject> findByIdWithGraph(
             @Param("companyId") Integer companyId, @Param("projectId") Long projectId);
+
+    @Query(
+            """
+            SELECT cp
+            FROM CompanyProject cp
+            JOIN FETCH cp.company c
+            LEFT JOIN FETCH c.user
+            JOIN FETCH cp.project p
+            JOIN FETCH p.npo n
+            LEFT JOIN FETCH n.npoUser
+            WHERE cp.status = com.vinculohub.backend.model.enums.RelationshipStatus.pending
+              AND cp.createdAt <= :threshold
+            ORDER BY cp.createdAt ASC
+            """)
+    List<CompanyProject> findOverduePendingRelationships(
+            @Param("threshold") LocalDateTime threshold);
 
     @Query(
             value =

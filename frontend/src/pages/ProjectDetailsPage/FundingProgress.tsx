@@ -7,7 +7,7 @@ export function FundingProgress({ progressPercent }: FundingProgressProps) {
 
   return (
     <section className="mt-10">
-      <h2 className="text-base font-bold text-vinculo-dark mb-4">Progresso do Projeto</h2>
+      <h2 className="text-base font-bold text-vinculo-dark mb-4">Progresso de Captação</h2>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 mb-3">
         <span className="text-slate-600 text-sm">Meta de investimento</span>
         <span className="text-vinculo-green font-semibold text-sm">{pct}% alcançado</span>

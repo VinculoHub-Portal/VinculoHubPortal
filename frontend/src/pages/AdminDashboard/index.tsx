@@ -364,7 +364,7 @@ export function AdminDashboard() {
 
             {!isLoadingReports && !reportsError && reports.length === 0 && (
               <p className="text-sm text-slate-600">
-                {statusFilter === "OPEN" && "Nenhuma denúncia aberta."}
+                {statusFilter === "OPEN" && "Nenhuma denúncia pendente."}
                 {statusFilter === "RESOLVED" && "Nenhuma denúncia resolvida."}
                 {statusFilter === "DISMISSED" && "Nenhuma denúncia descartada."}
               </p>

@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   getAccessTokenSilentlyMock: vi.fn(),
   navigateMock: vi.fn(),
   apiPostMock: vi.fn(),
+  invalidateQueriesMock: vi.fn(),
 }));
 
 vi.mock("@auth0/auth0-react", () => ({
@@ -22,6 +23,12 @@ vi.mock("@auth0/auth0-react", () => ({
 
 vi.mock("../../context/ToastContext", () => ({
   useToast: () => ({ showToast: mocks.showToastMock }),
+}));
+
+vi.mock("@tanstack/react-query", () => ({
+  useQueryClient: () => ({
+    invalidateQueries: mocks.invalidateQueriesMock,
+  }),
 }));
 
 vi.mock("react-router-dom", async () => {
