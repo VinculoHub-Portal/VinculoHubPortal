@@ -7,7 +7,7 @@ import { EsgImpactSection } from "./EsgImpactSection"
 import { InvestmentModalitiesSection } from "./InvestmentModalitiesSection"
 import { SupportedProjectsCard } from "./SupportedProjectsCard"
 import { mapEsgImpactDashboardToPillars } from "./esgImpactMapper"
-import { type EsgPillar } from "./mockData"
+import { type EsgPillar } from "./types"
 import { useSupportedProjectsSummary } from "./useSupportedProjectsSummary"
 
 export const CompanyDashboard = () => {
