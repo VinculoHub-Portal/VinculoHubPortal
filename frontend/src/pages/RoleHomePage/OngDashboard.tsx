@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom"
 import { uploadDocument } from "../../api/document"
 import type { ProjectStatus } from "../../api/projects"
 import { BaseButton } from "../../components/general/BaseButton"
+import { CompanyShowcaseCard } from "./CompanyShowcaseCard"
 import { Header } from "../../components/general/Header"
 import { ProgressBar } from "../../components/general/ProgressBar"
 import { useToast } from "../../context/ToastContext"
@@ -23,17 +24,17 @@ import {
   type OngProjectTypeMetric,
 } from "./useOngDashboard"
 
-interface OngDashboardMockProps {
+interface OngDashboardProps {
   onCreateProject: () => void
   successMessage?: string | null
   refreshKey?: number
 }
 
-export function OngDashboardMock({
+export function OngDashboard({
   onCreateProject,
   successMessage = null,
   refreshKey = 0,
-}: OngDashboardMockProps) {
+}: OngDashboardProps) {
   const navigate = useNavigate()
   const { showToast } = useToast()
   const { getAccessTokenSilently } = useAuth0()
@@ -147,6 +148,10 @@ export function OngDashboardMock({
         </section>
 
         <FundingOpportunitiesBanner />
+
+        <section>
+          <CompanyShowcaseCard />
+        </section>
 
         <UploadModal
           isOpen={isUploadModalOpen}
