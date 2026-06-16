@@ -1,0 +1,25 @@
+meta {
+  name: 07 - Company Forbidden on Admin Reports (ADM-06)
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/admin/npo-reports
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{companyToken}}
+}
+
+script:post-response {
+  if (res.getStatus() !== 403) {
+    throw new Error(`Esperado 403 para COMPANY em rota ADMIN, recebido ${res.getStatus()}`)
+  }
+}
+
+docs {
+  Confirma que uma empresa autenticada não consegue acessar a listagem administrativa de denúncias.
+}

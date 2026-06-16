@@ -1,0 +1,40 @@
+meta {
+  name: 03 - List Export NPOs and Seed ID (ADM-02)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/npo-accounts
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminToken}}
+}
+
+script:post-response {
+  const rawBody = res.getBody()
+  const body = typeof rawBody === "string" ? JSON.parse(rawBody) : rawBody
+
+  if (res.getStatus() !== 200) {
+    throw new Error(`Esperado 200 ao listar ONGs exportáveis, recebido ${res.getStatus()}`)
+  }
+
+  if (!Array.isArray(body) || body.length === 0) {
+    throw new Error("A lista de ONGs exportáveis veio vazia")
+  }
+
+  const seedNpo = body.find((item) => item.name === "ONG Dev") ?? body[0]
+
+  if (!seedNpo?.id) {
+    throw new Error("Não foi possível identificar a ONG seedada no profile dev")
+  }
+
+  bru.setVar("seedNpoId", String(seedNpo.id))
+}
+
+docs {
+  Lista as ONGs exportadas pelo botão de CSV e captura o id da ONG seedada para o restante do fluxo.
+}

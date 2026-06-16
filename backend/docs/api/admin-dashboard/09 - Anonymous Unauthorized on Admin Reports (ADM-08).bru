@@ -1,0 +1,20 @@
+meta {
+  name: 08 - Anonymous Unauthorized on Admin Reports (ADM-07)
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/admin/npo-reports
+  body: none
+}
+
+script:post-response {
+  if (res.getStatus() !== 401) {
+    throw new Error(`Esperado 401 sem token em rota ADMIN, recebido ${res.getStatus()}`)
+  }
+}
+
+docs {
+  Confirma que a rota administrativa exige autenticação.
+}
