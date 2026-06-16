@@ -14,22 +14,26 @@ import {
   Card,
   CardActionArea,
   Chip,
+  CircularProgress,
 } from "@mui/material"
+import RefreshIcon from "@mui/icons-material/Refresh"
 import { useAuth0 } from "@auth0/auth0-react"
-import { useState, type ReactNode } from "react"
+import { useMemo, useState, type ReactNode } from "react"
 import type { NavigateFunction } from "react-router-dom"
 import { Link, useNavigate } from "react-router-dom"
 import { PortalTopbar } from "../../components/general/PortalTopbar"
 import { resolveDashboardPath } from "../../utils/dashboardPath"
+import { useAuthProfile } from "../../hooks/useAuthProfile"
+import { useMyRelationships } from "../../hooks/useMyRelationships"
 import {
   filterVinculos,
   getOpenVinculoCount,
   getVinculoFilterCounts,
-  mockVinculos,
+  mapRelationshipsToVinculos,
   type VinculoConnection,
   type VinculoFilter,
   type VinculoStatus,
-} from "./mockData"
+} from "./vinculo"
 
 const FILTER_OPTIONS: Array<{
   filter: VinculoFilter
@@ -115,13 +119,26 @@ const BUTTON_BASE_SX = {
 export function MyRelationshipsPage() {
   const navigate = useNavigate()
   const { user } = useAuth0()
+  const { data: profile } = useAuthProfile()
+  const {
+    data: relationships,
+    isPending,
+    isError,
+    refetch,
+    isRefetching,
+  } = useMyRelationships()
   const [selectedFilter, setSelectedFilter] = useState<VinculoFilter>("all")
+
+  const vinculos = useMemo(
+    () => mapRelationshipsToVinculos(relationships ?? [], profile?.userType ?? null),
+    [relationships, profile?.userType],
+  )
 
   const dashboardPath = resolveDashboardPath(user)
   const userLabel = user?.name ?? user?.nickname ?? "Admin"
-  const summaryCounts = getVinculoFilterCounts(mockVinculos)
-  const visibleVinculos = filterVinculos(mockVinculos, selectedFilter)
-  const openVinculosCount = getOpenVinculoCount(mockVinculos)
+  const summaryCounts = getVinculoFilterCounts(vinculos)
+  const visibleVinculos = filterVinculos(vinculos, selectedFilter)
+  const openVinculosCount = getOpenVinculoCount(vinculos)
 
   return (
     <div className="min-h-screen bg-surface text-slate-900">
@@ -166,7 +183,11 @@ export function MyRelationshipsPage() {
         </section>
 
         <section className="flex flex-col gap-4" aria-label="Lista de vínculos">
-          {visibleVinculos.length === 0 ? (
+          {isPending ? (
+            <LoadingState />
+          ) : isError ? (
+            <ErrorState onRetry={() => void refetch()} isRetrying={isRefetching} />
+          ) : visibleVinculos.length === 0 ? (
             <EmptyState />
           ) : (
             visibleVinculos.map((vinculo) => (
@@ -284,19 +305,23 @@ function VinculoCard({
           <span>{vinculo.partnerInstitutionName}</span>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-500">
-          <span className="inline-flex items-center gap-1.5">
-            <AccessTimeOutlinedIcon sx={{ fontSize: 17 }} />
-            <span>Solicitado em {vinculo.requestedAt}</span>
-          </span>
+        {(vinculo.requestedAt || vinculo.activeSince) && (
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-500">
+            {vinculo.requestedAt && (
+              <span className="inline-flex items-center gap-1.5">
+                <AccessTimeOutlinedIcon sx={{ fontSize: 17 }} />
+                <span>Solicitado em {vinculo.requestedAt}</span>
+              </span>
+            )}
 
-          {vinculo.activeSince && (
-            <span className="inline-flex items-center gap-1.5">
-              <CheckCircleOutlineIcon sx={{ fontSize: 17 }} />
-              <span>Ativo desde {vinculo.activeSince}</span>
-            </span>
-          )}
-        </div>
+            {vinculo.activeSince && (
+              <span className="inline-flex items-center gap-1.5">
+                <CheckCircleOutlineIcon sx={{ fontSize: 17 }} />
+                <span>Ativo desde {vinculo.activeSince}</span>
+              </span>
+            )}
+          </div>
+        )}
 
         {showContact && vinculo.contact && (
           <div className="mt-6 rounded-2xl bg-slate-50 px-4 py-4 sm:px-5">
@@ -305,29 +330,35 @@ function VinculoCard({
             </h3>
 
             <div className="mt-3 flex flex-col gap-2 text-sm text-slate-700">
-              <ContactRow icon={<EmailOutlinedIcon sx={{ fontSize: 18 }} />}>
-                <a
-                  href={`mailto:${vinculo.contact.email}`}
-                  className="text-blue-700 transition hover:underline"
-                >
-                  {vinculo.contact.email}
-                </a>
-              </ContactRow>
+              {vinculo.contact.email && (
+                <ContactRow icon={<EmailOutlinedIcon sx={{ fontSize: 18 }} />}>
+                  <a
+                    href={`mailto:${vinculo.contact.email}`}
+                    className="text-blue-700 transition hover:underline"
+                  >
+                    {vinculo.contact.email}
+                  </a>
+                </ContactRow>
+              )}
 
-              <ContactRow icon={<PhoneOutlinedIcon sx={{ fontSize: 18 }} />}>
-                <span>{vinculo.contact.phone}</span>
-              </ContactRow>
+              {vinculo.contact.phone && (
+                <ContactRow icon={<PhoneOutlinedIcon sx={{ fontSize: 18 }} />}>
+                  <span>{vinculo.contact.phone}</span>
+                </ContactRow>
+              )}
 
-              <ContactRow icon={<LanguageOutlinedIcon sx={{ fontSize: 18 }} />}>
-                <a
-                  href={vinculo.contact.websiteHref}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-blue-700 transition hover:underline"
-                >
-                  {vinculo.contact.websiteLabel}
-                </a>
-              </ContactRow>
+              {vinculo.contact.websiteHref && (
+                <ContactRow icon={<LanguageOutlinedIcon sx={{ fontSize: 18 }} />}>
+                  <a
+                    href={vinculo.contact.websiteHref}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-blue-700 transition hover:underline"
+                  >
+                    {vinculo.contact.websiteLabel}
+                  </a>
+                </ContactRow>
+              )}
             </div>
           </div>
         )}
@@ -342,14 +373,16 @@ function VinculoCard({
               Ver Projeto
             </ActionButton>
 
-            <ActionButton
-              variant="outlined"
-              colorScheme="neutral"
-              icon={<PersonOutlineIcon fontSize="small" />}
-              onClick={() => navigate(`/ong/publico/${vinculo.partnerId}`)}
-            >
-              Ver Perfil da ONG
-            </ActionButton>
+            {vinculo.partnerType === "ONG" && (
+              <ActionButton
+                variant="outlined"
+                colorScheme="neutral"
+                icon={<PersonOutlineIcon fontSize="small" />}
+                onClick={() => navigate(`/ong/publico/${vinculo.partnerId}`)}
+              >
+                Ver Perfil da ONG
+              </ActionButton>
+            )}
 
             {showConfirmActions && (
               <>
@@ -547,6 +580,61 @@ function EmptyState() {
       <p className="mt-2 text-sm leading-6 text-slate-500">
         Não há conexões para o filtro selecionado no momento.
       </p>
+    </Card>
+  )
+}
+
+function LoadingState() {
+  return (
+    <Card
+      elevation={0}
+      className="flex flex-col items-center gap-4 rounded-[20px] border border-slate-200 bg-white px-6 py-12 text-center shadow-sm"
+    >
+      <CircularProgress size={32} sx={{ color: "var(--color-vinculo-dark)" }} />
+      <p className="text-sm leading-6 text-slate-500">Carregando seus vínculos...</p>
+    </Card>
+  )
+}
+
+function ErrorState({
+  onRetry,
+  isRetrying,
+}: {
+  onRetry: () => void
+  isRetrying: boolean
+}) {
+  return (
+    <Card
+      elevation={0}
+      className="rounded-[20px] border border-red-200 bg-red-50 px-6 py-10 text-center shadow-sm"
+    >
+      <h2 className="text-lg font-semibold text-red-700">
+        Não foi possível carregar seus vínculos
+      </h2>
+      <p className="mt-2 text-sm leading-6 text-red-600">
+        Ocorreu um erro ao buscar suas conexões. Tente novamente em instantes.
+      </p>
+      <div className="mt-5 flex justify-center">
+        <Button
+          type="button"
+          variant="outlined"
+          disableElevation
+          startIcon={<RefreshIcon fontSize="small" />}
+          onClick={onRetry}
+          disabled={isRetrying}
+          sx={{
+            ...BUTTON_BASE_SX,
+            borderColor: "#dc2626",
+            color: "#dc2626",
+            "&:hover": {
+              borderColor: "#dc2626",
+              backgroundColor: "rgba(220, 38, 38, 0.05)",
+            },
+          }}
+        >
+          {isRetrying ? "Tentando..." : "Tentar novamente"}
+        </Button>
+      </div>
     </Card>
   )
 }

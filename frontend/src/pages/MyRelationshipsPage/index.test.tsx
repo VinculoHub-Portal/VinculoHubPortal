@@ -13,6 +13,43 @@ vi.mock("@auth0/auth0-react", () => ({
   }),
 }))
 
+vi.mock("../../hooks/useAuthProfile", () => ({
+  useAuthProfile: () => ({ data: { userType: "company" } }),
+}))
+
+vi.mock("../../hooks/useMyRelationships", () => ({
+  useMyRelationships: () => ({
+    data: [
+      {
+        projectId: 321,
+        projectName: "Biblioteca Comunitária Sementes do Saber",
+        partnerInstitutionId: 101,
+        partnerInstitutionName: "Instituto Educação para Todos",
+        status: "active",
+        partnerContactEmail: "contato@educacaoparatodos.org.br",
+        partnerContactPhone: "(11) 1234-5678",
+        canRespond: false,
+        canConfirm: false,
+      },
+      {
+        projectId: 323,
+        projectName: "Educação Ambiental nas Escolas",
+        partnerInstitutionId: 103,
+        partnerInstitutionName: "Eco Futuro",
+        status: "negotiation",
+        partnerContactEmail: "contato@ecofuturo.org.br",
+        partnerContactPhone: "(31) 2345-6789",
+        canRespond: false,
+        canConfirm: false,
+      },
+    ],
+    isPending: false,
+    isError: false,
+    isRefetching: false,
+    refetch: vi.fn(),
+  }),
+}))
+
 describe("MyRelationshipsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks()
