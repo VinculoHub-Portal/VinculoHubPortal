@@ -56,7 +56,7 @@ denúncias em um banco funcionalmente vazio. A carga é opcional:
 APP_TEST_SCENARIOS_ENABLED=true
 ```
 
-Antes de subir a aplicação, devem existir na tabela `users`, com os tipos indicados, as contas:
+Quando habilitado, o seeder garante na tabela `users`, com os tipos indicados, as contas:
 
 - `e2e.company.empty@vinculohub.test` (`company`)
 - `e2e.company.active@vinculohub.test` (`company`)
@@ -64,14 +64,14 @@ Antes de subir a aplicação, devem existir na tabela `users`, com os tipos indi
 - `e2e.npo.projects@vinculohub.test` (`npo`)
 - `e2e.npo.reported@vinculohub.test` (`npo`)
 
-Esses usuários também devem corresponder às contas de teste mantidas no Auth0. A feature apenas
-resolve os registros locais por e-mail: não chama a Management API, não cria e não atualiza usuários
-no Auth0.
+Esses usuários também devem corresponder às contas de teste mantidas no Auth0. A feature usa os
+`auth0_id` declarados em `01_scenario_definitions.sql`: não chama a Management API, não cria e não
+atualiza usuários no Auth0.
 
 O catálogo inclui empresa sem vínculo, empresa com vínculo ativo, empresa com múltiplos vínculos,
-ONG com três projetos ativos e ONG com duas denúncias. A carga inteira ocorre em uma transação e
-falha sem persistir dados quando falta um usuário, seu tipo é incompatível ou alguma tabela funcional
-já contém registros. Para recriar o ambiente, use um banco vazio e execute `docker compose up`.
+ONG com três projetos ativos e ONG com duas denúncias. A carga inteira ocorre em uma transação. Se o
+catálogo funcional já estiver carregado exatamente, a aplicação sobe sem reinserir dados; se houver
+dados funcionais parciais ou diferentes, a execução falha com mensagem de conflito.
 
 ---
 

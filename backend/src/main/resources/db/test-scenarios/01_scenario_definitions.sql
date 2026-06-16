@@ -1,5 +1,6 @@
 CREATE TEMP TABLE scenario_user (
-    logical_key TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, user_type TEXT NOT NULL
+    logical_key TEXT PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE NOT NULL,
+    user_type TEXT NOT NULL, auth0_id TEXT NOT NULL
 ) ON COMMIT DROP;
 CREATE TEMP TABLE scenario_address (
     logical_key TEXT PRIMARY KEY, state TEXT, state_code CHAR(2), city TEXT, street TEXT,
@@ -46,11 +47,11 @@ SELECT concat_ws(', ',
 ) AS populated;
 
 INSERT INTO scenario_user VALUES
-('company_empty', 'e2e.company.empty@vinculohub.test', 'company'),
-('company_active', 'e2e.company.active@vinculohub.test', 'company'),
-('company_multiple', 'e2e.company.multiple@vinculohub.test', 'company'),
-('npo_projects', 'e2e.npo.projects@vinculohub.test', 'npo'),
-('npo_reported', 'e2e.npo.reported@vinculohub.test', 'npo');
+('company_empty', 'E2E Empty Company', 'e2e.company.empty@vinculohub.test', 'company', 'auth0|6a3080b7cd92f499f988ff9e'),
+('company_active', 'E2E Active Company', 'e2e.company.active@vinculohub.test', 'company', 'auth0|6a3080a930e31f8544d1008c'),
+('company_multiple', 'E2E Multiple Company', 'e2e.company.multiple@vinculohub.test', 'company', 'auth0|6a308099cd92f499f988ff8b'),
+('npo_projects', 'E2E Projects NPO', 'e2e.npo.projects@vinculohub.test', 'npo', 'auth0|6a308086cd92f499f988ff7b'),
+('npo_reported', 'E2E Reported NPO', 'e2e.npo.reported@vinculohub.test', 'npo', 'auth0|6a308065bf0afb7fc359689c');
 INSERT INTO scenario_address VALUES
 ('company_empty', 'Sao Paulo', 'SP', 'Sao Paulo', 'Rua das Flores', '10', '01001-000'),
 ('company_active', 'Rio Grande do Sul', 'RS', 'Porto Alegre', 'Rua da Industria', '20', '90010-000'),
@@ -77,3 +78,27 @@ INSERT INTO scenario_relationship VALUES
 INSERT INTO scenario_report VALUES
 ('report_open', 'npo_reported', 'company_active', 'Informacoes de prestacao de contas precisam de verificacao.', 'OPEN'),
 ('report_resolved', 'npo_reported', 'company_multiple', 'Documento institucional estava temporariamente indisponivel.', 'RESOLVED');
+
+CREATE TEMP VIEW scenario_catalog_guard AS
+SELECT concat_ws(', ',
+    CASE WHEN (SELECT count(*) FROM address) <> (SELECT count(*) FROM scenario_address) THEN 'address' END, CASE WHEN (SELECT count(*) FROM company) <> (SELECT count(*) FROM scenario_company) THEN 'company' END,
+    CASE WHEN (SELECT count(*) FROM npo) <> (SELECT count(*) FROM scenario_npo) THEN 'npo' END, CASE WHEN (SELECT count(*) FROM project) <> (SELECT count(*) FROM scenario_project) THEN 'project' END,
+    CASE WHEN (SELECT count(*) FROM project_ods) <> (SELECT count(*) FROM scenario_project) THEN 'project_ods' END, CASE WHEN (SELECT count(*) FROM company_project) <> (SELECT count(*) FROM scenario_relationship) THEN 'company_project' END,
+    CASE WHEN (SELECT count(*) FROM npo_report) <> (SELECT count(*) FROM scenario_report) THEN 'npo_report' END,
+    CASE WHEN EXISTS (SELECT 1 FROM scenario_company s LEFT JOIN company c ON c.cnpj = s.cnpj
+        LEFT JOIN scenario_user su ON su.logical_key = s.user_key LEFT JOIN users u ON u.id = c.user_id
+        WHERE c.id IS NULL OR lower(u.email) <> lower(su.email)) THEN 'company data' END,
+    CASE WHEN EXISTS (SELECT 1 FROM scenario_npo s LEFT JOIN npo n ON n.cpf = s.cpf
+        LEFT JOIN scenario_user su ON su.logical_key = s.user_key LEFT JOIN users u ON u.id = n.user_id
+        WHERE n.id IS NULL OR lower(u.email) <> lower(su.email)) THEN 'npo data' END,
+    CASE WHEN EXISTS (SELECT 1 FROM scenario_project s LEFT JOIN npo n ON n.cpf = (SELECT cpf FROM scenario_npo WHERE logical_key = s.npo_key) LEFT JOIN project p ON p.title = s.title AND p.npo_id = n.id
+        WHERE p.id IS NULL OR p.status <> s.status OR p.progress <> s.progress) THEN 'project data' END,
+    CASE WHEN EXISTS (SELECT 1 FROM scenario_project s LEFT JOIN project p ON p.title = s.title
+        LEFT JOIN project_ods po ON po.project_id = p.id AND po.ods_id = s.ods_id
+        WHERE po.project_id IS NULL) THEN 'project_ods data' END,
+    CASE WHEN EXISTS (SELECT 1 FROM scenario_relationship s LEFT JOIN company c ON c.cnpj = (SELECT cnpj FROM scenario_company WHERE logical_key = s.company_key)
+        LEFT JOIN project p ON p.title = (SELECT title FROM scenario_project WHERE logical_key = s.project_key) LEFT JOIN company_project cp ON cp.company_id = c.id AND cp.project_id = p.id
+        WHERE cp.company_id IS NULL OR cp.status::text <> s.status) THEN 'company_project data' END,
+    CASE WHEN EXISTS (SELECT 1 FROM scenario_report s LEFT JOIN npo_report r ON r.reason = s.reason
+        WHERE r.id IS NULL OR r.status <> s.status) THEN 'npo_report data' END
+) AS mismatches;

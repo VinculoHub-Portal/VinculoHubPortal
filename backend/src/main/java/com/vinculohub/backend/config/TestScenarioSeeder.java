@@ -27,40 +27,77 @@ public class TestScenarioSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        new TransactionTemplate(transactionManager)
-                .executeWithoutResult(
-                        ignored -> {
-                            execute(DEFINITIONS);
-                            validateEmptyDatabase();
-                            validateUsers();
-                            execute(PERSISTENCE);
-                        });
-        log.info("Development and E2E test scenarios loaded.");
-    }
-
-    private void validateEmptyDatabase() {
-        String populated =
-                jdbc.queryForObject("SELECT populated FROM scenario_database_guard", String.class);
-        if (!populated.isEmpty()) {
-            throw new IllegalStateException(
-                    "Test scenarios require an empty functional database. Populated tables: "
-                            + populated);
+        boolean loaded =
+                Boolean.TRUE.equals(
+                        new TransactionTemplate(transactionManager)
+                                .execute(
+                                        ignored -> {
+                                            execute(DEFINITIONS);
+                                            ensureUsers();
+                                            if (hasFunctionalData()) {
+                                                validateExistingCatalog();
+                                                log.info(
+                                                        "Development and E2E test scenarios already"
+                                                                + " loaded.");
+                                                return false;
+                                            }
+                                            execute(PERSISTENCE);
+                                            return true;
+                                        }));
+        if (loaded) {
+            log.info("Development and E2E test scenarios loaded.");
         }
     }
 
-    private void validateUsers() {
+    private boolean hasFunctionalData() {
+        String populated =
+                jdbc.queryForObject("SELECT populated FROM scenario_database_guard", String.class);
+        return !populated.isEmpty();
+    }
+
+    private void validateExistingCatalog() {
+        String mismatches =
+                jdbc.queryForObject("SELECT mismatches FROM scenario_catalog_guard", String.class);
+        if (!mismatches.isEmpty()) {
+            throw new IllegalStateException(
+                    "Functional database does not match test scenarios. Mismatches: " + mismatches);
+        }
+    }
+
+    private void ensureUsers() {
+        validateUsersWithExistingEmails();
+        jdbc.update(
+                """
+                INSERT INTO users (name, email, user_type, auth0_id, created_at, updated_at)
+                SELECT s.name, s.email, s.user_type::user_type, s.auth0_id, now(), now()
+                FROM scenario_user s
+                WHERE NOT EXISTS (SELECT 1 FROM users u WHERE lower(u.email) = lower(s.email))
+                """);
+        jdbc.update(
+                """
+                UPDATE users u SET auth0_id = s.auth0_id, updated_at = now()
+                FROM scenario_user s
+                WHERE lower(u.email) = lower(s.email)
+                  AND u.user_type::text = s.user_type
+                  AND u.auth0_id IS NULL
+                """);
+    }
+
+    private void validateUsersWithExistingEmails() {
         String invalid =
                 jdbc.queryForObject(
                         """
-                        SELECT string_agg(s.email || ' (expected ' || s.user_type || ', found ' ||
-                            COALESCE(u.user_type::text, 'missing') || ')', ', ' ORDER BY s.email)
-                        FROM scenario_user s LEFT JOIN users u ON lower(u.email) = lower(s.email)
-                        WHERE u.id IS NULL OR u.user_type::text <> s.user_type
+                        SELECT string_agg(s.email || ' (expected type=' || s.user_type ||
+                            ', auth0_id=' || s.auth0_id || ', found type=' ||
+                            COALESCE(u.user_type::text, 'missing') || ', auth0_id=' ||
+                            COALESCE(u.auth0_id, 'missing') || ')', ', ' ORDER BY s.email)
+                        FROM scenario_user s JOIN users u ON lower(u.email) = lower(s.email)
+                        WHERE u.user_type::text <> s.user_type
+                           OR (u.auth0_id IS NOT NULL AND u.auth0_id <> s.auth0_id)
                         """,
                         String.class);
         if (invalid != null) {
-            throw new IllegalStateException(
-                    "Required scenario users are missing or incompatible: " + invalid);
+            throw new IllegalStateException("Required scenario users are incompatible: " + invalid);
         }
     }
 
