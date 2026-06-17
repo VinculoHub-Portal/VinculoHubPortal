@@ -76,7 +76,7 @@ export const CompanyDashboard = () => {
             </p>
           </div>
           <Link
-            to="/vinculos"
+            to="/meus-vinculos"
             className="w-fit rounded-lg border-2 border-vinculo-dark px-6 py-2 font-semibold text-vinculo-dark transition-all duration-200 hover:bg-vinculo-dark/5"
           >
             Ver vínculos

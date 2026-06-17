@@ -114,7 +114,7 @@ function renderOngDashboard() {
           }
         />
         <Route path="/ong/projetos" element={<p>Meus Projetos</p>} />
-        <Route path="/vinculos" element={<p>Página de Vínculos</p>} />
+        <Route path="/meus-vinculos" element={<p>Página de Vínculos</p>} />
       </Routes>
     </MemoryRouter>,
   )

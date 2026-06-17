@@ -101,7 +101,7 @@ describe("CompanyDashboard", () => {
     await renderCompanyDashboard();
     expect(screen.getByRole("link", { name: "Ver vínculos" })).toHaveAttribute(
       "href",
-      "/vinculos",
+      "/meus-vinculos",
     );
   });
 

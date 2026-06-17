@@ -124,7 +124,7 @@ export function OngDashboard({
               type="button"
               variant="outline"
               className="min-h-14 w-full border-slate-200 bg-white px-8 text-lg shadow-md hover:bg-slate-50 sm:w-fit"
-              onClick={() => navigate("/vinculos")}
+              onClick={() => navigate("/meus-vinculos")}
             >
               <LinkOutlinedIcon fontSize="small" />
               Ver vínculos
