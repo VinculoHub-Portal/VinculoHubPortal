@@ -102,6 +102,9 @@ export async function fetchAllVinculos(token: string): Promise<VinculoExportData
     return data
   } catch (error) {
     logger.error("AdminAPI", "Failed to fetch vinculos", error)
+        throw error
+  }
+}
 export async function fetchAdminMetrics(token: string): Promise<AdminMetrics> {
   logger.info("AdminAPI", "Fetching admin metrics")
   try {
