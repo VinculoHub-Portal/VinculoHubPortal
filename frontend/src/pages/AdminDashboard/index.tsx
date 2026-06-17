@@ -8,7 +8,7 @@ import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
 import PendingActionsOutlinedIcon from "@mui/icons-material/PendingActionsOutlined";
 import { useEffect, useState } from "react";
-import { fetchAllCompanies, fetchAllNpos, fetchAdminMetrics, type AdminMetrics } from "../../api/admin";
+import { fetchAllCompanies, fetchAllNpos, fetchAllVinculos, fetchAdminMetrics, type AdminMetrics } from "../../api/admin";
 import {
   fetchAdminNpoReports,
   updateAdminNpoReportStatus,
@@ -20,6 +20,7 @@ import { FlexibleButton } from "../../components/general/FlexibleButton";
 import { Header } from "../../components/general/Header";
 import { MetricCard } from "../../components/general/MetricCard";
 import { useToast } from "../../context/ToastContext";
+import{ mapNposForCsvExport, mapVinculosForCsvExport } from "../../utils/adminExportDisplay";
 import { downloadCsv } from "../../utils/exportCsv";
 
 const PAGE_SIZE = 5;
@@ -28,7 +29,6 @@ const NPO_HEADERS = {
   id: "ID",
   name: "Nome",
   cnpj: "CNPJ",
-  cpf: "CPF",
   phone: "Telefone",
   npoSize: "Porte",
   environmental: "Ambiental",
@@ -51,6 +51,13 @@ const COMPANY_HEADERS = {
   state: "Estado",
   zipCode: "CEP",
   createdAt: "Data de Cadastro",
+}
+
+const VINCULOS_HEADERS = {
+  companyName: "Empresa",
+  npoName: "ONG",
+  projectTitle: "Projeto",
+  status: "Status",
 }
 
 const REPORT_STATUS_LABELS: Record<NpoReportResponse["status"], string> = {
@@ -175,10 +182,15 @@ export function AdminDashboard() {
     setExporting(true);
     try {
       const token = await getAccessTokenSilently();
-      const [npos, companies] = await Promise.all([fetchAllNpos(token), fetchAllCompanies(token)]);
+      const [npos, companies, vinculos] = await Promise.all([
+        fetchAllNpos(token),
+        fetchAllCompanies(token),
+        fetchAllVinculos(token),
+      ]);
       const date = new Date().toISOString().slice(0, 10);
-      downloadCsv(`ongs_${date}.csv`, npos, NPO_HEADERS);
+      downloadCsv(`ongs_${date}.csv`, mapNposForCsvExport(npos), NPO_HEADERS);
       downloadCsv(`empresas_${date}.csv`, companies, COMPANY_HEADERS);
+      downloadCsv(`vinculos_${date}.csv`, mapVinculosForCsvExport(vinculos), VINCULOS_HEADERS);
     } finally {
       setExporting(false);
     }

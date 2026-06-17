@@ -51,7 +51,8 @@ INSERT INTO scenario_user VALUES
 ('company_active', 'E2E Active Company', 'e2e.company.active@vinculohub.test', 'company', 'auth0|6a3080a930e31f8544d1008c'),
 ('company_multiple', 'E2E Multiple Company', 'e2e.company.multiple@vinculohub.test', 'company', 'auth0|6a308099cd92f499f988ff8b'),
 ('npo_projects', 'E2E Projects NPO', 'e2e.npo.projects@vinculohub.test', 'npo', 'auth0|6a308086cd92f499f988ff7b'),
-('npo_reported', 'E2E Reported NPO', 'e2e.npo.reported@vinculohub.test', 'npo', 'auth0|6a308065bf0afb7fc359689c');
+('npo_reported', 'E2E Reported NPO', 'e2e.npo.reported@vinculohub.test', 'npo', 'auth0|6a308065bf0afb7fc359689c'),
+('admin', 'E2E Admin', 'e2e.admin@vinculohub.test', 'admin', 'auth0|6a331bda1c18d613abf56327');
 INSERT INTO scenario_address VALUES
 ('company_empty', 'Sao Paulo', 'SP', 'Sao Paulo', 'Rua das Flores', '10', '01001-000'),
 ('company_active', 'Rio Grande do Sul', 'RS', 'Porto Alegre', 'Rua da Industria', '20', '90010-000'),

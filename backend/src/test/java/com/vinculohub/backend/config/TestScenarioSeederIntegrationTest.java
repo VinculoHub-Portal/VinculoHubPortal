@@ -31,11 +31,13 @@ class TestScenarioSeederIntegrationTest extends AbstractIntegrationTest {
 
         seeder.run();
         assertThat(tableCounts("users", "company", "npo", "project", "company_project"))
-                .containsExactly(5, 3, 2, 4, 4);
+                .containsExactly(6, 3, 2, 4, 4);
+        assertThat(scenarioUserAuth0("e2e.admin@vinculohub.test"))
+                .isEqualTo("auth0|6a331bda1c18d613abf56327");
         assertThat(catalogWasPersistedCorrectly()).isTrue();
         seeder.run();
         assertThat(tableCounts("users", "company", "npo", "project", "npo_report"))
-                .containsExactly(5, 3, 2, 4, 2);
+                .containsExactly(6, 3, 2, 4, 2);
 
         reset();
         insertUser(
@@ -47,7 +49,7 @@ class TestScenarioSeederIntegrationTest extends AbstractIntegrationTest {
         seeder.run();
         assertThat(scenarioUserAuth0("e2e.npo.projects@vinculohub.test"))
                 .isEqualTo("auth0|6a308086cd92f499f988ff7b");
-        assertThat(tableCounts("users", "company_project")).containsExactly(5, 4);
+        assertThat(tableCounts("users", "company_project")).containsExactly(6, 4);
 
         reset();
         insertUser("Wrong Type", "e2e.npo.projects@vinculohub.test", "auth0|wrong", "admin");

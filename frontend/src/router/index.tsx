@@ -13,6 +13,7 @@ import { CompanyPrivateInvestmentPage } from "../pages/CompanyPrivateInvestmentP
 import { OngProjectsPage } from "../pages/OngProjectsPage"
 import { OngProfilePage } from "../pages/OngProfilePage"
 import { OngPublicProfilePage } from "../pages/OngPublicProfilePage"
+import { MyRelationshipsPage } from "../pages/MyRelationshipsPage"
 import { EditProjectPage } from "../pages/EditProjectPage"
 import { EditaisMuralPage } from "../pages/EditaisMuralPage"
 import { AdminDashboard } from "../pages/AdminDashboard"
@@ -111,6 +112,14 @@ export const AppRouter = () => (
         element={
           <ProtectedRoute requiredRole="COMPANY">
             <CompanyDashboard />
+          </ProtectedRoute>
+          }
+        />
+      <Route
+        path="/meus-vinculos"
+        element={
+          <ProtectedRoute requiredRoles={["COMPANY", "NPO"]}>
+            <MyRelationshipsPage />
           </ProtectedRoute>
         }
       />

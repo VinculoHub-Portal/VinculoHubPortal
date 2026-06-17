@@ -32,7 +32,7 @@ export interface AdminVinculoPage {
 export interface NpoExportData {
   id: number
   name: string
-  cnpj: string | null
+  cnpj: string | null 
   cpf: string | null
   phone: string | null
   npoSize: "small" | "medium" | "large" | null
@@ -56,6 +56,13 @@ export interface CompanyExportData {
   state: string | null
   zipCode: string | null
   createdAt: string
+}
+
+export interface VinculoExportData {
+  companyName: string
+  npoName: string
+  projectTitle: string
+  status: "pending" | "active" | "inactive" | "negotiation"
 }
 
 export async function fetchAllNpos(token: string): Promise<NpoExportData[]> {
@@ -86,6 +93,19 @@ export async function fetchAllCompanies(token: string): Promise<CompanyExportDat
   }
 }
 
+export async function fetchAllVinculos(token: string): Promise<VinculoExportData[]> {
+  logger.info("AdminAPI", "Fetching all vinculos for export")
+  try {
+    const { data } = await api.get<VinculoExportData[]>("/api/admin/export/vinculos", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    logger.info("AdminAPI", "Vinculos fetched", { count: data.length })
+    return data
+  } catch (error) {
+    logger.error("AdminAPI", "Failed to fetch vinculos", error)
+        throw error
+  }
+}
 export async function fetchAdminMetrics(token: string): Promise<AdminMetrics> {
   logger.info("AdminAPI", "Fetching admin metrics")
   try {
