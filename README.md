@@ -63,10 +63,14 @@ Quando habilitado, o seeder garante na tabela `users`, com os tipos indicados, a
 - `e2e.company.multiple@vinculohub.test` (`company`)
 - `e2e.npo.projects@vinculohub.test` (`npo`)
 - `e2e.npo.reported@vinculohub.test` (`npo`)
+- `e2e.admin@vinculohub.test` (`admin`)
 
 Esses usuários também devem corresponder às contas de teste mantidas no Auth0. A feature usa os
 `auth0_id` declarados em `01_scenario_definitions.sql`: não chama a Management API, não cria e não
 atualiza usuários no Auth0.
+
+As roles equivalentes também precisam estar configuradas no Auth0 e emitidas no access token pelo
+claim `https://vinculohub/roles`: `COMPANY`, `NPO` ou `ADMIN`, conforme o tipo local.
 
 O catálogo inclui empresa sem vínculo, empresa com vínculo ativo, empresa com múltiplos vínculos,
 ONG com três projetos ativos e ONG com duas denúncias. A carga inteira ocorre em uma transação. Se o
