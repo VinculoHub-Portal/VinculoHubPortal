@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom"
 import { useAuth0 } from "@auth0/auth0-react"
 import { BaseButton } from "./BaseButton"
 import { AuthRedirectModal } from "../auth/AuthRedirectModal"
+import LinkIcon from "@mui/icons-material/Link"
 import LanguageIcon from "@mui/icons-material/Language"
 import MenuIcon from "@mui/icons-material/Menu"
 import CloseIcon from "@mui/icons-material/Close"
@@ -72,7 +73,16 @@ export function Header() {
           VinculoHub<span className="text-vinculo-green">Portal</span>
         </Link>
 
-        <div className="hidden md:flex gap-4">
+        <div className="hidden items-center gap-4 md:flex">
+          {isPlatformUser && (
+            <Link
+              to="/meus-vinculos"
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+            >
+              <LinkIcon fontSize="small" />
+              Vínculos
+            </Link>
+          )}
           {!isPlatformUser && (
             <Link to="/cadastro/instituicao">
               <BaseButton
@@ -102,6 +112,17 @@ export function Header() {
 
       {isMenuOpen && (
         <div className="md:hidden bg-vinculo-dark border-t border-white/10 px-6 py-8 flex flex-col gap-4 animate-in slide-in-from-top duration-300">
+          {isPlatformUser && (
+            <Link
+              to="/meus-vinculos"
+              onClick={() => setIsMenuOpen(false)}
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-3 text-base font-medium text-white transition hover:bg-white/10"
+            >
+              <LinkIcon fontSize="small" />
+              Vínculos
+            </Link>
+          )}
+
           {!isPlatformUser && (
             <BaseButton
               variant="outline"
