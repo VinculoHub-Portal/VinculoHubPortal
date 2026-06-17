@@ -15,6 +15,9 @@ public interface EditalRepository extends JpaRepository<Edital, Long> {
 
     Page<Edital> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
+    @Query("SELECT COUNT(e) FROM Edital e WHERE e.expiredAt IS NULL OR e.expiredAt > :now")
+    long countActive(@Param("now") LocalDateTime now);
+
     @Query(
             value =
                     "SELECT e FROM Edital e WHERE e.expiredAt IS NULL OR e.expiredAt > :now"

@@ -18,6 +18,7 @@ services:
       - AUTH0_ISSUER_URI=${AUTH0_ISSUER_URI}
       - AUTH0_AUDIENCE=${AUTH0_AUDIENCE}
       - AUTH0_ROLES_CLAIM=${AUTH0_ROLES_CLAIM:-https://vinculohub/roles}
+      - APP_TEST_SCENARIOS_ENABLED=${APP_TEST_SCENARIOS_ENABLED:-false}
     depends_on:
       db:
         condition: service_healthy
