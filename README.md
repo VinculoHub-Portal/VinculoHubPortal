@@ -47,6 +47,34 @@ Para parar todos os serviços, execute: `docker compose down`.
 
 ---
 
+## Cenários de dados para desenvolvimento e E2E
+
+O compose principal pode carregar um catálogo fixo de empresas, ONGs, projetos, vínculos e
+denúncias em um banco funcionalmente vazio. A carga é opcional:
+
+```dotenv
+APP_TEST_SCENARIOS_ENABLED=true
+```
+
+Quando habilitado, o seeder garante na tabela `users`, com os tipos indicados, as contas:
+
+- `e2e.company.empty@vinculohub.test` (`company`)
+- `e2e.company.active@vinculohub.test` (`company`)
+- `e2e.company.multiple@vinculohub.test` (`company`)
+- `e2e.npo.projects@vinculohub.test` (`npo`)
+- `e2e.npo.reported@vinculohub.test` (`npo`)
+
+Esses usuários também devem corresponder às contas de teste mantidas no Auth0. A feature usa os
+`auth0_id` declarados em `01_scenario_definitions.sql`: não chama a Management API, não cria e não
+atualiza usuários no Auth0.
+
+O catálogo inclui empresa sem vínculo, empresa com vínculo ativo, empresa com múltiplos vínculos,
+ONG com três projetos ativos e ONG com duas denúncias. A carga inteira ocorre em uma transação. Se o
+catálogo funcional já estiver carregado exatamente, a aplicação sobe sem reinserir dados; se houver
+dados funcionais parciais ou diferentes, a execução falha com mensagem de conflito.
+
+---
+
 ## 🛠️ Rodando Manualmente (Sem Docker)
 
 Se preferir rodar os serviços individualmente para desenvolvimento mais focado:
