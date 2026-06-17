@@ -53,14 +53,6 @@ public class CompanyProject {
     @Builder.Default
     private RelationshipStatus status = RelationshipStatus.pending;
 
-    @Column(name = "company_confirmed", nullable = false)
-    @Builder.Default
-    private Boolean companyConfirmed = false;
-
-    @Column(name = "npo_confirmed", nullable = false)
-    @Builder.Default
-    private Boolean npoConfirmed = false;
-
     @Enumerated(EnumType.STRING)
     @JdbcType(PostgreSQLEnumJdbcType.class)
     @Column(name = "initiator_type", columnDefinition = "initiator_type")

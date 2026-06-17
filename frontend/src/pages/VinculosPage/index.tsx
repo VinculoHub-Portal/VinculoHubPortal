@@ -5,14 +5,14 @@ import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty"
 import TaskAltIcon from "@mui/icons-material/TaskAlt"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
-  efetivarParceria,
-  fetchMeVinculos,
-  type VinculoResponse,
+  confirmRelationship,
+  fetchMyRelationships,
+  type RelationshipListItemResponse,
 } from "../../api/vinculos"
 import { BackLink } from "../../components/general/BackLink"
 import { Header } from "../../components/general/Header"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "Pendente",
@@ -40,28 +40,31 @@ export function VinculosPage({ role, dashboardPath }: VinculosPageProps) {
   const [actionMessages, setActionMessages] = useState<Record<string, string>>({})
   const [actionErrors, setActionErrors] = useState<Record<string, string>>({})
 
-  const { data: vinculos = [], isLoading, isError } = useQuery({
-    queryKey: ["vinculos", "me"],
+  const { data: relationships = [], isLoading, isError } = useQuery({
+    queryKey: ["relationships", "me"],
     queryFn: async () => {
       const token = await getAccessTokenSilently()
-      return fetchMeVinculos(token)
+      return fetchMyRelationships(token)
     },
   })
 
   const mutation = useMutation({
     mutationFn: async ({ companyId, projectId }: { companyId: number; projectId: number }) => {
       const token = await getAccessTokenSilently()
-      return efetivarParceria(companyId, projectId, token)
+      return confirmRelationship(companyId, projectId, token)
     },
-    onSuccess: (data) => {
-      const key = `${data.companyId}-${data.projectId}`
-      setActionMessages((prev) => ({ ...prev, [key]: data.message }))
+    onSuccess: (_data, variables) => {
+      const key = `${variables.companyId}-${variables.projectId}`
+      setActionMessages((prev) => ({
+        ...prev,
+        [key]: "Confirmação registrada com sucesso! Quando ambas as partes confirmarem, o vínculo será ativado.",
+      }))
       setActionErrors((prev) => {
         const next = { ...prev }
         delete next[key]
         return next
       })
-      void queryClient.invalidateQueries({ queryKey: ["vinculos", "me"] })
+      void queryClient.invalidateQueries({ queryKey: ["relationships", "me"] })
     },
     onError: (_error, variables) => {
       const key = `${variables.companyId}-${variables.projectId}`
@@ -72,8 +75,8 @@ export function VinculosPage({ role, dashboardPath }: VinculosPageProps) {
     },
   })
 
-  const negotiationVinculos = vinculos.filter((v) => v.status === "negotiation")
-  const otherVinculos = vinculos.filter((v) => v.status !== "negotiation")
+  const negotiationRelationships = relationships.filter((r) => r.status === "negotiation")
+  const otherRelationships = relationships.filter((r) => r.status !== "negotiation")
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
@@ -107,29 +110,32 @@ export function VinculosPage({ role, dashboardPath }: VinculosPageProps) {
           </div>
         )}
 
-        {!isLoading && !isError && vinculos.length === 0 && (
+        {!isLoading && !isError && relationships.length === 0 && (
           <EmptyState role={role} />
         )}
 
-        {!isLoading && !isError && negotiationVinculos.length > 0 && (
+        {!isLoading && !isError && negotiationRelationships.length > 0 && (
           <section className="flex flex-col gap-4">
             <h2 className="text-base font-semibold text-vinculo-dark">
               Aguardando Efetivação
             </h2>
-            {negotiationVinculos.map((v) => {
-              const key = `${v.companyId}-${v.projectId}`
+            {negotiationRelationships.map((r) => {
+              const key = `${r.partnerInstitutionId}-${r.projectId}`
               return (
-                <VinculoCard
+                <RelationshipCard
                   key={key}
-                  vinculo={v}
-                  role={role}
-                  isLoading={mutation.isPending && mutation.variables?.companyId === v.companyId && mutation.variables?.projectId === v.projectId}
+                  relationship={r}
+                  isLoading={
+                    mutation.isPending &&
+                    mutation.variables?.companyId === r.partnerInstitutionId &&
+                    mutation.variables?.projectId === r.projectId
+                  }
                   successMessage={actionMessages[key]}
                   errorMessage={actionErrors[key]}
-                  onEfetivar={() =>
+                  onConfirm={() =>
                     mutation.mutate({
-                      companyId: v.companyId,
-                      projectId: v.projectId,
+                      companyId: r.partnerInstitutionId,
+                      projectId: r.projectId,
                     })
                   }
                 />
@@ -138,18 +144,17 @@ export function VinculosPage({ role, dashboardPath }: VinculosPageProps) {
           </section>
         )}
 
-        {!isLoading && !isError && otherVinculos.length > 0 && (
+        {!isLoading && !isError && otherRelationships.length > 0 && (
           <section className="flex flex-col gap-4">
             <h2 className="text-base font-semibold text-vinculo-dark">
               Outros Vínculos
             </h2>
-            {otherVinculos.map((v) => {
-              const key = `${v.companyId}-${v.projectId}`
+            {otherRelationships.map((r) => {
+              const key = `${r.partnerInstitutionId}-${r.projectId}`
               return (
-                <VinculoCard
+                <RelationshipCard
                   key={key}
-                  vinculo={v}
-                  role={role}
+                  relationship={r}
                   isLoading={false}
                   successMessage={actionMessages[key]}
                   errorMessage={actionErrors[key]}
@@ -163,31 +168,22 @@ export function VinculosPage({ role, dashboardPath }: VinculosPageProps) {
   )
 }
 
-interface VinculoCardProps {
-  vinculo: VinculoResponse
-  role: "COMPANY" | "NPO"
+interface RelationshipCardProps {
+  relationship: RelationshipListItemResponse
   isLoading: boolean
   successMessage?: string
   errorMessage?: string
-  onEfetivar?: () => void
+  onConfirm?: () => void
 }
 
-function VinculoCard({
-  vinculo,
-  role,
+function RelationshipCard({
+  relationship: r,
   isLoading,
   successMessage,
   errorMessage,
-  onEfetivar,
-}: VinculoCardProps) {
-  const partnerLabel = role === "COMPANY" ? "ONG" : "Empresa"
-  const partnerName = role === "COMPANY" ? vinculo.npoName : vinculo.companyName
-  const canEfetivar =
-    vinculo.status === "negotiation" && !vinculo.currentUserConfirmed && !!onEfetivar
-  const alreadyConfirmed = vinculo.status === "negotiation" && vinculo.currentUserConfirmed
-
-  const companyConfirmedLabel = vinculo.companyConfirmed ? "✓ Empresa confirmou" : "○ Empresa pendente"
-  const npoConfirmedLabel = vinculo.npoConfirmed ? "✓ ONG confirmou" : "○ ONG pendente"
+  onConfirm,
+}: RelationshipCardProps) {
+  const canEfetivar = r.canConfirm && !!onConfirm && !successMessage
 
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -195,53 +191,65 @@ function VinculoCard({
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 flex-wrap">
             <span
-              className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_COLORS[vinculo.status] ?? "bg-slate-100 text-slate-600"}`}
+              className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_COLORS[r.status] ?? "bg-slate-100 text-slate-600"}`}
             >
-              {STATUS_LABEL[vinculo.status] ?? vinculo.status}
+              {STATUS_LABEL[r.status] ?? r.status}
             </span>
           </div>
-          <h3 className="mt-1 text-base font-semibold text-vinculo-dark">
-            {vinculo.projectTitle}
-          </h3>
+          <h3 className="mt-1 text-base font-semibold text-vinculo-dark">{r.projectName}</h3>
           <p className="text-sm text-slate-500">
-            {partnerLabel}: <span className="font-medium text-slate-700">{partnerName}</span>
+            Parceiro:{" "}
+            <span className="font-medium text-slate-700">{r.partnerInstitutionName}</span>
           </p>
+          {r.partnerContactEmail && (
+            <p className="text-sm text-slate-500">
+              Contato:{" "}
+              <a
+                href={`mailto:${r.partnerContactEmail}`}
+                className="font-medium text-vinculo-dark underline-offset-2 hover:underline"
+              >
+                {r.partnerContactEmail}
+              </a>
+              {r.partnerContactPhone && (
+                <span className="ml-2 text-slate-400">· {r.partnerContactPhone}</span>
+              )}
+            </p>
+          )}
         </div>
 
-        {vinculo.status === "negotiation" && (
-          <div className="flex flex-col items-end gap-2 shrink-0">
-            {canEfetivar && (
-              <button
-                type="button"
-                disabled={isLoading}
-                onClick={onEfetivar}
-                className="inline-flex items-center gap-1.5 rounded-full bg-vinculo-dark px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <HandshakeOutlinedIcon sx={{ fontSize: 16 }} aria-hidden />
-                {isLoading ? "Confirmando..." : "Efetivar Parceria"}
-              </button>
-            )}
-            {alreadyConfirmed && !successMessage && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-xs font-medium text-emerald-700">
-                <CheckCircleOutlineIcon sx={{ fontSize: 14 }} aria-hidden />
-                Você já confirmou
-              </span>
-            )}
-          </div>
-        )}
+        <div className="flex flex-col items-end gap-2 shrink-0">
+          {canEfetivar && (
+            <button
+              type="button"
+              disabled={isLoading}
+              onClick={onConfirm}
+              className="inline-flex items-center gap-1.5 rounded-full bg-vinculo-dark px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <HandshakeOutlinedIcon sx={{ fontSize: 16 }} aria-hidden />
+              {isLoading ? "Confirmando..." : "Efetivar Parceria"}
+            </button>
+          )}
 
-        {vinculo.status === "active" && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-xs font-medium text-emerald-700 shrink-0">
-            <TaskAltIcon sx={{ fontSize: 14 }} aria-hidden />
-            Ativo
-          </span>
-        )}
+          {r.status === "negotiation" && !r.canConfirm && !successMessage && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-xs font-medium text-emerald-700">
+              <CheckCircleOutlineIcon sx={{ fontSize: 14 }} aria-hidden />
+              Você já confirmou
+            </span>
+          )}
+
+          {r.status === "active" && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-xs font-medium text-emerald-700">
+              <TaskAltIcon sx={{ fontSize: 14 }} aria-hidden />
+              Ativo
+            </span>
+          )}
+        </div>
       </div>
 
-      {vinculo.status === "negotiation" && (
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-slate-100 pt-3">
-          <ConfirmationBadge confirmed={vinculo.companyConfirmed} label={companyConfirmedLabel} />
-          <ConfirmationBadge confirmed={vinculo.npoConfirmed} label={npoConfirmedLabel} />
+      {r.status === "negotiation" && (
+        <div className="mt-3 flex items-center gap-1.5 border-t border-slate-100 pt-3 text-xs text-slate-400">
+          <HourglassEmptyIcon sx={{ fontSize: 14 }} aria-hidden />
+          <span>Aguardando confirmação de ambas as partes para ativar o vínculo.</span>
         </div>
       )}
 
@@ -257,24 +265,7 @@ function VinculoCard({
           <p className="text-sm font-medium text-red-700">{errorMessage}</p>
         </div>
       )}
-
-      {vinculo.status === "negotiation" && !vinculo.companyConfirmed && !vinculo.npoConfirmed && !successMessage && (
-        <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-400">
-          <HourglassEmptyIcon sx={{ fontSize: 14 }} aria-hidden />
-          <span>Aguardando confirmação de ambas as partes para ativar o vínculo.</span>
-        </div>
-      )}
     </article>
-  )
-}
-
-function ConfirmationBadge({ confirmed, label }: { confirmed: boolean; label: string }) {
-  return (
-    <span
-      className={`text-xs font-medium ${confirmed ? "text-emerald-600" : "text-slate-400"}`}
-    >
-      {label}
-    </span>
   )
 }
 
@@ -285,7 +276,7 @@ function EmptyState({ role }: { role: "COMPANY" | "NPO" }) {
       <h2 className="mt-3 text-lg font-semibold text-vinculo-dark">Nenhum vínculo encontrado</h2>
       <p className="mt-2 text-sm text-slate-500">
         {role === "COMPANY"
-          ? "Sua empresa ainda não possui vínculos com ONGs. Navegue pelos projetos para iniciar uma parceria."
+          ? "Sua empresa ainda não possui vínculos com ONGs."
           : "Seus projetos ainda não possuem vínculos com empresas."}
       </p>
     </div>

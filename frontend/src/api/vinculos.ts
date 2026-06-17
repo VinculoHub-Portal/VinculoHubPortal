@@ -3,59 +3,52 @@ import { logger } from "../utils/logger"
 
 export type RelationshipStatus = "pending" | "active" | "inactive" | "negotiation"
 
-export interface VinculoResponse {
-  companyId: number
+export interface RelationshipListItemResponse {
   projectId: number
-  projectTitle: string
-  companyName: string
-  npoName: string
-  companyEmail: string | null
-  npoEmail: string | null
+  projectName: string
+  partnerInstitutionId: number
+  partnerInstitutionName: string
   status: RelationshipStatus
-  companyConfirmed: boolean
-  npoConfirmed: boolean
-  currentUserConfirmed: boolean
+  partnerContactEmail: string | null
+  partnerContactPhone: string | null
+  canRespond: boolean
+  canConfirm: boolean
 }
 
-export interface EfetivarParceiraResponse {
-  companyId: number
-  projectId: number
-  status: RelationshipStatus
-  companyConfirmed: boolean
-  npoConfirmed: boolean
-  message: string
-}
-
-export async function fetchMeVinculos(token: string): Promise<VinculoResponse[]> {
-  logger.info("VinculosAPI", "Fetching vinculos for current user")
+export async function fetchMyRelationships(
+  token: string,
+  status?: RelationshipStatus,
+): Promise<RelationshipListItemResponse[]> {
+  logger.info("VinculosAPI", "Fetching relationships for current user")
   try {
-    const { data } = await api.get<VinculoResponse[]>("/api/me/vinculos", {
+    const params = status ? { status } : {}
+    const { data } = await api.get<RelationshipListItemResponse[]>("/api/relationships", {
       headers: { Authorization: `Bearer ${token}` },
+      params,
     })
-    logger.info("VinculosAPI", "Vinculos fetched", data)
+    logger.info("VinculosAPI", "Relationships fetched", data)
     return data
   } catch (error) {
-    logger.error("VinculosAPI", "Failed to fetch vinculos", error)
+    logger.error("VinculosAPI", "Failed to fetch relationships", error)
     throw error
   }
 }
 
-export async function efetivarParceria(
+export async function confirmRelationship(
   companyId: number,
   projectId: number,
   token: string,
-): Promise<EfetivarParceiraResponse> {
-  logger.info("VinculosAPI", `Efetivar parceria companyId=${companyId} projectId=${projectId}`)
+): Promise<void> {
+  logger.info("VinculosAPI", `Confirming relationship companyId=${companyId} projectId=${projectId}`)
   try {
-    const { data } = await api.post<EfetivarParceiraResponse>(
-      `/api/me/vinculos/${companyId}/${projectId}/efetivar`,
+    await api.post(
+      `/api/relationships/${companyId}/${projectId}/confirm`,
       null,
       { headers: { Authorization: `Bearer ${token}` } },
     )
-    logger.info("VinculosAPI", "Efetivar parceria response", data)
-    return data
+    logger.info("VinculosAPI", "Relationship confirmed")
   } catch (error) {
-    logger.error("VinculosAPI", "Failed to efetivar parceria", error)
+    logger.error("VinculosAPI", "Failed to confirm relationship", error)
     throw error
   }
 }
