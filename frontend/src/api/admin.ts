@@ -1,6 +1,34 @@
 import { api } from "../services/api"
 import { logger } from "../utils/logger"
 
+export interface AdminMetrics {
+  totalNpos: number
+  publishedEditais: number
+  activeVinculos: number
+  pendingNotifications: number
+}
+
+export type VinculoStatus = "pending" | "active" | "inactive" | "negotiation"
+
+export interface AdminVinculoItem {
+  companyId: number
+  companyName: string
+  projectId: number
+  projectTitle: string
+  npoId: number
+  npoName: string
+  status: VinculoStatus
+  createdAt: string
+}
+
+export interface AdminVinculoPage {
+  content: AdminVinculoItem[]
+  totalElements: number
+  totalPages: number
+  number: number
+  size: number
+}
+
 export interface NpoExportData {
   id: number
   name: string
@@ -54,6 +82,39 @@ export async function fetchAllCompanies(token: string): Promise<CompanyExportDat
     return data
   } catch (error) {
     logger.error("AdminAPI", "Failed to fetch companies", error)
+    throw error
+  }
+}
+
+export async function fetchAdminMetrics(token: string): Promise<AdminMetrics> {
+  logger.info("AdminAPI", "Fetching admin metrics")
+  try {
+    const { data } = await api.get<AdminMetrics>("/api/admin/metrics", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    logger.info("AdminAPI", "Admin metrics fetched", data)
+    return data
+  } catch (error) {
+    logger.error("AdminAPI", "Failed to fetch admin metrics", error)
+    throw error
+  }
+}
+
+export async function fetchAdminVinculos(
+  token: string,
+  page = 0,
+  size = 20,
+): Promise<AdminVinculoPage> {
+  logger.info("AdminAPI", "Fetching admin vinculos", { page, size })
+  try {
+    const { data } = await api.get<AdminVinculoPage>("/api/admin/vinculos", {
+      headers: { Authorization: `Bearer ${token}` },
+      params: { page, size, sort: "createdAt,desc" },
+    })
+    logger.info("AdminAPI", "Admin vinculos fetched", { total: data.totalElements })
+    return data
+  } catch (error) {
+    logger.error("AdminAPI", "Failed to fetch admin vinculos", error)
     throw error
   }
 }
