@@ -8,8 +8,7 @@ import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
 import PendingActionsOutlinedIcon from "@mui/icons-material/PendingActionsOutlined";
 import { useEffect, useState } from "react";
-import { fetchAllCompanies, fetchAllNpos, fetchAllVinculos } from "../../api/admin";
-import { fetchAllCompanies, fetchAllNpos, fetchAdminMetrics, type AdminMetrics } from "../../api/admin";
+import { fetchAllCompanies, fetchAllNpos, fetchAllVinculos, fetchAdminMetrics, type AdminMetrics } from "../../api/admin";
 import {
   fetchAdminNpoReports,
   updateAdminNpoReportStatus,
