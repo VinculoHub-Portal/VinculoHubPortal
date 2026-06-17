@@ -2,6 +2,7 @@
 package com.vinculohub.backend.repository;
 
 import com.vinculohub.backend.model.NpoReport;
+import com.vinculohub.backend.model.enums.NpoReportStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -17,4 +18,6 @@ public interface NpoReportRepository
     @Override
     @EntityGraph(attributePaths = {"npo", "npo.npoUser", "reporterCompany", "reporterUser"})
     Page<NpoReport> findAll(Specification<NpoReport> spec, Pageable pageable);
+
+    long countByStatus(NpoReportStatus status);
 }

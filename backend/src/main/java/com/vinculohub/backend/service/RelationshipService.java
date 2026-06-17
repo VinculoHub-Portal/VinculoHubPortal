@@ -2,6 +2,7 @@
 package com.vinculohub.backend.service;
 
 import com.vinculohub.backend.dto.CreateRelationshipRequest;
+import com.vinculohub.backend.dto.OverduePartnershipAlertResponse;
 import com.vinculohub.backend.dto.RelationshipListItemResponse;
 import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.ForbiddenException;
@@ -57,6 +58,29 @@ public class RelationshipService {
         boolean isCompany() {
             return role == ActorRole.COMPANY;
         }
+    }
+
+    // ----------------------------------------------------------------------------------------
+    // ADM-06 — overdue pending alert (admin)
+    // ----------------------------------------------------------------------------------------
+
+    private static final int OVERDUE_DAYS = 7;
+
+    @Transactional(readOnly = true)
+    public List<OverduePartnershipAlertResponse> listOverdueRelationshipsForAdmin() {
+        LocalDateTime threshold = LocalDateTime.now().minusDays(OVERDUE_DAYS);
+        return companyProjectRepository.findOverduePendingRelationships(threshold).stream()
+                .map(
+                        cp ->
+                                new OverduePartnershipAlertResponse(
+                                        cp.getCompany().getId(),
+                                        companyName(cp.getCompany()),
+                                        cp.getProject().getNpo().getId(),
+                                        npoName(cp.getProject().getNpo()),
+                                        cp.getProject().getId(),
+                                        cp.getProject().getTitle(),
+                                        cp.getCreatedAt()))
+                .toList();
     }
 
     // ----------------------------------------------------------------------------------------

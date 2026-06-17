@@ -5,9 +5,12 @@ import com.vinculohub.backend.model.CompanyProject;
 import com.vinculohub.backend.model.CompanyProjectId;
 import com.vinculohub.backend.model.enums.RelationshipStatus;
 import com.vinculohub.backend.repository.projection.CompanySupportedProjectsSummaryProjection;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -80,6 +83,22 @@ public interface CompanyProjectRepository extends JpaRepository<CompanyProject, 
             @Param("companyId") Integer companyId, @Param("projectId") Long projectId);
 
     @Query(
+            """
+            SELECT cp
+            FROM CompanyProject cp
+            JOIN FETCH cp.company c
+            LEFT JOIN FETCH c.user
+            JOIN FETCH cp.project p
+            JOIN FETCH p.npo n
+            LEFT JOIN FETCH n.npoUser
+            WHERE cp.status = com.vinculohub.backend.model.enums.RelationshipStatus.pending
+              AND cp.createdAt <= :threshold
+            ORDER BY cp.createdAt ASC
+            """)
+    List<CompanyProject> findOverduePendingRelationships(
+            @Param("threshold") LocalDateTime threshold);
+
+    @Query(
             value =
                     """
                     SELECT
@@ -103,4 +122,17 @@ public interface CompanyProjectRepository extends JpaRepository<CompanyProject, 
             nativeQuery = true)
     CompanySupportedProjectsSummaryProjection getSupportedProjectsSummaryByCompanyId(
             @Param("companyId") Integer companyId);
+
+    long countByStatus(RelationshipStatus status);
+
+    @Query(
+            """
+            SELECT cp
+            FROM CompanyProject cp
+            JOIN FETCH cp.company c
+            JOIN FETCH cp.project p
+            JOIN FETCH p.npo n
+            ORDER BY cp.createdAt DESC
+            """)
+    Page<CompanyProject> findAllForAdmin(Pageable pageable);
 }

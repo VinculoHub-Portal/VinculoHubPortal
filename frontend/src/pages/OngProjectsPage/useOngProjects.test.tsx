@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   getAccessTokenSilentlyMock: vi.fn(),
   fetchAuthenticatedProfileMock: vi.fn(),
   fetchProjectsMock: vi.fn(),
+  fetchNpoProjectSummaryMock: vi.fn(),
 }))
 
 vi.mock("@auth0/auth0-react", () => ({
@@ -22,6 +23,7 @@ vi.mock("../../api/me", () => ({
 
 vi.mock("../../api/projects", () => ({
   fetchProjects: mocks.fetchProjectsMock,
+  fetchNpoProjectSummary: mocks.fetchNpoProjectSummaryMock,
 }))
 
 function HookConsumer() {
@@ -50,6 +52,7 @@ describe("useOngProjects", () => {
     vi.clearAllMocks()
     mocks.getAccessTokenSilentlyMock.mockResolvedValue("token")
     mocks.fetchAuthenticatedProfileMock.mockResolvedValue({ npoId: 42 })
+    mocks.fetchNpoProjectSummaryMock.mockResolvedValue({ total: 1, taxIncentiveLaw: 0, socialInvestmentLaw: 1 })
     mocks.fetchProjectsMock.mockResolvedValue({
       content: [
         {
@@ -84,7 +87,7 @@ describe("useOngProjects", () => {
 
     expect(mocks.fetchAuthenticatedProfileMock).toHaveBeenCalledWith("token")
     expect(mocks.fetchProjectsMock).toHaveBeenCalledWith(
-      { npoId: 42, size: 50 },
+      { npoId: 42, size: 10, page: 0 },
       "token",
     )
     expect(screen.getByText("Projeto Integrado")).toBeInTheDocument()

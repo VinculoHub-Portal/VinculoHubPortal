@@ -17,6 +17,8 @@ import { EditProjectPage } from "../pages/EditProjectPage"
 import { EditaisMuralPage } from "../pages/EditaisMuralPage"
 import { AdminDashboard } from "../pages/AdminDashboard"
 import { VinculosPage } from "../pages/VinculosPage"
+import { AdminOngsList } from "../pages/AdminOngsList"
+import { AdminVinculosList } from "../pages/AdminVinculosList"
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -40,6 +42,22 @@ export const AppRouter = () => (
         element={
           <ProtectedRoute requiredRole="ADMIN">
             <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/ongs"
+        element={
+          <ProtectedRoute requiredRole="ADMIN">
+            <AdminOngsList />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/vinculos"
+        element={
+          <ProtectedRoute requiredRole="ADMIN">
+            <AdminVinculosList />
           </ProtectedRoute>
         }
       />
