@@ -38,6 +38,7 @@ export type VinculoInfoBanner = VinculoInfoBannerWarning | VinculoInfoBannerSucc
 export interface VinculoConnection {
   id: string
   projectId: number
+  companyId: number | null
   projectName: string
   partnerInstitutionName: string
   partnerType: VinculoPartnerType
@@ -151,7 +152,7 @@ export function mapRelationshipToVinculo(
       prefix: partnerType === "ONG" ? "A ONG " : "A Empresa ",
       highlightedPartner: item.partnerInstitutionName,
       suffix:
-        ' demonstrou interesse em sua organização. Clique em "Confirmar Primeiro Aperto de Mão" para iniciar a negociação.',
+        ' demonstrou interesse em sua organização. Clique em "Aceitar Contato" para iniciar a negociação.',
     }
   } else if (status === "pending_waiting") {
     infoBanner = {
@@ -169,6 +170,7 @@ export function mapRelationshipToVinculo(
   return {
     id: `${item.partnerInstitutionId}-${item.projectId}`,
     projectId: item.projectId,
+    companyId: viewerType === "npo" ? item.partnerInstitutionId : null,
     projectName: item.projectName,
     partnerInstitutionName: item.partnerInstitutionName,
     partnerType,

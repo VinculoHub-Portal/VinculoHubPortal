@@ -5,9 +5,9 @@ export type RelationshipStatus = "pending" | "active" | "inactive" | "negotiatio
 
 /**
  * One row of the "Meus Vínculos" panel (VNC-01), as returned by
- * {@code GET /api/relationships}. {@code partnerContactEmail}/{@code partnerContactPhone} are only
- * populated once the relationship reaches {@code negotiation} or {@code active}; {@code canRespond}
- * and {@code canConfirm} tell the caller which actions it may take in this relationship.
+ * GET /api/relationships. partnerContactEmail/partnerContactPhone are only
+ * populated once the relationship reaches negotiation or active; canRespond
+ * and canConfirm tell the caller which actions it may take in this relationship.
  */
 export interface RelationshipListItem {
   projectId: number
@@ -21,20 +21,71 @@ export interface RelationshipListItem {
   canConfirm: boolean
 }
 
-export async function fetchMyRelationships(
+export interface RelationshipListParams {
+  status?: RelationshipStatus
+}
+
+export async function fetchRelationships(
+  params: RelationshipListParams = {},
   token: string,
-  status?: RelationshipStatus,
 ): Promise<RelationshipListItem[]> {
-  logger.info("RelationshipsAPI", "Fetching my relationships", { status })
+  logger.info("RelationshipsAPI", "Fetching relationships", params)
+
   try {
     const { data } = await api.get<RelationshipListItem[]>("/api/relationships", {
+      params,
       headers: { Authorization: `Bearer ${token}` },
-      params: status ? { status } : undefined,
     })
+
     logger.info("RelationshipsAPI", "Relationships fetched", { count: data.length })
     return data
   } catch (error) {
     logger.error("RelationshipsAPI", "Failed to fetch relationships", error)
+    throw error
+  }
+}
+
+export async function fetchMyRelationships(
+  token: string,
+  status?: RelationshipStatus,
+): Promise<RelationshipListItem[]> {
+  return fetchRelationships(status ? { status } : {}, token)
+}
+
+export async function acceptRelationship(
+  companyId: number,
+  projectId: number,
+  token: string,
+): Promise<void> {
+  logger.info("RelationshipsAPI", "Accepting relationship", { companyId, projectId })
+
+  try {
+    await api.post(`/api/relationships/${companyId}/${projectId}/accept`, undefined, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
+    logger.info("RelationshipsAPI", "Relationship accepted", { companyId, projectId })
+  } catch (error) {
+    logger.error("RelationshipsAPI", "Failed to accept relationship", error)
+    throw error
+  }
+}
+
+export async function rejectRelationship(
+  companyId: number,
+  projectId: number,
+  token: string,
+): Promise<void> {
+  logger.info("RelationshipsAPI", "Rejecting relationship", { companyId, projectId })
+
+  try {
+    await api.post(`/api/relationships/${companyId}/${projectId}/reject`, undefined, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
+    logger.info("RelationshipsAPI", "Relationship rejected", { companyId, projectId })
+  } catch (error) {
+    logger.error("RelationshipsAPI", "Failed to reject relationship", error)
     throw error
   }
 }
