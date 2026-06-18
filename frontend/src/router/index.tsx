@@ -13,12 +13,16 @@ import { CompanyPrivateInvestmentPage } from "../pages/CompanyPrivateInvestmentP
 import { OngProjectsPage } from "../pages/OngProjectsPage"
 import { OngProfilePage } from "../pages/OngProfilePage"
 import { OngPublicProfilePage } from "../pages/OngPublicProfilePage"
+import { MyRelationshipsPage } from "../pages/MyRelationshipsPage"
 import { EditProjectPage } from "../pages/EditProjectPage"
 import { EditaisMuralPage } from "../pages/EditaisMuralPage"
 import { AdminDashboard } from "../pages/AdminDashboard"
 import { AdminNotificationsPage } from "../pages/AdminNotificationsPage"
 import { AdminOngsPage } from "../pages/AdminOngsPage"
 import { AdminVinculosPage } from "../pages/AdminVinculosPage"
+import { RelationshipsPage } from "../pages/RelationshipsPage"
+import { AdminOngsList } from "../pages/AdminOngsList"
+import { AdminVinculosList } from "../pages/AdminVinculosList"
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -50,6 +54,7 @@ export const AppRouter = () => (
         element={
           <ProtectedRoute requiredRole="ADMIN">
             <AdminOngsPage />
+            <AdminOngsList />
           </ProtectedRoute>
         }
       />
@@ -66,6 +71,7 @@ export const AppRouter = () => (
         element={
           <ProtectedRoute requiredRole="ADMIN">
             <AdminNotificationsPage />
+            <AdminVinculosList />
           </ProtectedRoute>
         }
       />
@@ -115,10 +121,26 @@ export const AppRouter = () => (
         }
       />
       <Route
+        path="/vinculos"
+        element={
+          <ProtectedRoute requiredRoles={["NPO", "COMPANY"]}>
+            <RelationshipsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/empresa/dashboard"
         element={
           <ProtectedRoute requiredRole="COMPANY">
             <CompanyDashboard />
+          </ProtectedRoute>
+          }
+        />
+      <Route
+        path="/meus-vinculos"
+        element={
+          <ProtectedRoute requiredRoles={["COMPANY", "NPO"]}>
+            <MyRelationshipsPage />
           </ProtectedRoute>
         }
       />

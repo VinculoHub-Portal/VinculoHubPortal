@@ -84,6 +84,16 @@ public interface CompanyProjectRepository extends JpaRepository<CompanyProject, 
 
     @Query(
             """
+            SELECT cp FROM CompanyProject cp
+            JOIN FETCH cp.company c
+            JOIN FETCH cp.project p
+            JOIN FETCH p.npo n
+            ORDER BY c.legalName, n.name, p.title
+            """)
+    List<CompanyProject> findAllForExport();
+
+    @Query(
+            """
             SELECT cp
             FROM CompanyProject cp
             JOIN FETCH cp.company c
@@ -181,4 +191,17 @@ WHERE (
             nativeQuery = true)
     CompanySupportedProjectsSummaryProjection getSupportedProjectsSummaryByCompanyId(
             @Param("companyId") Integer companyId);
+
+    long countByStatus(RelationshipStatus status);
+
+    @Query(
+            """
+            SELECT cp
+            FROM CompanyProject cp
+            JOIN FETCH cp.company c
+            JOIN FETCH cp.project p
+            JOIN FETCH p.npo n
+            ORDER BY cp.createdAt DESC
+            """)
+    Page<CompanyProject> findAllForAdmin(Pageable pageable);
 }
