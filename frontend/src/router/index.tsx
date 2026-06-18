@@ -18,6 +18,7 @@ import { EditProjectPage } from "../pages/EditProjectPage"
 import { EditaisMuralPage } from "../pages/EditaisMuralPage"
 import { AdminDashboard } from "../pages/AdminDashboard"
 import { VinculosPage } from "../pages/VinculosPage"
+import { RelationshipsPage } from "../pages/RelationshipsPage"
 import { AdminOngsList } from "../pages/AdminOngsList"
 import { AdminVinculosList } from "../pages/AdminVinculosList"
 
@@ -104,6 +105,14 @@ export const AppRouter = () => (
         element={
           <ProtectedRoute requiredRoles={["ADMIN", "NPO"]}>
             <EditaisMuralPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/vinculos"
+        element={
+          <ProtectedRoute requiredRoles={["NPO", "COMPANY"]}>
+            <RelationshipsPage />
           </ProtectedRoute>
         }
       />

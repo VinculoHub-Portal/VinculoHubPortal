@@ -21,10 +21,16 @@ import { useAuth0 } from "@auth0/auth0-react"
 import { useMemo, useState, type ReactNode } from "react"
 import type { NavigateFunction } from "react-router-dom"
 import { Link, useNavigate } from "react-router-dom"
+import {
+  acceptRelationship,
+  rejectRelationship,
+} from "../../api/relationships"
 import { PortalTopbar } from "../../components/general/PortalTopbar"
+import { useToast } from "../../context/ToastContext"
 import { resolveDashboardPath } from "../../utils/dashboardPath"
 import { useAuthProfile } from "../../hooks/useAuthProfile"
 import { useMyRelationships } from "../../hooks/useMyRelationships"
+import { RejectRelationshipModal } from "../RelationshipsPage/components/RejectRelationshipModal"
 import {
   filterVinculos,
   getOpenVinculoCount,
@@ -118,7 +124,8 @@ const BUTTON_BASE_SX = {
 
 export function MyRelationshipsPage() {
   const navigate = useNavigate()
-  const { user } = useAuth0()
+  const { getAccessTokenSilently, user } = useAuth0()
+  const { showToast } = useToast()
   const { data: profile } = useAuthProfile()
   const {
     data: relationships,
@@ -128,6 +135,9 @@ export function MyRelationshipsPage() {
     isRefetching,
   } = useMyRelationships()
   const [selectedFilter, setSelectedFilter] = useState<VinculoFilter>("all")
+  const [isSubmittingResponse, setIsSubmittingResponse] = useState(false)
+  const [vinculoToReject, setVinculoToReject] =
+    useState<VinculoConnection | null>(null)
 
   const vinculos = useMemo(
     () => mapRelationshipsToVinculos(relationships ?? [], profile?.userType ?? null),
@@ -139,6 +149,55 @@ export function MyRelationshipsPage() {
   const summaryCounts = getVinculoFilterCounts(vinculos)
   const visibleVinculos = filterVinculos(vinculos, selectedFilter)
   const openVinculosCount = getOpenVinculoCount(vinculos)
+
+  function resolveCompanyId(vinculo: VinculoConnection): number | null {
+    if (profile?.userType === "company") return profile.companyId ?? null
+    if (profile?.userType === "npo") return vinculo.companyId
+    return null
+  }
+
+  async function handleAccept(vinculo: VinculoConnection) {
+    const companyId = resolveCompanyId(vinculo)
+    if (companyId === null) {
+      showToast("Não foi possível identificar a empresa deste vínculo.", "error")
+      return
+    }
+
+    setIsSubmittingResponse(true)
+    try {
+      const token = await getAccessTokenSilently()
+      await acceptRelationship(companyId, vinculo.projectId, token)
+      showToast("Contato aceito com sucesso.", "success")
+      await refetch()
+    } catch {
+      showToast("Não foi possível aceitar o contato. Tente novamente.", "error")
+    } finally {
+      setIsSubmittingResponse(false)
+    }
+  }
+
+  async function handleConfirmReject() {
+    if (!vinculoToReject) return
+
+    const companyId = resolveCompanyId(vinculoToReject)
+    if (companyId === null) {
+      showToast("Não foi possível identificar a empresa deste vínculo.", "error")
+      return
+    }
+
+    setIsSubmittingResponse(true)
+    try {
+      const token = await getAccessTokenSilently()
+      await rejectRelationship(companyId, vinculoToReject.projectId, token)
+      showToast("Contato recusado com sucesso.", "success")
+      setVinculoToReject(null)
+      await refetch()
+    } catch {
+      showToast("Não foi possível recusar o contato. Tente novamente.", "error")
+    } finally {
+      setIsSubmittingResponse(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-surface text-slate-900">
@@ -195,11 +254,21 @@ export function MyRelationshipsPage() {
                 key={vinculo.id}
                 vinculo={vinculo}
                 navigate={navigate}
+                isSubmittingResponse={isSubmittingResponse}
+                onAccept={handleAccept}
+                onReject={setVinculoToReject}
               />
             ))
           )}
         </section>
       </main>
+
+      <RejectRelationshipModal
+        open={vinculoToReject !== null}
+        isSubmitting={isSubmittingResponse}
+        onCancel={() => setVinculoToReject(null)}
+        onConfirm={handleConfirmReject}
+      />
     </div>
   )
 }
@@ -247,9 +316,15 @@ function SummaryCard({
 function VinculoCard({
   vinculo,
   navigate,
+  isSubmittingResponse,
+  onAccept,
+  onReject,
 }: {
   vinculo: VinculoConnection
   navigate: NavigateFunction
+  isSubmittingResponse: boolean
+  onAccept: (vinculo: VinculoConnection) => void
+  onReject: (vinculo: VinculoConnection) => void
 }) {
   const statusMeta = STATUS_META[vinculo.status]
   const StatusIcon = statusMeta.icon
@@ -390,16 +465,18 @@ function VinculoCard({
                   variant="contained"
                   colorScheme="success"
                   icon={<CheckOutlinedIcon fontSize="small" />}
-                  onClick={() => navigate(`/projeto/${vinculo.projectId}`)}
+                  disabled={isSubmittingResponse}
+                  onClick={() => onAccept(vinculo)}
                 >
-                  Confirmar Primeiro Aperto de Mão
+                  Aceitar Contato
                 </ActionButton>
 
                 <ActionButton
                   variant="contained"
                   colorScheme="neutral"
                   icon={<CloseIcon fontSize="small" />}
-                  onClick={() => navigate(`/projeto/${vinculo.projectId}`)}
+                  disabled={isSubmittingResponse}
+                  onClick={() => onReject(vinculo)}
                 >
                   Recusar
                 </ActionButton>
@@ -449,12 +526,14 @@ function ActionButton({
   icon,
   variant,
   colorScheme = "brand",
+  disabled = false,
   onClick,
 }: {
   children: ReactNode
   icon: ReactNode
   variant: "outlined" | "contained"
   colorScheme?: "brand" | "success" | "neutral"
+  disabled?: boolean
   onClick: () => void
 }) {
   const styleByScheme = {
@@ -521,6 +600,7 @@ function ActionButton({
       variant={variant}
       startIcon={icon}
       onClick={onClick}
+      disabled={disabled}
       sx={{
         ...BUTTON_BASE_SX,
         ...(styleByScheme[colorScheme][variant] as Record<string, unknown>),
