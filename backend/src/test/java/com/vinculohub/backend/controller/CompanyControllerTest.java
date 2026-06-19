@@ -10,7 +10,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.vinculohub.backend.config.SecurityConfig;
 import com.vinculohub.backend.database.AbstractIntegrationTest;
+import com.vinculohub.backend.dto.CompanyExportDTO;
+import com.vinculohub.backend.dto.CompanyListItemResponse;
 import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.model.Company;
 import com.vinculohub.backend.model.User;
@@ -18,22 +21,39 @@ import com.vinculohub.backend.model.enums.UserType;
 import com.vinculohub.backend.repository.AddressRepository;
 import com.vinculohub.backend.repository.CompanyRepository;
 import com.vinculohub.backend.repository.UserRepository;
+import com.vinculohub.backend.service.CompanyService;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 @ActiveProfiles("test")
 class CompanyControllerTest extends AbstractIntegrationTest {
 
     @Autowired private MockMvc mockMvc;
+
     @Autowired private CompanyRepository companyRepository;
+
     @Autowired private UserRepository userRepository;
+
     @Autowired private AddressRepository addressRepository;
+
     @Autowired private JdbcTemplate jdbcTemplate;
 
     @BeforeEach
@@ -86,8 +106,7 @@ class CompanyControllerTest extends AbstractIntegrationTest {
         mockMvc.perform(
                         get("/api/me/company/profile")
                                 .with(
-                                        jwt()
-                                                .authorities(
+                                        jwt().authorities(
                                                         new SimpleGrantedAuthority("ROLE_COMPANY"))
                                                 .jwt(jwt -> jwt.subject("auth0|company-profile"))))
                 .andExpect(status().isOk())
@@ -119,41 +138,21 @@ class CompanyControllerTest extends AbstractIntegrationTest {
         mockMvc.perform(
                         get("/api/me/company/profile")
                                 .with(
-                                        jwt()
-                                                .authorities(
+                                        jwt().authorities(
                                                         new SimpleGrantedAuthority("ROLE_COMPANY"))
                                                 .jwt(jwt -> jwt.subject("auth0|no-company"))))
                 .andExpect(status().isNotFound());
-import com.vinculohub.backend.config.SecurityConfig;
-import com.vinculohub.backend.dto.CompanyExportDTO;
-import com.vinculohub.backend.dto.CompanyListItemResponse;
-import com.vinculohub.backend.service.CompanyService;
-import java.time.LocalDateTime;
-import java.util.List;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.web.servlet.MockMvc;
+    }
+}
 
 @WebMvcTest(controllers = CompanyController.class)
-@Import({SecurityConfig.class, CompanyControllerTest.JwtDecoderTestConfig.class})
+@Import({SecurityConfig.class, CompanyControllerWebMvcTest.JwtDecoderTestConfig.class})
 @TestPropertySource(
         properties = {
             "app.frontend.url=http://localhost:5173",
             "app.auth0.roles-claim=https://vinculohub/roles"
         })
-class CompanyControllerTest {
+class CompanyControllerWebMvcTest {
 
     @Autowired private MockMvc mockMvc;
 

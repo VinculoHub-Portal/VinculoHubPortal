@@ -3,8 +3,8 @@ package com.vinculohub.backend.controller;
 
 import com.vinculohub.backend.dto.CompanyDTO;
 import com.vinculohub.backend.dto.CompanyExportDTO;
-import com.vinculohub.backend.dto.CompanyProfileResponse;
 import com.vinculohub.backend.dto.CompanyListItemResponse;
+import com.vinculohub.backend.dto.CompanyProfileResponse;
 import com.vinculohub.backend.service.CompanyService;
 import jakarta.validation.Valid;
 import java.util.List;

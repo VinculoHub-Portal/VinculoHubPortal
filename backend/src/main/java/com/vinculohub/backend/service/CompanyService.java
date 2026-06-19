@@ -3,8 +3,8 @@ package com.vinculohub.backend.service;
 
 import com.vinculohub.backend.dto.CompanyDTO;
 import com.vinculohub.backend.dto.CompanyExportDTO;
-import com.vinculohub.backend.dto.CompanyProfileResponse;
 import com.vinculohub.backend.dto.CompanyListItemResponse;
+import com.vinculohub.backend.dto.CompanyProfileResponse;
 import com.vinculohub.backend.dto.UserDTO;
 import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.CompanyAlreadyExistsException;
@@ -57,6 +57,8 @@ public class CompanyService {
                         .orElseThrow(() -> new NotFoundException("Empresa não encontrada."));
 
         return companyToCompanyProfileResponse(company);
+    }
+
     public Page<CompanyListItemResponse> findAllForNpoListing(Pageable pageable) {
         return companyRepository.findAll(pageable).map(this::toListItemResponse);
     }
@@ -189,7 +191,8 @@ public class CompanyService {
                         company.getLogoUrl(),
                         company.getCnpj(),
                         company.getPhone()),
-                new CompanyProfileResponse.ContactData(user == null ? null : user.getEmail(), company.getPhone()),
+                new CompanyProfileResponse.ContactData(
+                        user == null ? null : user.getEmail(), company.getPhone()),
                 mapAddress(company.getAddress()),
                 mapResponsible(user));
     }
