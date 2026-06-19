@@ -4,6 +4,7 @@ package com.vinculohub.backend.service;
 import com.vinculohub.backend.dto.CompanyDTO;
 import com.vinculohub.backend.dto.CompanyExportDTO;
 import com.vinculohub.backend.dto.CompanyProfileResponse;
+import com.vinculohub.backend.dto.CompanyListItemResponse;
 import com.vinculohub.backend.dto.UserDTO;
 import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.CompanyAlreadyExistsException;
@@ -19,6 +20,8 @@ import com.vinculohub.backend.utils.DocumentValidator;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,6 +57,8 @@ public class CompanyService {
                         .orElseThrow(() -> new NotFoundException("Empresa não encontrada."));
 
         return companyToCompanyProfileResponse(company);
+    public Page<CompanyListItemResponse> findAllForNpoListing(Pageable pageable) {
+        return companyRepository.findAll(pageable).map(this::toListItemResponse);
     }
 
     private CompanyExportDTO toExportDTO(Company company) {
@@ -70,6 +75,19 @@ public class CompanyService {
                 .state(address != null ? address.getState() : null)
                 .zipCode(address != null ? address.getZipCode() : null)
                 .createdAt(company.getCreatedAt())
+                .build();
+    }
+
+    private CompanyListItemResponse toListItemResponse(Company company) {
+        var address = company.getAddress();
+        return CompanyListItemResponse.builder()
+                .id(company.getId())
+                .legalName(company.getLegalName())
+                .socialName(company.getSocialName())
+                .description(company.getDescription())
+                .logoUrl(company.getLogoUrl())
+                .city(address != null ? address.getCity() : null)
+                .state(address != null ? address.getState() : null)
                 .build();
     }
 

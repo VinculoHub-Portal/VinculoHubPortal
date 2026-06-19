@@ -43,7 +43,14 @@ public class MeController {
         if (user.isEmpty()) {
             log.info("No DB user found for auth0Id={}, returning empty profile", jwt.getSubject());
             return new AuthenticatedProfileResponse(
-                    jwt.getSubject(), jwt.getClaimAsString("email"), null, null, null, null, false);
+                    jwt.getSubject(),
+                    jwt.getClaimAsString("email"),
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    false);
         }
 
         User savedUser = user.get();
@@ -51,20 +58,26 @@ public class MeController {
                 savedUser.getUserType() == UserType.npo
                         ? npoRepository.findByUserId(savedUser.getId()).map(Npo::getId).orElse(null)
                         : null;
-        Integer companyId =
+        Company company =
                 savedUser.getUserType() == UserType.company
-                        ? companyRepository
-                                .findByUserId(savedUser.getId())
-                                .map(Company::getId)
-                                .orElse(null)
+                        ? companyRepository.findByUserId(savedUser.getId()).orElse(null)
                         : null;
+        Integer companyId = company == null ? null : company.getId();
+        String companyName =
+                company == null
+                        ? null
+                        : company.getSocialName() != null && !company.getSocialName().isBlank()
+                                ? company.getSocialName()
+                                : company.getLegalName();
 
         log.info(
-                "Profile loaded | userId={} type={} npoId={} companyId={} complete={}",
+                "Profile loaded | userId={} type={} npoId={} companyId={} companyName={}"
+                        + " complete={}",
                 savedUser.getId(),
                 savedUser.getUserType(),
                 npoId,
                 companyId,
+                companyName,
                 npoId != null || companyId != null);
 
         return new AuthenticatedProfileResponse(
@@ -74,6 +87,7 @@ public class MeController {
                 savedUser.getUserType(),
                 npoId,
                 companyId,
+                companyName,
                 npoId != null || companyId != null);
     }
 }

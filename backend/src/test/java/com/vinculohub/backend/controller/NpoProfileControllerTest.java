@@ -12,6 +12,7 @@ import com.vinculohub.backend.database.AbstractIntegrationTest;
 import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.model.Document;
 import com.vinculohub.backend.model.Npo;
+import com.vinculohub.backend.model.Ods;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.User;
 import com.vinculohub.backend.model.enums.NpoSize;
@@ -20,8 +21,11 @@ import com.vinculohub.backend.repository.AddressRepository;
 import com.vinculohub.backend.repository.CompanyProjectRepository;
 import com.vinculohub.backend.repository.DocumentRepository;
 import com.vinculohub.backend.repository.NpoRepository;
+import com.vinculohub.backend.repository.OdsRepository;
 import com.vinculohub.backend.repository.ProjectRepository;
 import com.vinculohub.backend.repository.UserRepository;
+import java.util.LinkedHashSet;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,6 +47,7 @@ class NpoProfileControllerTest extends AbstractIntegrationTest {
     @Autowired private ProjectRepository projectRepository;
     @Autowired private CompanyProjectRepository companyProjectRepository;
     @Autowired private DocumentRepository documentRepository;
+    @Autowired private OdsRepository odsRepository;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private ObjectMapper objectMapper;
 
@@ -93,9 +98,15 @@ class NpoProfileControllerTest extends AbstractIntegrationTest {
                                 .description("Descrição ONG")
                                 .build());
 
+        Ods ods = odsRepository.findById(4).orElseThrow();
         Project project =
                 projectRepository.save(
-                        Project.builder().npo(npo).title("Projeto X").description("D").build());
+                        Project.builder()
+                                .npo(npo)
+                                .title("Projeto X")
+                                .description("D")
+                                .ods(new LinkedHashSet<>(List.of(ods)))
+                                .build());
 
         Document document = new Document();
         document.setNpo(npo);
@@ -120,6 +131,7 @@ class NpoProfileControllerTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.contact.phone").value("(11) 99999-0000"))
                 .andExpect(jsonPath("$.address.city").value("Porto Alegre"))
                 .andExpect(jsonPath("$.projects[0].title").value("Projeto X"))
+                .andExpect(jsonPath("$.projects[0].ods[0].id").value(4))
                 .andExpect(jsonPath("$.documents[0].title").value("Estatuto"));
     }
 
@@ -146,6 +158,83 @@ class NpoProfileControllerTest extends AbstractIntegrationTest {
         mockMvc.perform(get("/api/npos/" + npo.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.viewerContext").value("EXTERNAL"));
+    }
+
+    @Test
+    @DisplayName("GET /api/npos/{id}/projects retorna 200 com projetos paginados")
+    void shouldReturn200WithPaginatedPublicProjects() throws Exception {
+        Npo npo = createSimpleNpo("ONG Com Projetos");
+        Ods ods = odsRepository.findById(4).orElseThrow();
+        createProject(npo, "Projeto Alpha", ods);
+        createProject(npo, "Projeto Beta", ods);
+
+        mockMvc.perform(
+                        get("/api/npos/" + npo.getId() + "/projects")
+                                .param("page", "0")
+                                .param("size", "1")
+                                .with(
+                                        jwt().authorities(
+                                                        new SimpleGrantedAuthority("ROLE_COMPANY"))
+                                                .jwt(jwt -> jwt.subject("auth0|company"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].title").exists())
+                .andExpect(jsonPath("$.content[0].status").value("ACTIVE"))
+                .andExpect(jsonPath("$.content[0].ods[0].id").value(4))
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.size").value(1));
+    }
+
+    @Test
+    @DisplayName("GET /api/npos/{id}/projects sem autenticação retorna 200")
+    void shouldReturn200WithPublicProjectsWithoutAuth() throws Exception {
+        Npo npo = createSimpleNpo("ONG Publica Sem Token");
+        Ods ods = odsRepository.findById(4).orElseThrow();
+        createProject(npo, "Projeto Visitante", ods);
+
+        mockMvc.perform(
+                        get("/api/npos/" + npo.getId() + "/projects")
+                                .param("page", "0")
+                                .param("size", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].title").value("Projeto Visitante"))
+                .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
+    @DisplayName("GET /api/npos/{id}/projects retorna 200 com pagina vazia para ONG sem projetos")
+    void shouldReturn200WithEmptyPublicProjectsPage() throws Exception {
+        Npo npo = createSimpleNpo("ONG Sem Projetos");
+
+        mockMvc.perform(
+                        get("/api/npos/" + npo.getId() + "/projects")
+                                .param("page", "0")
+                                .param("size", "5")
+                                .with(
+                                        jwt().authorities(
+                                                        new SimpleGrantedAuthority("ROLE_COMPANY"))
+                                                .jwt(jwt -> jwt.subject("auth0|company"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(0))
+                .andExpect(jsonPath("$.totalElements").value(0))
+                .andExpect(jsonPath("$.totalPages").value(0));
+    }
+
+    @Test
+    @DisplayName("GET /api/npos/{id}/projects retorna 404 para ONG inexistente")
+    void shouldReturn404ForPublicProjectsOfNonexistentNpo() throws Exception {
+        mockMvc.perform(
+                        get("/api/npos/999999/projects")
+                                .param("page", "0")
+                                .param("size", "5")
+                                .with(
+                                        jwt().authorities(
+                                                        new SimpleGrantedAuthority("ROLE_COMPANY"))
+                                                .jwt(jwt -> jwt.subject("auth0|company"))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404));
     }
 
     @Test
@@ -284,5 +373,19 @@ class NpoProfileControllerTest extends AbstractIntegrationTest {
                                                 .jwt(jwt -> jwt.subject("auth0|other-user"))))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status").value(403));
+    }
+
+    private Npo createSimpleNpo(String name) {
+        return npoRepository.save(Npo.builder().name(name).npoSize(NpoSize.small).build());
+    }
+
+    private Project createProject(Npo npo, String title, Ods ods) {
+        return projectRepository.save(
+                Project.builder()
+                        .npo(npo)
+                        .title(title)
+                        .description("Descricao do projeto publico")
+                        .ods(new LinkedHashSet<>(List.of(ods)))
+                        .build());
     }
 }

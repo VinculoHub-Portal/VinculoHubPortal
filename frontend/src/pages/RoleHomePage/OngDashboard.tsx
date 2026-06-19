@@ -4,52 +4,44 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward"
 import CampaignOutlinedIcon from "@mui/icons-material/CampaignOutlined"
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined"
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined"
+import LinkOutlinedIcon from "@mui/icons-material/LinkOutlined"
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined"
 import { useAuth0 } from "@auth0/auth0-react"
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { useNavigate } from "react-router-dom"
 import { uploadDocument } from "../../api/document"
 import type { ProjectStatus } from "../../api/projects"
 import { BaseButton } from "../../components/general/BaseButton"
+import { CompanyShowcaseCard } from "./CompanyShowcaseCard"
 import { Header } from "../../components/general/Header"
 import { ProgressBar } from "../../components/general/ProgressBar"
 import { useToast } from "../../context/ToastContext"
 import UploadModal from "./UploadModal"
 import {
   ONG_DASHBOARD_FILTERS,
-  statusMatchesFilter,
   useOngDashboard,
   type OngDashboardFilter,
   type OngDashboardProject,
   type OngProjectTypeMetric,
 } from "./useOngDashboard"
 
-interface OngDashboardMockProps {
+interface OngDashboardProps {
   onCreateProject: () => void
   successMessage?: string | null
   refreshKey?: number
 }
 
-export function OngDashboardMock({
+export function OngDashboard({
   onCreateProject,
   successMessage = null,
   refreshKey = 0,
-}: OngDashboardMockProps) {
+}: OngDashboardProps) {
   const navigate = useNavigate()
   const { showToast } = useToast()
   const { getAccessTokenSilently } = useAuth0()
-  const [selectedFilter, setSelectedFilter] = useState<OngDashboardFilter>("all")
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
-  const { projects, typeMetrics, loading, error, refetch } = useOngDashboard()
+  const { projects, typeMetrics, filter, setFilter, loading, error, refetch } = useOngDashboard()
   const previousRefreshKeyRef = useRef(refreshKey)
-
-  const filteredProjects = useMemo(
-    () =>
-      projects.filter((project) =>
-        statusMatchesFilter(project.status, selectedFilter),
-      ),
-    [projects, selectedFilter],
-  )
 
   useEffect(() => {
     if (previousRefreshKeyRef.current === refreshKey) {
@@ -97,7 +89,7 @@ export function OngDashboardMock({
             </p>
           </div>
 
-          <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-fit">
+          <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap lg:w-fit lg:flex-nowrap">
             <BaseButton
               type="button"
               variant="secondary"
@@ -127,6 +119,16 @@ export function OngDashboardMock({
               <AccountCircleOutlinedIcon fontSize="small" />
               Meu Perfil
             </BaseButton>
+
+            <BaseButton
+              type="button"
+              variant="outline"
+              className="min-h-14 w-full border-slate-200 bg-white px-8 text-lg shadow-md hover:bg-slate-50 sm:w-fit"
+              onClick={() => navigate("/meus-vinculos")}
+            >
+              <LinkOutlinedIcon fontSize="small" />
+              Ver vínculos
+            </BaseButton>
           </div>
         </section>
 
@@ -145,17 +147,22 @@ export function OngDashboardMock({
             onDetails={() => navigate("/ong/projetos")}
           />
           <ProjectStatusCard
-            selectedFilter={selectedFilter}
-            onFilterChange={setSelectedFilter}
-            projects={filteredProjects}
+            selectedFilter={filter}
+            onFilterChange={setFilter}
+            projects={projects}
             loading={loading}
             error={error}
             onRetry={refetch}
             onViewProject={(projectId) => navigate(`/projeto/${projectId}`)}
+            onViewAll={() => navigate("/ong/projetos")}
           />
         </section>
 
         <FundingOpportunitiesBanner />
+
+        <section>
+          <CompanyShowcaseCard />
+        </section>
 
         <UploadModal
           isOpen={isUploadModalOpen}
@@ -231,6 +238,7 @@ interface ProjectStatusCardProps {
   error: string | null
   onRetry: () => Promise<void>
   onViewProject: (projectId: number) => void
+  onViewAll: () => void
 }
 
 function ProjectStatusCard({
@@ -241,6 +249,7 @@ function ProjectStatusCard({
   error,
   onRetry,
   onViewProject,
+  onViewAll,
 }: ProjectStatusCardProps) {
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
@@ -317,6 +326,16 @@ function ProjectStatusCard({
               </button>
             </div>
           ))}
+        </div>
+
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={() => onViewAll()}
+            className="min-h-11 min-w-32 cursor-pointer rounded-lg border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+          >
+            Ver todos
+          </button>
         </div>
       </DashboardCardState>
     </article>

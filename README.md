@@ -47,6 +47,38 @@ Para parar todos os serviços, execute: `docker compose down`.
 
 ---
 
+## Cenários de dados para desenvolvimento e E2E
+
+O compose principal pode carregar um catálogo fixo de empresas, ONGs, projetos, vínculos e
+denúncias em um banco funcionalmente vazio. A carga é opcional:
+
+```dotenv
+APP_TEST_SCENARIOS_ENABLED=true
+```
+
+Quando habilitado, o seeder garante na tabela `users`, com os tipos indicados, as contas:
+
+- `e2e.company.empty@vinculohub.test` (`company`)
+- `e2e.company.active@vinculohub.test` (`company`)
+- `e2e.company.multiple@vinculohub.test` (`company`)
+- `e2e.npo.projects@vinculohub.test` (`npo`)
+- `e2e.npo.reported@vinculohub.test` (`npo`)
+- `e2e.admin@vinculohub.test` (`admin`)
+
+Esses usuários também devem corresponder às contas de teste mantidas no Auth0. A feature usa os
+`auth0_id` declarados em `01_scenario_definitions.sql`: não chama a Management API, não cria e não
+atualiza usuários no Auth0.
+
+As roles equivalentes também precisam estar configuradas no Auth0 e emitidas no access token pelo
+claim `https://vinculohub/roles`: `COMPANY`, `NPO` ou `ADMIN`, conforme o tipo local.
+
+O catálogo inclui empresa sem vínculo, empresa com vínculo ativo, empresa com múltiplos vínculos,
+ONG com três projetos ativos e ONG com duas denúncias. A carga inteira ocorre em uma transação. Se o
+catálogo funcional já estiver carregado exatamente, a aplicação sobe sem reinserir dados; se houver
+dados funcionais parciais ou diferentes, a execução falha com mensagem de conflito.
+
+---
+
 ## 🛠️ Rodando Manualmente (Sem Docker)
 
 Se preferir rodar os serviços individualmente para desenvolvimento mais focado:
@@ -108,6 +140,53 @@ Os testes cobrem:
 - Rota pública `/ong/publico/:id` acessível sem login
 - Segurança de API: endpoints protegidos retornam 401 sem token
 - Endpoints públicos (`GET /api/editais`, `GET /public/ping`) retornam 200
+
+---
+
+## 📬 API de Vínculos — Swagger e coleção Bruno
+
+A API do épico **Vínculos** (`/api/relationships`) pode ser explorada de duas formas.
+
+### Swagger / OpenAPI (app rodando)
+- UI interativa: **http://localhost:8080/swagger-ui.html**
+- Spec OpenAPI (JSON): **http://localhost:8080/v3/api-docs**
+
+Clique em **Authorize** e cole um JWT (`Bearer`) para chamar os endpoints autenticados. A mesma spec
+pode ser importada no Postman/Insomnia (Import → URL → `/v3/api-docs`).
+
+### Coleção Bruno
+A coleção fica versionada em `backend/docs/api/vinculos/` (arquivos `.bru`, amigáveis ao git) e cobre
+o ciclo completo (criar interesse → aceitar → efetivar → ativo).
+
+**Opção 1 — app desktop ([Bruno](https://www.usebruno.com/)):**
+1. Abra a pasta `backend/docs/api/vinculos` no Bruno.
+2. Selecione o environment **Local** e preencha `bearerToken` com um JWT válido.
+3. Rode as requisições na ordem `01 → 05`.
+
+**Opção 2 — CLI:**
+```bash
+npm i -g @usebruno/cli
+cd backend/docs/api/vinculos
+bru run --env Local --env-var bearerToken=<jwt>
+```
+
+### Como obter um `bearerToken` sem Auth0 (profile dev)
+Existe um stack de desenvolvimento com **auth local** (sem Auth0): ele assina o JWT localmente,
+expõe um emissor de tokens em `/dev/token` e semeia dados de exemplo (Empresa + ONG + Projeto).
+
+```bash
+# sobe Postgres + backend no profile dev (porta 8088)
+docker compose -f docker-compose.dev.yml up --build -d
+
+# emite um token (note o %7C, que é o "|" url-encodado)
+curl "http://localhost:8088/dev/token?sub=dev%7Ccompany&roles=COMPANY"   # empresa
+curl "http://localhost:8088/dev/token?sub=dev%7Cnpo&roles=NPO"           # ONG
+```
+Copie o `access_token` da resposta e use como `bearerToken` no Bruno (ou no `Authorize` do Swagger).
+Para encerrar: `docker compose -f docker-compose.dev.yml down -v`.
+
+> ⚠️ O profile `dev` e o `/dev/token` existem **apenas para desenvolvimento**. Em produção o app roda
+> no profile padrão, que continua validando JWTs reais do Auth0.
 
 ---
 

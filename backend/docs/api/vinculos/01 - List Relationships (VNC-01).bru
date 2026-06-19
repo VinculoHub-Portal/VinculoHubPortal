@@ -1,0 +1,25 @@
+meta {
+  name: 01 - List Relationships (VNC-01)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/relationships?status=pending
+  body: none
+  auth: bearer
+}
+
+params:query {
+  status: pending
+}
+
+auth:bearer {
+  token: {{bearerToken}}
+}
+
+docs {
+  Lista os vínculos visíveis (pending, negotiation, active) do ator autenticado.
+  Remova o parâmetro `status` para listar todos. Contatos e flags canRespond/canConfirm
+  vêm preenchidos conforme o status e o papel do ator.
+}
