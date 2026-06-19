@@ -43,6 +43,7 @@ interface UseOngDashboardResult {
   loadingMore: boolean
   hasMore: boolean
   error: string | null
+  npoId: number | null
   refetch: () => Promise<void>
   loadMore: () => Promise<void>
 }
@@ -117,6 +118,7 @@ export function useOngDashboard(): UseOngDashboardResult {
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [npoId, setNpoId] = useState<number | null>(null)
   const requestIdRef = useRef(0)
   const pageRef = useRef(0)
   const filterRef = useRef<OngDashboardFilter>("all")
@@ -127,6 +129,7 @@ export function useOngDashboard(): UseOngDashboardResult {
     })
     const profile = await fetchAuthenticatedProfile(token)
     if (!profile.npoId) throw new Error("ONG não encontrada para o usuário autenticado.")
+    setNpoId(profile.npoId)
     return { token, npoId: profile.npoId as number }
   }, [getAccessTokenSilently])
 
@@ -257,6 +260,7 @@ export function useOngDashboard(): UseOngDashboardResult {
     loadingMore,
     hasMore,
     error,
+    npoId,
     refetch,
     loadMore,
   }
