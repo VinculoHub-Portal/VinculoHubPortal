@@ -4,6 +4,7 @@ package com.vinculohub.backend.controller;
 import com.vinculohub.backend.dto.CompanyDTO;
 import com.vinculohub.backend.dto.CompanyExportDTO;
 import com.vinculohub.backend.dto.CompanyListItemResponse;
+import com.vinculohub.backend.dto.CompanyProfileResponse;
 import com.vinculohub.backend.service.CompanyService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -59,5 +60,12 @@ public class CompanyController {
                         jwt.getSubject(), jwt.getClaimAsString("email"), companyDTO);
         log.info("Company created | id={} legalName={}", created.id(), created.legalName());
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @GetMapping("/api/me/company/profile")
+    public ResponseEntity<CompanyProfileResponse> getAuthenticatedCompanyProfile(
+            @AuthenticationPrincipal Jwt jwt) {
+        log.info("GET /api/me/company/profile | sub={}", jwt.getSubject());
+        return ResponseEntity.ok(companyService.getCompanyProfileByAuth0Id(jwt.getSubject()));
     }
 }
