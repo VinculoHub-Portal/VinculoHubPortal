@@ -39,3 +39,33 @@ export async function fetchCompaniesForNpo(
     throw error
   }
 }
+
+export interface CompanyPublicProfile {
+  id: number
+  legalName: string
+  socialName: string | null
+  description: string | null
+  logoUrl: string | null
+  city: string | null
+  stateCode: string | null
+  segment: string | null
+  website: string | null
+}
+
+export async function fetchCompanyPublicProfile(
+  companyId: number,
+  token: string,
+): Promise<CompanyPublicProfile> {
+  logger.info("CompaniesAPI", "Fetching public profile", { companyId })
+  try {
+    const { data } = await api.get<CompanyPublicProfile>(
+      `/api/companies/${companyId}/public`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    )
+    logger.info("CompaniesAPI", "Public profile fetched", { companyId })
+    return data
+  } catch (error) {
+    logger.error("CompaniesAPI", "Failed to fetch public profile", error)
+    throw error
+  }
+}
