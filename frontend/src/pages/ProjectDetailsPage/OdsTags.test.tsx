@@ -3,7 +3,6 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { OdsTags } from "./OdsTags";
 
-const fewLabels = ["Saúde e Bem-Estar", "Educação de Qualidade", "Igualdade de Gênero"];
 const exactThreshold = ["ODS 1", "ODS 2", "ODS 3", "ODS 4"];
 const manyLabels = [
   "ODS 1", "ODS 2", "ODS 3", "ODS 4", "ODS 5",
