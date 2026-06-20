@@ -92,9 +92,6 @@ export const CompanyDashboard = () => {
           />
         </section>
 
-        <section>
-          <OngShowcaseCard />
-        </section>
 
         <InvestmentModalitiesSection />
 
@@ -109,6 +106,10 @@ export const CompanyDashboard = () => {
         ) : (
           <EsgImpactSection pillars={esgPillars} />
         )}
+        
+        <section>
+          <OngShowcaseCard />
+        </section>
       </main>
     </div>
   );
