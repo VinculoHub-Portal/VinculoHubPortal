@@ -74,57 +74,55 @@ export function OngDashboard({
 
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 sm:px-6">
         {/* Page header */}
-        <section className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <section className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold leading-tight text-vinculo-dark">
+            <h1 className="text-2xl sm:text-3xl font-semibold leading-tight text-vinculo-dark">
               Dashboard da ONG
             </h1>
-            <p className="mt-2 text-sm sm:text-base text-slate-500">
+            <p className="mt-1 text-sm text-slate-500">
               Bem-vindo ao seu painel de controle de projetos e impacto social
             </p>
           </div>
 
-          {/* Action buttons */}
-          <div className="flex w-full flex-col gap-2 lg:w-fit lg:flex-row lg:items-center lg:gap-3">
-            <BaseButton
+          {/* Action toolbar */}
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-3">
+            {/* Primary */}
+            <button
               type="button"
-              variant="secondary"
-              className="w-full lg:w-fit px-5 sm:px-8 text-sm sm:text-base shadow-md hover:bg-emerald-600"
               onClick={onCreateProject}
+              className="flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-vinculo-green px-4 text-[14px] font-semibold text-white transition hover:bg-emerald-600 lg:w-auto"
             >
-              <AddIcon fontSize="small" />
+              <AddIcon style={{ fontSize: 16 }} />
               Novo Projeto
-            </BaseButton>
+            </button>
 
-            <BaseButton
+            {/* Secondaries */}
+            <button
               type="button"
-              variant="outline"
-              className="w-full lg:w-fit border-slate-200 bg-white px-5 text-sm shadow-sm hover:bg-slate-50"
               onClick={() => setIsUploadModalOpen(true)}
+              className="flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-4 text-[14px] font-medium text-slate-700 transition hover:bg-slate-50 lg:w-auto"
             >
-              <FileUploadOutlinedIcon fontSize="small" />
+              <FileUploadOutlinedIcon style={{ fontSize: 16 }} />
               Upload de Documentos
-            </BaseButton>
+            </button>
 
             <div className="grid grid-cols-2 gap-2 lg:flex lg:gap-3">
-              <BaseButton
+              <button
                 type="button"
-                variant="outline"
-                className="w-full border-slate-200 bg-white px-4 text-sm shadow-sm hover:bg-slate-50"
                 onClick={() => navigate("/ong/perfil")}
+                className="flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-4 text-[14px] font-medium text-slate-700 transition hover:bg-slate-50"
               >
-                <AccountCircleOutlinedIcon fontSize="small" />
+                <AccountCircleOutlinedIcon style={{ fontSize: 16 }} />
                 Meu Perfil
-              </BaseButton>
-              <BaseButton
+              </button>
+              <button
                 type="button"
-                variant="outline"
-                className="w-full border-slate-200 bg-white px-4 text-sm shadow-sm hover:bg-slate-50"
                 onClick={() => navigate("/meus-vinculos")}
+                className="flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-4 text-[14px] font-medium text-slate-700 transition hover:bg-slate-50"
               >
-                <LinkOutlinedIcon fontSize="small" />
+                <LinkOutlinedIcon style={{ fontSize: 16 }} />
                 Ver vínculos
-              </BaseButton>
+              </button>
             </div>
           </div>
         </section>
