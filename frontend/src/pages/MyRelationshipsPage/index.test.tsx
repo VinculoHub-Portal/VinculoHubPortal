@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   getAccessTokenSilentlyMock: vi.fn(),
   acceptRelationshipMock: vi.fn(),
   rejectRelationshipMock: vi.fn(),
+  confirmRelationshipMock: vi.fn(),
   refetchMock: vi.fn(),
   showToastMock: vi.fn(),
 }))
@@ -54,6 +55,7 @@ vi.mock("../../api/relationships", async () => {
     ...actual,
     acceptRelationship: mocks.acceptRelationshipMock,
     rejectRelationship: mocks.rejectRelationshipMock,
+    confirmRelationship: mocks.confirmRelationshipMock,
   }
 })
 
@@ -97,6 +99,18 @@ const pendingRespondableRelationship: RelationshipListItem = {
   canConfirm: false,
 }
 
+const negotiationConfirmableRelationship: RelationshipListItem = {
+  projectId: 555,
+  projectName: "Reflorestamento Urbano",
+  partnerInstitutionId: 88,
+  partnerInstitutionName: "Verde Vida",
+  status: "negotiation",
+  partnerContactEmail: "contato@verdevida.org.br",
+  partnerContactPhone: "(11) 5555-5555",
+  canRespond: false,
+  canConfirm: true,
+}
+
 function renderMyRelationshipsPage() {
   render(
     <MemoryRouter initialEntries={["/meus-vinculos"]}>
@@ -111,6 +125,7 @@ describe("MyRelationshipsPage", () => {
     mocks.getAccessTokenSilentlyMock.mockResolvedValue("token")
     mocks.acceptRelationshipMock.mockResolvedValue(undefined)
     mocks.rejectRelationshipMock.mockResolvedValue(undefined)
+    mocks.confirmRelationshipMock.mockResolvedValue(undefined)
     mocks.refetchMock.mockResolvedValue({})
     profile = { userType: "company", companyId: 42 }
     relationships = [activeRelationship, negotiationRelationship]
@@ -229,5 +244,90 @@ describe("MyRelationshipsPage", () => {
       "Não foi possível identificar a empresa deste vínculo.",
       "error",
     )
+  })
+
+  describe("Efetivar Parceria", () => {
+    it("clicar em Efetivar Parceria abre modal de confirmação", async () => {
+      const user = userEvent.setup()
+      relationships = [negotiationConfirmableRelationship]
+
+      renderMyRelationshipsPage()
+
+      await user.click(
+        screen.getByRole("button", { name: "Efetivar Parceria" }),
+      )
+
+      expect(
+        screen.getByRole("dialog", { name: "Efetivar Parceria" }),
+      ).toBeInTheDocument()
+    })
+
+    it("confirmar chama confirmRelationship com (companyId, projectId, token) usando companyId do perfil quando viewer é COMPANY", async () => {
+      const user = userEvent.setup()
+      profile = { userType: "company", companyId: 42 }
+      relationships = [negotiationConfirmableRelationship]
+
+      renderMyRelationshipsPage()
+
+      await user.click(
+        screen.getByRole("button", { name: "Efetivar Parceria" }),
+      )
+      await user.click(screen.getByRole("button", { name: "Confirmar" }))
+
+      await waitFor(() => {
+        expect(mocks.confirmRelationshipMock).toHaveBeenCalledWith(
+          42,
+          555,
+          "token",
+        )
+        expect(mocks.refetchMock).toHaveBeenCalledOnce()
+      })
+      expect(mocks.showToastMock).toHaveBeenCalledWith(
+        "Parceria confirmada com sucesso!",
+        "success",
+      )
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+    })
+
+    it("confirmar usa partnerInstitutionId como companyId quando viewer é NPO", async () => {
+      const user = userEvent.setup()
+      profile = { userType: "npo", companyId: null }
+      relationships = [negotiationConfirmableRelationship]
+
+      renderMyRelationshipsPage()
+
+      await user.click(
+        screen.getByRole("button", { name: "Efetivar Parceria" }),
+      )
+      await user.click(screen.getByRole("button", { name: "Confirmar" }))
+
+      await waitFor(() => {
+        expect(mocks.confirmRelationshipMock).toHaveBeenCalledWith(
+          88,
+          555,
+          "token",
+        )
+      })
+    })
+
+    it("erro ao efetivar mostra toast de erro", async () => {
+      const user = userEvent.setup()
+      relationships = [negotiationConfirmableRelationship]
+      mocks.confirmRelationshipMock.mockRejectedValueOnce(new Error("boom"))
+
+      renderMyRelationshipsPage()
+
+      await user.click(
+        screen.getByRole("button", { name: "Efetivar Parceria" }),
+      )
+      await user.click(screen.getByRole("button", { name: "Confirmar" }))
+
+      await waitFor(() => {
+        expect(mocks.showToastMock).toHaveBeenCalledWith(
+          "Não foi possível efetivar a parceria. Tente novamente.",
+          "error",
+        )
+      })
+    })
   })
 })

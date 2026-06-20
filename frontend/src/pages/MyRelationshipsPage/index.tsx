@@ -23,9 +23,11 @@ import type { NavigateFunction } from "react-router-dom"
 import { Link, useNavigate } from "react-router-dom"
 import {
   acceptRelationship,
+  confirmRelationship,
   rejectRelationship,
 } from "../../api/relationships"
 import { PortalTopbar } from "../../components/general/PortalTopbar"
+import { EfetivarParceriaModal } from "../../components/relationships/EfetivarParceriaModal"
 import { useToast } from "../../context/ToastContext"
 import { resolveDashboardPath } from "../../utils/dashboardPath"
 import { useAuthProfile } from "../../hooks/useAuthProfile"
@@ -138,6 +140,9 @@ export function MyRelationshipsPage() {
   const [isSubmittingResponse, setIsSubmittingResponse] = useState(false)
   const [vinculoToReject, setVinculoToReject] =
     useState<VinculoConnection | null>(null)
+  const [vinculoToConfirm, setVinculoToConfirm] =
+    useState<VinculoConnection | null>(null)
+  const [isSubmittingConfirm, setIsSubmittingConfirm] = useState(false)
 
   const vinculos = useMemo(
     () => mapRelationshipsToVinculos(relationships ?? [], profile?.userType ?? null),
@@ -199,6 +204,32 @@ export function MyRelationshipsPage() {
     }
   }
 
+  async function handleConfirmEfetivar() {
+    if (!vinculoToConfirm) return
+
+    const companyId = resolveCompanyId(vinculoToConfirm)
+    if (companyId === null) {
+      showToast("Não foi possível identificar a empresa deste vínculo.", "error")
+      return
+    }
+
+    setIsSubmittingConfirm(true)
+    try {
+      const token = await getAccessTokenSilently()
+      await confirmRelationship(companyId, vinculoToConfirm.projectId, token)
+      setVinculoToConfirm(null)
+      showToast("Parceria confirmada com sucesso!", "success")
+      await refetch()
+    } catch {
+      showToast(
+        "Não foi possível efetivar a parceria. Tente novamente.",
+        "error",
+      )
+    } finally {
+      setIsSubmittingConfirm(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-surface text-slate-900">
       <PortalTopbar
@@ -257,6 +288,7 @@ export function MyRelationshipsPage() {
                 isSubmittingResponse={isSubmittingResponse}
                 onAccept={handleAccept}
                 onReject={setVinculoToReject}
+                onEfetivar={setVinculoToConfirm}
               />
             ))
           )}
@@ -269,6 +301,17 @@ export function MyRelationshipsPage() {
         onCancel={() => setVinculoToReject(null)}
         onConfirm={handleConfirmReject}
       />
+
+      {vinculoToConfirm && (
+        <EfetivarParceriaModal
+          open
+          onClose={() => setVinculoToConfirm(null)}
+          onConfirm={() => void handleConfirmEfetivar()}
+          loading={isSubmittingConfirm}
+          projectName={vinculoToConfirm.projectName}
+          partnerName={vinculoToConfirm.partnerInstitutionName}
+        />
+      )}
     </div>
   )
 }
@@ -319,12 +362,14 @@ function VinculoCard({
   isSubmittingResponse,
   onAccept,
   onReject,
+  onEfetivar,
 }: {
   vinculo: VinculoConnection
   navigate: NavigateFunction
   isSubmittingResponse: boolean
   onAccept: (vinculo: VinculoConnection) => void
   onReject: (vinculo: VinculoConnection) => void
+  onEfetivar?: (vinculo: VinculoConnection) => void
 }) {
   const statusMeta = STATUS_META[vinculo.status]
   const StatusIcon = statusMeta.icon
@@ -488,7 +533,16 @@ function VinculoCard({
                 variant="contained"
                 colorScheme="success"
                 icon={<CheckOutlinedIcon fontSize="small" />}
-                onClick={() => navigate(`/projeto/${vinculo.projectId}`)}
+                onClick={() => {
+                  if (
+                    vinculo.optionalActionLabel === "Efetivar Parceria" &&
+                    onEfetivar
+                  ) {
+                    onEfetivar(vinculo)
+                  } else {
+                    navigate(`/projeto/${vinculo.projectId}`)
+                  }
+                }}
               >
                 {vinculo.optionalActionLabel}
               </ActionButton>
