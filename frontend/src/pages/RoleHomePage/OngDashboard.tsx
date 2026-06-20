@@ -90,7 +90,7 @@ export function OngDashboard({
             <button
               type="button"
               onClick={onCreateProject}
-              className="flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-vinculo-green px-4 text-[14px] font-semibold text-white transition hover:bg-emerald-600 lg:w-auto"
+              className="flex h-10 w-full cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-vinculo-green px-4 text-[14px] font-semibold text-white transition hover:bg-emerald-600 lg:w-auto"
             >
               <AddIcon style={{ fontSize: 16 }} />
               Novo Projeto
@@ -100,7 +100,7 @@ export function OngDashboard({
             <button
               type="button"
               onClick={() => setIsUploadModalOpen(true)}
-              className="flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-4 text-[14px] font-medium text-slate-700 transition hover:bg-slate-50 lg:w-auto"
+              className="flex h-10 w-full cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-4 text-[14px] font-medium text-slate-700 transition hover:bg-slate-50 lg:w-auto"
             >
               <FileUploadOutlinedIcon style={{ fontSize: 16 }} />
               Upload de Documentos
@@ -110,7 +110,7 @@ export function OngDashboard({
               <button
                 type="button"
                 onClick={() => navigate("/ong/perfil")}
-                className="flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-4 text-[14px] font-medium text-slate-700 transition hover:bg-slate-50"
+                className="flex h-10 w-full cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-4 text-[14px] font-medium text-slate-700 transition hover:bg-slate-50"
               >
                 <AccountCircleOutlinedIcon style={{ fontSize: 16 }} />
                 Meu Perfil
@@ -118,7 +118,7 @@ export function OngDashboard({
               <button
                 type="button"
                 onClick={() => navigate("/meus-vinculos")}
-                className="flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-4 text-[14px] font-medium text-slate-700 transition hover:bg-slate-50"
+                className="flex h-10 w-full cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-4 text-[14px] font-medium text-slate-700 transition hover:bg-slate-50"
               >
                 <LinkOutlinedIcon style={{ fontSize: 16 }} />
                 Ver vínculos
