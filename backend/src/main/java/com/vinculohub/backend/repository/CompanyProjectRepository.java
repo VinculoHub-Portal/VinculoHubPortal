@@ -109,8 +109,7 @@ public interface CompanyProjectRepository extends JpaRepository<CompanyProject, 
             @Param("status") RelationshipStatus status,
             @Param("threshold") LocalDateTime threshold);
 
-    long countByStatusAndCreatedAtLessThanEqual(
-            RelationshipStatus status, LocalDateTime threshold);
+    long countByStatusAndCreatedAtLessThanEqual(RelationshipStatus status, LocalDateTime threshold);
 
     @Query(
             value =
