@@ -22,8 +22,10 @@ public class NotificationConfig {
     @Bean
     @ConditionalOnExpression("!'${resend.api-key:}'.isBlank()")
     public NotificationService resendNotificationService(
-            @Value("${resend.api-key}") String apiKey, @Value("${resend.from:}") String from) {
-        return new ResendNotificationService(apiKey, from);
+            @Value("${resend.api-key}") String apiKey,
+            @Value("${resend.from:}") String from,
+            @Value("${resend.override-to:}") String overrideTo) {
+        return new ResendNotificationService(apiKey, from, overrideTo);
     }
 
     @Bean

@@ -22,15 +22,23 @@ public class ResendNotificationService implements NotificationService {
 
     private final RestClient restClient;
     private final String from;
+    private final String overrideTo;
 
-    public ResendNotificationService(String apiKey, String from) {
-        this(buildClient(apiKey), from);
+    public ResendNotificationService(String apiKey, String from, String overrideTo) {
+        this(buildClient(apiKey), from, overrideTo);
     }
 
     /** Package-private constructor for tests — accepts a pre-built (mockable) RestClient. */
-    ResendNotificationService(RestClient restClient, String from) {
+    ResendNotificationService(RestClient restClient, String from, String overrideTo) {
         this.restClient = restClient;
         this.from = from;
+        this.overrideTo = (overrideTo == null || overrideTo.isBlank()) ? null : overrideTo.trim();
+        if (this.overrideTo != null) {
+            log.warn(
+                    "[RESEND] OVERRIDE ATIVO — todos os e-mails serão redirecionados para {}."
+                            + " Esta configuração é apenas para desenvolvimento/sandbox.",
+                    this.overrideTo);
+        }
     }
 
     private static RestClient buildClient(String apiKey) {
@@ -51,20 +59,32 @@ public class ResendNotificationService implements NotificationService {
     /**
      * Sends an e-mail via Resend, swallowing any failure to avoid breaking the caller's transaction.
      */
-    private void send(String to, String subject, String html) {
+    private void send(String originalTo, String subject, String html) {
+        String effectiveTo = overrideTo != null ? overrideTo : originalTo;
+        if (overrideTo != null) {
+            log.warn(
+                    "[RESEND] Override ativo: enviando '{}' para {} (original: {})",
+                    subject,
+                    overrideTo,
+                    originalTo);
+        }
         try {
             restClient
                     .post()
                     .uri(RESEND_URL)
-                    .body(new EmailRequest(from, List.of(to), subject, html))
+                    .body(new EmailRequest(from, List.of(effectiveTo), subject, html))
                     .retrieve()
                     .toBodilessEntity();
-            log.debug("[RESEND] Sent '{}' to {}", subject, to);
+            log.debug("[RESEND] Sent '{}' to {}", subject, effectiveTo);
         } catch (RuntimeException e) {
             // Catches RestClientException (HTTP errors), IllegalStateException (config issues),
             // and Jackson serialization errors. Email failures must never propagate — see class
             // javadoc.
-            log.error("[RESEND] Falha ao enviar '{}' para {}: {}", subject, to, e.getMessage());
+            log.error(
+                    "[RESEND] Falha ao enviar '{}' para {}: {}",
+                    subject,
+                    effectiveTo,
+                    e.getMessage());
         }
     }
 
