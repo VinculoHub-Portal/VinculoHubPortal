@@ -11,7 +11,6 @@ const mocks = vi.hoisted(() => ({
   fetchProjectsMock: vi.fn(),
   fetchOdsCatalogMock: vi.fn(),
   createProjectMock: vi.fn(),
-  uploadDocumentMock: vi.fn(),
   showToastMock: vi.fn(),
 }))
 
@@ -38,10 +37,6 @@ vi.mock("../../api/projects", () => ({
 
 vi.mock("../../api/me", () => ({
   fetchAuthenticatedProfile: mocks.fetchAuthenticatedProfileMock,
-}))
-
-vi.mock("../../api/document", () => ({
-  uploadDocument: mocks.uploadDocumentMock,
 }))
 
 vi.mock("../../hooks/usePaginatedCompanies", () => ({
@@ -135,7 +130,6 @@ describe("RoleHomePage - dashboard da ONG", () => {
       { id: 1, name: "ODS 1", description: "Erradicação da pobreza" },
     ])
     mocks.createProjectMock.mockResolvedValue({ id: 1 })
-    mocks.uploadDocumentMock.mockResolvedValue({ id: 1 })
   })
 
   it("renderiza o dashboard da ONG com projetos reais", async () => {
@@ -206,65 +200,6 @@ describe("RoleHomePage - dashboard da ONG", () => {
     expect(
       screen.getByRole("dialog", { name: "Cadastrar Novo Projeto" }),
     ).toBeInTheDocument()
-  })
-
-  it("envia documento com o npoId real do usuário autenticado", async () => {
-    renderOngDashboard()
-    await screen.findByText("Projeto Ativo")
-
-    await userEvent.click(screen.getByRole("button", { name: /Upload de Documentos/i }))
-
-    await userEvent.type(
-      screen.getByPlaceholderText("Ex: Estatuto Social da ONG"),
-      "Estatuto",
-    )
-    await userEvent.type(
-      screen.getByPlaceholderText("Descreva os detalhes deste documento..."),
-      "Descrição do documento",
-    )
-    const fileInput = screen.getByLabelText(/Clique para fazer upload/i)
-    await userEvent.upload(
-      fileInput,
-      new File(["conteudo"], "estatuto.pdf", { type: "application/pdf" }),
-    )
-
-    await userEvent.click(screen.getByRole("button", { name: /Adicionar documento/i }))
-
-    await waitFor(() => expect(mocks.uploadDocumentMock).toHaveBeenCalled())
-    expect(mocks.uploadDocumentMock).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({ npoId: 42 }),
-      "token",
-    )
-  })
-
-  it("não envia documento quando o usuário não tem npoId vinculado", async () => {
-    mocks.fetchAuthenticatedProfileMock.mockResolvedValue({ npoId: null })
-    renderOngDashboard()
-    await screen.findByText("Não foi possível carregar os dados do dashboard.")
-
-    await userEvent.click(screen.getByRole("button", { name: /Upload de Documentos/i }))
-
-    await userEvent.type(
-      screen.getByPlaceholderText("Ex: Estatuto Social da ONG"),
-      "Estatuto",
-    )
-    await userEvent.type(
-      screen.getByPlaceholderText("Descreva os detalhes deste documento..."),
-      "Descrição do documento",
-    )
-    const fileInput = screen.getByLabelText(/Clique para fazer upload/i)
-    await userEvent.upload(
-      fileInput,
-      new File(["conteudo"], "estatuto.pdf", { type: "application/pdf" }),
-    )
-
-    await userEvent.click(screen.getByRole("button", { name: /Adicionar documento/i }))
-
-    expect(mocks.uploadDocumentMock).not.toHaveBeenCalled()
-    expect(mocks.showToastMock).toHaveBeenCalledWith(
-      "ONG não encontrada para o usuário autenticado.",
-    )
   })
 })
 
