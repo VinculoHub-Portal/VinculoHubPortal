@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   getAccessTokenSilentlyMock: vi.fn(),
   fetchCompanyEsgImpactDashboardMock: vi.fn(),
   fetchAuthenticatedProfileMock: vi.fn(),
+  usePaginatedNposMock: vi.fn(),
 }));
 
 vi.mock("react-router-dom", async () => {
@@ -30,6 +31,10 @@ vi.mock("../../api/me", () => ({
 
 vi.mock("../../api/companyPortfolio", () => ({
   fetchCompanyEsgImpactDashboard: mocks.fetchCompanyEsgImpactDashboardMock,
+}));
+
+vi.mock("../../hooks/usePaginatedNpos", () => ({
+  usePaginatedNpos: mocks.usePaginatedNposMock,
 }));
 
 vi.mock("../../components/general/Header", () => ({
@@ -74,6 +79,25 @@ describe("CompanyDashboard", () => {
         },
       ],
     });
+    mocks.usePaginatedNposMock.mockReturnValue({
+      npos: [
+        {
+          id: 1,
+          name: "ONG Teste",
+          description: "Descrição institucional",
+          logoUrl: null,
+          city: "São Paulo",
+          stateCode: "SP",
+        },
+      ],
+      loading: false,
+      error: null,
+      currentPage: 0,
+      totalPages: 1,
+      totalElements: 1,
+      setCurrentPage: vi.fn(),
+      refetch: vi.fn(),
+    });
   });
 
   it("renderiza o título 'Dashboard Empresarial'", async () => {
@@ -114,6 +138,12 @@ describe("CompanyDashboard", () => {
   it("renderiza a seção de projetos apoiados", async () => {
     await renderCompanyDashboard();
     expect(screen.getByText("Projetos Apoiados")).toBeInTheDocument();
+  });
+
+  it("renderiza a vitrine de ONGs no dashboard empresarial", async () => {
+    await renderCompanyDashboard();
+    expect(screen.getByText("ONGs Cadastradas")).toBeInTheDocument();
+    expect(screen.getByText("ONG Teste")).toBeInTheDocument();
   });
 
   it("renderiza a seção de modalidades de investimento", async () => {

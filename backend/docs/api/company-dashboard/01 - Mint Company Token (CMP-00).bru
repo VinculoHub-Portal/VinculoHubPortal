@@ -1,0 +1,29 @@
+meta {
+  name: 01 - Mint Company Token (CMP-00)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/dev/token?sub=dev%7Ccompany&roles=COMPANY
+  body: none
+}
+
+script:post-response {
+  const rawBody = res.getBody()
+  const body = typeof rawBody === "string" ? JSON.parse(rawBody) : rawBody
+
+  if (res.getStatus() !== 200) {
+    throw new Error(`Esperado 200 ao emitir token COMPANY, recebido ${res.getStatus()}`)
+  }
+
+  if (!body?.access_token) {
+    throw new Error("Resposta sem access_token para o token COMPANY")
+  }
+
+  bru.setVar("companyToken", body.access_token)
+}
+
+docs {
+  Emite um JWT local com ROLE_COMPANY para autenticar a listagem que alimenta o OngShowcaseCard.
+}
