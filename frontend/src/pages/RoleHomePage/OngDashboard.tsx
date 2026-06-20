@@ -40,7 +40,8 @@ export function OngDashboard({
   const { showToast } = useToast()
   const { getAccessTokenSilently } = useAuth0()
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
-  const { projects, typeMetrics, filter, setFilter, loading, error, refetch } = useOngDashboard()
+  const { projects, typeMetrics, filter, setFilter, loading, error, npoId, refetch } =
+    useOngDashboard()
   const previousRefreshKeyRef = useRef(refreshKey)
 
   useEffect(() => {
@@ -53,6 +54,11 @@ export function OngDashboard({
   }, [refetch, refreshKey])
 
   async function handleConfirmUpload(file: File, title: string, description: string) {
+    if (!npoId) {
+      showToast("ONG não encontrada para o usuário autenticado.")
+      return
+    }
+
     try {
       const token = await getAccessTokenSilently()
 
@@ -61,7 +67,7 @@ export function OngDashboard({
         {
           title,
           description,
-          npoId: 1,
+          npoId,
         },
         token,
       )

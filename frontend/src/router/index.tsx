@@ -20,6 +20,7 @@ import { AdminDashboard } from "../pages/AdminDashboard"
 import { AdminNotificationsPage } from "../pages/AdminNotificationsPage"
 import { AdminOngsPage } from "../pages/AdminOngsPage"
 import { AdminVinculosPage } from "../pages/AdminVinculosPage"
+import { VinculosPage } from "../pages/VinculosPage"
 import { RelationshipsPage } from "../pages/RelationshipsPage"
 import { AdminOngsList } from "../pages/AdminOngsList"
 import { AdminVinculosList } from "../pages/AdminVinculosList"
@@ -159,6 +160,22 @@ export const AppRouter = () => (
         element={
           <ProtectedRoute requiredRole="COMPANY">
             <CompanyPrivateInvestmentPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/empresa/vinculos"
+        element={
+          <ProtectedRoute requiredRole="COMPANY">
+            <VinculosPage role="COMPANY" dashboardPath="/empresa/dashboard" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/ong/vinculos"
+        element={
+          <ProtectedRoute requiredRole="NPO">
+            <VinculosPage role="NPO" dashboardPath="/ong/dashboard" />
           </ProtectedRoute>
         }
       />

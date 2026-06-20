@@ -55,7 +55,7 @@ describe("admin api", () => {
     });
 
     expect(mocks.apiGetMock).toHaveBeenCalledWith(
-      "/api/admin/vinculos",
+      "/api/admin/vinculos/search",
       expect.objectContaining({
         headers: { Authorization: "Bearer token" },
       }),
@@ -65,11 +65,11 @@ describe("admin api", () => {
     );
   });
 
-  it("usa a rota legada separada para a listagem simples de vínculos", async () => {
+  it("usa a rota legada para a listagem simples de vínculos", async () => {
     await fetchAdminVinculos("token", 3, 20);
 
     expect(mocks.apiGetMock).toHaveBeenCalledWith(
-      "/api/admin/vinculos/list",
+      "/api/admin/vinculos",
       expect.objectContaining({
         headers: { Authorization: "Bearer token" },
         params: { page: 3, size: 20, sort: "createdAt,desc" },

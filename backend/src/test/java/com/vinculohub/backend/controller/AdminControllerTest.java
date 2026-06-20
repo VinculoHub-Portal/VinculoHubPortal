@@ -98,7 +98,7 @@ class AdminControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/admin/vinculos lista vínculos para admin")
+    @DisplayName("GET /api/admin/vinculos/search lista vínculos para admin")
     void shouldListAdminRelationships() throws Exception {
         Page<AdminRelationshipResponse> page =
                 new PageImpl<>(
@@ -131,7 +131,7 @@ class AdminControllerTest {
                 .thenReturn(page);
 
         mockMvc.perform(
-                        get("/api/admin/vinculos")
+                        get("/api/admin/vinculos/search")
                                 .param("companyName", "Empresa Verde")
                                 .param("npoName", "ONG Verde")
                                 .param("projectTitle", "Projeto Impacto")

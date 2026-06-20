@@ -40,7 +40,7 @@ public class AdminController {
         return ResponseEntity.ok(adminNpoService.listNpos(search, area, active, pageable));
     }
 
-    @GetMapping("/vinculos")
+    @GetMapping("/vinculos/search")
     public ResponseEntity<Page<AdminRelationshipResponse>> listRelationships(
             @RequestParam(required = false) String companyName,
             @RequestParam(required = false) String npoName,
@@ -49,7 +49,7 @@ public class AdminController {
             @PageableDefault(size = 10, sort = "updatedAt", direction = Sort.Direction.DESC)
                     Pageable pageable) {
         log.info(
-                "GET /api/admin/vinculos | companyName={} npoName={} projectTitle={} status={}",
+                "GET /api/admin/vinculos/search | companyName={} npoName={} projectTitle={} status={}",
                 companyName,
                 npoName,
                 projectTitle,

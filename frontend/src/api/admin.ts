@@ -238,7 +238,7 @@ export async function fetchAdminRelationships(
 
   logger.info("AdminAPI", "Fetching admin relationships", { filters })
   try {
-    const { data } = await api.get<AdminRelationshipPage>("/api/admin/vinculos", {
+    const { data } = await api.get<AdminRelationshipPage>("/api/admin/vinculos/search", {
       headers: { Authorization: `Bearer ${token}` },
       params,
     })
@@ -260,7 +260,7 @@ export async function fetchAdminVinculos(
 ): Promise<AdminVinculoPage> {
   logger.info("AdminAPI", "Fetching admin vinculos", { page, size })
   try {
-    const { data } = await api.get<AdminVinculoPage>("/api/admin/vinculos/list", {
+    const { data } = await api.get<AdminVinculoPage>("/api/admin/vinculos", {
       headers: { Authorization: `Bearer ${token}` },
       params: { page, size, sort: "createdAt,desc" },
     })
