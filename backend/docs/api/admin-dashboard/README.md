@@ -1,6 +1,6 @@
 # Admin Dashboard API
 
-Coleção Bruno de smoke tests dos endpoints usados pelo `AdminDashboard`.
+Coleção Bruno legada base de smoke tests dos endpoints usados pelo `AdminDashboard`.
 
 Ela roda contra o stack de desenvolvimento do `docker-compose.dev.yml`, usando o backend em
 `http://localhost:8088` e o emissor local de JWT em `/dev/token`.
@@ -16,7 +16,7 @@ docker compose -f docker-compose.dev.yml down -v
 
 ## O que a coleção cobre
 
-- Emissão de tokens locais para `ADMIN` e `COMPANY`
+- Emissão de tokens locais para `ADMIN`, `COMPANY` e `NPO`
 - Descoberta da ONG semeada no profile `dev`
 - Exportação de ONGs e empresas
 - Criação e atualização de denúncia

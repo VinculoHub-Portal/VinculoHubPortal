@@ -53,8 +53,9 @@ export const AppRouter = () => (
         path="/admin/ongs"
         element={
           <ProtectedRoute requiredRole="ADMIN">
-            <AdminOngsPage />
-            <AdminOngsList />
+            <AdminOngsPage>
+              <AdminOngsList />
+            </AdminOngsPage>
           </ProtectedRoute>
         }
       />
@@ -62,7 +63,9 @@ export const AppRouter = () => (
         path="/admin/vinculos"
         element={
           <ProtectedRoute requiredRole="ADMIN">
-            <AdminVinculosPage />
+            <AdminVinculosPage>
+              <AdminVinculosList />
+            </AdminVinculosPage>
           </ProtectedRoute>
         }
       />
@@ -71,7 +74,6 @@ export const AppRouter = () => (
         element={
           <ProtectedRoute requiredRole="ADMIN">
             <AdminNotificationsPage />
-            <AdminVinculosList />
           </ProtectedRoute>
         }
       />

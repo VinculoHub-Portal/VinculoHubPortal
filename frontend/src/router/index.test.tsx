@@ -27,6 +27,36 @@ vi.mock("../pages/RelationshipsPage", () => ({
   RelationshipsPage: () => <p>Página de vínculos</p>,
 }))
 
+vi.mock("../pages/AdminOngsPage", () => ({
+  AdminOngsPage: ({ children }: { children?: any }) => (
+    <div>
+      <p>Admin ONGs page</p>
+      {children}
+    </div>
+  ),
+}))
+
+vi.mock("../pages/AdminOngsList", () => ({
+  AdminOngsList: () => <p>Admin ONGs list</p>,
+}))
+
+vi.mock("../pages/AdminVinculosPage", () => ({
+  AdminVinculosPage: ({ children }: { children?: any }) => (
+    <div>
+      <p>Admin vínculos page</p>
+      {children}
+    </div>
+  ),
+}))
+
+vi.mock("../pages/AdminVinculosList", () => ({
+  AdminVinculosList: () => <p>Admin vínculos list</p>,
+}))
+
+vi.mock("../pages/AdminNotificationsPage", () => ({
+  AdminNotificationsPage: () => <p>Admin notificações page</p>,
+}))
+
 describe("rota /vinculos", () => {
   beforeEach(() => {
     mocks.roles.splice(0, mocks.roles.length, "NPO")
@@ -54,5 +84,38 @@ describe("rota /vinculos", () => {
 
     expect(await screen.findByText("Página inicial")).toBeInTheDocument()
     expect(screen.queryByText("Página de vínculos")).not.toBeInTheDocument()
+  })
+})
+
+describe("rotas administrativas", () => {
+  beforeEach(() => {
+    mocks.roles.splice(0, mocks.roles.length, "ADMIN")
+  })
+
+  it("compõe a rota /admin/ongs com page e list", () => {
+    window.history.replaceState({}, "", "/admin/ongs")
+
+    render(<AppRouter />)
+
+    expect(screen.getByText("Admin ONGs page")).toBeInTheDocument()
+    expect(screen.getByText("Admin ONGs list")).toBeInTheDocument()
+  })
+
+  it("compõe a rota /admin/vinculos com page e list", () => {
+    window.history.replaceState({}, "", "/admin/vinculos")
+
+    render(<AppRouter />)
+
+    expect(screen.getByText("Admin vínculos page")).toBeInTheDocument()
+    expect(screen.getByText("Admin vínculos list")).toBeInTheDocument()
+  })
+
+  it("mantém /admin/notificacoes sem a lista de vínculos", () => {
+    window.history.replaceState({}, "", "/admin/notificacoes")
+
+    render(<AppRouter />)
+
+    expect(screen.getByText("Admin notificações page")).toBeInTheDocument()
+    expect(screen.queryByText("Admin vínculos list")).not.toBeInTheDocument()
   })
 })

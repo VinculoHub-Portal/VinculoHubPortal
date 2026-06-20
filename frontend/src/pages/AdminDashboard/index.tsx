@@ -8,7 +8,13 @@ import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
 import PendingActionsOutlinedIcon from "@mui/icons-material/PendingActionsOutlined";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchAllCompanies, fetchAllNpos, fetchAllVinculos, fetchAdminMetrics, type AdminMetrics } from "../../api/admin";
+import {
+  fetchAllCompanies,
+  fetchAllNpos,
+  fetchAllVinculos,
+  fetchAdminMetrics,
+  type AdminMetrics,
+} from "../../api/admin";
 import {
   fetchAdminNpoReports,
   updateAdminNpoReportStatus,
@@ -20,43 +26,11 @@ import { FlexibleButton } from "../../components/general/FlexibleButton";
 import { Header } from "../../components/general/Header";
 import { MetricCard } from "../../components/general/MetricCard";
 import { useToast } from "../../context/ToastContext";
-import{ mapNposForCsvExport, mapVinculosForCsvExport } from "../../utils/adminExportDisplay";
+import {
+  mapNposForCsvExport,
+  mapVinculosForCsvExport,
+} from "../../utils/adminExportDisplay";
 import { downloadCsv } from "../../utils/exportCsv";
-
-const dashboardMetrics = [
-  {
-    label: "Total de ONGs",
-    value: 87,
-    description: "Cadastradas no sistema",
-    icon: <CorporateFareOutlinedIcon fontSize="small" />,
-    variant: "brand" as const,
-    href: "/admin/ongs",
-  },
-  {
-    label: "Editais Publicados",
-    value: 24,
-    description: "Ativos no mural",
-    icon: <DescriptionOutlinedIcon fontSize="small" />,
-    variant: "success" as const,
-    href: "/editais",
-  },
-  {
-    label: "Vínculos Ativos",
-    value: 156,
-    description: "Empresas e ONGs conectadas",
-    icon: <HubOutlinedIcon fontSize="small" />,
-    variant: "accent" as const,
-    href: "/admin/vinculos",
-  },
-  {
-    label: "Notificações Pendentes",
-    value: 5,
-    description: "Mediações necessárias",
-    icon: <PendingActionsOutlinedIcon fontSize="small" />,
-    variant: "warning" as const,
-    href: "/admin/notificacoes",
-  },
-];
 
 const PAGE_SIZE = 5;
 
@@ -88,14 +62,12 @@ const COMPANY_HEADERS = {
   createdAt: "Data de Cadastro",
 };
 
-const PAGE_SIZE = 5;
-
 const VINCULOS_HEADERS = {
   companyName: "Empresa",
   npoName: "ONG",
   projectTitle: "Projeto",
   status: "Status",
-}
+};
 
 const REPORT_STATUS_LABELS: Record<NpoReportResponse["status"], string> = {
   OPEN: "Aberta",
@@ -103,7 +75,11 @@ const REPORT_STATUS_LABELS: Record<NpoReportResponse["status"], string> = {
   DISMISSED: "Descartada",
 };
 
-const REPORT_STATUS_OPTIONS: NpoReportStatus[] = ["OPEN", "RESOLVED", "DISMISSED"];
+const REPORT_STATUS_OPTIONS: NpoReportStatus[] = [
+  "OPEN",
+  "RESOLVED",
+  "DISMISSED",
+];
 
 function formatReportDate(value: string) {
   const date = new Date(value);
@@ -119,7 +95,6 @@ export function AdminDashboard() {
   const navigate = useNavigate();
   const { getAccessTokenSilently } = useAuth0();
   const { showToast } = useToast();
-  const [exporting, setExporting] = useState(false);
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   const [metricsLoading, setMetricsLoading] = useState(true);
   const [metricsError, setMetricsError] = useState("");
@@ -132,12 +107,12 @@ export function AdminDashboard() {
   const [updatingReportId, setUpdatingReportId] = useState<number | null>(null);
   const [npoNameFilter, setNpoNameFilter] = useState("");
   const [companyNameFilter, setCompanyNameFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState<NpoReportStatus>("OPEN");
-  const [exporting, setExporting] = useState(false);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [debouncedNpoName, setDebouncedNpoName] = useState("");
   const [debouncedCompanyName, setDebouncedCompanyName] = useState("");
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [statusFilter, setStatusFilter] = useState<NpoReportStatus>("OPEN");
+  const [openReportsCount, setOpenReportsCount] = useState(0);
+  const [exporting, setExporting] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -167,6 +142,7 @@ export function AdminDashboard() {
       setDebouncedNpoName(npoNameFilter);
       setPage(0);
     }, 400);
+
     return () => clearTimeout(timer);
   }, [npoNameFilter]);
 
@@ -175,6 +151,7 @@ export function AdminDashboard() {
       setDebouncedCompanyName(companyNameFilter);
       setPage(0);
     }, 400);
+
     return () => clearTimeout(timer);
   }, [companyNameFilter]);
 
@@ -187,22 +164,29 @@ export function AdminDashboard() {
       try {
         const token = await getAccessTokenSilently();
         const data = await fetchAdminNpoReports(token, {
-          npoName: npoNameFilter || undefined,
-          companyName: companyNameFilter || undefined,
+          npoName: debouncedNpoName || undefined,
+          companyName: debouncedCompanyName || undefined,
           status: statusFilter,
           page,
           size: PAGE_SIZE,
         });
         if (!isMounted) return;
+
         setReports(data.content);
         setTotalPages(data.totalPages);
         setTotalElements(data.totalElements);
+        if (statusFilter === "OPEN") {
+          setOpenReportsCount(data.totalElements);
+        }
       } catch {
         if (isMounted) {
           setReportsError("Não foi possível carregar as denúncias.");
           setReports([]);
           setTotalPages(0);
           setTotalElements(0);
+          if (statusFilter === "OPEN") {
+            setOpenReportsCount(0);
+          }
         }
       } finally {
         if (isMounted) setIsLoadingReports(false);
@@ -214,9 +198,14 @@ export function AdminDashboard() {
     return () => {
       isMounted = false;
     };
-  }, [getAccessTokenSilently, npoNameFilter, companyNameFilter, statusFilter, page]);
+  }, [
+    getAccessTokenSilently,
+    debouncedNpoName,
+    debouncedCompanyName,
+    statusFilter,
+    page,
+  ]);
 
-  const openReportsCount = reports.filter((report) => report.status === "OPEN").length;
   async function handleExport() {
     setExporting(true);
     try {
@@ -229,18 +218,31 @@ export function AdminDashboard() {
       const date = new Date().toISOString().slice(0, 10);
       downloadCsv(`ongs_${date}.csv`, mapNposForCsvExport(npos), NPO_HEADERS);
       downloadCsv(`empresas_${date}.csv`, companies, COMPANY_HEADERS);
-      downloadCsv(`vinculos_${date}.csv`, mapVinculosForCsvExport(vinculos), VINCULOS_HEADERS);
+      downloadCsv(
+        `vinculos_${date}.csv`,
+        mapVinculosForCsvExport(vinculos),
+        VINCULOS_HEADERS,
+      );
     } finally {
       setExporting(false);
     }
   }
 
-  async function handleStatusChange(reportId: number, newStatus: NpoReportStatus) {
+  async function handleStatusChange(
+    reportId: number,
+    newStatus: NpoReportStatus,
+  ) {
     setUpdatingReportId(reportId);
+    const previousReport = reports.find((report) => report.id === reportId);
+
     try {
       const token = await getAccessTokenSilently();
-      const updatedReport = await updateAdminNpoReportStatus(reportId, { status: newStatus }, token);
-      showToast(`Status atualizado para "${REPORT_STATUS_LABELS[newStatus]}" com sucesso.`, "success");
+      const updatedReport = await updateAdminNpoReportStatus(
+        reportId,
+        { status: newStatus },
+        token,
+      );
+
       setReports((currentReports) => {
         const nextReports = currentReports.map((report) =>
           report.id === updatedReport.id ? updatedReport : report,
@@ -252,9 +254,24 @@ export function AdminDashboard() {
 
         return nextReports;
       });
+
       if (statusFilter !== updatedReport.status) {
         setTotalElements((value) => Math.max(0, value - 1));
       }
+
+      if (previousReport?.status === "OPEN" && updatedReport.status !== "OPEN") {
+        setOpenReportsCount((value) => Math.max(0, value - 1));
+      } else if (
+        previousReport?.status !== "OPEN" &&
+        updatedReport.status === "OPEN"
+      ) {
+        setOpenReportsCount((value) => value + 1);
+      }
+
+      showToast(
+        `Status atualizado para "${REPORT_STATUS_LABELS[newStatus]}" com sucesso.`,
+        "success",
+      );
     } catch {
       showToast("Não foi possível atualizar o status da denúncia.", "error");
     } finally {
@@ -265,19 +282,6 @@ export function AdminDashboard() {
   function handleStatusFilterChange(value: NpoReportStatus) {
     setStatusFilter(value);
     setPage(0);
-  }
-
-  async function handleExport() {
-    setExporting(true);
-    try {
-      const token = await getAccessTokenSilently();
-      const [npos, companies] = await Promise.all([fetchAllNpos(token), fetchAllCompanies(token)]);
-      const date = new Date().toISOString().slice(0, 10);
-      downloadCsv(`ongs_${date}.csv`, npos, NPO_HEADERS);
-      downloadCsv(`empresas_${date}.csv`, companies, COMPANY_HEADERS);
-    } finally {
-      setExporting(false);
-    }
   }
 
   return (
@@ -336,14 +340,17 @@ export function AdminDashboard() {
           aria-label="Métricas do dashboard"
         >
           {metricsError && (
-            <p className="col-span-full text-sm font-medium text-vinculo-red" role="alert">
+            <p
+              className="col-span-full text-sm font-medium text-vinculo-red"
+              role="alert"
+            >
               {metricsError}
             </p>
           )}
           {metricsLoading
-            ? Array.from({ length: 4 }).map((_, i) => (
+            ? Array.from({ length: 4 }).map((_, index) => (
                 <div
-                  key={i}
+                  key={index}
                   className="h-36 animate-pulse rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
                   aria-hidden="true"
                 >
@@ -357,7 +364,8 @@ export function AdminDashboard() {
                   <div className="mt-5 h-3 w-40 rounded bg-slate-200" />
                 </div>
               ))
-            : !metricsError && metrics && (
+            : !metricsError &&
+              metrics && (
                 <>
                   <MetricCard
                     label="Total de ONGs"
@@ -402,11 +410,15 @@ export function AdminDashboard() {
         >
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h2 id="denuncias-title" className="text-xl font-bold text-vinculo-dark">
+              <h2
+                id="denuncias-title"
+                className="text-xl font-bold text-vinculo-dark"
+              >
                 Denúncias de ONGs
               </h2>
               <p className="mt-1 text-sm leading-6 text-slate-600">
-                Acompanhe suspeitas reportadas por empresas para análise administrativa.
+                Acompanhe suspeitas reportadas por empresas para análise
+                administrativa.
               </p>
             </div>
             <span className="inline-flex w-fit items-center rounded-full bg-vinculo-red/10 px-3 py-1 text-sm font-semibold text-vinculo-red">
@@ -415,20 +427,24 @@ export function AdminDashboard() {
           </div>
 
           <div className="mt-4 flex flex-col gap-3">
-            <div className="flex gap-1" role="tablist" aria-label="Filtrar por status">
-              {REPORT_STATUS_OPTIONS.map((s) => (
+            <div
+              className="flex gap-1"
+              role="tablist"
+              aria-label="Filtrar por status"
+            >
+              {REPORT_STATUS_OPTIONS.map((status) => (
                 <button
-                  key={s}
+                  key={status}
                   role="tab"
-                  aria-selected={statusFilter === s}
-                  onClick={() => handleStatusFilterChange(s)}
+                  aria-selected={statusFilter === status}
+                  onClick={() => handleStatusFilterChange(status)}
                   className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                    statusFilter === s
+                    statusFilter === status
                       ? "bg-vinculo-dark text-white"
                       : "border border-slate-300 text-slate-600 hover:bg-slate-50"
                   }`}
                 >
-                  {REPORT_STATUS_LABELS[s]}
+                  {REPORT_STATUS_LABELS[status]}
                 </button>
               ))}
             </div>
@@ -437,20 +453,14 @@ export function AdminDashboard() {
                 type="text"
                 placeholder="Filtrar por ONG"
                 value={npoNameFilter}
-                onChange={(e) => {
-                  setPage(0);
-                  setNpoNameFilter(e.target.value);
-                }}
+                onChange={(event) => setNpoNameFilter(event.target.value)}
                 className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 outline-none focus:border-vinculo-dark focus:ring-2 focus:ring-vinculo-dark/20"
               />
               <input
                 type="text"
                 placeholder="Filtrar por empresa"
                 value={companyNameFilter}
-                onChange={(e) => {
-                  setPage(0);
-                  setCompanyNameFilter(e.target.value);
-                }}
+                onChange={(event) => setCompanyNameFilter(event.target.value)}
                 className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 outline-none focus:border-vinculo-dark focus:ring-2 focus:ring-vinculo-dark/20"
               />
             </div>
@@ -500,11 +510,18 @@ export function AdminDashboard() {
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {reports.map((report) => (
-                        <tr key={report.id} className="align-top text-slate-700">
+                        <tr
+                          key={report.id}
+                          className="align-top text-slate-700"
+                        >
                           <td className="py-4 pr-4">
-                            <p className="font-semibold text-vinculo-dark">{report.npo.name}</p>
+                            <p className="font-semibold text-vinculo-dark">
+                              {report.npo.name}
+                            </p>
                             {report.npo.email && (
-                              <p className="mt-1 text-xs text-slate-500">{report.npo.email}</p>
+                              <p className="mt-1 text-xs text-slate-500">
+                                {report.npo.email}
+                              </p>
                             )}
                           </td>
                           <td className="px-4 py-4">
@@ -515,7 +532,9 @@ export function AdminDashboard() {
                               {report.reporterUser.email}
                             </p>
                           </td>
-                          <td className="max-w-md px-4 py-4 leading-6">{report.reason}</td>
+                          <td className="max-w-md px-4 py-4 leading-6">
+                            {report.reason}
+                          </td>
                           <td className="px-4 py-4">
                             <select
                               aria-label={`Alterar status da denúncia ${report.id}`}
@@ -529,9 +548,9 @@ export function AdminDashboard() {
                               }
                               className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-none focus:border-vinculo-dark focus:ring-2 focus:ring-vinculo-dark/20 disabled:opacity-60"
                             >
-                              {REPORT_STATUS_OPTIONS.map((s) => (
-                                <option key={s} value={s}>
-                                  {REPORT_STATUS_LABELS[s]}
+                              {REPORT_STATUS_OPTIONS.map((status) => (
+                                <option key={status} value={status}>
+                                  {REPORT_STATUS_LABELS[status]}
                                 </option>
                               ))}
                             </select>
@@ -546,10 +565,12 @@ export function AdminDashboard() {
                 </div>
 
                 <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
-                  <span>{totalElements} resultado{totalElements !== 1 ? "s" : ""}</span>
+                  <span>
+                    {totalElements} resultado{totalElements !== 1 ? "s" : ""}
+                  </span>
                   <div className="flex items-center gap-3">
                     <button
-                      onClick={() => setPage((p) => p - 1)}
+                      onClick={() => setPage((currentPage) => currentPage - 1)}
                       disabled={page === 0}
                       className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                     >
@@ -559,7 +580,7 @@ export function AdminDashboard() {
                       Página {page + 1} de {totalPages}
                     </span>
                     <button
-                      onClick={() => setPage((p) => p + 1)}
+                      onClick={() => setPage((currentPage) => currentPage + 1)}
                       disabled={page >= totalPages - 1}
                       className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                     >
@@ -571,7 +592,6 @@ export function AdminDashboard() {
             )}
           </div>
         </section>
-
       </main>
 
       <CreateNoticeModal

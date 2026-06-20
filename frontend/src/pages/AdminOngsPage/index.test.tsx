@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { AdminOngsList } from "../AdminOngsList";
 import { AdminOngsPage } from "./index";
 
 const mocks = vi.hoisted(() => ({
@@ -39,7 +40,9 @@ const mockNpo = {
 function renderPage() {
   return render(
     <MemoryRouter>
-      <AdminOngsPage />
+      <AdminOngsPage>
+        <AdminOngsList />
+      </AdminOngsPage>
     </MemoryRouter>,
   );
 }
@@ -70,15 +73,14 @@ describe("AdminOngsPage", () => {
 
     expect(screen.getByTestId("header")).toBeInTheDocument();
     expect(screen.getByText("ONGs cadastradas")).toBeInTheDocument();
-    const cardTitle = await screen.findByText("ONG Verde");
-    expect(cardTitle).toBeInTheDocument();
-    const card = cardTitle.closest("article");
-    expect(card).not.toBeNull();
-    expect(screen.getByText("Porto Alegre - RS")).toBeInTheDocument();
+    expect(await screen.findByText("ONG Verde")).toBeInTheDocument();
+    expect(screen.getByText("Porto Alegre, RS")).toBeInTheDocument();
     expect(screen.getByText("Ativa")).toBeInTheDocument();
-    expect(within(card!).getByText("Ambiental")).toBeInTheDocument();
-    expect(within(card!).getByText("Governança")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Ver perfil público" })).toHaveAttribute(
+    const row = screen.getByText("ONG Verde").closest("tr");
+    expect(row).not.toBeNull();
+    expect(within(row!).getByText("Ambiental")).toBeInTheDocument();
+    expect(within(row!).getByText("Governança")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Ver perfil" })).toHaveAttribute(
       "href",
       "/ong/publico/42",
     );

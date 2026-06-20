@@ -1,4 +1,5 @@
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft"
+import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined"
+import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined"
 import { useAuth0 } from "@auth0/auth0-react"
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
@@ -126,33 +127,27 @@ export function AdminNotificationsPage() {
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
         <Link
           to="/admin/dashboard"
-          className="flex w-fit items-center gap-1 text-sm font-medium text-vinculo-dark transition-opacity hover:opacity-70"
+          className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-vinculo-dark"
         >
-          <ChevronLeftIcon fontSize="small" />
-          Voltar ao Dashboard
+          <ArrowBackOutlinedIcon fontSize="small" />
+          Voltar ao painel
         </Link>
 
-        <header className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold leading-tight text-vinculo-dark sm:text-4xl">
-            Denúncias de ONGs
-          </h1>
-          <p className="max-w-2xl text-base leading-7 text-slate-600">
-            Acompanhe, filtre e atualize os relatos recebidos no painel administrativo.
-          </p>
+        <header className="flex items-center gap-3">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-100 text-rose-600">
+            <ReportProblemOutlinedIcon fontSize="small" />
+          </span>
+          <div>
+            <h1 className="text-2xl font-bold text-vinculo-dark">Denúncias de ONGs</h1>
+            <p className="text-sm text-slate-500">
+              {isLoadingReports
+                ? "Carregando..."
+                : `${totalElements} pendência${totalElements !== 1 ? "s" : ""} no total`}
+            </p>
+          </div>
         </header>
 
         <section aria-labelledby="denuncias-title" className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h2 id="denuncias-title" className="text-xl font-bold text-vinculo-dark">
-                Denúncias
-              </h2>
-              <p className="mt-1 text-sm leading-6 text-slate-600">
-                {totalElements} pendência{totalElements !== 1 ? "s" : ""}
-              </p>
-            </div>
-          </div>
-
           <div className="flex flex-col gap-3">
             <div className="flex gap-1" role="tablist" aria-label="Filtrar por status">
               {REPORT_STATUS_OPTIONS.map((status) => (
@@ -191,17 +186,23 @@ export function AdminNotificationsPage() {
             </div>
           </div>
 
-          <div className="mt-2">
-            {isLoadingReports && <p className="text-sm text-slate-600">Carregando denúncias...</p>}
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            {isLoadingReports && (
+              <div className="p-6">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <div key={index} className="mb-4 h-10 animate-pulse rounded bg-slate-100" />
+                ))}
+              </div>
+            )}
 
             {!isLoadingReports && reportsError && (
-              <p className="text-sm font-medium text-vinculo-red" role="alert">
+              <p className="p-6 text-sm font-medium text-vinculo-red" role="alert">
                 {reportsError}
               </p>
             )}
 
             {!isLoadingReports && !reportsError && reports.length === 0 && (
-              <p className="text-sm text-slate-600">
+              <p className="p-6 text-sm text-slate-500">
                 {statusFilter === "OPEN" && "Nenhuma denúncia aberta."}
                 {statusFilter === "RESOLVED" && "Nenhuma denúncia resolvida."}
                 {statusFilter === "DISMISSED" && "Nenhuma denúncia descartada."}
@@ -209,11 +210,12 @@ export function AdminNotificationsPage() {
             )}
 
             {!isLoadingReports && !reportsError && reports.length > 0 && (
-              <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+              <>
+                <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
-                  <thead>
+                  <thead className="bg-slate-50">
                     <tr className="text-slate-500">
-                      <th scope="col" className="py-3 pl-4 pr-4 font-semibold">
+                      <th scope="col" className="px-6 py-3 font-semibold">
                         ONG
                       </th>
                       <th scope="col" className="px-4 py-3 font-semibold">
@@ -275,18 +277,21 @@ export function AdminNotificationsPage() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+                </div>
+
+                <div className="border-t border-slate-100 px-6 py-2">
+                  <Pagination
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onChange={(newPage) => {
+                      setPage(newPage)
+                      window.scrollTo({ top: 0, behavior: "smooth" })
+                    }}
+                  />
+                </div>
+              </>
             )}
           </div>
-
-          <Pagination
-            currentPage={page}
-            totalPages={totalPages}
-            onChange={(newPage) => {
-              setPage(newPage)
-              window.scrollTo({ top: 0, behavior: "smooth" })
-            }}
-          />
         </section>
       </main>
     </div>

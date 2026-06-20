@@ -260,7 +260,7 @@ export async function fetchAdminVinculos(
 ): Promise<AdminVinculoPage> {
   logger.info("AdminAPI", "Fetching admin vinculos", { page, size })
   try {
-    const { data } = await api.get<AdminVinculoPage>("/api/admin/vinculos", {
+    const { data } = await api.get<AdminVinculoPage>("/api/admin/vinculos/list", {
       headers: { Authorization: `Bearer ${token}` },
       params: { page, size, sort: "createdAt,desc" },
     })

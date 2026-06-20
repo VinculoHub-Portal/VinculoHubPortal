@@ -33,12 +33,12 @@ public class AdminMetricsController {
         return ResponseEntity.ok(adminMetricsService.getMetrics());
     }
 
-    @GetMapping("/vinculos")
+    @GetMapping("/vinculos/list")
     public ResponseEntity<Page<AdminVinculoListItemResponse>> listVinculos(
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
                     Pageable pageable) {
         log.info(
-                "GET /api/admin/vinculos | page={} size={}",
+                "GET /api/admin/vinculos/list | page={} size={}",
                 pageable.getPageNumber(),
                 pageable.getPageSize());
         Page<AdminVinculoListItemResponse> page =

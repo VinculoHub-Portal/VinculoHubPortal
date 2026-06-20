@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { AdminVinculosList } from "../AdminVinculosList";
 import { AdminVinculosPage } from "./index";
 
 const mocks = vi.hoisted(() => ({
@@ -44,7 +45,9 @@ const mockRelationship = {
 function renderPage() {
   return render(
     <MemoryRouter>
-      <AdminVinculosPage />
+      <AdminVinculosPage>
+        <AdminVinculosList />
+      </AdminVinculosPage>
     </MemoryRouter>,
   );
 }

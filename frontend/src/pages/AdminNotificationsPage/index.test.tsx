@@ -88,7 +88,7 @@ describe("AdminNotificationsPage", () => {
     expect(await screen.findByText("ONG Reportada")).toBeInTheDocument();
     expect(screen.getByText("Empresa Denunciante")).toBeInTheDocument();
     expect(screen.getByText("empresa@example.com")).toBeInTheDocument();
-    expect(screen.getByText("1 pendência")).toBeInTheDocument();
+    expect(screen.getByText("1 pendência no total")).toBeInTheDocument();
 
     const select = screen.getByRole("combobox", {
       name: "Alterar status da denúncia 1",
