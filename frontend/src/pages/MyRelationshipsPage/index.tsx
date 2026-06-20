@@ -33,7 +33,6 @@ import { useMyRelationships } from "../../hooks/useMyRelationships"
 import { RejectRelationshipModal } from "../RelationshipsPage/components/RejectRelationshipModal"
 import {
   filterVinculos,
-  getOpenVinculoCount,
   getVinculoFilterCounts,
   mapRelationshipsToVinculos,
   type VinculoConnection,
@@ -145,10 +144,8 @@ export function MyRelationshipsPage() {
   )
 
   const dashboardPath = resolveDashboardPath(user)
-  const userLabel = user?.name ?? user?.nickname ?? "Admin"
   const summaryCounts = getVinculoFilterCounts(vinculos)
   const visibleVinculos = filterVinculos(vinculos, selectedFilter)
-  const openVinculosCount = getOpenVinculoCount(vinculos)
 
   function resolveCompanyId(vinculo: VinculoConnection): number | null {
     if (profile?.userType === "company") return profile.companyId ?? null
