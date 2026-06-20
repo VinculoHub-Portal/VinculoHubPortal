@@ -115,6 +115,20 @@ describe("OngShowcaseCard", () => {
     vi.useRealTimers()
   })
 
+  it("filtra ONGs pela descrição após debounce de 400ms", () => {
+    vi.useFakeTimers()
+    renderCard()
+    const input = screen.getByPlaceholderText("Buscar ONG...")
+    fireEvent.change(input, { target: { value: "inclusão" } })
+    act(() => {
+      vi.runAllTimers()
+    })
+    expect(screen.getByText("ONG Alpha")).toBeInTheDocument()
+    expect(screen.queryByText("Instituto Beta")).not.toBeInTheDocument()
+    expect(screen.queryByText("Projeto Gama")).not.toBeInTheDocument()
+    vi.useRealTimers()
+  })
+
   it("exibe 'Carregando ONGs...' quando loading=true", () => {
     mocks.usePaginatedNpos.mockReturnValue({
       npos: [],

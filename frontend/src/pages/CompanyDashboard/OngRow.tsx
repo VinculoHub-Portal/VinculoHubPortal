@@ -57,7 +57,7 @@ export function OngRow({ npo }: OngRowProps) {
         <Link
           to={`/ong/publico/${npo.id}`}
           aria-label={`Ver perfil de ${npo.name}`}
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-vinculo-dark transition hover:bg-blue-50"
+          className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg text-vinculo-dark transition hover:bg-blue-50"
         >
           <VisibilityOutlinedIcon fontSize="small" />
         </Link>

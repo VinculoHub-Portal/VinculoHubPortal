@@ -5,45 +5,31 @@ import { Pagination } from "../../components/general/Pagination"
 import { usePaginatedNpos } from "../../hooks/usePaginatedNpos"
 import { OngRow } from "./OngRow"
 
-interface OngShowcaseCardContentProps {
-  npos: ReturnType<typeof usePaginatedNpos>["npos"]
-  loading: boolean
-  error: string | null
-  currentPage: number
-  totalPages: number
-  totalElements: number
-  onPageChange: (page: number) => void
-  onRetry: () => void
-  onDebouncedNameChange?: (name: string) => void
-}
-
-export function OngShowcaseCardContent({
-  npos,
-  loading,
-  error,
-  currentPage,
-  totalPages,
-  totalElements,
-  onPageChange,
-  onRetry,
-  onDebouncedNameChange,
-}: OngShowcaseCardContentProps) {
+export function OngShowcaseCard() {
   const [nameFilter, setNameFilter] = useState("")
   const [debouncedName, setDebouncedName] = useState("")
+
+  const { npos, loading, error, currentPage, totalPages, totalElements, setCurrentPage, refetch } =
+    usePaginatedNpos({ pageSize: 10, name: debouncedName })
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedName(nameFilter)
-      onPageChange(0)
-      onDebouncedNameChange?.(nameFilter)
+      setCurrentPage(0)
     }, 400)
     return () => clearTimeout(timer)
-  }, [nameFilter, onDebouncedNameChange, onPageChange])
+  }, [nameFilter, setCurrentPage])
 
   const isFiltering = nameFilter !== debouncedName
 
   const filteredNpos = debouncedName
-    ? npos.filter((npo) => npo.name.toLowerCase().includes(debouncedName.toLowerCase()))
+    ? npos.filter((npo) => {
+        const term = debouncedName.toLowerCase()
+        return (
+          npo.name.toLowerCase().includes(term) ||
+          (npo.description?.toLowerCase().includes(term) ?? false)
+        )
+      })
     : npos
 
   return (
@@ -90,7 +76,7 @@ export function OngShowcaseCardContent({
             <p className="text-sm text-red-500">{error}</p>
             <button
               type="button"
-              onClick={onRetry}
+              onClick={refetch}
               className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-vinculo-dark transition hover:bg-slate-50"
             >
               Tentar novamente
@@ -121,30 +107,10 @@ export function OngShowcaseCardContent({
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            onChange={onPageChange}
+            onChange={setCurrentPage}
           />
         </div>
       )}
     </article>
-  )
-}
-
-export function OngShowcaseCard() {
-  const [debouncedName, setDebouncedName] = useState("")
-  const { npos, loading, error, currentPage, totalPages, totalElements, setCurrentPage, refetch } =
-    usePaginatedNpos({ pageSize: 10, name: debouncedName })
-
-  return (
-    <OngShowcaseCardContent
-      npos={npos}
-      loading={loading}
-      error={error}
-      currentPage={currentPage}
-      totalPages={totalPages}
-      totalElements={totalElements}
-      onPageChange={setCurrentPage}
-      onRetry={refetch}
-      onDebouncedNameChange={setDebouncedName}
-    />
   )
 }
