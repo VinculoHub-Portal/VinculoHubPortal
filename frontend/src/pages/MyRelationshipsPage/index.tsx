@@ -25,7 +25,7 @@ import {
   acceptRelationship,
   rejectRelationship,
 } from "../../api/relationships"
-import { PortalTopbar } from "../../components/general/PortalTopbar"
+import { Header } from "../../components/general/Header"
 import { useToast } from "../../context/ToastContext"
 import { resolveDashboardPath } from "../../utils/dashboardPath"
 import { useAuthProfile } from "../../hooks/useAuthProfile"
@@ -200,14 +200,8 @@ export function MyRelationshipsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface text-slate-900">
-      <PortalTopbar
-        homeHref={dashboardPath}
-        vinculosHref="/meus-vinculos"
-        vinculosCount={openVinculosCount}
-        userLabel={userLabel}
-        avatarVariant="icon"
-      />
+    <div className="min-h-screen bg-slate-50 text-slate-900">
+      <Header />
 
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 md:py-10">
         <Link
