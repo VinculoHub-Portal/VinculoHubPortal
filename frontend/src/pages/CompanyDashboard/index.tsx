@@ -63,27 +63,27 @@ export const CompanyDashboard = () => {
   }, [getAccessTokenSilently]);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
+    <div className="min-h-screen bg-slate-50 flex flex-col gap-6 sm:gap-10 pb-12 sm:pb-20">
       <Header />
-      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 flex flex-col gap-8">
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <main className="max-w-[1440px] mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-col gap-6 sm:gap-8">
+        <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <div>
-            <h1 className="text-2xl font-medium leading-9 text-vinculo-dark">
+            <h1 className="text-xl sm:text-2xl font-medium leading-tight sm:leading-9 text-vinculo-dark">
               Dashboard Empresarial
             </h1>
-            <p className="text-base font-normal leading-6 text-slate-600">
+            <p className="text-sm sm:text-base font-normal leading-6 text-slate-600">
               Bem-vindo de volta, {companyName ?? "Empresa"}
             </p>
           </div>
           <Link
             to="/meus-vinculos"
-            className="w-fit rounded-lg border-2 border-vinculo-dark px-6 py-2 font-semibold text-vinculo-dark transition-all duration-200 hover:bg-vinculo-dark/5"
+            className="w-fit rounded-lg border-2 border-vinculo-dark px-5 py-2 text-sm sm:text-base font-semibold text-vinculo-dark transition-all duration-200 hover:bg-vinculo-dark/5"
           >
             Ver vínculos
           </Link>
         </header>
 
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <section className="w-full">
           <SupportedProjectsCard
             data={supportedProjectsSummary.data}
             loading={supportedProjectsSummary.loading}
@@ -94,11 +94,11 @@ export const CompanyDashboard = () => {
         <InvestmentModalitiesSection />
 
         {esgLoading ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-8">
             <p className="text-sm text-slate-600">Carregando impacto ESG...</p>
           </div>
         ) : esgError ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-red-100 p-6 sm:p-8">
+          <div className="bg-white rounded-2xl shadow-sm border border-red-100 p-5 sm:p-8">
             <p className="text-sm text-red-700">{esgError}</p>
           </div>
         ) : (

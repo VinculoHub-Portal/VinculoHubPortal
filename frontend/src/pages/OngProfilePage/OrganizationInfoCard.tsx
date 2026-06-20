@@ -75,29 +75,25 @@ export function OrganizationInfoCard({
             Informações da Organização
           </h2>
           <div className="flex flex-col gap-4">
-            {docField && (
-              <InfoItem
-                icon={<DescriptionOutlinedIcon fontSize="small" />}
-                label={docField.label}
-                value={docField.value}
-                isEditing={isEditing}
-                inputId="ong-cnpj"
-                onValueChange={(v) =>
-                  institutionalData.cnpj !== null
-                    ? onInstitutionalChange?.("cnpj", v)
-                    : onInstitutionalChange?.("cpf", v)
-                }
-              />
-            )}
-            {institutionalData.npoSize && (
-              <InfoItem
-                icon={<ShieldOutlinedIcon fontSize="small" />}
-                label="Porte da Organização"
-                value={npoSizeLabel(institutionalData.npoSize)}
-                isEditing={false}
-                inputId="ong-size"
-              />
-            )}
+            <InfoItem
+              icon={<DescriptionOutlinedIcon fontSize="small" />}
+              label={docField?.label ?? "CNPJ / CPF"}
+              value={docField?.value ?? "Não informado"}
+              isEditing={isEditing}
+              inputId="ong-cnpj"
+              onValueChange={(v) =>
+                institutionalData.cnpj !== null
+                  ? onInstitutionalChange?.("cnpj", v)
+                  : onInstitutionalChange?.("cpf", v)
+              }
+            />
+            <InfoItem
+              icon={<ShieldOutlinedIcon fontSize="small" />}
+              label="Porte da Organização"
+              value={institutionalData.npoSize ? npoSizeLabel(institutionalData.npoSize) : "Não informado"}
+              isEditing={false}
+              inputId="ong-size"
+            />
           </div>
         </div>
 
@@ -149,27 +145,25 @@ export function OrganizationInfoCard({
                 />
               </>
             ) : (
-              addressStr && (
-                <InfoItem
-                  icon={<LocationOnOutlinedIcon fontSize="small" />}
-                  label="Endereço"
-                  value={addressStr}
-                  isEditing={false}
-                  inputId="ong-address"
-                />
-              )
+              <InfoItem
+                icon={<LocationOnOutlinedIcon fontSize="small" />}
+                label="Endereço"
+                value={addressStr ?? "Não informado"}
+                isEditing={false}
+                inputId="ong-address"
+              />
             )}
             <InfoItem
               icon={<MailOutlinedIcon fontSize="small" />}
               label="E-mail"
-              value={contact.email ?? ""}
+              value={contact.email ?? "Não informado"}
               isEditing={false}
               inputId="ong-email"
             />
             <InfoItem
               icon={<PhoneOutlinedIcon fontSize="small" />}
               label="Telefone"
-              value={contact.phone ?? ""}
+              value={isEditing ? (contact.phone ?? "") : (contact.phone ?? "Não informado")}
               isEditing={isEditing}
               inputId="ong-phone"
               onValueChange={(v) => onContactChange?.("phone", v)}
