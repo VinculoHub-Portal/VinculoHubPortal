@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.vinculohub.backend.config.SecurityConfig;
 import com.vinculohub.backend.dto.CompanyExportDTO;
 import com.vinculohub.backend.dto.CompanyListItemResponse;
+import com.vinculohub.backend.dto.NpoListItemResponse;
 import com.vinculohub.backend.service.CompanyService;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -121,6 +122,91 @@ class CompanyControllerTest {
     void shouldRejectNpoCompanyListingForAdminRole() throws Exception {
         mockMvc.perform(
                         get("/api/npo/companies")
+                                .with(
+                                        jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                                                .jwt(jwt -> jwt.subject("auth0|admin"))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET /api/company/npos lista ONGs paginadas para empresa")
+    void shouldListNposForAuthenticatedCompanyWithPagination() throws Exception {
+        var response =
+                NpoListItemResponse.builder()
+                        .id(9)
+                        .name("ONG Horizonte")
+                        .description("Projetos de inclusão produtiva.")
+                        .logoUrl("https://example.com/horizonte.png")
+                        .city("Curitiba")
+                        .stateCode("PR")
+                        .build();
+
+        when(companyService.findAllForCompanyListing(any(), any(Pageable.class)))
+                .thenAnswer(
+                        invocation ->
+                                new PageImpl<>(List.of(response), invocation.getArgument(1), 4));
+
+        mockMvc.perform(
+                        get("/api/company/npos")
+                                .param("name", "Hori")
+                                .param("page", "1")
+                                .param("size", "3")
+                                .param("sort", "name,desc")
+                                .with(
+                                        jwt().authorities(
+                                                        new SimpleGrantedAuthority("ROLE_COMPANY"))
+                                                .jwt(jwt -> jwt.subject("auth0|company"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(9))
+                .andExpect(jsonPath("$.content[0].name").value("ONG Horizonte"))
+                .andExpect(
+                        jsonPath("$.content[0].description")
+                                .value("Projetos de inclusão produtiva."))
+                .andExpect(jsonPath("$.content[0].city").value("Curitiba"))
+                .andExpect(jsonPath("$.content[0].stateCode").value("PR"))
+                .andExpect(jsonPath("$.content[0].active").doesNotExist())
+                .andExpect(jsonPath("$.totalElements").value(4))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.number").value(1))
+                .andExpect(jsonPath("$.size").value(3));
+
+        ArgumentCaptor<String> nameCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(companyService)
+                .findAllForCompanyListing(nameCaptor.capture(), pageableCaptor.capture());
+        org.assertj.core.api.Assertions.assertThat(nameCaptor.getValue()).isEqualTo("Hori");
+        Pageable pageable = pageableCaptor.getValue();
+        org.assertj.core.api.Assertions.assertThat(pageable.getPageNumber()).isEqualTo(1);
+        org.assertj.core.api.Assertions.assertThat(pageable.getPageSize()).isEqualTo(3);
+        org.assertj.core.api.Assertions.assertThat(
+                        pageable.getSort().getOrderFor("name").getDirection().name())
+                .isEqualTo("DESC");
+    }
+
+    @Test
+    @DisplayName("GET /api/company/npos sem autenticação retorna 401")
+    void shouldRejectCompanyNpoListingWithoutAuthentication() throws Exception {
+        mockMvc.perform(get("/api/company/npos")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("GET /api/company/npos bloqueia ONG")
+    void shouldRejectCompanyNpoListingForNpoRole() throws Exception {
+        mockMvc.perform(
+                        get("/api/company/npos")
+                                .with(
+                                        jwt().authorities(new SimpleGrantedAuthority("ROLE_NPO"))
+                                                .jwt(jwt -> jwt.subject("auth0|npo"))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET /api/company/npos bloqueia admin")
+    void shouldRejectCompanyNpoListingForAdminRole() throws Exception {
+        mockMvc.perform(
+                        get("/api/company/npos")
                                 .with(
                                         jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))
                                                 .jwt(jwt -> jwt.subject("auth0|admin"))))

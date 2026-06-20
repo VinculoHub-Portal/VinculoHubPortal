@@ -1,0 +1,64 @@
+meta {
+  name: 04 - List Company Showcase NPOs (CMP-03)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/company/npos?page=0&size=10
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{companyToken}}
+}
+
+script:post-response {
+  const rawBody = res.getBody()
+  const body = typeof rawBody === "string" ? JSON.parse(rawBody) : rawBody
+
+  if (res.getStatus() !== 200) {
+    throw new Error(`Esperado 200 ao listar ONGs da vitrine da empresa, recebido ${res.getStatus()}`)
+  }
+
+  if (!Array.isArray(body?.content) || body.content.length === 0) {
+    throw new Error("A lista de ONGs para a vitrine da empresa veio vazia")
+  }
+
+  const showcaseNpo = body.content.find((item) => item.name === "ONG Dev") ?? body.content[0]
+
+  if (!showcaseNpo?.id) {
+    throw new Error("Nenhuma ONG retornou com id válido na vitrine da empresa")
+  }
+
+  if (!showcaseNpo?.name) {
+    throw new Error("Nenhuma ONG retornou com nome válido na vitrine da empresa")
+  }
+
+  if (typeof body.totalElements !== "number") {
+    throw new Error("Resposta sem totalElements numérico")
+  }
+
+  if (typeof body.totalPages !== "number") {
+    throw new Error("Resposta sem totalPages numérico")
+  }
+
+  if (typeof body.number !== "number") {
+    throw new Error("Resposta sem número da página")
+  }
+
+  if (typeof body.size !== "number") {
+    throw new Error("Resposta sem tamanho da página")
+  }
+
+  if ("active" in showcaseNpo) {
+    throw new Error("A vitrine da empresa não deve expor o campo administrativo active")
+  }
+
+  bru.setVar("showcaseNpoId", String(showcaseNpo.id))
+}
+
+docs {
+  Lista as ONGs exibidas para empresas na vitrine do dashboard e valida o contrato mínimo consumido pelo OngShowcaseCard.
+}

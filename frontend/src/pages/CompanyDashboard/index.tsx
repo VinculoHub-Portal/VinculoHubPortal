@@ -6,6 +6,7 @@ import { fetchCompanyEsgImpactDashboard } from "../../api/companyPortfolio";
 import { Header } from "../../components/general/Header";
 import { EsgImpactSection } from "./EsgImpactSection";
 import { InvestmentModalitiesSection } from "./InvestmentModalitiesSection";
+import { OngShowcaseCard } from "./OngShowcaseCard";
 import { SupportedProjectsCard } from "./SupportedProjectsCard";
 import { mapEsgImpactDashboardToPillars } from "./esgImpactMapper";
 import { type EsgPillar } from "./types";
@@ -89,6 +90,10 @@ export const CompanyDashboard = () => {
             loading={supportedProjectsSummary.loading}
             error={supportedProjectsSummary.error}
           />
+        </section>
+
+        <section>
+          <OngShowcaseCard />
         </section>
 
         <InvestmentModalitiesSection />

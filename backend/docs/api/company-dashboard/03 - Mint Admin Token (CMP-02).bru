@@ -1,0 +1,29 @@
+meta {
+  name: 03 - Mint Admin Token (CMP-02)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/dev/token?sub=dev%7Cadmin&roles=ADMIN
+  body: none
+}
+
+script:post-response {
+  const rawBody = res.getBody()
+  const body = typeof rawBody === "string" ? JSON.parse(rawBody) : rawBody
+
+  if (res.getStatus() !== 200) {
+    throw new Error(`Esperado 200 ao emitir token ADMIN, recebido ${res.getStatus()}`)
+  }
+
+  if (!body?.access_token) {
+    throw new Error("Resposta sem access_token para o token ADMIN")
+  }
+
+  bru.setVar("adminToken", body.access_token)
+}
+
+docs {
+  Emite um JWT local com ROLE_ADMIN para validar que a rota é exclusiva de COMPANY.
+}
