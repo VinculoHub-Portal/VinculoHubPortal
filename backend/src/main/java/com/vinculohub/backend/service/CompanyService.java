@@ -71,15 +71,26 @@ public class CompanyService {
                         .orElseThrow(() -> new NotFoundException("Empresa não encontrada."));
         Address address = company.getAddress();
         String city = address != null ? address.getCity() : null;
+        String state = address != null ? address.getState() : null;
         String stateCode = address != null ? address.getStateCode() : null;
+        String street = address != null ? address.getStreet() : null;
+        String number = address != null ? address.getNumber() : null;
+        String complement = address != null ? address.getComplement() : null;
+        String zipCode = address != null ? address.getZipCode() : null;
         return new CompanyPublicProfileResponse(
                 company.getId(),
                 company.getLegalName(),
                 company.getSocialName(),
                 company.getDescription(),
                 company.getLogoUrl(),
+                company.getCnpj(),
                 city,
+                state,
                 stateCode,
+                street,
+                number,
+                complement,
+                zipCode,
                 null,
                 null);
     }

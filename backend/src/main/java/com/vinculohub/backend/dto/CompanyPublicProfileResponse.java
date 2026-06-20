@@ -7,7 +7,13 @@ public record CompanyPublicProfileResponse(
         String socialName,
         String description,
         String logoUrl,
+        String cnpj,
         String city,
+        String state,
         String stateCode,
+        String street,
+        String number,
+        String complement,
+        String zipCode,
         String segment,
         String website) {}

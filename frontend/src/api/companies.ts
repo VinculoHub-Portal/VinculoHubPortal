@@ -46,8 +46,14 @@ export interface CompanyPublicProfile {
   socialName: string | null
   description: string | null
   logoUrl: string | null
+  cnpj: string | null
   city: string | null
+  state: string | null
   stateCode: string | null
+  street: string | null
+  number: string | null
+  complement: string | null
+  zipCode: string | null
   segment: string | null
   website: string | null
 }

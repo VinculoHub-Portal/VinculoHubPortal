@@ -1,8 +1,10 @@
 import { useAuth0 } from "@auth0/auth0-react"
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useMemo, useState } from "react"
-import { useParams } from "react-router-dom"
+import { Link, useParams } from "react-router-dom"
 import ApartmentOutlinedIcon from "@mui/icons-material/ApartmentOutlined"
+import ArrowBackIcon from "@mui/icons-material/ArrowBack"
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined"
 import HandshakeOutlinedIcon from "@mui/icons-material/HandshakeOutlined"
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined"
 import { Tooltip } from "@mui/material"
@@ -19,6 +21,7 @@ import { BaseButton } from "../../components/general/BaseButton"
 import { Header } from "../../components/general/Header"
 import { ProporParceriaModal } from "../../components/companies/ProporParceriaModal"
 import { useToast } from "../../context/ToastContext"
+import { resolveDashboardPath } from "../../utils/dashboardPath"
 import { useOngProjects } from "../OngProjectsPage/useOngProjects"
 
 const ROLES_CLAIM = "https://vinculohub/roles"
@@ -28,6 +31,7 @@ export function CompanyPublicProfilePage() {
   const { getAccessTokenSilently, user } = useAuth0()
   const numericId = Number(companyId)
   const validId = Number.isFinite(numericId) && numericId > 0 ? numericId : null
+  const dashboardPath = resolveDashboardPath(user)
 
   const query = useQuery({
     queryKey: ["company-public-profile", validId],
@@ -112,6 +116,14 @@ export function CompanyPublicProfilePage() {
       <Header />
 
       <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 sm:px-6">
+        <Link
+          to={dashboardPath}
+          className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-vinculo-dark transition-colors hover:text-vinculo-dark-hover"
+        >
+          <ArrowBackIcon sx={{ fontSize: 18 }} aria-hidden />
+          Voltar ao Dashboard
+        </Link>
+
         {query.isLoading && (
           <p className="text-sm text-slate-500" role="status" aria-busy="true">
             Carregando perfil da empresa...
@@ -250,13 +262,12 @@ function CompanyHeaderCard({
 }
 
 function CompanyInfoCard({ company }: { company: CompanyPublicProfile }) {
-  const hasLocation = Boolean(company.city || company.stateCode)
+  const fullAddress = formatAddress(company)
+  const hasAnyInfo = Boolean(
+    company.cnpj || fullAddress || company.segment || company.website,
+  )
 
-  if (!hasLocation && !company.segment && !company.website) {
-    return null
-  }
-
-  const location = [company.city, company.stateCode].filter(Boolean).join(" - ")
+  if (!hasAnyInfo) return null
 
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
@@ -264,11 +275,18 @@ function CompanyInfoCard({ company }: { company: CompanyPublicProfile }) {
         Informações da Empresa
       </h2>
       <div className="flex flex-col gap-4">
-        {hasLocation && (
+        {company.cnpj && (
+          <InfoRow
+            icon={<DescriptionOutlinedIcon fontSize="small" />}
+            label="CNPJ"
+            value={company.cnpj}
+          />
+        )}
+        {fullAddress && (
           <InfoRow
             icon={<LocationOnOutlinedIcon fontSize="small" />}
-            label="Localização"
-            value={location}
+            label="Endereço"
+            value={fullAddress}
           />
         )}
         {company.segment && (
@@ -288,6 +306,19 @@ function CompanyInfoCard({ company }: { company: CompanyPublicProfile }) {
       </div>
     </article>
   )
+}
+
+function formatAddress(company: CompanyPublicProfile): string | null {
+  const streetParts = [company.street, company.number].filter(Boolean).join(", ")
+  const street = streetParts || null
+  const cityState = [company.city, company.stateCode].filter(Boolean).join(" - ")
+  const lines = [
+    street,
+    company.complement || null,
+    cityState || null,
+    company.zipCode ? `CEP ${company.zipCode}` : null,
+  ].filter((part): part is string => Boolean(part))
+  return lines.length > 0 ? lines.join(" · ") : null
 }
 
 function InfoRow({

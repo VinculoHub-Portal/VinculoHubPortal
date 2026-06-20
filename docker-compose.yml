@@ -19,6 +19,9 @@ services:
       - AUTH0_AUDIENCE=${AUTH0_AUDIENCE}
       - AUTH0_ROLES_CLAIM=${AUTH0_ROLES_CLAIM:-https://vinculohub/roles}
       - APP_TEST_SCENARIOS_ENABLED=${APP_TEST_SCENARIOS_ENABLED:-false}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - RESEND_FROM=${RESEND_FROM}
+      - RESEND_OVERRIDE_TO=${RESEND_OVERRIDE_TO}
     depends_on:
       db:
         condition: service_healthy

@@ -29,13 +29,23 @@ class CompanyPublicProfileServiceTest {
 
     @BeforeEach
     void setUp() {
-        Address address = Address.builder().city("São Paulo").stateCode("SP").build();
+        Address address =
+                Address.builder()
+                        .city("São Paulo")
+                        .state("São Paulo")
+                        .stateCode("SP")
+                        .street("Rua Exemplo")
+                        .number("123")
+                        .complement("Sala 4")
+                        .zipCode("01000-000")
+                        .build();
         company = new Company();
         company.setId(42);
         company.setLegalName("ACME LTDA");
         company.setSocialName("ACME");
         company.setDescription("Empresa de tecnologia");
         company.setLogoUrl("https://logo");
+        company.setCnpj("12.345.678/0001-90");
         company.setAddress(address);
     }
 
@@ -51,8 +61,14 @@ class CompanyPublicProfileServiceTest {
         assertEquals("ACME", response.socialName());
         assertEquals("Empresa de tecnologia", response.description());
         assertEquals("https://logo", response.logoUrl());
+        assertEquals("12.345.678/0001-90", response.cnpj());
         assertEquals("São Paulo", response.city());
+        assertEquals("São Paulo", response.state());
         assertEquals("SP", response.stateCode());
+        assertEquals("Rua Exemplo", response.street());
+        assertEquals("123", response.number());
+        assertEquals("Sala 4", response.complement());
+        assertEquals("01000-000", response.zipCode());
         assertNull(response.segment());
         assertNull(response.website());
     }
@@ -81,6 +97,11 @@ class CompanyPublicProfileServiceTest {
 
         CompanyPublicProfileResponse response = companyService.getPublicProfile(1);
         assertNull(response.city());
+        assertNull(response.state());
         assertNull(response.stateCode());
+        assertNull(response.street());
+        assertNull(response.number());
+        assertNull(response.complement());
+        assertNull(response.zipCode());
     }
 }

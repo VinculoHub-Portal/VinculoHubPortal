@@ -69,8 +69,14 @@ const baseProfile = {
   socialName: "ACME",
   description: "Empresa de tecnologia",
   logoUrl: null,
+  cnpj: "12.345.678/0001-90",
   city: "São Paulo",
+  state: "São Paulo",
   stateCode: "SP",
+  street: "Rua Exemplo",
+  number: "123",
+  complement: null,
+  zipCode: "01000-000",
   segment: null,
   website: null,
 }
@@ -103,7 +109,19 @@ describe("CompanyPublicProfilePage", () => {
     })
     expect(screen.getByText("ACME")).toBeInTheDocument()
     expect(screen.getByText(/Empresa de tecnologia/)).toBeInTheDocument()
+    expect(screen.getByText("12.345.678/0001-90")).toBeInTheDocument()
+    expect(screen.getByText(/Rua Exemplo, 123/)).toBeInTheDocument()
     expect(screen.getByText(/São Paulo - SP/)).toBeInTheDocument()
+    expect(screen.getByText(/CEP 01000-000/)).toBeInTheDocument()
+  })
+
+  it("exibe link 'Voltar ao Dashboard'", async () => {
+    mocks.fetchCompanyPublicProfileMock.mockResolvedValue(baseProfile)
+    renderPage("7")
+    await waitFor(() => {
+      expect(screen.getByText("ACME LTDA")).toBeInTheDocument()
+    })
+    expect(screen.getByText(/voltar ao dashboard/i)).toBeInTheDocument()
   })
 
   it("exibe mensagem de empresa não encontrada quando 404", async () => {
