@@ -20,7 +20,7 @@ import RefreshIcon from "@mui/icons-material/Refresh"
 import { useAuth0 } from "@auth0/auth0-react"
 import { useMemo, useState, type ReactNode } from "react"
 import type { NavigateFunction } from "react-router-dom"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import {
   acceptRelationship,
   confirmRelationship,
@@ -123,6 +123,20 @@ const BUTTON_BASE_SX = {
   },
 }
 
+const VALID_FILTERS: ReadonlyArray<VinculoFilter> = [
+  "all",
+  "pending",
+  "negotiation",
+  "active",
+]
+
+function parseFilterParam(raw: string | null): VinculoFilter {
+  if (raw && (VALID_FILTERS as ReadonlyArray<string>).includes(raw)) {
+    return raw as VinculoFilter
+  }
+  return "all"
+}
+
 export function MyRelationshipsPage() {
   const navigate = useNavigate()
   const { getAccessTokenSilently, user } = useAuth0()
@@ -135,7 +149,10 @@ export function MyRelationshipsPage() {
     refetch,
     isRefetching,
   } = useMyRelationships()
-  const [selectedFilter, setSelectedFilter] = useState<VinculoFilter>("all")
+  const [searchParams] = useSearchParams()
+  const initialFilter = parseFilterParam(searchParams.get("filter"))
+  const [selectedFilter, setSelectedFilter] =
+    useState<VinculoFilter>(initialFilter)
   const [isSubmittingResponse, setIsSubmittingResponse] = useState(false)
   const [vinculoToReject, setVinculoToReject] =
     useState<VinculoConnection | null>(null)

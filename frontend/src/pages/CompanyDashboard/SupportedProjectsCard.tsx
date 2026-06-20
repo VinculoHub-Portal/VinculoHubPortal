@@ -1,4 +1,5 @@
 import DescriptionIcon from "@mui/icons-material/Description"
+import { Link } from "react-router-dom"
 import type { CompanySupportedProjectsSummary } from "../../api/companyPortfolio"
 
 interface SupportedProjectsCardProps {
@@ -48,9 +49,12 @@ export function SupportedProjectsCard({
         </div>
       </div>
 
-      <button className="bg-white text-vinculo-green font-semibold rounded-lg px-4 py-3 w-full text-sm">
+      <Link
+        to="/meus-vinculos?filter=active"
+        className="bg-white text-vinculo-green font-semibold rounded-lg px-4 py-3 w-full text-sm text-center transition-opacity hover:opacity-90"
+      >
         Ver todos os projetos
-      </button>
+      </Link>
     </div>
   )
 }
