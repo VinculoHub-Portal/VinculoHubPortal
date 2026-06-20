@@ -32,7 +32,7 @@ public class ResendNotificationService implements NotificationService {
     ResendNotificationService(RestClient restClient, String from, String overrideTo) {
         this.restClient = restClient;
         this.from = from;
-        this.overrideTo = (overrideTo == null || overrideTo.isBlank()) ? null : overrideTo.trim();
+        this.overrideTo = overrideTo == null || overrideTo.isBlank() ? null : overrideTo.trim();
         if (this.overrideTo != null) {
             log.warn(
                     "[RESEND] OVERRIDE ATIVO — todos os e-mails serão redirecionados para {}."
