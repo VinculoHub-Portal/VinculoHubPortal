@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import { render, screen } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { AppRouter } from "."
@@ -28,7 +29,7 @@ vi.mock("../pages/RelationshipsPage", () => ({
 }))
 
 vi.mock("../pages/AdminOngsPage", () => ({
-  AdminOngsPage: ({ children }: { children?: any }) => (
+  AdminOngsPage: ({ children }: { children?: ReactNode }) => (
     <div>
       <p>Admin ONGs page</p>
       {children}
@@ -41,7 +42,7 @@ vi.mock("../pages/AdminOngsList", () => ({
 }))
 
 vi.mock("../pages/AdminVinculosPage", () => ({
-  AdminVinculosPage: ({ children }: { children?: any }) => (
+  AdminVinculosPage: ({ children }: { children?: ReactNode }) => (
     <div>
       <p>Admin vínculos page</p>
       {children}

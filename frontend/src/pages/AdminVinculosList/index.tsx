@@ -4,7 +4,7 @@ import { Link } from "react-router-dom"
 import type { AdminRelationshipCard, AdminRelationshipStatusFilter } from "../../api/admin"
 import { Header } from "../../components/general/Header"
 import { Pagination } from "../../components/general/Pagination"
-import { useAdminVinculosPage } from "../AdminVinculosPage"
+import { useAdminVinculosPage } from "../AdminVinculosPage/useAdminVinculosPage"
 
 const STATUS_OPTIONS: Array<{ value: AdminRelationshipStatusFilter; label: string }> = [
   { value: "all", label: "Todas" },

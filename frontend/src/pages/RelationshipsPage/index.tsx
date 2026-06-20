@@ -101,8 +101,36 @@ export function RelationshipsPage() {
   }, [selectedStatus, session])
 
   useEffect(() => {
-    void loadRelationships()
-  }, [loadRelationships])
+    if (!session) return
+
+    let cancelled = false
+
+    async function loadCurrentRelationships() {
+      setIsLoadingRelationships(true)
+      setLoadError(null)
+      try {
+        const data = await fetchRelationships(
+          { status: selectedStatus },
+          session.token,
+        )
+        if (!cancelled) setRelationships(data)
+      } catch {
+        if (!cancelled) {
+          setLoadError(
+            "Não foi possível carregar seus relacionamentos. Tente novamente.",
+          )
+        }
+      } finally {
+        if (!cancelled) setIsLoadingRelationships(false)
+      }
+    }
+
+    void loadCurrentRelationships()
+
+    return () => {
+      cancelled = true
+    }
+  }, [selectedStatus, session])
 
   function getCompanyId(relationship: RelationshipListItem): number | null {
     if (!session) return null

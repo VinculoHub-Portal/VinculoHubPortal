@@ -4,7 +4,7 @@ import { Link } from "react-router-dom"
 import type { AdminNpoAreaFilter, AdminNpoStatusFilter } from "../../api/admin"
 import { Header } from "../../components/general/Header"
 import { Pagination } from "../../components/general/Pagination"
-import { useAdminOngsPage } from "../AdminOngsPage"
+import { useAdminOngsPage } from "../AdminOngsPage/useAdminOngsPage"
 
 const AREA_OPTIONS: Array<{ value: AdminNpoAreaFilter | "all"; label: string }> = [
   { value: "all", label: "Todas" },

@@ -24,17 +24,23 @@ const EMPTY_PROJECTS_PAGE: NpoProfileProjectPage = {
 export function OngPublicProfilePage() {
   const { id } = useParams<{ id: string }>()
   const numericId = id ? Number(id) : undefined
+  const hasValidNumericId =
+    numericId !== undefined && !Number.isNaN(numericId)
   const [projectPage, setProjectPage] = useState(0)
   const [projectsPage, setProjectsPage] =
     useState<NpoProfileProjectPage>(EMPTY_PROJECTS_PAGE)
   const [projectsError, setProjectsError] = useState<string | null>(null)
   const [projectsLoading, setProjectsLoading] = useState(false)
   const { profile, loading, error } = useNpoProfile(numericId)
+  const displayedProjectsPage = hasValidNumericId
+    ? projectsPage
+    : EMPTY_PROJECTS_PAGE
+  const displayedProjectsError = hasValidNumericId
+    ? projectsError
+    : null
 
   useEffect(() => {
-    if (numericId === undefined || Number.isNaN(numericId)) {
-      setProjectsPage(EMPTY_PROJECTS_PAGE)
-      setProjectsError(null)
+    if (!hasValidNumericId) {
       return
     }
 
@@ -65,7 +71,7 @@ export function OngPublicProfilePage() {
     return () => {
       cancelled = true
     }
-  }, [numericId, projectPage])
+  }, [hasValidNumericId, numericId, projectPage])
 
   if (loading) {
     return (
@@ -122,13 +128,13 @@ export function OngPublicProfilePage() {
         <ResponsibleCard responsible={profile.responsible} isEditing={false} />
 
         <PublicProjectsSection
-          currentPage={projectsPage.number}
-          error={projectsError}
+          currentPage={displayedProjectsPage.number}
+          error={displayedProjectsError}
           loading={projectsLoading}
           onPageChange={setProjectPage}
-          projects={projectsPage.content}
-          totalElements={projectsPage.totalElements}
-          totalPages={projectsPage.totalPages}
+          projects={displayedProjectsPage.content}
+          totalElements={displayedProjectsPage.totalElements}
+          totalPages={displayedProjectsPage.totalPages}
         />
       </main>
     </div>

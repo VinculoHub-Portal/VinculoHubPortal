@@ -245,8 +245,57 @@ export function useOngDashboard(): UseOngDashboardResult {
   }, [getAuth])
 
   useEffect(() => {
-    void refetch()
-  }, [refetch])
+    let cancelled = false
+
+    async function loadDashboard() {
+      if (isLoading) return
+
+      const requestId = ++requestIdRef.current
+      const isCurrent = () => !cancelled && requestIdRef.current === requestId
+      pageRef.current = 0
+
+      if (!isAuthenticated) {
+        setProjects([])
+        setTypeMetrics([])
+        setError("Faça login para visualizar seus projetos.")
+        setLoading(false)
+        return
+      }
+
+      setLoading(true)
+      setError(null)
+
+      try {
+        const { token, npoId } = await getAuth()
+        if (!isCurrent()) return
+
+        const statusParam = filterRef.current !== "all" ? filterRef.current : undefined
+
+        const [listData, metricsData] = await Promise.all([
+          fetchProjects({ npoId, size: PAGE_SIZE, page: 0, status: statusParam }, token),
+          fetchProjects({ npoId, size: METRICS_SIZE }, token),
+        ])
+        if (!isCurrent()) return
+
+        setProjects(listData.content.map(mapProjectToDashboardProject))
+        setHasMore(!listData.last)
+        setTypeMetrics(buildTypeMetrics(metricsData.content))
+      } catch {
+        if (!isCurrent()) return
+        setProjects([])
+        setTypeMetrics([])
+        setError("Não foi possível carregar os dados do dashboard.")
+      } finally {
+        if (isCurrent()) setLoading(false)
+      }
+    }
+
+    void loadDashboard()
+
+    return () => {
+      cancelled = true
+    }
+  }, [getAuth, isAuthenticated, isLoading])
 
   return {
     projects,

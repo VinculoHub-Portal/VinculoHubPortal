@@ -1,42 +1,13 @@
 import { useAuth0 } from "@auth0/auth0-react"
-import { createContext, type ReactNode, useContext, useEffect, useState } from "react"
+import { type ReactNode, useEffect, useState } from "react"
 import {
   fetchAdminRelationships,
   type AdminRelationshipCard,
   type AdminRelationshipStatusFilter,
 } from "../../api/admin"
+import { AdminVinculosPageContext } from "./useAdminVinculosPage"
 
 const PAGE_SIZE = 10
-
-interface AdminVinculosPageContextValue {
-  relationships: AdminRelationshipCard[]
-  page: number
-  totalPages: number
-  totalElements: number
-  loading: boolean
-  error: string
-  companyNameFilter: string
-  npoNameFilter: string
-  projectTitleFilter: string
-  statusFilter: AdminRelationshipStatusFilter
-  setCompanyNameFilter: (value: string) => void
-  setNpoNameFilter: (value: string) => void
-  setProjectTitleFilter: (value: string) => void
-  setPage: (page: number) => void
-  handleStatusChange: (value: AdminRelationshipStatusFilter) => void
-}
-
-const AdminVinculosPageContext = createContext<AdminVinculosPageContextValue | null>(null)
-
-export function useAdminVinculosPage() {
-  const context = useContext(AdminVinculosPageContext)
-
-  if (!context) {
-    throw new Error("useAdminVinculosPage must be used within AdminVinculosPage")
-  }
-
-  return context
-}
 
 export function AdminVinculosPage({ children }: { children: ReactNode }) {
   const { getAccessTokenSilently } = useAuth0()

@@ -8,9 +8,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.vinculohub.backend.dto.AdminMetricsResponse;
+import com.vinculohub.backend.model.Company;
 import com.vinculohub.backend.model.CompanyProject;
 import com.vinculohub.backend.model.CompanyProjectId;
-import com.vinculohub.backend.model.Company;
 import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.model.Project;
 import com.vinculohub.backend.model.enums.RelationshipStatus;
@@ -50,7 +50,8 @@ class AdminMetricsControllerTest {
     @Test
     @DisplayName("GET /api/admin/metrics retorna métricas agregadas")
     void shouldReturnMetrics() throws Exception {
-        when(adminMetricsService.getMetrics()).thenReturn(new AdminMetricsResponse(10L, 4L, 7L, 2L));
+        when(adminMetricsService.getMetrics())
+                .thenReturn(new AdminMetricsResponse(10L, 4L, 7L, 2L));
 
         mockMvc.perform(get("/api/admin/metrics"))
                 .andExpect(status().isOk())
@@ -63,7 +64,9 @@ class AdminMetricsControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/admin/vinculos/list retorna a listagem simples sem conflitar com a rota filtrada")
+    @DisplayName(
+            "GET /api/admin/vinculos/list retorna a listagem simples sem conflitar com a rota"
+                    + " filtrada")
     void shouldListVinculosFromDedicatedRoute() throws Exception {
         Company company = new Company();
         company.setId(7);
@@ -72,19 +75,22 @@ class AdminMetricsControllerTest {
         Npo npo = Npo.builder().id(9).name("ONG Azul").build();
         Project project = Project.builder().id(99L).title("Projeto Impacto").npo(npo).build();
 
-        CompanyProject relationship = CompanyProject.builder()
-                .id(new CompanyProjectId(7, 99L))
-                .company(company)
-                .project(project)
-                .status(RelationshipStatus.active)
-                .createdAt(LocalDateTime.of(2026, 5, 29, 12, 0))
-                .build();
+        CompanyProject relationship =
+                CompanyProject.builder()
+                        .id(new CompanyProjectId(7, 99L))
+                        .company(company)
+                        .project(project)
+                        .status(RelationshipStatus.active)
+                        .createdAt(LocalDateTime.of(2026, 5, 29, 12, 0))
+                        .build();
 
-        when(companyProjectRepository.findAllForAdmin(PageRequest.of(1, 5, Sort.by(Sort.Direction.DESC, "createdAt"))))
-                .thenReturn(new PageImpl<>(
-                        List.of(relationship),
-                        PageRequest.of(1, 5, Sort.by(Sort.Direction.DESC, "createdAt")),
-                        6));
+        when(companyProjectRepository.findAllForAdmin(
+                        PageRequest.of(1, 5, Sort.by(Sort.Direction.DESC, "createdAt"))))
+                .thenReturn(
+                        new PageImpl<>(
+                                List.of(relationship),
+                                PageRequest.of(1, 5, Sort.by(Sort.Direction.DESC, "createdAt")),
+                                6));
 
         mockMvc.perform(get("/api/admin/vinculos/list").param("page", "1").param("size", "5"))
                 .andExpect(status().isOk())

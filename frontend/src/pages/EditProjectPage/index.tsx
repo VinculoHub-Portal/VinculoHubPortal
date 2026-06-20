@@ -101,6 +101,9 @@ export function EditProjectPage() {
   const navigate = useNavigate()
   const { getAccessTokenSilently } = useAuth0()
   const { showToast } = useToast()
+  const projectIdNumber = projectId ? Number(projectId) : Number.NaN
+  const hasValidProjectId =
+    Number.isFinite(projectIdNumber) && projectIdNumber > 0
 
   const [loadState, setLoadState] = useState<
     "loading" | "error" | "not-found" | "ready"
@@ -120,13 +123,10 @@ export function EditProjectPage() {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [currentInvestedAmount, setCurrentInvestedAmount] = useState(0)
   const budgetNeededInputRef = useRef<HTMLInputElement | null>(null)
+  const effectiveLoadState = !hasValidProjectId ? "not-found" : loadState
 
   useEffect(() => {
-    if (!projectId) return
-
-    const projectIdNumber = Number(projectId)
-    if (!Number.isFinite(projectIdNumber) || projectIdNumber <= 0) {
-      setLoadState("not-found")
+    if (!hasValidProjectId) {
       return
     }
 
@@ -179,7 +179,7 @@ export function EditProjectPage() {
     return () => {
       active = false
     }
-  }, [projectId, getAccessTokenSilently])
+  }, [getAccessTokenSilently, hasValidProjectId, projectIdNumber])
 
   const previewInvestedTotal = useMemo(() => {
     const delta = Number(formData.investedAmount)
@@ -275,13 +275,13 @@ export function EditProjectPage() {
           onClick={() => navigate("/ong/projetos")}
         />
 
-        {loadState === "loading" && (
+        {effectiveLoadState === "loading" && (
           <p className="text-sm text-slate-500" aria-live="polite">
             Carregando projeto...
           </p>
         )}
 
-        {loadState === "not-found" && (
+        {effectiveLoadState === "not-found" && (
           <div className="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
             <p className="font-semibold text-vinculo-dark">
               Projeto não encontrado.
@@ -297,7 +297,7 @@ export function EditProjectPage() {
           </div>
         )}
 
-        {loadState === "error" && (
+        {effectiveLoadState === "error" && (
           <div
             className="rounded-lg border border-red-200 bg-red-50 p-6 text-red-700"
             role="alert"
@@ -306,7 +306,7 @@ export function EditProjectPage() {
           </div>
         )}
 
-        {loadState === "ready" && (
+        {effectiveLoadState === "ready" && (
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h1 className="text-2xl font-bold text-vinculo-dark">
               Editar Projeto
