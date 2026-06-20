@@ -1,11 +1,13 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { useQuery } from "@tanstack/react-query";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import HandshakeOutlinedIcon from "@mui/icons-material/HandshakeOutlined";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
 import axios from "axios";
 import { useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { createRelationship } from "../../api/relationships";
+import { BaseButton } from "../../components/general/BaseButton";
 import { Header } from "../../components/general/Header";
 import { FlexibleButton } from "../../components/general/FlexibleButton";
 import { DemonstrarInteresseModal } from "../../components/projects/DemonstrarInteresseModal";
@@ -184,14 +186,16 @@ export function ProjectDetailsPage() {
 
               {showInterestButton && (
                 <div className="mt-8 flex justify-end">
-                  <button
+                  <BaseButton
                     type="button"
+                    variant="secondary"
                     onClick={() => setInterestModalOpen(true)}
                     disabled={interestButtonDisabled}
-                    className="inline-flex items-center justify-center rounded-lg bg-vinculo-dark px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+                    className="hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                   >
+                    <HandshakeOutlinedIcon sx={{ fontSize: 18 }} aria-hidden />
                     {interestButtonLabel}
-                  </button>
+                  </BaseButton>
                 </div>
               )}
             </article>
