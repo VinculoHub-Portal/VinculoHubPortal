@@ -162,6 +162,22 @@ export const AppRouter = () => (
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/empresa/vinculos"
+        element={
+          <ProtectedRoute requiredRole="COMPANY">
+            <VinculosPage role="COMPANY" dashboardPath="/empresa/dashboard" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/ong/vinculos"
+        element={
+          <ProtectedRoute requiredRole="NPO">
+            <VinculosPage role="NPO" dashboardPath="/ong/dashboard" />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   </BrowserRouter>
 );

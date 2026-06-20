@@ -4,9 +4,11 @@ package com.vinculohub.backend.service;
 import com.vinculohub.backend.dto.CompanyDTO;
 import com.vinculohub.backend.dto.CompanyExportDTO;
 import com.vinculohub.backend.dto.CompanyListItemResponse;
+import com.vinculohub.backend.dto.CompanyProfileResponse;
 import com.vinculohub.backend.dto.UserDTO;
 import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.CompanyAlreadyExistsException;
+import com.vinculohub.backend.exception.NotFoundException;
 import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.model.Company;
 import com.vinculohub.backend.model.User;
@@ -39,6 +41,24 @@ public class CompanyService {
     }
 
     @Transactional(readOnly = true)
+    public CompanyProfileResponse getCompanyProfileByAuth0Id(String auth0Id) {
+        if (auth0Id == null || auth0Id.isBlank()) {
+            throw new BadRequestException("Auth0 ID é obrigatório.");
+        }
+
+        User user =
+                userRepository
+                        .findByAuth0Id(auth0Id)
+                        .orElseThrow(() -> new NotFoundException("Empresa não encontrada."));
+
+        Company company =
+                companyRepository
+                        .findByUserId(user.getId())
+                        .orElseThrow(() -> new NotFoundException("Empresa não encontrada."));
+
+        return companyToCompanyProfileResponse(company);
+    }
+
     public Page<CompanyListItemResponse> findAllForNpoListing(Pageable pageable) {
         return companyRepository.findAll(pageable).map(this::toListItemResponse);
     }
@@ -158,6 +178,50 @@ public class CompanyService {
                 .address(addressService.addressToAddressDTO(company.getAddress()))
                 .user(userToUserDTO(company.getUser()))
                 .build();
+    }
+
+    private CompanyProfileResponse companyToCompanyProfileResponse(Company company) {
+        User user = company.getUser();
+        return new CompanyProfileResponse(
+                new CompanyProfileResponse.InstitutionalData(
+                        company.getId(),
+                        company.getLegalName(),
+                        company.getSocialName(),
+                        company.getDescription(),
+                        company.getLogoUrl(),
+                        company.getCnpj(),
+                        company.getPhone()),
+                new CompanyProfileResponse.ContactData(
+                        user == null ? null : user.getEmail(), company.getPhone()),
+                mapAddress(company.getAddress()),
+                mapResponsible(user));
+    }
+
+    private CompanyProfileResponse.AddressData mapAddress(Address address) {
+        if (address == null) {
+            return null;
+        }
+        return new CompanyProfileResponse.AddressData(
+                address.getId(),
+                address.getState(),
+                address.getStateCode(),
+                address.getCity(),
+                address.getStreet(),
+                address.getNumber(),
+                address.getComplement(),
+                address.getZipCode());
+    }
+
+    private CompanyProfileResponse.ResponsibleData mapResponsible(User responsible) {
+        if (responsible == null) {
+            return null;
+        }
+        return new CompanyProfileResponse.ResponsibleData(
+                responsible.getId(),
+                responsible.getName(),
+                responsible.getEmail(),
+                responsible.getAuth0Id(),
+                responsible.getUserType());
     }
 
     private UserDTO userToUserDTO(User user) {
