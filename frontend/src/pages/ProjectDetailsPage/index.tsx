@@ -2,11 +2,16 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { useQuery } from "@tanstack/react-query";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
+import axios from "axios";
 import { useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
+import { createRelationship } from "../../api/relationships";
 import { Header } from "../../components/general/Header";
 import { FlexibleButton } from "../../components/general/FlexibleButton";
+import { DemonstrarInteresseModal } from "../../components/projects/DemonstrarInteresseModal";
 import { ReportNpoModal } from "../../components/ong/ReportNpoModal";
+import { useToast } from "../../context/ToastContext";
+import { useExistingRelationship } from "../../hooks/useExistingRelationship";
 import { resolveDashboardPath } from "../../utils/dashboardPath";
 import { fetchProjectDetails } from "./fetchProjectDetails";
 import { FundingProgress } from "./FundingProgress";
@@ -39,6 +44,7 @@ export function ProjectDetailsPage() {
   const location = useLocation();
   const dashboardPath = resolveDashboardPath(user);
   const companyUser = isCompanyUser(user);
+  const { showToast } = useToast();
   const locationState = location.state as { returnTo?: unknown } | null;
   const returnTo =
     typeof locationState?.returnTo === "string"
@@ -66,6 +72,54 @@ export function ProjectDetailsPage() {
   const reportableNpoId = project?.responsibleInstitution?.npoId ?? null;
   const canReportInstitution = companyUser && reportableNpoId != null;
   const canViewPublicProfile = reportableNpoId != null;
+
+  const numericProjectId = project ? Number(project.id) : null;
+  const validProjectId =
+    numericProjectId != null && Number.isFinite(numericProjectId) ? numericProjectId : null;
+  const { exists: alreadyHasRelationship, loading: existingRelationshipLoading } =
+    useExistingRelationship({
+      projectId: validProjectId,
+    });
+
+  const [interestModalOpen, setInterestModalOpen] = useState(false);
+  const [submittingInterest, setSubmittingInterest] = useState(false);
+  const [sentInThisSession, setSentInThisSession] = useState(false);
+
+  const showInterestButton = companyUser && project != null && validProjectId != null;
+  const interestButtonDisabled =
+    alreadyHasRelationship ||
+    sentInThisSession ||
+    existingRelationshipLoading ||
+    submittingInterest;
+  const interestButtonLabel =
+    alreadyHasRelationship || sentInThisSession
+      ? "Interesse já enviado"
+      : "Demonstrar Interesse";
+
+  async function handleConfirmInterest() {
+    if (!validProjectId) return;
+    setSubmittingInterest(true);
+    try {
+      const token = await getAccessTokenSilently();
+      await createRelationship(validProjectId, token);
+      setSentInThisSession(true);
+      setInterestModalOpen(false);
+      showToast("Interesse enviado com sucesso!", "success");
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
+        setSentInThisSession(true);
+        setInterestModalOpen(false);
+        showToast("Já existe vínculo em andamento para este projeto.", "warning");
+      } else {
+        showToast(
+          "Não foi possível enviar o interesse. Tente novamente.",
+          "error",
+        );
+      }
+    } finally {
+      setSubmittingInterest(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
@@ -127,6 +181,19 @@ export function ProjectDetailsPage() {
               {isIncentiveLaw && (
                 <FundingProgress progressPercent={project.progressPercent} />
               )}
+
+              {showInterestButton && (
+                <div className="mt-8 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setInterestModalOpen(true)}
+                    disabled={interestButtonDisabled}
+                    className="inline-flex items-center justify-center rounded-lg bg-vinculo-dark px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+                  >
+                    {interestButtonLabel}
+                  </button>
+                </div>
+              )}
             </article>
           )}
 
@@ -169,6 +236,13 @@ export function ProjectDetailsPage() {
               onClose={() => setIsReportModalOpen(false)}
             />
           )}
+
+          <DemonstrarInteresseModal
+            open={interestModalOpen}
+            onClose={() => setInterestModalOpen(false)}
+            onConfirm={() => void handleConfirmInterest()}
+            loading={submittingInterest}
+          />
         </div>
       </div>
     </div>
