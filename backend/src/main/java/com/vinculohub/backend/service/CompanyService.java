@@ -5,6 +5,7 @@ import com.vinculohub.backend.dto.CompanyDTO;
 import com.vinculohub.backend.dto.CompanyExportDTO;
 import com.vinculohub.backend.dto.CompanyListItemResponse;
 import com.vinculohub.backend.dto.CompanyProfileResponse;
+import com.vinculohub.backend.dto.NpoListItemResponse;
 import com.vinculohub.backend.dto.UserDTO;
 import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.CompanyAlreadyExistsException;
@@ -63,6 +64,13 @@ public class CompanyService {
         return companyRepository.findAll(pageable).map(this::toListItemResponse);
     }
 
+    @Transactional(readOnly = true)
+    public Page<NpoListItemResponse> findAllForCompanyListing(String name, Pageable pageable) {
+        return npoRepository
+                .findActiveCardsForCompany(name, pageable)
+                .map(this::toNpoListItemResponse);
+    }
+
     private CompanyExportDTO toExportDTO(Company company) {
         var address = company.getAddress();
         var user = company.getUser();
@@ -90,6 +98,18 @@ public class CompanyService {
                 .logoUrl(company.getLogoUrl())
                 .city(address != null ? address.getCity() : null)
                 .state(address != null ? address.getState() : null)
+                .build();
+    }
+
+    private NpoListItemResponse toNpoListItemResponse(
+            com.vinculohub.backend.repository.projection.CompanyNpoCardProjection projection) {
+        return NpoListItemResponse.builder()
+                .id(projection.getId())
+                .name(projection.getName())
+                .description(projection.getDescription())
+                .logoUrl(projection.getLogoUrl())
+                .city(projection.getCity())
+                .stateCode(projection.getStateCode())
                 .build();
     }
 
