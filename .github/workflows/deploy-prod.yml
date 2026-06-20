@@ -1,0 +1,27 @@
+name: Deploy Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Acessar EC2 e Atualizar PROD
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/VinculoHubPortal
+            git fetch
+            git checkout main
+            git pull origin main
+            export $(grep -v '^#' .env | xargs)
+            docker system prune -f
+            docker compose -f docker-compose.swarm.yml build --no-cache frontend-prod backend-prod
+            docker compose -f docker-compose.swarm.yml push frontend-prod backend-prod
+            docker stack deploy --with-registry-auth -c docker-compose.swarm.yml vinculohub
