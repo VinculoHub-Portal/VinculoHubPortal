@@ -26,7 +26,7 @@ import {
   confirmRelationship,
   rejectRelationship,
 } from "../../api/relationships"
-import { PortalTopbar } from "../../components/general/PortalTopbar"
+import { Header } from "../../components/general/Header"
 import { EfetivarParceriaModal } from "../../components/relationships/EfetivarParceriaModal"
 import { useToast } from "../../context/ToastContext"
 import { resolveDashboardPath } from "../../utils/dashboardPath"
@@ -35,7 +35,6 @@ import { useMyRelationships } from "../../hooks/useMyRelationships"
 import { RejectRelationshipModal } from "../RelationshipsPage/components/RejectRelationshipModal"
 import {
   filterVinculos,
-  getOpenVinculoCount,
   getVinculoFilterCounts,
   mapRelationshipsToVinculos,
   type VinculoConnection,
@@ -150,10 +149,8 @@ export function MyRelationshipsPage() {
   )
 
   const dashboardPath = resolveDashboardPath(user)
-  const userLabel = user?.name ?? user?.nickname ?? "Admin"
   const summaryCounts = getVinculoFilterCounts(vinculos)
   const visibleVinculos = filterVinculos(vinculos, selectedFilter)
-  const openVinculosCount = getOpenVinculoCount(vinculos)
 
   function resolveCompanyId(vinculo: VinculoConnection): number | null {
     if (profile?.userType === "company") return profile.companyId ?? null
@@ -231,16 +228,10 @@ export function MyRelationshipsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface text-slate-900">
-      <PortalTopbar
-        homeHref={dashboardPath}
-        vinculosHref="/meus-vinculos"
-        vinculosCount={openVinculosCount}
-        userLabel={userLabel}
-        avatarVariant="icon"
-      />
+    <div className="flex min-h-screen flex-col gap-10 bg-surface pb-20">
+      <Header />
 
-      <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 md:py-10">
+      <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 sm:px-6">
         <Link
           to={dashboardPath}
           className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-vinculo-dark transition-colors hover:text-vinculo-dark-hover"
@@ -250,10 +241,10 @@ export function MyRelationshipsPage() {
         </Link>
 
         <header className="max-w-3xl">
-          <h1 className="text-2xl font-medium leading-tight text-vinculo-dark sm:text-3xl">
+          <h1 className="text-2xl font-semibold leading-9 text-vinculo-dark sm:text-3xl">
             Meus Vínculos
           </h1>
-          <p className="mt-4 text-base leading-7 text-slate-600">
+          <p className="mt-2 text-base leading-6 text-slate-500">
             Gerencie suas conexões e acompanhe o status das negociações em andamento.
           </p>
         </header>
