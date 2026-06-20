@@ -1,12 +1,24 @@
 import { useAuth0 } from "@auth0/auth0-react"
 import { useQuery } from "@tanstack/react-query"
+import { useEffect, useMemo, useState } from "react"
 import { useParams } from "react-router-dom"
+import { Button, Tooltip } from "@mui/material"
 import { fetchCompanyPublicProfile } from "../../api/companies"
+import {
+  createRelationship,
+  fetchRelationships,
+  type RelationshipListItem,
+} from "../../api/relationships"
+import { ProporParceriaModal } from "../../components/companies/ProporParceriaModal"
 import { Header } from "../../components/general/Header"
+import { useToast } from "../../context/ToastContext"
+import { useOngProjects } from "../OngProjectsPage/useOngProjects"
+
+const ROLES_CLAIM = "https://vinculohub/roles"
 
 export function CompanyPublicProfilePage() {
   const { companyId = "" } = useParams<{ companyId: string }>()
-  const { getAccessTokenSilently } = useAuth0()
+  const { getAccessTokenSilently, user } = useAuth0()
   const numericId = Number(companyId)
   const validId = Number.isFinite(numericId) && numericId > 0 ? numericId : null
 
@@ -24,6 +36,69 @@ export function CompanyPublicProfilePage() {
     (query.error as { response?: { status?: number } } | null)?.response?.status ?? null
   const isNotFound =
     validId === null || status === 404 || (query.isSuccess && query.data == null)
+
+  const isNpo = useMemo(() => {
+    const rawRoles = (user as Record<string, unknown> | undefined)?.[ROLES_CLAIM]
+    const roles = Array.isArray(rawRoles) ? rawRoles : []
+    return roles.some((r) => String(r).toUpperCase() === "NPO")
+  }, [user])
+
+  const { projects } = useOngProjects()
+  const [existingRelationships, setExistingRelationships] = useState<
+    RelationshipListItem[]
+  >([])
+
+  useEffect(() => {
+    if (!isNpo) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const t = await getAccessTokenSilently()
+        const items = await fetchRelationships({}, t)
+        if (!cancelled) setExistingRelationships(items)
+      } catch {
+        if (!cancelled) setExistingRelationships([])
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [isNpo, getAccessTokenSilently])
+
+  const proposableProjects = useMemo(() => {
+    if (!isNpo || validId === null) return []
+    return projects
+      .filter((p) => p.status === "Ativo")
+      .filter(
+        (p) =>
+          !existingRelationships.some(
+            (r) =>
+              r.projectId === p.id &&
+              r.partnerInstitutionId === validId &&
+              r.status !== "inactive",
+          ),
+      )
+      .map((p) => ({ id: p.id, title: p.title }))
+  }, [isNpo, projects, existingRelationships, validId])
+
+  const [proposeModalOpen, setProposeModalOpen] = useState(false)
+  const [submittingPropose, setSubmittingPropose] = useState(false)
+  const { showToast } = useToast()
+
+  async function handleConfirmPropose(projectId: number) {
+    if (!validId) return
+    setSubmittingPropose(true)
+    try {
+      const t = await getAccessTokenSilently()
+      await createRelationship(projectId, t, validId)
+      setProposeModalOpen(false)
+      showToast("Proposta enviada com sucesso!", "success")
+    } catch {
+      showToast("Não foi possível enviar a proposta. Tente novamente.", "error")
+    } finally {
+      setSubmittingPropose(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
@@ -102,7 +177,40 @@ export function CompanyPublicProfilePage() {
                   </p>
                 </section>
               )}
+
+              {isNpo && (
+                <section className="mt-8 flex justify-end">
+                  <Tooltip
+                    title={
+                      proposableProjects.length === 0
+                        ? "Você precisa de um projeto ativo para propor parceria"
+                        : ""
+                    }
+                  >
+                    <span>
+                      <Button
+                        variant="contained"
+                        disabled={proposableProjects.length === 0}
+                        onClick={() => setProposeModalOpen(true)}
+                      >
+                        Propor Parceria
+                      </Button>
+                    </span>
+                  </Tooltip>
+                </section>
+              )}
             </article>
+          )}
+
+          {isNpo && query.data && (
+            <ProporParceriaModal
+              open={proposeModalOpen}
+              onClose={() => setProposeModalOpen(false)}
+              onConfirm={(pid) => void handleConfirmPropose(pid)}
+              loading={submittingPropose}
+              projects={proposableProjects}
+              companyName={query.data.legalName}
+            />
           )}
         </div>
       </main>
