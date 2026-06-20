@@ -114,25 +114,25 @@ public class ResendNotificationService implements NotificationService {
 
     private static String wrap(String title, String body) {
         return """
-                <!DOCTYPE html>
-                <html lang="pt-BR">
-                <head><meta charset="UTF-8"><title>VinculoHub</title></head>
-                <body style="font-family: sans-serif; color: #1a1a1a; max-width: 600px; margin: 0 auto;">
-                  <div style="background: #2563eb; padding: 24px; border-radius: 8px 8px 0 0;">
-                    <h1 style="color: #ffffff; margin: 0; font-size: 22px;">VinculoHub</h1>
-                  </div>
-                  <div style="padding: 32px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
-                    <h2 style="font-size: 18px;">%s</h2>
-                    %s
-                    <p>Acesse o VinculoHub para mais detalhes.</p>
-                    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
-                    <p style="font-size: 12px; color: #6b7280;">
-                      E-mail automático do VinculoHub. Não responda.
-                    </p>
-                  </div>
-                </body>
-                </html>
-                """
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><title>VinculoHub</title></head>
+<body style="font-family: sans-serif; color: #1a1a1a; max-width: 600px; margin: 0 auto;">
+  <div style="background: #2563eb; padding: 24px; border-radius: 8px 8px 0 0;">
+    <h1 style="color: #ffffff; margin: 0; font-size: 22px;">VinculoHub</h1>
+  </div>
+  <div style="padding: 32px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+    <h2 style="font-size: 18px;">%s</h2>
+    %s
+    <p>Acesse o VinculoHub para mais detalhes.</p>
+    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+    <p style="font-size: 12px; color: #6b7280;">
+      E-mail automático do VinculoHub. Não responda.
+    </p>
+  </div>
+</body>
+</html>
+"""
                 .formatted(title, body);
     }
 
@@ -149,14 +149,14 @@ public class ResendNotificationService implements NotificationService {
         return wrap(
                 "Interesse aceito",
                 "<p><strong>%s</strong> aceitou seu interesse no projeto <strong>%s</strong>.</p>"
-                                .formatted(partnerName, projectName));
+                        .formatted(partnerName, projectName));
     }
 
     private static String buildInterestRejectedHtml(String projectName, String partnerName) {
         return wrap(
                 "Interesse não aceito",
                 "<p><strong>%s</strong> não aceitou seu interesse no projeto <strong>%s</strong>.</p>"
-                                .formatted(partnerName, projectName));
+                        .formatted(partnerName, projectName));
     }
 
     private static String buildConfirmationRequestedHtml(String projectName, String partnerName) {
@@ -171,6 +171,6 @@ public class ResendNotificationService implements NotificationService {
         return wrap(
                 "Parceria ativada",
                 "<p>A parceria com <strong>%s</strong> no projeto <strong>%s</strong> está ativa.</p>"
-                                .formatted(partnerName, projectName));
+                        .formatted(partnerName, projectName));
     }
 }

@@ -24,8 +24,7 @@ class NotificationConfigIntegrationTest {
 
     @Test
     void usesResendWhenApiKeyIsPresent() {
-        runner.withPropertyValues(
-                        "resend.api-key=re_test_key_12345", "resend.from=test@x.com")
+        runner.withPropertyValues("resend.api-key=re_test_key_12345", "resend.from=test@x.com")
                 .run(
                         ctx -> {
                             assertThat(ctx).hasSingleBean(NotificationService.class);
