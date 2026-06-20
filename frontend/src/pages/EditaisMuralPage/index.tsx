@@ -30,7 +30,7 @@ export function EditaisMuralPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col gap-10 pb-20">
+    <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
       <Header />
 
       <main className="flex w-full flex-col gap-8 px-6 md:px-8">

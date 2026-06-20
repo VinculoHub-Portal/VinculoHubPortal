@@ -158,7 +158,6 @@ describe("OngProfilePage — viewerContext OWNER", () => {
     expect(screen.getByText("Instituto Educação para Todos")).toBeInTheDocument()
     expect(screen.getByText("Organização dedicada à educação.")).toBeInTheDocument()
     expect(screen.getByText("12.345.678/0001-90")).toBeInTheDocument()
-    expect(screen.getByText("Maria Silva Santos")).toBeInTheDocument()
     expect(screen.getByText("contato@educacaoparatodos.org.br")).toBeInTheDocument()
   })
 

@@ -120,7 +120,7 @@ describe("CompanyShowcaseCard", () => {
   })
 
   describe("filtro por nome", () => {
-    it("filtra empresas pelo nome após debounce de 400ms", () => {
+    it("passa o termo de busca ao hook após debounce de 400ms", () => {
       vi.useFakeTimers()
       renderCard()
       const input = screen.getByPlaceholderText("Buscar empresa...")
@@ -128,9 +128,9 @@ describe("CompanyShowcaseCard", () => {
       act(() => {
         vi.runAllTimers()
       })
-      expect(screen.getByText("Empresa Alpha LTDA")).toBeInTheDocument()
-      expect(screen.queryByText("Beta Tecnologia S.A.")).not.toBeInTheDocument()
-      expect(screen.queryByText("Gamma Soluções LTDA")).not.toBeInTheDocument()
+      expect(mocks.usePaginatedCompanies).toHaveBeenLastCalledWith(
+        expect.objectContaining({ name: "alpha" }),
+      )
       vi.useRealTimers()
     })
   })
