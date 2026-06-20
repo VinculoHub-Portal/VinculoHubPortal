@@ -2,15 +2,22 @@ import { useAuth0 } from "@auth0/auth0-react"
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useMemo, useState } from "react"
 import { useParams } from "react-router-dom"
-import { Button, Tooltip } from "@mui/material"
-import { fetchCompanyPublicProfile } from "../../api/companies"
+import ApartmentOutlinedIcon from "@mui/icons-material/ApartmentOutlined"
+import HandshakeOutlinedIcon from "@mui/icons-material/HandshakeOutlined"
+import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined"
+import { Tooltip } from "@mui/material"
+import {
+  fetchCompanyPublicProfile,
+  type CompanyPublicProfile,
+} from "../../api/companies"
 import {
   createRelationship,
   fetchRelationships,
   type RelationshipListItem,
 } from "../../api/relationships"
-import { ProporParceriaModal } from "../../components/companies/ProporParceriaModal"
+import { BaseButton } from "../../components/general/BaseButton"
 import { Header } from "../../components/general/Header"
+import { ProporParceriaModal } from "../../components/companies/ProporParceriaModal"
 import { useToast } from "../../context/ToastContext"
 import { useOngProjects } from "../OngProjectsPage/useOngProjects"
 
@@ -32,10 +39,10 @@ export function CompanyPublicProfilePage() {
     enabled: validId !== null,
   })
 
-  const status =
+  const httpStatus =
     (query.error as { response?: { status?: number } } | null)?.response?.status ?? null
   const isNotFound =
-    validId === null || status === 404 || (query.isSuccess && query.data == null)
+    validId === null || httpStatus === 404 || (query.isSuccess && query.data == null)
 
   const isNpo = useMemo(() => {
     const rawRoles = (user as Record<string, unknown> | undefined)?.[ROLES_CLAIM]
@@ -101,119 +108,208 @@ export function CompanyPublicProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col">
+    <div className="flex min-h-screen flex-col gap-10 bg-surface pb-20">
       <Header />
-      <main className="flex-1 w-full px-4 sm:px-6 py-8 md:py-10">
-        <div className="max-w-3xl mx-auto w-full">
-          {query.isLoading && (
-            <p className="text-sm text-slate-500" role="status" aria-busy="true">
-              Carregando perfil da empresa...
+
+      <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 sm:px-6">
+        {query.isLoading && (
+          <p className="text-sm text-slate-500" role="status" aria-busy="true">
+            Carregando perfil da empresa...
+          </p>
+        )}
+
+        {!query.isLoading && isNotFound && (
+          <article className="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
+            <h1 className="text-xl font-bold text-vinculo-dark">
+              Empresa não encontrada
+            </h1>
+            <p className="mt-2 text-sm text-slate-500">
+              A empresa que você tentou acessar não existe ou não está mais disponível.
             </p>
-          )}
+          </article>
+        )}
 
-          {!query.isLoading && isNotFound && (
-            <article className="bg-white rounded-2xl border border-slate-200 px-6 py-12 text-center shadow-sm">
-              <h1 className="text-lg font-semibold text-vinculo-dark">
-                Empresa não encontrada
-              </h1>
-              <p className="mt-2 text-sm text-slate-600">
-                A empresa que você tentou acessar não existe ou não está mais disponível.
-              </p>
-            </article>
-          )}
-
-          {!query.isLoading && !isNotFound && query.isError && (
-            <div
-              className="bg-white rounded-2xl border border-slate-200 px-6 py-12 text-center shadow-sm"
-              role="alert"
+        {!query.isLoading && !isNotFound && query.isError && (
+          <article
+            className="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm"
+            role="alert"
+          >
+            <p className="mb-4 text-sm text-slate-700">
+              Não foi possível carregar os dados da empresa.
+            </p>
+            <BaseButton
+              type="button"
+              variant="primary"
+              onClick={() => void query.refetch()}
+              className="mx-auto"
             >
-              <p className="text-slate-700 mb-4">
-                Não foi possível carregar os dados da empresa.
-              </p>
-              <button
-                type="button"
-                onClick={() => void query.refetch()}
-                className="inline-flex items-center justify-center rounded-lg bg-vinculo-dark px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
-              >
-                Tentar novamente
-              </button>
-            </div>
-          )}
+              Tentar novamente
+            </BaseButton>
+          </article>
+        )}
 
-          {!query.isLoading && !query.isError && query.data && (
-            <article className="bg-white rounded-2xl shadow-[var(--shadow-vinculo)] px-6 sm:px-10 py-8 sm:py-10 border border-slate-100">
-              <header className="flex items-center gap-4">
-                {query.data.logoUrl && (
-                  <img
-                    src={query.data.logoUrl}
-                    alt={`Logo de ${query.data.legalName}`}
-                    className="h-16 w-16 rounded-full object-cover border border-slate-200"
-                  />
-                )}
-                <div>
-                  <h1 className="text-2xl font-bold text-vinculo-dark">
-                    {query.data.legalName}
-                  </h1>
-                  {query.data.socialName && (
-                    <p className="text-sm text-slate-500">{query.data.socialName}</p>
-                  )}
-                </div>
-              </header>
-
-              {query.data.description && (
-                <section className="mt-8">
-                  <h2 className="text-base font-bold text-vinculo-dark mb-3">Sobre</h2>
-                  <p className="text-slate-600 text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words">
-                    {query.data.description}
-                  </p>
-                </section>
-              )}
-
-              {(query.data.city || query.data.stateCode) && (
-                <section className="mt-6">
-                  <h2 className="text-base font-bold text-vinculo-dark mb-3">Localização</h2>
-                  <p className="text-slate-600 text-sm">
-                    {[query.data.city, query.data.stateCode].filter(Boolean).join(" - ")}
-                  </p>
-                </section>
-              )}
-
-              {isNpo && (
-                <section className="mt-8 flex justify-end">
-                  <Tooltip
-                    title={
-                      proposableProjects.length === 0
-                        ? "Você precisa de um projeto ativo para propor parceria"
-                        : ""
-                    }
-                  >
-                    <span>
-                      <Button
-                        variant="contained"
-                        disabled={proposableProjects.length === 0}
-                        onClick={() => setProposeModalOpen(true)}
-                      >
-                        Propor Parceria
-                      </Button>
-                    </span>
-                  </Tooltip>
-                </section>
-              )}
-            </article>
-          )}
-
-          {isNpo && query.data && (
-            <ProporParceriaModal
-              open={proposeModalOpen}
-              onClose={() => setProposeModalOpen(false)}
-              onConfirm={(pid) => void handleConfirmPropose(pid)}
-              loading={submittingPropose}
-              projects={proposableProjects}
-              companyName={query.data.legalName}
+        {!query.isLoading && !query.isError && query.data && (
+          <>
+            <CompanyHeaderCard
+              company={query.data}
+              showProposeButton={isNpo}
+              proposeDisabled={proposableProjects.length === 0}
+              onPropose={() => setProposeModalOpen(true)}
             />
-          )}
-        </div>
+            <CompanyInfoCard company={query.data} />
+          </>
+        )}
+
+        {isNpo && query.data && (
+          <ProporParceriaModal
+            open={proposeModalOpen}
+            onClose={() => setProposeModalOpen(false)}
+            onConfirm={(pid) => void handleConfirmPropose(pid)}
+            loading={submittingPropose}
+            projects={proposableProjects}
+            companyName={query.data.legalName}
+          />
+        )}
       </main>
+    </div>
+  )
+}
+
+interface CompanyHeaderCardProps {
+  company: CompanyPublicProfile
+  showProposeButton: boolean
+  proposeDisabled: boolean
+  onPropose: () => void
+}
+
+function CompanyHeaderCard({
+  company,
+  showProposeButton,
+  proposeDisabled,
+  onPropose,
+}: CompanyHeaderCardProps) {
+  return (
+    <article className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-4">
+          <div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-vinculo-dark text-white">
+            {company.logoUrl ? (
+              <img
+                src={company.logoUrl}
+                alt={`Logo de ${company.legalName}`}
+                className="h-full w-full rounded-xl object-cover"
+              />
+            ) : (
+              <ApartmentOutlinedIcon fontSize="large" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold text-vinculo-dark">
+              {company.legalName}
+            </h1>
+            {company.socialName && (
+              <p className="mt-1 text-sm text-slate-500">{company.socialName}</p>
+            )}
+          </div>
+        </div>
+
+        {showProposeButton && (
+          <div className="flex w-full sm:w-auto">
+            <Tooltip
+              title={
+                proposeDisabled
+                  ? "Você precisa de um projeto ativo para propor parceria"
+                  : ""
+              }
+            >
+              <span className="w-full sm:w-auto">
+                <BaseButton
+                  type="button"
+                  variant="secondary"
+                  fullWidth
+                  disabled={proposeDisabled}
+                  onClick={onPropose}
+                  className="hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-fit!"
+                >
+                  <HandshakeOutlinedIcon sx={{ fontSize: 18 }} aria-hidden />
+                  Propor Parceria
+                </BaseButton>
+              </span>
+            </Tooltip>
+          </div>
+        )}
+      </div>
+
+      {company.description && (
+        <p className="mt-6 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-600 sm:text-base">
+          {company.description}
+        </p>
+      )}
+    </article>
+  )
+}
+
+function CompanyInfoCard({ company }: { company: CompanyPublicProfile }) {
+  const hasLocation = Boolean(company.city || company.stateCode)
+
+  if (!hasLocation && !company.segment && !company.website) {
+    return null
+  }
+
+  const location = [company.city, company.stateCode].filter(Boolean).join(" - ")
+
+  return (
+    <article className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <h2 className="mb-5 text-base font-semibold text-vinculo-dark">
+        Informações da Empresa
+      </h2>
+      <div className="flex flex-col gap-4">
+        {hasLocation && (
+          <InfoRow
+            icon={<LocationOnOutlinedIcon fontSize="small" />}
+            label="Localização"
+            value={location}
+          />
+        )}
+        {company.segment && (
+          <InfoRow
+            icon={<ApartmentOutlinedIcon fontSize="small" />}
+            label="Segmento"
+            value={company.segment}
+          />
+        )}
+        {company.website && (
+          <InfoRow
+            icon={<ApartmentOutlinedIcon fontSize="small" />}
+            label="Website"
+            value={company.website}
+          />
+        )}
+      </div>
+    </article>
+  )
+}
+
+function InfoRow({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: string
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-50 text-vinculo-dark">
+        {icon}
+      </span>
+      <div className="min-w-0">
+        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          {label}
+        </p>
+        <p className="mt-0.5 break-words text-sm text-slate-700">{value}</p>
+      </div>
     </div>
   )
 }
