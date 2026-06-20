@@ -5,6 +5,7 @@ import com.vinculohub.backend.dto.CompanyDTO;
 import com.vinculohub.backend.dto.CompanyExportDTO;
 import com.vinculohub.backend.dto.CompanyListItemResponse;
 import com.vinculohub.backend.dto.CompanyProfileResponse;
+import com.vinculohub.backend.dto.CompanyPublicProfileResponse;
 import com.vinculohub.backend.dto.UserDTO;
 import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.CompanyAlreadyExistsException;
@@ -57,6 +58,30 @@ public class CompanyService {
                         .orElseThrow(() -> new NotFoundException("Empresa não encontrada."));
 
         return companyToCompanyProfileResponse(company);
+    }
+
+    @Transactional(readOnly = true)
+    public CompanyPublicProfileResponse getPublicProfile(Integer id) {
+        if (id == null) {
+            throw new BadRequestException("ID da empresa é obrigatório.");
+        }
+        Company company =
+                companyRepository
+                        .findById(id)
+                        .orElseThrow(() -> new NotFoundException("Empresa não encontrada."));
+        Address address = company.getAddress();
+        String city = address != null ? address.getCity() : null;
+        String stateCode = address != null ? address.getStateCode() : null;
+        return new CompanyPublicProfileResponse(
+                company.getId(),
+                company.getLegalName(),
+                company.getSocialName(),
+                company.getDescription(),
+                company.getLogoUrl(),
+                city,
+                stateCode,
+                null,
+                null);
     }
 
     public Page<CompanyListItemResponse> findAllForNpoListing(Pageable pageable) {
