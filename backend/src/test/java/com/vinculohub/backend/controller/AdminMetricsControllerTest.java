@@ -64,7 +64,9 @@ class AdminMetricsControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/admin/vinculos/list retorna a listagem simples sem conflitar com a rota filtrada")
+    @DisplayName(
+            "GET /api/admin/vinculos/list retorna a listagem simples sem conflitar com a rota"
+                    + " filtrada")
     void shouldListVinculosFromDedicatedRoute() throws Exception {
         Company company = new Company();
         company.setId(7);
@@ -73,15 +75,17 @@ class AdminMetricsControllerTest {
         Npo npo = Npo.builder().id(9).name("ONG Azul").build();
         Project project = Project.builder().id(99L).title("Projeto Impacto").npo(npo).build();
 
-        CompanyProject relationship = CompanyProject.builder()
-                .id(new CompanyProjectId(7, 99L))
-                .company(company)
-                .project(project)
-                .status(RelationshipStatus.active)
-                .createdAt(LocalDateTime.of(2026, 5, 29, 12, 0))
-                .build();
+        CompanyProject relationship =
+                CompanyProject.builder()
+                        .id(new CompanyProjectId(7, 99L))
+                        .company(company)
+                        .project(project)
+                        .status(RelationshipStatus.active)
+                        .createdAt(LocalDateTime.of(2026, 5, 29, 12, 0))
+                        .build();
 
-        when(companyProjectRepository.findAllForAdmin(PageRequest.of(1, 5, Sort.by(Sort.Direction.DESC, "createdAt"))))
+        when(companyProjectRepository.findAllForAdmin(
+                        PageRequest.of(1, 5, Sort.by(Sort.Direction.DESC, "createdAt"))))
                 .thenReturn(
                         new PageImpl<>(
                                 List.of(relationship),
