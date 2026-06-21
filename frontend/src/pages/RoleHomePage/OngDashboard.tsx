@@ -48,7 +48,6 @@ export function OngDashboard({
     if (previousRefreshKeyRef.current === refreshKey) {
       return
     }
-
     previousRefreshKeyRef.current = refreshKey
     void refetch()
   }, [refetch, refreshKey])
@@ -58,20 +57,9 @@ export function OngDashboard({
       showToast("ONG não encontrada para o usuário autenticado.")
       return
     }
-
     try {
       const token = await getAccessTokenSilently()
-
-      await uploadDocument(
-        file,
-        {
-          title,
-          description,
-          npoId,
-        },
-        token,
-      )
-
+      await uploadDocument(file, { title, description, npoId }, token)
       showToast("Documento enviado com sucesso!", "success")
       setIsUploadModalOpen(false)
     } catch (error) {
@@ -81,60 +69,61 @@ export function OngDashboard({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
+    <div className="min-h-screen bg-slate-50 flex flex-col gap-6 sm:gap-8 pb-20">
       <Header />
 
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 sm:px-6">
-        <section className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        {/* Page header */}
+        <section className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="text-4xl font-semibold leading-tight text-vinculo-dark">
+            <h1 className="text-2xl sm:text-3xl font-semibold leading-tight text-vinculo-dark">
               Dashboard da ONG
             </h1>
-            <p className="mt-3 text-base text-slate-500">
+            <p className="mt-1 text-sm text-slate-500">
               Bem-vindo ao seu painel de controle de projetos e impacto social
             </p>
           </div>
 
-          <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap lg:w-fit lg:flex-nowrap">
-            <BaseButton
+          {/* Action toolbar */}
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-3">
+            {/* Primary */}
+            <button
               type="button"
-              variant="secondary"
-              className="min-h-14 w-full px-8 text-lg shadow-md hover:bg-emerald-600 sm:w-fit"
               onClick={onCreateProject}
+              className="flex h-10 w-full cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-vinculo-green px-4 text-[14px] font-semibold text-white transition hover:bg-emerald-600 lg:w-auto"
             >
-              <AddIcon fontSize="small" />
+              <AddIcon style={{ fontSize: 16 }} />
               Novo Projeto
-            </BaseButton>
+            </button>
 
-            <BaseButton
+            {/* Secondaries */}
+            <button
               type="button"
-              variant="outline"
-              className="min-h-14 w-full border-slate-200 bg-white px-8 text-lg shadow-md hover:bg-slate-50 sm:w-fit"
               onClick={() => setIsUploadModalOpen(true)}
+              className="flex h-10 w-full cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-4 text-[14px] font-medium text-slate-700 transition hover:bg-slate-50 lg:w-auto"
             >
-              <FileUploadOutlinedIcon fontSize="small" />
+              <FileUploadOutlinedIcon style={{ fontSize: 16 }} />
               Upload de Documentos
-            </BaseButton>
+            </button>
 
-            <BaseButton
-              type="button"
-              variant="outline"
-              className="min-h-14 w-full border-slate-200 bg-white px-8 text-lg shadow-md hover:bg-slate-50 sm:w-fit"
-              onClick={() => navigate("/ong/perfil")}
-            >
-              <AccountCircleOutlinedIcon fontSize="small" />
-              Meu Perfil
-            </BaseButton>
-
-            <BaseButton
-              type="button"
-              variant="outline"
-              className="min-h-14 w-full border-slate-200 bg-white px-8 text-lg shadow-md hover:bg-slate-50 sm:w-fit"
-              onClick={() => navigate("/meus-vinculos")}
-            >
-              <LinkOutlinedIcon fontSize="small" />
-              Ver vínculos
-            </BaseButton>
+            <div className="grid grid-cols-2 gap-2 lg:flex lg:gap-3">
+              <button
+                type="button"
+                onClick={() => navigate("/ong/perfil")}
+                className="flex h-10 w-full cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-4 text-[14px] font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                <AccountCircleOutlinedIcon style={{ fontSize: 16 }} />
+                Meu Perfil
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/meus-vinculos")}
+                className="flex h-10 w-full cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-4 text-[14px] font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                <LinkOutlinedIcon style={{ fontSize: 16 }} />
+                Ver vínculos
+              </button>
+            </div>
           </div>
         </section>
 
@@ -144,25 +133,36 @@ export function OngDashboard({
           </div>
         )}
 
-        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[448px_minmax(0,1fr)]">
-          <ProjectsByTypeCard
-            loading={loading}
-            error={error}
-            metrics={typeMetrics}
-            onRetry={refetch}
-            onDetails={() => navigate("/ong/projetos")}
-          />
-          <ProjectStatusCard
-            selectedFilter={filter}
-            onFilterChange={setFilter}
-            projects={projects}
-            loading={loading}
-            error={error}
-            onRetry={refetch}
-            onViewProject={(projectId) => navigate(`/projeto/${projectId}`)}
-            onViewAll={() => navigate("/ong/projetos")}
-          />
-        </section>
+        {error ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-5 text-center">
+            <p className="text-sm font-medium text-red-700">{error}</p>
+            <button
+              type="button"
+              className="mt-3 rounded-lg px-3 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100"
+              onClick={() => void refetch()}
+            >
+              Tentar novamente
+            </button>
+          </div>
+        ) : (
+          <section className="grid grid-cols-1 gap-5 xl:grid-cols-[448px_minmax(0,1fr)]">
+            <ProjectsByTypeCard
+              loading={loading}
+              metrics={typeMetrics}
+              onRetry={refetch}
+              onDetails={() => navigate("/ong/projetos")}
+            />
+            <ProjectStatusCard
+              selectedFilter={filter}
+              onFilterChange={setFilter}
+              projects={projects}
+              loading={loading}
+              onRetry={refetch}
+              onViewProject={(projectId) => navigate(`/projeto/${projectId}`)}
+              onViewAll={() => navigate("/ong/projetos")}
+            />
+          </section>
+        )}
 
         <FundingOpportunitiesBanner />
 
@@ -182,37 +182,35 @@ export function OngDashboard({
 
 function ProjectsByTypeCard({
   loading,
-  error,
   metrics,
   onRetry,
   onDetails,
 }: {
   loading: boolean
-  error: string | null
   metrics: OngProjectTypeMetric[]
   onRetry: () => Promise<void>
   onDetails: () => void
 }) {
   return (
-    <article className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+    <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <h2 className="text-xl font-semibold text-vinculo-dark">Projetos por Tipo</h2>
       <DashboardCardState
         loading={loading}
-        error={error}
+        error={null}
         isEmpty={metrics.length === 0}
         emptyMessage="Nenhum projeto cadastrado ainda."
         onRetry={onRetry}
       >
-        <div className="mt-8 flex flex-col gap-6">
+        <div className="mt-5 sm:mt-6 flex flex-col gap-4 sm:gap-5">
           {metrics.map((metric) => (
             <div key={metric.label}>
-              <div className="flex items-center justify-between gap-4 text-base">
+              <div className="flex items-center justify-between gap-4 text-sm sm:text-base">
                 <span className="text-slate-600">{metric.label}</span>
                 <span className="shrink-0 font-semibold text-slate-600">
                   {metric.count} projetos
                 </span>
               </div>
-              <div className="mt-3">
+              <div className="mt-2">
                 <ProgressBar
                   value={metric.percentage}
                   colorClass={metric.barClassName}
@@ -226,7 +224,7 @@ function ProjectsByTypeCard({
       </DashboardCardState>
       <button
         type="button"
-        className="mx-auto mt-8 flex cursor-pointer items-center gap-1 rounded-lg px-3 py-2 text-base font-semibold text-vinculo-dark transition hover:bg-blue-50"
+        className="mx-auto mt-5 sm:mt-6 flex cursor-pointer items-center gap-1 rounded-lg px-3 py-2 text-sm sm:text-base font-semibold text-vinculo-dark transition hover:bg-blue-50"
         onClick={onDetails}
       >
         Ver detalhes
@@ -241,7 +239,6 @@ interface ProjectStatusCardProps {
   onFilterChange: (filter: OngDashboardFilter) => void
   projects: OngDashboardProject[]
   loading: boolean
-  error: string | null
   onRetry: () => Promise<void>
   onViewProject: (projectId: number) => void
   onViewAll: () => void
@@ -252,23 +249,23 @@ function ProjectStatusCard({
   onFilterChange,
   projects,
   loading,
-  error,
   onRetry,
   onViewProject,
   onViewAll,
 }: ProjectStatusCardProps) {
   return (
-    <article className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-      <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+    <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <h2 className="text-xl font-semibold text-vinculo-dark">Status dos Projetos</h2>
-        <div className="flex flex-wrap gap-2">
+        {/* Horizontally scrollable filter chips on mobile */}
+        <div className="flex gap-2 overflow-x-auto pb-1">
           {ONG_DASHBOARD_FILTERS.map((filter) => {
             const isSelected = selectedFilter === filter.id
             return (
               <button
                 key={filter.id}
                 type="button"
-                className={`min-h-11 cursor-pointer rounded-lg border px-5 text-sm font-semibold transition ${
+                className={`cursor-pointer rounded-lg border px-3 py-1.5 sm:px-5 sm:py-2 text-xs sm:text-sm font-semibold transition whitespace-nowrap ${
                   isSelected
                     ? "border-vinculo-dark bg-vinculo-dark text-white"
                     : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
@@ -284,12 +281,13 @@ function ProjectStatusCard({
 
       <DashboardCardState
         loading={loading}
-        error={error}
+        error={null}
         isEmpty={projects.length === 0}
         emptyMessage="Nenhum projeto encontrado para este filtro."
         onRetry={onRetry}
       >
-        <div className="mt-7 hidden grid-cols-[minmax(210px,1.6fr)_minmax(120px,0.9fr)_minmax(110px,0.75fr)_minmax(130px,1fr)_56px] border-b border-slate-200 pb-4 text-sm font-semibold text-slate-500 lg:grid">
+        {/* Desktop table header */}
+        <div className="mt-6 hidden grid-cols-[minmax(210px,1.6fr)_minmax(120px,0.9fr)_minmax(110px,0.75fr)_minmax(130px,1fr)_56px] border-b border-slate-200 pb-3 text-sm font-semibold text-slate-500 lg:grid">
           <span>Projeto</span>
           <span>Tipo</span>
           <span>Status</span>
@@ -297,35 +295,55 @@ function ProjectStatusCard({
           <span>Ações</span>
         </div>
 
-        <div className="mt-4 flex flex-col gap-3 lg:mt-2 lg:gap-0 lg:divide-y-0">
+        <div className="mt-3 flex flex-col gap-3 lg:mt-1 lg:gap-0">
           {projects.map((project) => (
             <div
               key={project.id}
-              className="grid grid-cols-1 gap-4 rounded-lg border border-slate-100 p-4 lg:grid-cols-[minmax(210px,1.6fr)_minmax(120px,0.9fr)_minmax(110px,0.75fr)_minmax(130px,1fr)_56px] lg:items-center lg:border-0 lg:p-0 lg:py-5"
+              className="flex flex-col gap-2 rounded-lg border border-slate-100 p-3 sm:p-4 lg:grid lg:grid-cols-[minmax(210px,1.6fr)_minmax(120px,0.9fr)_minmax(110px,0.75fr)_minmax(130px,1fr)_56px] lg:items-center lg:gap-0 lg:rounded-none lg:border-0 lg:p-0 lg:py-4"
             >
-              <div className="flex items-center gap-4">
-                <span
-                  className={`grid h-12 w-12 shrink-0 place-items-center rounded-full text-white ${project.iconClassName}`}
+              {/* Col 1: icon + title (+ mobile view button) */}
+              <div className="flex items-center justify-between gap-2 lg:block">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span
+                    className={`grid h-10 w-10 sm:h-11 sm:w-11 shrink-0 aspect-square place-items-center rounded-full text-white ${project.iconClassName}`}
+                  >
+                    <DescriptionOutlinedIcon fontSize="small" />
+                  </span>
+                  <span className="font-semibold text-vinculo-dark text-sm sm:text-base leading-snug">{project.title}</span>
+                </div>
+                <button
+                  type="button"
+                  className="lg:hidden flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-vinculo-dark transition hover:bg-blue-50"
+                  onClick={() => onViewProject(project.id)}
                 >
-                  <DescriptionOutlinedIcon fontSize="small" />
-                </span>
-                <span className="font-semibold text-vinculo-dark">{project.title}</span>
+                  <VisibilityOutlinedIcon fontSize="small" />
+                </button>
               </div>
-              <span className="text-slate-600">{project.type}</span>
-              <StatusBadge status={project.status} label={project.statusLabel} />
-              <div className="flex items-center gap-3">
-                <div className="flex-1 max-w-28">
+
+              {/* Col 2: type */}
+              <span className="text-xs text-slate-500 lg:text-sm lg:text-slate-600">{project.type}</span>
+
+              {/* Col 3: status (wrapped so it doesn't stretch full-width on mobile) */}
+              <div className="flex">
+                <StatusBadge status={project.status} label={project.statusLabel} />
+              </div>
+
+              {/* Col 4: progress */}
+              <div className="flex items-center gap-2 lg:gap-3">
+                <div className="flex-1 lg:flex-none lg:max-w-28">
                   <ProgressBar
                     value={project.progress}
                     trackClass="bg-slate-200"
                     ariaLabel={`Progresso de ${project.title}`}
                   />
                 </div>
-                <span className="text-sm text-slate-500">{project.progress}%</span>
+                <span className="text-xs sm:text-sm text-slate-500 shrink-0">{project.progress}%</span>
               </div>
+
+              {/* Col 5: desktop view button */}
               <button
                 type="button"
-                className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg text-vinculo-dark transition hover:bg-blue-50"
+                className="hidden lg:flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg text-vinculo-dark transition hover:bg-blue-50"
                 onClick={() => onViewProject(project.id)}
               >
                 <VisibilityOutlinedIcon fontSize="small" />
@@ -334,11 +352,11 @@ function ProjectStatusCard({
           ))}
         </div>
 
-        <div className="mt-6 flex justify-center">
+        <div className="mt-5 flex justify-center">
           <button
             type="button"
             onClick={() => onViewAll()}
-            className="min-h-11 min-w-32 cursor-pointer rounded-lg border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+            className="min-h-9 min-w-28 cursor-pointer rounded-lg border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
           >
             Ver todos
           </button>
@@ -357,7 +375,7 @@ function StatusBadge({ status, label }: { status: ProjectStatus; label: string }
 
   return (
     <span
-      className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${classNameByStatus[status]}`}
+      className={`inline-flex rounded-full px-2.5 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm font-semibold ${classNameByStatus[status]}`}
     >
       {label}
     </span>
@@ -381,7 +399,7 @@ function DashboardCardState({
 }) {
   if (loading) {
     return (
-      <div className="mt-8 rounded-lg bg-slate-50 px-4 py-6 text-center text-sm font-medium text-slate-500">
+      <div className="mt-6 rounded-lg bg-slate-50 px-4 py-6 text-center text-sm font-medium text-slate-500">
         Carregando projetos...
       </div>
     )
@@ -389,7 +407,7 @@ function DashboardCardState({
 
   if (error) {
     return (
-      <div className="mt-8 rounded-lg border border-red-200 bg-red-50 px-4 py-5 text-center">
+      <div className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-5 text-center">
         <p className="text-sm font-medium text-red-700">{error}</p>
         <button
           type="button"
@@ -404,7 +422,7 @@ function DashboardCardState({
 
   if (isEmpty) {
     return (
-      <div className="mt-8 rounded-lg bg-slate-50 px-4 py-6 text-center text-sm font-medium text-slate-500">
+      <div className="mt-6 rounded-lg bg-slate-50 px-4 py-6 text-center text-sm font-medium text-slate-500">
         {emptyMessage}
       </div>
     )
@@ -416,22 +434,22 @@ function DashboardCardState({
 function FundingOpportunitiesBanner() {
   const navigate = useNavigate()
   return (
-    <section className="rounded-lg bg-linear-to-r from-vinculo-dark to-blue-600 p-6 text-white shadow-sm sm:p-8">
-      <div className="flex flex-col gap-5 md:flex-row md:items-start">
-        <div className="grid h-16 w-16 shrink-0 place-items-center rounded-lg bg-white/20">
-          <CampaignOutlinedIcon fontSize="large" />
+    <section className="rounded-lg bg-linear-to-r from-vinculo-dark to-blue-600 p-5 sm:p-6 text-white shadow-sm">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+        <div className="grid h-11 w-11 sm:h-14 sm:w-14 shrink-0 aspect-square place-items-center rounded-lg bg-white/20">
+          <CampaignOutlinedIcon />
         </div>
         <div className="min-w-0 flex-1">
-          <h2 className="text-2xl font-semibold leading-8">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-semibold leading-tight">
             Novas Oportunidades de Financiamento Disponíveis
           </h2>
-          <p className="mt-3 max-w-3xl text-base leading-7 text-white/90">
+          <p className="mt-2 sm:mt-3 max-w-3xl text-sm sm:text-base leading-6 sm:leading-7 text-white/90">
             Explore editais ativos e descubra oportunidades de captação de recursos para seus projetos.
           </p>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="mt-4 sm:mt-5">
             <BaseButton
               variant="primary"
-              className="min-h-12 bg-white! px-6 text-vinculo-dark! hover:bg-slate-100"
+              className="w-full sm:w-fit bg-white! px-6 text-vinculo-dark! hover:bg-slate-100"
               onClick={() => navigate('/editais')}
             >
               <DescriptionOutlinedIcon fontSize="small" />

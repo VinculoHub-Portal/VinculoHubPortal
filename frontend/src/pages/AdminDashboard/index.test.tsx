@@ -31,6 +31,18 @@ vi.mock("../../api/npoReports", () => ({
   updateAdminNpoReportStatus: mocks.updateAdminNpoReportStatusMock,
 }));
 
+vi.mock("../../api/admin", () => ({
+  fetchAdminMetrics: vi.fn().mockResolvedValue({
+    totalNpos: 87,
+    publishedEditais: 24,
+    activeVinculos: 156,
+    pendingNotifications: 5,
+  }),
+  fetchAllNpos: vi.fn().mockResolvedValue([]),
+  fetchAllCompanies: vi.fn().mockResolvedValue([]),
+  fetchAllVinculos: vi.fn().mockResolvedValue([]),
+}));
+
 vi.mock("../../context/ToastContext", () => ({
   useToast: () => ({ showToast: mocks.showToastMock }),
 }));
@@ -103,11 +115,11 @@ describe("AdminDashboard", () => {
     ).toBeInTheDocument();
   });
 
-  it("renderiza as métricas principais do dashboard", () => {
+  it("renderiza as métricas principais do dashboard", async () => {
     render(<AdminDashboard />);
 
     expect(
-      screen.getByRole("article", { name: "Total de ONGs: 87" }),
+      await screen.findByRole("article", { name: "Total de ONGs: 87" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("article", { name: "Editais Publicados: 24" }),
