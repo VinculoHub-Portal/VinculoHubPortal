@@ -114,6 +114,65 @@ public interface CompanyProjectRepository extends JpaRepository<CompanyProject, 
     @Query(
             value =
                     """
+SELECT cp
+FROM CompanyProject cp
+JOIN FETCH cp.company c
+LEFT JOIN FETCH c.user
+JOIN FETCH cp.project p
+JOIN FETCH p.npo n
+LEFT JOIN FETCH n.npoUser
+WHERE (
+        :status IS NULL
+        OR cp.status = :status
+)
+  AND (
+        :companyName IS NULL
+        OR LOWER(COALESCE(c.socialName, c.legalName)) LIKE LOWER(CONCAT('%', :companyName, '%'))
+)
+  AND (
+        :npoName IS NULL
+        OR LOWER(n.name) LIKE LOWER(CONCAT('%', :npoName, '%'))
+)
+  AND (
+        :projectTitle IS NULL
+        OR LOWER(p.title) LIKE LOWER(CONCAT('%', :projectTitle, '%'))
+)
+ORDER BY cp.updatedAt DESC, cp.createdAt DESC
+""",
+            countQuery =
+                    """
+SELECT COUNT(cp)
+FROM CompanyProject cp
+JOIN cp.company c
+JOIN cp.project p
+JOIN p.npo n
+WHERE (
+        :status IS NULL
+        OR cp.status = :status
+)
+  AND (
+        :companyName IS NULL
+        OR LOWER(COALESCE(c.socialName, c.legalName)) LIKE LOWER(CONCAT('%', :companyName, '%'))
+)
+  AND (
+        :npoName IS NULL
+        OR LOWER(n.name) LIKE LOWER(CONCAT('%', :npoName, '%'))
+)
+  AND (
+        :projectTitle IS NULL
+        OR LOWER(p.title) LIKE LOWER(CONCAT('%', :projectTitle, '%'))
+)
+""")
+    Page<CompanyProject> findAdminRelationships(
+            @Param("companyName") String companyName,
+            @Param("npoName") String npoName,
+            @Param("projectTitle") String projectTitle,
+            @Param("status") RelationshipStatus status,
+            Pageable pageable);
+
+    @Query(
+            value =
+                    """
                     SELECT
                         COUNT(DISTINCT p.id) AS totalActiveProjects,
                         COUNT(DISTINCT CASE

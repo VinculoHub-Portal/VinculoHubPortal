@@ -18,11 +18,13 @@ import { MyRelationshipsPage } from "../pages/MyRelationshipsPage"
 import { EditProjectPage } from "../pages/EditProjectPage"
 import { EditaisMuralPage } from "../pages/EditaisMuralPage"
 import { AdminDashboard } from "../pages/AdminDashboard"
+import { AdminNotificationsPage } from "../pages/AdminNotificationsPage"
+import { AdminOngsPage } from "../pages/AdminOngsPage"
+import { AdminVinculosPage } from "../pages/AdminVinculosPage"
 import { VinculosPage } from "../pages/VinculosPage"
 import { RelationshipsPage } from "../pages/RelationshipsPage"
 import { AdminOngsList } from "../pages/AdminOngsList"
 import { AdminVinculosList } from "../pages/AdminVinculosList"
-import { AdminNotificationsPage } from "../pages/AdminNotificationsPage"
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -53,7 +55,9 @@ export const AppRouter = () => (
         path="/admin/ongs"
         element={
           <ProtectedRoute requiredRole="ADMIN">
-            <AdminOngsList />
+            <AdminOngsPage>
+              <AdminOngsList />
+            </AdminOngsPage>
           </ProtectedRoute>
         }
       />
@@ -61,7 +65,17 @@ export const AppRouter = () => (
         path="/admin/vinculos"
         element={
           <ProtectedRoute requiredRole="ADMIN">
-            <AdminVinculosList />
+            <AdminVinculosPage>
+              <AdminVinculosList />
+            </AdminVinculosPage>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/notificacoes"
+        element={
+          <ProtectedRoute requiredRole="ADMIN">
+            <AdminNotificationsPage />
           </ProtectedRoute>
         }
       />
