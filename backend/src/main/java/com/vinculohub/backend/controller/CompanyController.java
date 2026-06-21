@@ -5,6 +5,7 @@ import com.vinculohub.backend.dto.CompanyDTO;
 import com.vinculohub.backend.dto.CompanyExportDTO;
 import com.vinculohub.backend.dto.CompanyListItemResponse;
 import com.vinculohub.backend.dto.CompanyProfileResponse;
+import com.vinculohub.backend.dto.CompanyPublicProfileResponse;
 import com.vinculohub.backend.dto.NpoListItemResponse;
 import com.vinculohub.backend.service.CompanyService;
 import jakarta.validation.Valid;
@@ -82,5 +83,12 @@ public class CompanyController {
             @AuthenticationPrincipal Jwt jwt) {
         log.info("GET /api/me/company/profile | sub={}", jwt.getSubject());
         return ResponseEntity.ok(companyService.getCompanyProfileByAuth0Id(jwt.getSubject()));
+    }
+
+    @GetMapping("/api/companies/{id}/public")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<CompanyPublicProfileResponse> getPublicProfile(@PathVariable Integer id) {
+        log.info("GET /api/companies/{}/public", id);
+        return ResponseEntity.ok(companyService.getPublicProfile(id));
     }
 }

@@ -42,7 +42,7 @@ class ResendNotificationServiceTest {
         when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
         when(requestBodySpec.body(any(EmailRequest.class))).thenReturn(requestBodySpec);
         when(requestBodySpec.retrieve()).thenReturn(responseSpec);
-        service = new ResendNotificationService(restClient, FROM);
+        service = new ResendNotificationService(restClient, FROM, null);
     }
 
     private EmailRequest capturePayload() {
@@ -125,5 +125,28 @@ class ResendNotificationServiceTest {
                 .thenThrow(new RestClientException("HTTP 500 - Internal Server Error"));
 
         assertDoesNotThrow(() -> service.interestReceived(TO, PROJECT, PARTNER));
+    }
+
+    @Test
+    @DisplayName("overrideTo substitui o destinatário real do payload")
+    void overrideToReplacesRecipient() {
+        String override = "dev-bucket@example.com";
+        ResendNotificationService svc = new ResendNotificationService(restClient, FROM, override);
+
+        svc.interestReceived(TO, PROJECT, PARTNER);
+
+        EmailRequest req = capturePayload();
+        assertEquals(java.util.List.of(override), req.to());
+    }
+
+    @Test
+    @DisplayName("overrideTo nulo ou em branco mantém destinatário original")
+    void nullOrBlankOverrideToKeepsOriginalRecipient() {
+        ResendNotificationService svc = new ResendNotificationService(restClient, FROM, "  ");
+
+        svc.interestReceived(TO, PROJECT, PARTNER);
+
+        EmailRequest req = capturePayload();
+        assertEquals(java.util.List.of(TO), req.to());
     }
 }

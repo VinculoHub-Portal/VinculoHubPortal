@@ -17,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AdminMetricsService {
 
+    private static final int OVERDUE_DAYS = 7;
+
     private final NpoRepository npoRepository;
     private final EditalRepository editalRepository;
     private final CompanyProjectRepository companyProjectRepository;
@@ -24,10 +26,15 @@ public class AdminMetricsService {
 
     @Transactional(readOnly = true)
     public AdminMetricsResponse getMetrics() {
+        LocalDateTime now = LocalDateTime.now();
         long totalNpos = npoRepository.count();
-        long publishedEditais = editalRepository.countActive(LocalDateTime.now());
+        long publishedEditais = editalRepository.countActive(now);
         long activeVinculos = companyProjectRepository.countByStatus(RelationshipStatus.active);
-        long pendingNotifications = npoReportRepository.countByStatus(NpoReportStatus.OPEN);
+        long openReports = npoReportRepository.countByStatus(NpoReportStatus.OPEN);
+        long overdueRelationships =
+                companyProjectRepository.countByStatusAndCreatedAtLessThanEqual(
+                        RelationshipStatus.pending, now.minusDays(OVERDUE_DAYS));
+        long pendingNotifications = openReports + overdueRelationships;
 
         return new AdminMetricsResponse(
                 totalNpos, publishedEditais, activeVinculos, pendingNotifications);

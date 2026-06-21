@@ -44,7 +44,7 @@ function makePageResponse(
     totalElements: items.length * totalPages,
     totalPages,
     number: 0,
-    size: 12,
+    size: 10,
     first: true,
     last: totalPages === 1,
   }
@@ -158,7 +158,7 @@ describe("CompanyPrivateInvestmentPage", () => {
       totalElements: 0,
       totalPages: 0,
       number: 0,
-      size: 12,
+      size: 10,
       first: true,
       last: true,
     })

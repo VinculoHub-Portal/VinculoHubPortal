@@ -8,7 +8,7 @@ import { ProjectsGrid } from "./ProjectsGrid"
 
 export const CompanyIncentiveLawsPage = () => {
   const openProjectDetails = useProjectDetailsNavigation("/empresa/leis-de-incentivo")
-  const { projects, loading, error, currentPage, totalPages, setCurrentPage } =
+  const { projects, loading, error, currentPage, totalPages, totalElements, setCurrentPage } =
     usePaginatedProjects({ type: "TAX_INCENTIVE_LAW" })
 
   function handlePageChange(page: number) {
@@ -17,9 +17,9 @@ export const CompanyIncentiveLawsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
+    <div className="min-h-screen bg-slate-50 flex flex-col gap-6 sm:gap-10 pb-12 sm:pb-20">
       <Header />
-      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 flex flex-col gap-6">
+      <main className="max-w-[1200px] mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-col gap-4 sm:gap-6">
         <Link
           to="/empresa/dashboard"
           className="flex items-center gap-1 text-sm text-vinculo-dark font-medium hover:opacity-70 transition-opacity w-fit"
@@ -28,23 +28,24 @@ export const CompanyIncentiveLawsPage = () => {
           Voltar ao Dashboard
         </Link>
 
-        <header>
-          <h1 className="text-2xl font-medium leading-9 text-vinculo-dark">
+        <header className="flex flex-col gap-1">
+          <h1 className="text-xl sm:text-2xl font-medium leading-tight sm:leading-9 text-vinculo-dark">
             Leis de Incentivo
           </h1>
-          <p className="text-base font-normal leading-6 text-slate-600 max-w-xl">
-            Explore projetos que podem ser apoiados através de leis de incentivo
-            fiscal. Invista em causas sociais enquanto obtém benefícios
-            tributários para sua empresa.
+          <p className="text-sm sm:text-base font-normal leading-relaxed text-slate-500 max-w-[600px]">
+            Encontre projetos aptos a receber apoio por meio de leis de incentivo fiscal, alinhados aos temas de interesse da sua empresa.
           </p>
         </header>
 
-        <ProjectsGrid
-          projects={projects}
-          loading={loading}
-          error={error}
-          onDetails={openProjectDetails}
-        />
+        <div className="mt-4 sm:mt-6">
+          <ProjectsGrid
+            projects={projects}
+            totalElements={totalElements}
+            loading={loading}
+            error={error}
+            onDetails={openProjectDetails}
+          />
+        </div>
 
         <Pagination
           currentPage={currentPage}

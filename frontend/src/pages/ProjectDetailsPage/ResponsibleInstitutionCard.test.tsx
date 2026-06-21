@@ -24,7 +24,7 @@ describe("ResponsibleInstitutionCard", () => {
 
   it("renderiza o título da seção", () => {
     render(<ResponsibleInstitutionCard institution={baseInstitution} />);
-    expect(screen.getByText("Organização Responsável")).toBeInTheDocument();
+    expect(screen.getAllByText("Organização Responsável")[0]).toBeInTheDocument();
   });
 
   it("renderiza a action quando fornecida", () => {
@@ -34,7 +34,7 @@ describe("ResponsibleInstitutionCard", () => {
         headerAction={<button type="button">Denunciar</button>}
       />,
     );
-    expect(screen.getByRole("button", { name: "Denunciar" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Denunciar" })[0]).toBeInTheDocument();
   });
 
   it("renderiza descrição quando presente", () => {

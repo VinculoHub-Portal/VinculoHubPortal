@@ -1,12 +1,20 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { useQuery } from "@tanstack/react-query";
+import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import HandshakeOutlinedIcon from "@mui/icons-material/HandshakeOutlined";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
+import axios from "axios";
 import { useState } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { createRelationship } from "../../api/relationships";
+import { BaseButton } from "../../components/general/BaseButton";
 import { Header } from "../../components/general/Header";
 import { FlexibleButton } from "../../components/general/FlexibleButton";
+import { DemonstrarInteresseModal } from "../../components/projects/DemonstrarInteresseModal";
 import { ReportNpoModal } from "../../components/ong/ReportNpoModal";
+import { useToast } from "../../context/ToastContext";
+import { useExistingRelationship } from "../../hooks/useExistingRelationship";
 import { resolveDashboardPath } from "../../utils/dashboardPath";
 import { fetchProjectDetails } from "./fetchProjectDetails";
 import { FundingProgress } from "./FundingProgress";
@@ -37,8 +45,10 @@ export function ProjectDetailsPage() {
   const { user, getAccessTokenSilently } = useAuth0();
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const dashboardPath = resolveDashboardPath(user);
   const companyUser = isCompanyUser(user);
+  const { showToast } = useToast();
   const locationState = location.state as { returnTo?: unknown } | null;
   const returnTo =
     typeof locationState?.returnTo === "string"
@@ -67,16 +77,64 @@ export function ProjectDetailsPage() {
   const canReportInstitution = companyUser && reportableNpoId != null;
   const canViewPublicProfile = reportableNpoId != null;
 
+  const numericProjectId = project ? Number(project.id) : null;
+  const validProjectId =
+    numericProjectId != null && Number.isFinite(numericProjectId) ? numericProjectId : null;
+  const { exists: alreadyHasRelationship, loading: existingRelationshipLoading } =
+    useExistingRelationship({
+      projectId: validProjectId,
+    });
+
+  const [interestModalOpen, setInterestModalOpen] = useState(false);
+  const [submittingInterest, setSubmittingInterest] = useState(false);
+  const [sentInThisSession, setSentInThisSession] = useState(false);
+
+  const showInterestButton = companyUser && project != null && validProjectId != null;
+  const interestButtonDisabled =
+    alreadyHasRelationship ||
+    sentInThisSession ||
+    existingRelationshipLoading ||
+    submittingInterest;
+  const interestButtonLabel =
+    alreadyHasRelationship || sentInThisSession
+      ? "Interesse já enviado"
+      : "Demonstrar Interesse";
+
+  async function handleConfirmInterest() {
+    if (!validProjectId) return;
+    setSubmittingInterest(true);
+    try {
+      const token = await getAccessTokenSilently();
+      await createRelationship(validProjectId, token);
+      setSentInThisSession(true);
+      setInterestModalOpen(false);
+      showToast("Interesse enviado com sucesso!", "success");
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
+        setSentInThisSession(true);
+        setInterestModalOpen(false);
+        showToast("Já existe vínculo em andamento para este projeto.", "warning");
+      } else {
+        showToast(
+          "Não foi possível enviar o interesse. Tente novamente.",
+          "error",
+        );
+      }
+    } finally {
+      setSubmittingInterest(false);
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-surface flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       <Header />
 
-      <div className="flex-1 w-full px-4 sm:px-6 py-8 md:py-10">
-        <div className="max-w-3xl mx-auto w-full">
+      <div className="flex-1 w-full px-4 sm:px-6 py-6 sm:py-8">
+        <div className="max-w-[960px] mx-auto w-full">
           {!showNotFound && (
             <Link
               to={returnTo}
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-vinculo-dark hover:text-vinculo-dark-hover mb-6 transition-colors"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-vinculo-dark hover:text-vinculo-dark-hover mb-4 sm:mb-6 transition-colors"
             >
               <ArrowBackIcon sx={{ fontSize: 18 }} aria-hidden />
               {returnLabel}
@@ -106,16 +164,16 @@ export function ProjectDetailsPage() {
           )}
 
           {Boolean(projectId) && !query.isLoading && !query.isError && project && (
-            <article className="bg-white rounded-2xl shadow-[var(--shadow-vinculo)] px-6 sm:px-10 py-8 sm:py-10 border border-slate-100">
+            <article className="bg-white rounded-2xl shadow-[var(--shadow-vinculo)] px-5 sm:px-8 py-6 sm:py-8 border border-slate-200">
               <ProjectHeader
                 fundingType={project.fundingType}
                 requiredAmountFormatted={isIncentiveLaw ? formatBrl(project.requiredAmount) : null}
                 name={project.name}
               />
 
-              <section className="mt-10">
-                <h2 className="text-base font-bold text-vinculo-dark mb-3">Sobre o Projeto</h2>
-                <p className="text-slate-600 text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words overflow-hidden">
+              <section className="mt-6 sm:mt-8">
+                <h2 className="text-sm sm:text-base font-bold text-vinculo-dark mb-2 sm:mb-3">Sobre o Projeto</h2>
+                <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap break-words overflow-hidden">
                   {project.description || "—"}
                 </p>
               </section>
@@ -127,6 +185,21 @@ export function ProjectDetailsPage() {
               {isIncentiveLaw && (
                 <FundingProgress progressPercent={project.progressPercent} />
               )}
+
+              {showInterestButton && (
+                <div className="mt-8 flex justify-end">
+                  <BaseButton
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setInterestModalOpen(true)}
+                    disabled={interestButtonDisabled}
+                    className="hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <HandshakeOutlinedIcon sx={{ fontSize: 18 }} aria-hidden />
+                    {interestButtonLabel}
+                  </BaseButton>
+                </div>
+              )}
             </article>
           )}
 
@@ -136,19 +209,21 @@ export function ProjectDetailsPage() {
                 institution={project.responsibleInstitution}
                 headerAction={
                   canViewPublicProfile || canReportInstitution ? (
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                       {canViewPublicProfile && (
-                        <Link
-                          to={`/ong/publico/${reportableNpoId}`}
-                          className="text-sm font-medium text-vinculo-dark underline-offset-2 hover:underline"
+                        <FlexibleButton
+                          icon={<AccountCircleOutlinedIcon fontSize="small" />}
+                          variant="outline"
+                          size="compact"
+                          onClick={() => navigate(`/ong/publico/${reportableNpoId}`)}
                         >
                           Ver perfil completo
-                        </Link>
+                        </FlexibleButton>
                       )}
                       {canReportInstitution && (
                         <FlexibleButton
                           icon={<ReportProblemOutlinedIcon fontSize="small" />}
-                          variant="subtle"
+                          variant="attention"
                           size="compact"
                           onClick={() => setIsReportModalOpen(true)}
                         >
@@ -169,6 +244,13 @@ export function ProjectDetailsPage() {
               onClose={() => setIsReportModalOpen(false)}
             />
           )}
+
+          <DemonstrarInteresseModal
+            open={interestModalOpen}
+            onClose={() => setInterestModalOpen(false)}
+            onConfirm={() => void handleConfirmInterest()}
+            loading={submittingInterest}
+          />
         </div>
       </div>
     </div>

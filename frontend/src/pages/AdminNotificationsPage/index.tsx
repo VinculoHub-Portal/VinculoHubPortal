@@ -1,299 +1,301 @@
-import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined"
-import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined"
-import { useAuth0 } from "@auth0/auth0-react"
-import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
-import { fetchAdminNpoReports, updateAdminNpoReportStatus, type NpoReportResponse, type NpoReportStatus } from "../../api/npoReports"
-import { Header } from "../../components/general/Header"
-import { Pagination } from "../../components/general/Pagination"
-import { useToast } from "../../context/ToastContext"
+import { useAuth0 } from "@auth0/auth0-react";
+import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
+import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
+import NotificationsActiveOutlinedIcon from "@mui/icons-material/NotificationsActiveOutlined";
+import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
+import { useEffect, useMemo, useState } from "react";
+import {
+  fetchOverdueRelationshipAlerts,
+  type OverdueRelationshipAlert,
+} from "../../api/admin";
+import {
+  fetchAdminNpoReports,
+  type NpoReportResponse,
+} from "../../api/npoReports";
+import { Header } from "../../components/general/Header";
 
-const PAGE_SIZE = 5
+type NotificationType = "all" | "reports" | "relationships";
 
-const REPORT_STATUS_LABELS: Record<NpoReportResponse["status"], string> = {
-  OPEN: "Aberta",
-  RESOLVED: "Resolvida",
-  DISMISSED: "Descartada",
-}
+type AdminNotificationItem =
+  | {
+      id: string;
+      type: "report";
+      title: string;
+      primary: string;
+      secondary: string;
+      description: string;
+      createdAt: string;
+      href: string;
+    }
+  | {
+      id: string;
+      type: "relationship";
+      title: string;
+      primary: string;
+      secondary: string;
+      description: string;
+      createdAt: string;
+      href: string;
+    };
 
-const REPORT_STATUS_OPTIONS: NpoReportStatus[] = ["OPEN", "RESOLVED", "DISMISSED"]
+const FILTERS: { value: NotificationType; label: string }[] = [
+  { value: "all", label: "Todas" },
+  { value: "reports", label: "Denúncias" },
+  { value: "relationships", label: "Vínculos vencidos" },
+];
 
-function formatReportDate(value: string) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return "Data indisponível"
+function formatDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Data indisponível";
 
   return new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "short",
     timeStyle: "short",
-  }).format(date)
+  }).format(date);
+}
+
+function mapReport(report: NpoReportResponse): AdminNotificationItem {
+  return {
+    id: `report-${report.id}`,
+    type: "report",
+    title: "Denúncia de ONG aberta",
+    primary: report.npo.name,
+    secondary: report.reporterCompany.name,
+    description: report.reason,
+    createdAt: report.createdAt,
+    href: "/admin/dashboard#denuncias",
+  };
+}
+
+function mapRelationship(alert: OverdueRelationshipAlert): AdminNotificationItem {
+  return {
+    id: `relationship-${alert.companyId}-${alert.projectId}`,
+    type: "relationship",
+    title: "Vínculo pendente vencido",
+    primary: alert.projectName,
+    secondary: `${alert.companyName} -> ${alert.npoName}`,
+    description: "A solicitação está pendente há mais de 7 dias e pode exigir mediação.",
+    createdAt: alert.requestedAt,
+    href: "/admin/vinculos",
+  };
 }
 
 export function AdminNotificationsPage() {
-  const { getAccessTokenSilently } = useAuth0()
-  const { showToast } = useToast()
-  const [reports, setReports] = useState<NpoReportResponse[]>([])
-  const [page, setPage] = useState(0)
-  const [totalPages, setTotalPages] = useState(0)
-  const [totalElements, setTotalElements] = useState(0)
-  const [isLoadingReports, setIsLoadingReports] = useState(true)
-  const [reportsError, setReportsError] = useState("")
-  const [updatingReportId, setUpdatingReportId] = useState<number | null>(null)
-  const [npoNameFilter, setNpoNameFilter] = useState("")
-  const [companyNameFilter, setCompanyNameFilter] = useState("")
-  const [statusFilter, setStatusFilter] = useState<NpoReportStatus>("OPEN")
-  const [debouncedNpoName, setDebouncedNpoName] = useState("")
-  const [debouncedCompanyName, setDebouncedCompanyName] = useState("")
-  const [refreshKey, setRefreshKey] = useState(0)
+  const { getAccessTokenSilently } = useAuth0();
+  const [reports, setReports] = useState<NpoReportResponse[]>([]);
+  const [relationships, setRelationships] = useState<OverdueRelationshipAlert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [filter, setFilter] = useState<NotificationType>("all");
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedNpoName(npoNameFilter)
-      setPage(0)
-    }, 400)
-    return () => clearTimeout(timer)
-  }, [npoNameFilter])
+    let isMounted = true;
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedCompanyName(companyNameFilter)
-      setPage(0)
-    }, 400)
-    return () => clearTimeout(timer)
-  }, [companyNameFilter])
-
-  useEffect(() => {
-    let isMounted = true
-
-    async function loadReports() {
-      setIsLoadingReports(true)
-      setReportsError("")
+    async function load() {
+      setLoading(true);
+      setError("");
       try {
-        const token = await getAccessTokenSilently()
-        const data = await fetchAdminNpoReports(token, {
-          npoName: debouncedNpoName || undefined,
-          companyName: debouncedCompanyName || undefined,
-          status: statusFilter,
-          page,
-          size: PAGE_SIZE,
-        })
-        if (!isMounted) return
-        setReports(data.content)
-        setTotalPages(data.totalPages)
-        setTotalElements(data.totalElements)
+        const token = await getAccessTokenSilently();
+        const [reportsResult, overdueResult] = await Promise.allSettled([
+          fetchAdminNpoReports(token, { status: "OPEN", page: 0, size: 100 }),
+          fetchOverdueRelationshipAlerts(token),
+        ]);
+
+        if (isMounted) {
+          const loadedReports =
+            reportsResult.status === "fulfilled" ? reportsResult.value.content : [];
+          const loadedRelationships =
+            overdueResult.status === "fulfilled" ? overdueResult.value : [];
+
+          setReports(loadedReports);
+          setRelationships(loadedRelationships);
+          if (reportsResult.status === "rejected" || overdueResult.status === "rejected") {
+            setError("Algumas notificações não puderam ser carregadas.");
+          }
+        }
       } catch {
         if (isMounted) {
-          setReportsError("Não foi possível carregar as denúncias.")
-          setReports([])
+          setReports([]);
+          setRelationships([]);
+          setError("Não foi possível carregar as notificações.");
         }
       } finally {
-        if (isMounted) setIsLoadingReports(false)
+        if (isMounted) setLoading(false);
       }
     }
 
-    void loadReports()
-
+    void load();
     return () => {
-      isMounted = false
-    }
-  }, [getAccessTokenSilently, debouncedNpoName, debouncedCompanyName, statusFilter, page, refreshKey])
+      isMounted = false;
+    };
+  }, [getAccessTokenSilently]);
 
-  async function handleStatusChange(reportId: number, newStatus: NpoReportStatus) {
-    setUpdatingReportId(reportId)
-    const oldReport = reports.find((r) => r.id === reportId)
-    try {
-      const token = await getAccessTokenSilently()
-      await updateAdminNpoReportStatus(reportId, { status: newStatus }, token)
-      showToast(`Status atualizado para "${REPORT_STATUS_LABELS[newStatus]}" com sucesso.`, "success")
-      if (oldReport?.status === "OPEN" && newStatus !== "OPEN") {
-        setTotalElements((value) => Math.max(0, value - 1))
-      }
-      setRefreshKey((k) => k + 1)
-    } catch {
-      showToast("Não foi possível atualizar o status da denúncia.", "error")
-    } finally {
-      setUpdatingReportId(null)
-    }
-  }
+  const notifications = useMemo(() => {
+    const items = [...reports.map(mapReport), ...relationships.map(mapRelationship)];
+    return items.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  }, [relationships, reports]);
 
-  function handleStatusFilterChange(value: NpoReportStatus) {
-    setStatusFilter(value)
-    setPage(0)
-  }
+  const filteredNotifications = notifications.filter((item) => {
+    if (filter === "reports") return item.type === "report";
+    if (filter === "relationships") return item.type === "relationship";
+    return true;
+  });
+
+  const totalNotifications = reports.length + relationships.length;
 
   return (
     <div className="min-h-screen bg-slate-50 pb-8">
       <Header />
 
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
-        <Link
-          to="/admin/dashboard"
-          className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-vinculo-dark"
-        >
-          <ArrowBackOutlinedIcon fontSize="small" />
-          Voltar ao painel
-        </Link>
+        <header className="flex flex-col gap-4">
+          <a
+            href="/admin/dashboard"
+            className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-vinculo-dark"
+          >
+            <ArrowBackOutlinedIcon fontSize="small" />
+            Voltar ao painel
+          </a>
 
-        <header className="flex items-center gap-3">
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-100 text-rose-600">
-            <ReportProblemOutlinedIcon fontSize="small" />
-          </span>
-          <div>
-            <h1 className="text-2xl font-bold text-vinculo-dark">Denúncias de ONGs</h1>
-            <p className="text-sm text-slate-500">
-              {isLoadingReports
-                ? "Carregando..."
-                : `${totalElements} pendência${totalElements !== 1 ? "s" : ""} no total`}
-            </p>
+          <div className="flex items-center gap-3">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
+              <NotificationsActiveOutlinedIcon fontSize="small" />
+            </span>
+            <div>
+              <h1 className="text-2xl font-bold text-vinculo-dark">Notificações</h1>
+              <p className="text-sm text-slate-500">
+                {loading
+                  ? "Carregando..."
+                  : `${totalNotifications} evento${totalNotifications !== 1 ? "s" : ""} pendente${totalNotifications !== 1 ? "s" : ""}`}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filtrar notificações">
+            {FILTERS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                role="tab"
+                aria-selected={filter === option.value}
+                onClick={() => setFilter(option.value)}
+                className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                  filter === option.value
+                    ? "bg-vinculo-dark text-white"
+                    : "border border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
         </header>
 
-        <section aria-labelledby="denuncias-title" className="flex flex-col gap-4">
-          <div className="flex flex-col gap-3">
-            <div className="flex gap-1" role="tablist" aria-label="Filtrar por status">
-              {REPORT_STATUS_OPTIONS.map((status) => (
-                <button
-                  key={status}
-                  type="button"
-                  role="tab"
-                  aria-selected={statusFilter === status}
-                  onClick={() => handleStatusFilterChange(status)}
-                  className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                    statusFilter === status
-                      ? "bg-vinculo-dark text-white"
-                      : "border border-slate-300 text-slate-600 hover:bg-slate-50"
-                  }`}
-                >
-                  {REPORT_STATUS_LABELS[status]}
-                </button>
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3" aria-label="Resumo de notificações">
+          <SummaryCard label="Total pendente" value={totalNotifications} />
+          <SummaryCard label="Denúncias abertas" value={reports.length} />
+          <SummaryCard label="Vínculos vencidos" value={relationships.length} />
+        </section>
+
+        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+          {loading && (
+            <div className="p-6">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="mb-4 h-10 animate-pulse rounded bg-slate-100" />
               ))}
             </div>
+          )}
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <input
-                type="text"
-                placeholder="Filtrar por ONG"
-                value={npoNameFilter}
-                onChange={(event) => setNpoNameFilter(event.target.value)}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 outline-none focus:border-vinculo-dark focus:ring-2 focus:ring-vinculo-dark/20"
-              />
-              <input
-                type="text"
-                placeholder="Filtrar por empresa"
-                value={companyNameFilter}
-                onChange={(event) => setCompanyNameFilter(event.target.value)}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 outline-none focus:border-vinculo-dark focus:ring-2 focus:ring-vinculo-dark/20"
-              />
-            </div>
-          </div>
+          {!loading && error && notifications.length === 0 && (
+            <p className="p-6 text-sm font-medium text-vinculo-red" role="alert">
+              {error}
+            </p>
+          )}
 
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-            {isLoadingReports && (
-              <div className="p-6">
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <div key={index} className="mb-4 h-10 animate-pulse rounded bg-slate-100" />
-                ))}
-              </div>
-            )}
+          {!loading && error && notifications.length > 0 && (
+            <p className="border-b border-slate-100 px-6 py-3 text-sm font-medium text-vinculo-red" role="alert">
+              {error}
+            </p>
+          )}
 
-            {!isLoadingReports && reportsError && (
-              <p className="p-6 text-sm font-medium text-vinculo-red" role="alert">
-                {reportsError}
-              </p>
-            )}
+          {!loading && filteredNotifications.length === 0 && notifications.length === 0 && !error && (
+            <p className="p-6 text-sm text-slate-500">Nenhuma notificação encontrada.</p>
+          )}
 
-            {!isLoadingReports && !reportsError && reports.length === 0 && (
-              <p className="p-6 text-sm text-slate-500">
-                {statusFilter === "OPEN" && "Nenhuma denúncia aberta."}
-                {statusFilter === "RESOLVED" && "Nenhuma denúncia resolvida."}
-                {statusFilter === "DISMISSED" && "Nenhuma denúncia descartada."}
-              </p>
-            )}
+          {!loading && filteredNotifications.length === 0 && notifications.length > 0 && (
+            <p className="p-6 text-sm text-slate-500">Nenhuma notificação encontrada para o filtro selecionado.</p>
+          )}
 
-            {!isLoadingReports && !reportsError && reports.length > 0 && (
-              <>
-                <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
-                  <thead className="bg-slate-50">
-                    <tr className="text-slate-500">
-                      <th scope="col" className="px-6 py-3 font-semibold">
-                        ONG
-                      </th>
-                      <th scope="col" className="px-4 py-3 font-semibold">
-                        Empresa
-                      </th>
-                      <th scope="col" className="px-4 py-3 font-semibold">
-                        Motivo
-                      </th>
-                      <th scope="col" className="px-4 py-3 font-semibold">
-                        Status
-                      </th>
-                      <th scope="col" className="py-3 pl-4 pr-4 font-semibold">
-                        Recebida em
-                      </th>
+          {!loading && filteredNotifications.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
+                <thead className="bg-slate-50">
+                  <tr className="text-slate-500">
+                    <th scope="col" className="px-6 py-3 font-semibold">Tipo</th>
+                    <th scope="col" className="px-4 py-3 font-semibold">Origem</th>
+                    <th scope="col" className="px-4 py-3 font-semibold">Detalhes</th>
+                    <th scope="col" className="px-4 py-3 font-semibold">Recebida em</th>
+                    <th scope="col" className="px-4 py-3 font-semibold">Ação</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredNotifications.map((item) => (
+                    <tr key={item.id} className="text-slate-700 hover:bg-slate-50">
+                      <td className="px-6 py-4">
+                        <NotificationBadge type={item.type} label={item.title} />
+                      </td>
+                      <td className="px-4 py-4">
+                        <p className="font-medium text-vinculo-dark">{item.primary}</p>
+                        <p className="mt-1 text-xs text-slate-500">{item.secondary}</p>
+                      </td>
+                      <td className="max-w-md px-4 py-4 leading-6">{item.description}</td>
+                      <td className="px-4 py-4 text-slate-500">{formatDate(item.createdAt)}</td>
+                      <td className="px-4 py-4">
+                        <a
+                          href={item.href}
+                          className="text-sm font-semibold text-vinculo-dark hover:underline"
+                        >
+                          Ver detalhes
+                        </a>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {reports.map((report) => (
-                      <tr key={report.id} className="align-top text-slate-700">
-                        <td className="py-4 pl-4 pr-4">
-                          <p className="font-semibold text-vinculo-dark">{report.npo.name}</p>
-                          {report.npo.email && (
-                            <p className="mt-1 text-xs text-slate-500">{report.npo.email}</p>
-                          )}
-                        </td>
-                        <td className="px-4 py-4">
-                          <p className="font-medium text-slate-800">
-                            {report.reporterCompany.name}
-                          </p>
-                          <p className="mt-1 text-xs text-slate-500">
-                            {report.reporterUser.email}
-                          </p>
-                        </td>
-                        <td className="max-w-md px-4 py-4 leading-6">{report.reason}</td>
-                        <td className="px-4 py-4">
-                          <select
-                            aria-label={`Alterar status da denúncia ${report.id}`}
-                            value={report.status}
-                            disabled={updatingReportId === report.id}
-                            onChange={(event) =>
-                              void handleStatusChange(
-                                report.id,
-                                event.target.value as NpoReportStatus,
-                              )
-                            }
-                            className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-none focus:border-vinculo-dark focus:ring-2 focus:ring-vinculo-dark/20 disabled:opacity-60"
-                          >
-                            {REPORT_STATUS_OPTIONS.map((status) => (
-                              <option key={status} value={status}>
-                                {REPORT_STATUS_LABELS[status]}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="py-4 pl-4 pr-4 text-slate-500">
-                          {formatReportDate(report.createdAt)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                </div>
-
-                <div className="border-t border-slate-100 px-6 py-2">
-                  <Pagination
-                    currentPage={page}
-                    totalPages={totalPages}
-                    onChange={(newPage) => {
-                      setPage(newPage)
-                      window.scrollTo({ top: 0, behavior: "smooth" })
-                    }}
-                  />
-                </div>
-              </>
-            )}
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
       </main>
     </div>
-  )
+  );
+}
+
+function SummaryCard({ label, value }: { label: string; value: number }) {
+  return (
+    <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <p className="text-sm font-medium text-slate-500">{label}</p>
+      <p className="mt-2 text-3xl font-bold text-vinculo-dark">{value}</p>
+    </article>
+  );
+}
+
+function NotificationBadge({
+  type,
+  label,
+}: {
+  type: AdminNotificationItem["type"];
+  label: string;
+}) {
+  const isReport = type === "report";
+  const Icon = isReport ? ReportProblemOutlinedIcon : HubOutlinedIcon;
+  const classes = isReport ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700";
+
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${classes}`}>
+      <Icon sx={{ fontSize: 14 }} aria-hidden />
+      {label}
+    </span>
+  );
 }

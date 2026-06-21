@@ -89,3 +89,46 @@ export async function rejectRelationship(
     throw error
   }
 }
+
+export async function createRelationship(
+  projectId: number,
+  token: string,
+  companyId?: number,
+): Promise<void> {
+  const body: { projectId: number; companyId?: number } = { projectId }
+  if (typeof companyId === "number") {
+    body.companyId = companyId
+  }
+
+  logger.info("RelationshipsAPI", "Creating relationship", body)
+
+  try {
+    await api.post("/api/relationships", body, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
+    logger.info("RelationshipsAPI", "Relationship created", body)
+  } catch (error) {
+    logger.error("RelationshipsAPI", "Failed to create relationship", error)
+    throw error
+  }
+}
+
+export async function confirmRelationship(
+  companyId: number,
+  projectId: number,
+  token: string,
+): Promise<void> {
+  logger.info("RelationshipsAPI", "Confirming relationship", { companyId, projectId })
+
+  try {
+    await api.post(`/api/relationships/${companyId}/${projectId}/confirm`, undefined, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
+    logger.info("RelationshipsAPI", "Relationship confirmed", { companyId, projectId })
+  } catch (error) {
+    logger.error("RelationshipsAPI", "Failed to confirm relationship", error)
+    throw error
+  }
+}

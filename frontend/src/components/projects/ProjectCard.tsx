@@ -38,10 +38,11 @@ export function ProjectCard({
 
   return (
     <div
-      className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 w-full h-full flex flex-col transition-transform transform hover:-translate-y-1 hover:shadow-md focus-within:shadow-md focus-within:ring-2 focus-within:ring-vinculo-green"
+      className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 w-full h-full flex flex-col transition-transform transform hover:-translate-y-1 hover:shadow-md focus-within:shadow-md focus-within:ring-2 focus-within:ring-vinculo-green cursor-pointer"
       role="article"
       tabIndex={0}
       aria-label={`Projeto ${title}`}
+      onClick={() => onDetails?.(id)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") onDetails?.(id);
       }}
@@ -101,11 +102,11 @@ export function ProjectCard({
         </>
       )}
 
-      <div className="mt-auto pt-4 text-sm">
+      <div className="mt-auto pt-4 text-sm hidden sm:block">
         <button
-          onClick={() => onDetails?.(id)}
+          onClick={(e) => { e.stopPropagation(); onDetails?.(id); }}
           aria-label={`Ver detalhes do projeto ${title}`}
-          className="text-vinculo-dark font-medium hover:opacity-80 transition-opacity"
+          className="cursor-pointer text-vinculo-dark font-medium hover:opacity-80 transition-opacity"
         >
           Ver detalhes →
         </button>

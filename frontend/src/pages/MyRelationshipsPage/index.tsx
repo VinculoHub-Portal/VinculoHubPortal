@@ -20,12 +20,14 @@ import RefreshIcon from "@mui/icons-material/Refresh"
 import { useAuth0 } from "@auth0/auth0-react"
 import { useMemo, useState, type ReactNode } from "react"
 import type { NavigateFunction } from "react-router-dom"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import {
   acceptRelationship,
+  confirmRelationship,
   rejectRelationship,
 } from "../../api/relationships"
-import { PortalTopbar } from "../../components/general/PortalTopbar"
+import { Header } from "../../components/general/Header"
+import { EfetivarParceriaModal } from "../../components/relationships/EfetivarParceriaModal"
 import { useToast } from "../../context/ToastContext"
 import { resolveDashboardPath } from "../../utils/dashboardPath"
 import { useAuthProfile } from "../../hooks/useAuthProfile"
@@ -33,7 +35,6 @@ import { useMyRelationships } from "../../hooks/useMyRelationships"
 import { RejectRelationshipModal } from "../RelationshipsPage/components/RejectRelationshipModal"
 import {
   filterVinculos,
-  getOpenVinculoCount,
   getVinculoFilterCounts,
   mapRelationshipsToVinculos,
   type VinculoConnection,
@@ -122,6 +123,20 @@ const BUTTON_BASE_SX = {
   },
 }
 
+const VALID_FILTERS: ReadonlyArray<VinculoFilter> = [
+  "all",
+  "pending",
+  "negotiation",
+  "active",
+]
+
+function parseFilterParam(raw: string | null): VinculoFilter {
+  if (raw && (VALID_FILTERS as ReadonlyArray<string>).includes(raw)) {
+    return raw as VinculoFilter
+  }
+  return "all"
+}
+
 export function MyRelationshipsPage() {
   const navigate = useNavigate()
   const { getAccessTokenSilently, user } = useAuth0()
@@ -134,10 +149,19 @@ export function MyRelationshipsPage() {
     refetch,
     isRefetching,
   } = useMyRelationships()
-  const [selectedFilter, setSelectedFilter] = useState<VinculoFilter>("all")
+  const [searchParams] = useSearchParams()
+  const initialFilter = parseFilterParam(searchParams.get("filter"))
+  const [selectedFilter, setSelectedFilter] =
+    useState<VinculoFilter>(initialFilter)
   const [isSubmittingResponse, setIsSubmittingResponse] = useState(false)
   const [vinculoToReject, setVinculoToReject] =
     useState<VinculoConnection | null>(null)
+  const [rejectMode, setRejectMode] = useState<"pending" | "negotiation">(
+    "pending",
+  )
+  const [vinculoToConfirm, setVinculoToConfirm] =
+    useState<VinculoConnection | null>(null)
+  const [isSubmittingConfirm, setIsSubmittingConfirm] = useState(false)
 
   const vinculos = useMemo(
     () => mapRelationshipsToVinculos(relationships ?? [], profile?.userType ?? null),
@@ -145,10 +169,8 @@ export function MyRelationshipsPage() {
   )
 
   const dashboardPath = resolveDashboardPath(user)
-  const userLabel = user?.name ?? user?.nickname ?? "Admin"
   const summaryCounts = getVinculoFilterCounts(vinculos)
   const visibleVinculos = filterVinculos(vinculos, selectedFilter)
-  const openVinculosCount = getOpenVinculoCount(vinculos)
 
   function resolveCompanyId(vinculo: VinculoConnection): number | null {
     if (profile?.userType === "company") return profile.companyId ?? null
@@ -185,31 +207,59 @@ export function MyRelationshipsPage() {
       return
     }
 
+    const isCancellingNegotiation = rejectMode === "negotiation"
+    const successMessage = isCancellingNegotiation
+      ? "Parceria cancelada com sucesso."
+      : "Contato recusado com sucesso."
+    const errorMessage = isCancellingNegotiation
+      ? "Não foi possível cancelar a parceria. Tente novamente."
+      : "Não foi possível recusar o contato. Tente novamente."
+
     setIsSubmittingResponse(true)
     try {
       const token = await getAccessTokenSilently()
       await rejectRelationship(companyId, vinculoToReject.projectId, token)
-      showToast("Contato recusado com sucesso.", "success")
+      showToast(successMessage, "success")
       setVinculoToReject(null)
       await refetch()
     } catch {
-      showToast("Não foi possível recusar o contato. Tente novamente.", "error")
+      showToast(errorMessage, "error")
     } finally {
       setIsSubmittingResponse(false)
     }
   }
 
-  return (
-    <div className="min-h-screen bg-surface text-slate-900">
-      <PortalTopbar
-        homeHref={dashboardPath}
-        vinculosHref="/meus-vinculos"
-        vinculosCount={openVinculosCount}
-        userLabel={userLabel}
-        avatarVariant="icon"
-      />
+  async function handleConfirmEfetivar() {
+    if (!vinculoToConfirm) return
 
-      <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 md:py-10">
+    const companyId = resolveCompanyId(vinculoToConfirm)
+    if (companyId === null) {
+      showToast("Não foi possível identificar a empresa deste vínculo.", "error")
+      return
+    }
+
+    setIsSubmittingConfirm(true)
+    try {
+      const token = await getAccessTokenSilently()
+      await confirmRelationship(companyId, vinculoToConfirm.projectId, token)
+      setVinculoToConfirm(null)
+      showToast("Parceria confirmada com sucesso!", "success")
+      await refetch()
+    } catch {
+      showToast(
+        "Não foi possível efetivar a parceria. Tente novamente.",
+        "error",
+      )
+    } finally {
+      setIsSubmittingConfirm(false)
+    }
+  }
+
+  return (
+    <div className="flex min-h-screen flex-col gap-10 bg-slate-50 pb-20">
+      <Header />
+
+      <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 sm:px-6">
         <Link
           to={dashboardPath}
           className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-vinculo-dark transition-colors hover:text-vinculo-dark-hover"
@@ -219,10 +269,10 @@ export function MyRelationshipsPage() {
         </Link>
 
         <header className="max-w-3xl">
-          <h1 className="text-2xl font-medium leading-tight text-vinculo-dark sm:text-3xl">
+          <h1 className="text-2xl font-semibold leading-9 text-vinculo-dark sm:text-3xl">
             Meus Vínculos
           </h1>
-          <p className="mt-4 text-base leading-7 text-slate-600">
+          <p className="mt-2 text-base leading-6 text-slate-500">
             Gerencie suas conexões e acompanhe o status das negociações em andamento.
           </p>
         </header>
@@ -256,7 +306,15 @@ export function MyRelationshipsPage() {
                 navigate={navigate}
                 isSubmittingResponse={isSubmittingResponse}
                 onAccept={handleAccept}
-                onReject={setVinculoToReject}
+                onReject={(v) => {
+                  setRejectMode("pending")
+                  setVinculoToReject(v)
+                }}
+                onEfetivar={setVinculoToConfirm}
+                onCancel={(v) => {
+                  setRejectMode("negotiation")
+                  setVinculoToReject(v)
+                }}
               />
             ))
           )}
@@ -268,7 +326,36 @@ export function MyRelationshipsPage() {
         isSubmitting={isSubmittingResponse}
         onCancel={() => setVinculoToReject(null)}
         onConfirm={handleConfirmReject}
+        title={
+          rejectMode === "negotiation"
+            ? "Cancelar parceria?"
+            : "Recusar contato?"
+        }
+        description={
+          rejectMode === "negotiation"
+            ? "Ao confirmar, a negociação será encerrada e a outra parte será notificada."
+            : "Ao confirmar, você recusará este primeiro contato e a instituição parceira será informada."
+        }
+        confirmLabel={
+          rejectMode === "negotiation"
+            ? "Confirmar cancelamento"
+            : "Confirmar recusa"
+        }
+        submittingLabel={
+          rejectMode === "negotiation" ? "Cancelando..." : "Recusando..."
+        }
       />
+
+      {vinculoToConfirm && (
+        <EfetivarParceriaModal
+          open
+          onClose={() => setVinculoToConfirm(null)}
+          onConfirm={() => void handleConfirmEfetivar()}
+          loading={isSubmittingConfirm}
+          projectName={vinculoToConfirm.projectName}
+          partnerName={vinculoToConfirm.partnerInstitutionName}
+        />
+      )}
     </div>
   )
 }
@@ -319,18 +406,23 @@ function VinculoCard({
   isSubmittingResponse,
   onAccept,
   onReject,
+  onEfetivar,
+  onCancel,
 }: {
   vinculo: VinculoConnection
   navigate: NavigateFunction
   isSubmittingResponse: boolean
   onAccept: (vinculo: VinculoConnection) => void
   onReject: (vinculo: VinculoConnection) => void
+  onEfetivar?: (vinculo: VinculoConnection) => void
+  onCancel?: (vinculo: VinculoConnection) => void
 }) {
   const statusMeta = STATUS_META[vinculo.status]
   const StatusIcon = statusMeta.icon
   const showContact = vinculo.status === "active" || vinculo.status === "negotiation"
   const showConfirmActions = vinculo.status === "pending_interest"
   const showOptionalAction = vinculo.status === "negotiation" && Boolean(vinculo.optionalActionLabel)
+  const showCancelAction = vinculo.status === "negotiation"
 
   return (
     <Card
@@ -488,9 +580,29 @@ function VinculoCard({
                 variant="contained"
                 colorScheme="success"
                 icon={<CheckOutlinedIcon fontSize="small" />}
-                onClick={() => navigate(`/projeto/${vinculo.projectId}`)}
+                onClick={() => {
+                  if (
+                    vinculo.optionalActionLabel === "Efetivar Parceria" &&
+                    onEfetivar
+                  ) {
+                    onEfetivar(vinculo)
+                  } else {
+                    navigate(`/projeto/${vinculo.projectId}`)
+                  }
+                }}
               >
                 {vinculo.optionalActionLabel}
+              </ActionButton>
+            )}
+
+            {showCancelAction && onCancel && (
+              <ActionButton
+                variant="outlined"
+                colorScheme="danger"
+                icon={<CloseIcon fontSize="small" />}
+                onClick={() => onCancel(vinculo)}
+              >
+                Cancelar Parceria
               </ActionButton>
             )}
           </div>
@@ -532,7 +644,7 @@ function ActionButton({
   children: ReactNode
   icon: ReactNode
   variant: "outlined" | "contained"
-  colorScheme?: "brand" | "success" | "neutral"
+  colorScheme?: "brand" | "success" | "neutral" | "danger"
   disabled?: boolean
   onClick: () => void
 }) {
@@ -588,6 +700,24 @@ function ActionButton({
         color: "rgb(55 65 81)",
         "&:hover": {
           backgroundColor: "rgb(209 213 219)",
+        },
+      },
+    },
+    danger: {
+      outlined: {
+        borderColor: "var(--color-vinculo-red, #dc2626)",
+        color: "var(--color-vinculo-red, #dc2626)",
+        backgroundColor: "transparent",
+        "&:hover": {
+          borderColor: "var(--color-vinculo-red, #dc2626)",
+          backgroundColor: "rgba(220, 38, 38, 0.05)",
+        },
+      },
+      contained: {
+        backgroundColor: "var(--color-vinculo-red, #dc2626)",
+        color: "#fff",
+        "&:hover": {
+          backgroundColor: "#b91c1c",
         },
       },
     },
