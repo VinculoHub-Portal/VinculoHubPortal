@@ -6,6 +6,7 @@ import com.vinculohub.backend.dto.CompanyExportDTO;
 import com.vinculohub.backend.dto.CompanyListItemResponse;
 import com.vinculohub.backend.dto.CompanyProfileResponse;
 import com.vinculohub.backend.dto.CompanyPublicProfileResponse;
+import com.vinculohub.backend.dto.NpoListItemResponse;
 import com.vinculohub.backend.service.CompanyService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -45,6 +46,20 @@ public class CompanyController {
                 pageable.getPageNumber(),
                 pageable.getPageSize());
         return ResponseEntity.ok(companyService.findAllForNpoListing(pageable));
+    }
+
+    @GetMapping("/api/company/npos")
+    @PreAuthorize("hasRole('COMPANY')")
+    public ResponseEntity<Page<NpoListItemResponse>> listNposForCompany(
+            @RequestParam(required = false) String name,
+            @PageableDefault(size = 10, sort = "name", direction = Sort.Direction.ASC)
+                    Pageable pageable) {
+        log.info(
+                "GET /api/company/npos | name={} page={} size={}",
+                name,
+                pageable.getPageNumber(),
+                pageable.getPageSize());
+        return ResponseEntity.ok(companyService.findAllForCompanyListing(name, pageable));
     }
 
     @PostMapping("/api/company-accounts")
