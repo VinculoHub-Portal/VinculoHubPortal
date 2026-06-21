@@ -420,47 +420,7 @@ export function AdminDashboard() {
 
             {!isLoadingReports && !reportsError && reports.length > 0 && (
               <>
-                {/* Mobile: cards */}
-                <div className="flex flex-col gap-3 lg:hidden">
-                  {reports.map((report) => (
-                    <div key={report.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="font-semibold text-vinculo-dark">{report.npo.name}</p>
-                          {report.npo.email && (
-                            <p className="truncate text-xs text-slate-500">{report.npo.email}</p>
-                          )}
-                        </div>
-                        <select
-                          aria-label={`Alterar status da denúncia ${report.id}`}
-                          value={report.status}
-                          disabled={updatingReportId === report.id}
-                          onChange={(event) =>
-                            void handleStatusChange(report.id, event.target.value as NpoReportStatus)
-                          }
-                          className="shrink-0 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-none focus:border-vinculo-dark focus:ring-2 focus:ring-vinculo-dark/20 disabled:opacity-60"
-                        >
-                          {REPORT_STATUS_OPTIONS.map((s) => (
-                            <option key={s} value={s}>{REPORT_STATUS_LABELS[s]}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="mt-2 border-t border-slate-200 pt-2">
-                        <p className="text-xs text-slate-500">
-                          Empresa: <span className="font-medium text-slate-700">{report.reporterCompany.name}</span>
-                        </p>
-                        <p className="truncate text-xs text-slate-400">{report.reporterUser.email}</p>
-                      </div>
-                      {report.reason && (
-                        <p className="mt-2 text-xs leading-5 text-slate-600">{report.reason}</p>
-                      )}
-                      <p className="mt-2 text-xs text-slate-400">{formatReportDate(report.createdAt)}</p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Desktop: table */}
-                <div className="hidden overflow-x-auto lg:block">
+                <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
                     <thead>
                       <tr className="text-slate-500">
@@ -508,8 +468,8 @@ export function AdminDashboard() {
                 </div>
 
                 <div className="mt-2 border-t border-slate-100">
-                  <div className="flex items-center justify-between px-1 pt-3 text-sm text-slate-500">
-                    <span>{totalElements} resultado{totalElements !== 1 ? "s" : ""}</span>
+                  <div className="px-1 pt-3 text-sm text-slate-500">
+                    {totalElements} resultado{totalElements !== 1 ? "s" : ""}
                   </div>
                   <Pagination
                     currentPage={page}
