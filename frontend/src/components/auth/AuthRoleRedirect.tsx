@@ -165,7 +165,7 @@ export function AuthRoleRedirect() {
     }
 
     void redirectByRole();
-  }, [getAccessTokenSilently, isAuthenticated, isLoading, location.pathname, navigate, showToast, user]);
+  }, [getAccessTokenSilently, isAuthenticated, isLoading, location.pathname, navigate, queryClient, showToast, user]);
 
   useEffect(() => {
     const isLoginFlow = sessionStorage.getItem(loginCompletedKey) === "true";

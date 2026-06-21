@@ -120,7 +120,7 @@ export function ProfileHeaderCard({
           />
         ) : (
           <p className="text-sm leading-relaxed text-slate-600">
-            {institutionalData.description}
+            {institutionalData.description || "Não informado"}
           </p>
         )}
       </div>

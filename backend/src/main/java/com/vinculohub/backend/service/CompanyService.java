@@ -5,6 +5,8 @@ import com.vinculohub.backend.dto.CompanyDTO;
 import com.vinculohub.backend.dto.CompanyExportDTO;
 import com.vinculohub.backend.dto.CompanyListItemResponse;
 import com.vinculohub.backend.dto.CompanyProfileResponse;
+import com.vinculohub.backend.dto.CompanyPublicProfileResponse;
+import com.vinculohub.backend.dto.NpoListItemResponse;
 import com.vinculohub.backend.dto.UserDTO;
 import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.CompanyAlreadyExistsException;
@@ -59,8 +61,50 @@ public class CompanyService {
         return companyToCompanyProfileResponse(company);
     }
 
+    @Transactional(readOnly = true)
+    public CompanyPublicProfileResponse getPublicProfile(Integer id) {
+        if (id == null) {
+            throw new BadRequestException("ID da empresa é obrigatório.");
+        }
+        Company company =
+                companyRepository
+                        .findById(id)
+                        .orElseThrow(() -> new NotFoundException("Empresa não encontrada."));
+        Address address = company.getAddress();
+        String city = address != null ? address.getCity() : null;
+        String state = address != null ? address.getState() : null;
+        String stateCode = address != null ? address.getStateCode() : null;
+        String street = address != null ? address.getStreet() : null;
+        String number = address != null ? address.getNumber() : null;
+        String complement = address != null ? address.getComplement() : null;
+        String zipCode = address != null ? address.getZipCode() : null;
+        return new CompanyPublicProfileResponse(
+                company.getId(),
+                company.getLegalName(),
+                company.getSocialName(),
+                company.getDescription(),
+                company.getLogoUrl(),
+                company.getCnpj(),
+                city,
+                state,
+                stateCode,
+                street,
+                number,
+                complement,
+                zipCode,
+                null,
+                null);
+    }
+
     public Page<CompanyListItemResponse> findAllForNpoListing(Pageable pageable) {
         return companyRepository.findAll(pageable).map(this::toListItemResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<NpoListItemResponse> findAllForCompanyListing(String name, Pageable pageable) {
+        return npoRepository
+                .findActiveCardsForCompany(name, pageable)
+                .map(this::toNpoListItemResponse);
     }
 
     private CompanyExportDTO toExportDTO(Company company) {
@@ -90,6 +134,18 @@ public class CompanyService {
                 .logoUrl(company.getLogoUrl())
                 .city(address != null ? address.getCity() : null)
                 .state(address != null ? address.getState() : null)
+                .build();
+    }
+
+    private NpoListItemResponse toNpoListItemResponse(
+            com.vinculohub.backend.repository.projection.CompanyNpoCardProjection projection) {
+        return NpoListItemResponse.builder()
+                .id(projection.getId())
+                .name(projection.getName())
+                .description(projection.getDescription())
+                .logoUrl(projection.getLogoUrl())
+                .city(projection.getCity())
+                .stateCode(projection.getStateCode())
                 .build();
     }
 

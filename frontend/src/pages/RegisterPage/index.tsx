@@ -323,26 +323,28 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
+    <div className="min-h-screen bg-slate-50 flex flex-col gap-6 sm:gap-8 pb-20">
       <Header />
 
-      <main className="max-w-4xl mx-auto w-full flex flex-col gap-12 px-6">
-        <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+      <main className="max-w-[600px] md:max-w-[720px] mx-auto w-full flex flex-col gap-4 sm:gap-6 px-4 sm:px-6">
+        <section className="bg-white px-5 py-6 sm:px-8 sm:py-8 rounded-2xl shadow-sm border border-slate-200">
           <BackLink label="Voltar ao início" onClick={handleResetToFirstStep} />
 
           <WizardSteps currentStep={currentStep} totalSteps={totalSteps} />
 
           {currentStepContent}
 
-          <div className="flex justify-center gap-4 mt-8">
-            {currentStep > 1 && (
-              <BaseButton variant="ghost" className="w-32" onClick={handleBack}>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 mt-6 sm:mt-8">
+            {currentStep > 1 ? (
+              <BaseButton variant="ghost" className="w-full sm:w-auto" onClick={handleBack}>
                 Voltar
               </BaseButton>
+            ) : (
+              <span className="hidden sm:block" />
             )}
             <BaseButton
               variant="secondary"
-              className="w-32"
+              className="w-full sm:w-auto sm:min-w-[160px]"
               onClick={handleNext}
               disabled={isOdsCatalogBlocking}
             >

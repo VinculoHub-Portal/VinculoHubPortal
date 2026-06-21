@@ -241,7 +241,7 @@ describe("RoleHomePage - dashboard da ONG", () => {
   it("não envia documento quando o usuário não tem npoId vinculado", async () => {
     mocks.fetchAuthenticatedProfileMock.mockResolvedValue({ npoId: null })
     renderOngDashboard()
-    await screen.findByText("Não foi possível carregar os dados do dashboard.")
+    await screen.findAllByText("Não foi possível carregar os dados do dashboard.")
 
     await userEvent.click(screen.getByRole("button", { name: /Upload de Documentos/i }))
 

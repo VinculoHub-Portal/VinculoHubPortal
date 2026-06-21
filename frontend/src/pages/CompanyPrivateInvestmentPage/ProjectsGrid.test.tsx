@@ -25,34 +25,34 @@ const onDetails = vi.fn()
 
 describe("ProjectsGrid (Investimento Social)", () => {
   it("exibe estado de loading", () => {
-    render(<MemoryRouter><ProjectsGrid projects={[]} loading={true} error={null} onDetails={onDetails} /></MemoryRouter>)
+    render(<MemoryRouter><ProjectsGrid projects={[]} totalElements={0} loading={true} error={null} onDetails={onDetails} /></MemoryRouter>)
     expect(screen.getByText("Carregando projetos...")).toBeInTheDocument()
   })
 
   it("exibe mensagem de erro", () => {
-    render(<MemoryRouter><ProjectsGrid projects={[]} loading={false} error="Timeout" onDetails={onDetails} /></MemoryRouter>)
+    render(<MemoryRouter><ProjectsGrid projects={[]} totalElements={0} loading={false} error="Timeout" onDetails={onDetails} /></MemoryRouter>)
     expect(screen.getByText(/Timeout/)).toBeInTheDocument()
   })
 
   it("exibe estado vazio quando não há projetos", () => {
-    render(<MemoryRouter><ProjectsGrid projects={[]} loading={false} error={null} onDetails={onDetails} /></MemoryRouter>)
+    render(<MemoryRouter><ProjectsGrid projects={[]} totalElements={0} loading={false} error={null} onDetails={onDetails} /></MemoryRouter>)
     expect(screen.getByText("Nenhum projeto disponível no momento.")).toBeInTheDocument()
   })
 
   it("renderiza os cards com títulos dos projetos", () => {
-    render(<MemoryRouter><ProjectsGrid projects={mockProjects} loading={false} error={null} onDetails={onDetails} /></MemoryRouter>)
+    render(<MemoryRouter><ProjectsGrid projects={mockProjects} totalElements={mockProjects.length} loading={false} error={null} onDetails={onDetails} /></MemoryRouter>)
     expect(screen.getByText("Saúde em Movimento")).toBeInTheDocument()
     expect(screen.getByText("Tecnologia Inclusiva")).toBeInTheDocument()
   })
 
   it("exibe contagem de projetos encontrados", () => {
-    render(<MemoryRouter><ProjectsGrid projects={mockProjects} loading={false} error={null} onDetails={onDetails} /></MemoryRouter>)
+    render(<MemoryRouter><ProjectsGrid projects={mockProjects} totalElements={mockProjects.length} loading={false} error={null} onDetails={onDetails} /></MemoryRouter>)
     expect(screen.getByText("2 projetos encontrados")).toBeInTheDocument()
   })
 
   it("não exibe badge de valor nem barra de progresso (Investimento Social Privado)", () => {
     const projects = [makeProject({ id: 1, title: "P1", budgetNeeded: 50000, progressPercent: 40 })]
-    render(<MemoryRouter><ProjectsGrid projects={projects} loading={false} error={null} onDetails={onDetails} /></MemoryRouter>)
+    render(<MemoryRouter><ProjectsGrid projects={projects} totalElements={projects.length} loading={false} error={null} onDetails={onDetails} /></MemoryRouter>)
     expect(screen.queryByText(/R\$/)).not.toBeInTheDocument()
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument()
   })

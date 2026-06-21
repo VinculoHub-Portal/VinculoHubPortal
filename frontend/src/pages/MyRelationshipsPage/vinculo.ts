@@ -117,25 +117,33 @@ export function filterVinculos(
 // viewer's own type, since each relationship is always Company <-> NPO.
 // --------------------------------------------------------------------------------------------
 
-function mapStatus(status: RelationshipStatus, canRespond: boolean): VinculoStatus {
+function mapStatus(
+  status: RelationshipStatus,
+  canRespond: boolean,
+): VinculoStatus | null {
   switch (status) {
     case "active":
       return "active"
     case "negotiation":
       return "negotiation"
     case "pending":
-    default:
       return canRespond ? "pending_interest" : "pending_waiting"
+    case "inactive":
+    default:
+      return null
   }
 }
 
 export function mapRelationshipToVinculo(
   item: RelationshipListItem,
   viewerType: AuthenticatedUserType | null,
-): VinculoConnection {
+): VinculoConnection | null {
+  const status = mapStatus(item.status, item.canRespond)
+  if (status === null) {
+    return null
+  }
   const partnerType: VinculoPartnerType = viewerType === "npo" ? "EMPRESA" : "ONG"
   const partnerNounDa = partnerType === "ONG" ? "da ONG" : "da empresa"
-  const status = mapStatus(item.status, item.canRespond)
 
   const contact: VinculoContact | undefined =
     item.partnerContactEmail || item.partnerContactPhone
@@ -194,4 +202,5 @@ export function mapRelationshipsToVinculos(
   return items
     .filter((item) => item.status !== "inactive")
     .map((item) => mapRelationshipToVinculo(item, viewerType))
+    .filter((vinculo): vinculo is VinculoConnection => vinculo !== null)
 }

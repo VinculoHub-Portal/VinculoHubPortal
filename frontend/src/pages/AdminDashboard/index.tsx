@@ -271,10 +271,7 @@ export function AdminDashboard() {
               icon={<ReportProblemOutlinedIcon fontSize="small" />}
               variant="warning"
               onClick={() => {
-                document.getElementById("mediacoes")?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "start",
-                });
+                window.location.href = "/admin/notificacoes";
               }}
             >
               Mediações

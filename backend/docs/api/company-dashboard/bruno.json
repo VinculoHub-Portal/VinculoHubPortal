@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "VinculoHub - Company Dashboard",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

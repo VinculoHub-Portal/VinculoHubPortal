@@ -7,6 +7,10 @@ type RejectRelationshipModalProps = {
   isSubmitting?: boolean
   onCancel: () => void
   onConfirm: () => void
+  title?: string
+  description?: string
+  confirmLabel?: string
+  submittingLabel?: string
 }
 
 export function RejectRelationshipModal({
@@ -14,6 +18,10 @@ export function RejectRelationshipModal({
   isSubmitting = false,
   onCancel,
   onConfirm,
+  title = "Recusar contato?",
+  description = "Ao confirmar, você recusará este primeiro contato e a instituição parceira será informada.",
+  confirmLabel = "Confirmar recusa",
+  submittingLabel = "Recusando...",
 }: RejectRelationshipModalProps) {
   useEffect(() => {
     if (!open) return
@@ -54,14 +62,13 @@ export function RejectRelationshipModal({
             id="reject-relationship-title"
             className="text-xl font-bold text-vinculo-dark"
           >
-            Recusar contato?
+            {title}
           </h2>
           <p
             id="reject-relationship-description"
             className="text-sm leading-6 text-slate-500"
           >
-            Ao confirmar, você recusará este primeiro contato e a instituição
-            parceira será informada.
+            {description}
           </p>
         </div>
 
@@ -82,7 +89,7 @@ export function RejectRelationshipModal({
             disabled={isSubmitting}
             onClick={onConfirm}
           >
-            {isSubmitting ? "Recusando..." : "Confirmar recusa"}
+            {isSubmitting ? submittingLabel : confirmLabel}
           </BaseButton>
         </div>
       </div>
