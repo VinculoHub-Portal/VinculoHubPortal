@@ -405,15 +405,8 @@ function redirectPathAfterSignupDraft({
   npoDraftSubmitted: boolean;
   companyDraftSubmitted: boolean;
 }) {
-  if (profile?.registrationCompleted) {
-    if (npoDraftSubmitted && profile.npoId) {
-      return "/ong/dashboard";
-    }
-
-    if (companyDraftSubmitted && profile.companyId) {
-      return "/empresa/dashboard";
-    }
-  }
+  if (npoDraftSubmitted) return "/ong/dashboard";
+  if (companyDraftSubmitted) return "/empresa/dashboard";
 
   return redirectPathForRole(role);
 }

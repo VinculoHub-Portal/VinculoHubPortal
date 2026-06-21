@@ -25,6 +25,7 @@ import { VinculosPage } from "../pages/VinculosPage"
 import { RelationshipsPage } from "../pages/RelationshipsPage"
 import { AdminOngsList } from "../pages/AdminOngsList"
 import { AdminVinculosList } from "../pages/AdminVinculosList"
+import { GuestOnlyRoute } from "../components/auth/GuestOnlyRoute"
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -32,9 +33,9 @@ export const AppRouter = () => (
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/components" element={<ComponentsPage />} />
-      <Route path="/cadastro" element={<RegisterPage />} />
-      <Route path="/cadastro/instituicao" element={<RegisterPage />} />
-      <Route path="/company/register" element={<CompanyRegistrationPage />} />
+      <Route path="/cadastro" element={<GuestOnlyRoute><RegisterPage /></GuestOnlyRoute>} />
+      <Route path="/cadastro/instituicao" element={<GuestOnlyRoute><RegisterPage /></GuestOnlyRoute>} />
+      <Route path="/company/register" element={<GuestOnlyRoute><CompanyRegistrationPage /></GuestOnlyRoute>} />
       <Route
         path="/projeto/:projectId"
         element={
