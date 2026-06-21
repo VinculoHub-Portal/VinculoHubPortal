@@ -130,6 +130,15 @@ public class ResendNotificationService implements NotificationService {
                 buildPartnershipActivatedHtml(projectName, partnerName));
     }
 
+    @Override
+    public void negotiationCancelled(
+            String recipientEmail, String projectName, String partnerName) {
+        send(
+                recipientEmail,
+                "[VinculoHub] Negociação cancelada em " + projectName,
+                buildNegotiationCancelledHtml(projectName, partnerName));
+    }
+
     // ---------- HTML templates ----------
 
     private static String wrap(String title, String body) {
@@ -191,6 +200,14 @@ public class ResendNotificationService implements NotificationService {
         return wrap(
                 "Parceria ativada",
                 "<p>A parceria com <strong>%s</strong> no projeto <strong>%s</strong> está ativa.</p>"
+                        .formatted(partnerName, projectName));
+    }
+
+    private static String buildNegotiationCancelledHtml(String projectName, String partnerName) {
+        return wrap(
+                "Negociação cancelada",
+                ("<p><strong>%s</strong> cancelou a negociação da parceria no projeto"
+                                + " <strong>%s</strong>. O vínculo foi encerrado.</p>")
                         .formatted(partnerName, projectName));
     }
 }

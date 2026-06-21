@@ -156,6 +156,9 @@ export function MyRelationshipsPage() {
   const [isSubmittingResponse, setIsSubmittingResponse] = useState(false)
   const [vinculoToReject, setVinculoToReject] =
     useState<VinculoConnection | null>(null)
+  const [rejectMode, setRejectMode] = useState<"pending" | "negotiation">(
+    "pending",
+  )
   const [vinculoToConfirm, setVinculoToConfirm] =
     useState<VinculoConnection | null>(null)
   const [isSubmittingConfirm, setIsSubmittingConfirm] = useState(false)
@@ -204,15 +207,23 @@ export function MyRelationshipsPage() {
       return
     }
 
+    const isCancellingNegotiation = rejectMode === "negotiation"
+    const successMessage = isCancellingNegotiation
+      ? "Parceria cancelada com sucesso."
+      : "Contato recusado com sucesso."
+    const errorMessage = isCancellingNegotiation
+      ? "Não foi possível cancelar a parceria. Tente novamente."
+      : "Não foi possível recusar o contato. Tente novamente."
+
     setIsSubmittingResponse(true)
     try {
       const token = await getAccessTokenSilently()
       await rejectRelationship(companyId, vinculoToReject.projectId, token)
-      showToast("Contato recusado com sucesso.", "success")
+      showToast(successMessage, "success")
       setVinculoToReject(null)
       await refetch()
     } catch {
-      showToast("Não foi possível recusar o contato. Tente novamente.", "error")
+      showToast(errorMessage, "error")
     } finally {
       setIsSubmittingResponse(false)
     }
@@ -295,8 +306,15 @@ export function MyRelationshipsPage() {
                 navigate={navigate}
                 isSubmittingResponse={isSubmittingResponse}
                 onAccept={handleAccept}
-                onReject={setVinculoToReject}
+                onReject={(v) => {
+                  setRejectMode("pending")
+                  setVinculoToReject(v)
+                }}
                 onEfetivar={setVinculoToConfirm}
+                onCancel={(v) => {
+                  setRejectMode("negotiation")
+                  setVinculoToReject(v)
+                }}
               />
             ))
           )}
@@ -308,6 +326,24 @@ export function MyRelationshipsPage() {
         isSubmitting={isSubmittingResponse}
         onCancel={() => setVinculoToReject(null)}
         onConfirm={handleConfirmReject}
+        title={
+          rejectMode === "negotiation"
+            ? "Cancelar parceria?"
+            : "Recusar contato?"
+        }
+        description={
+          rejectMode === "negotiation"
+            ? "Ao confirmar, a negociação será encerrada e a outra parte será notificada."
+            : "Ao confirmar, você recusará este primeiro contato e a instituição parceira será informada."
+        }
+        confirmLabel={
+          rejectMode === "negotiation"
+            ? "Confirmar cancelamento"
+            : "Confirmar recusa"
+        }
+        submittingLabel={
+          rejectMode === "negotiation" ? "Cancelando..." : "Recusando..."
+        }
       />
 
       {vinculoToConfirm && (
@@ -371,6 +407,7 @@ function VinculoCard({
   onAccept,
   onReject,
   onEfetivar,
+  onCancel,
 }: {
   vinculo: VinculoConnection
   navigate: NavigateFunction
@@ -378,12 +415,14 @@ function VinculoCard({
   onAccept: (vinculo: VinculoConnection) => void
   onReject: (vinculo: VinculoConnection) => void
   onEfetivar?: (vinculo: VinculoConnection) => void
+  onCancel?: (vinculo: VinculoConnection) => void
 }) {
   const statusMeta = STATUS_META[vinculo.status]
   const StatusIcon = statusMeta.icon
   const showContact = vinculo.status === "active" || vinculo.status === "negotiation"
   const showConfirmActions = vinculo.status === "pending_interest"
   const showOptionalAction = vinculo.status === "negotiation" && Boolean(vinculo.optionalActionLabel)
+  const showCancelAction = vinculo.status === "negotiation"
 
   return (
     <Card
@@ -555,6 +594,17 @@ function VinculoCard({
                 {vinculo.optionalActionLabel}
               </ActionButton>
             )}
+
+            {showCancelAction && onCancel && (
+              <ActionButton
+                variant="outlined"
+                colorScheme="danger"
+                icon={<CloseIcon fontSize="small" />}
+                onClick={() => onCancel(vinculo)}
+              >
+                Cancelar Parceria
+              </ActionButton>
+            )}
           </div>
         </div>
       </div>
@@ -594,7 +644,7 @@ function ActionButton({
   children: ReactNode
   icon: ReactNode
   variant: "outlined" | "contained"
-  colorScheme?: "brand" | "success" | "neutral"
+  colorScheme?: "brand" | "success" | "neutral" | "danger"
   disabled?: boolean
   onClick: () => void
 }) {
@@ -650,6 +700,24 @@ function ActionButton({
         color: "rgb(55 65 81)",
         "&:hover": {
           backgroundColor: "rgb(209 213 219)",
+        },
+      },
+    },
+    danger: {
+      outlined: {
+        borderColor: "var(--color-vinculo-red, #dc2626)",
+        color: "var(--color-vinculo-red, #dc2626)",
+        backgroundColor: "transparent",
+        "&:hover": {
+          borderColor: "var(--color-vinculo-red, #dc2626)",
+          backgroundColor: "rgba(220, 38, 38, 0.05)",
+        },
+      },
+      contained: {
+        backgroundColor: "var(--color-vinculo-red, #dc2626)",
+        color: "#fff",
+        "&:hover": {
+          backgroundColor: "#b91c1c",
         },
       },
     },

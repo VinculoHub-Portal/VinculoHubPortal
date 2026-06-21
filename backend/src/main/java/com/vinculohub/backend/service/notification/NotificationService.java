@@ -25,4 +25,10 @@ public interface NotificationService {
 
     /** 2nd handshake — both confirmed: notifies a party that the partnership is now active. */
     void partnershipActivated(String recipientEmail, String projectName, String partnerName);
+
+    /**
+     * Notifies the other party that the negotiation was cancelled by the counterpart before
+     * activation.
+     */
+    void negotiationCancelled(String recipientEmail, String projectName, String partnerName);
 }

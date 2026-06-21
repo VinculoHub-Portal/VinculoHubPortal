@@ -56,4 +56,14 @@ public class LoggingNotificationService implements NotificationService {
                 projectName,
                 partnerName);
     }
+
+    @Override
+    public void negotiationCancelled(
+            String recipientEmail, String projectName, String partnerName) {
+        log.info(
+                "[NOTIFICATION] negotiationCancelled -> to={} project='{}' partner='{}'",
+                recipientEmail,
+                projectName,
+                partnerName);
+    }
 }

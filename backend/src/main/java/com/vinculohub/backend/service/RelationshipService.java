@@ -209,10 +209,16 @@ public class RelationshipService {
         ResolvedActor actor = resolveActor(auth0Id);
         CompanyProject relationship = loadParticipantRelationship(actor, companyId, projectId);
 
-        if (relationship.getStatus() != RelationshipStatus.pending) {
-            throw new BadRequestException("Este vínculo não está pendente de resposta.");
+        RelationshipStatus current = relationship.getStatus();
+        boolean isPendingResponse = current == RelationshipStatus.pending;
+        boolean isCancellingNegotiation = !accept && current == RelationshipStatus.negotiation;
+
+        if (!isPendingResponse && !isCancellingNegotiation) {
+            throw new BadRequestException("Este vínculo não pode ser respondido no estado atual.");
         }
-        requireReceptor(actor, relationship);
+        if (isPendingResponse) {
+            requireReceptor(actor, relationship);
+        }
 
         Company company = relationship.getCompany();
         Npo npo = relationship.getProject().getNpo();
@@ -224,7 +230,15 @@ public class RelationshipService {
                 accept ? RelationshipStatus.negotiation : RelationshipStatus.inactive);
         companyProjectRepository.save(relationship);
 
-        // Notify the initiator.
+        if (isCancellingNegotiation) {
+            // Notify the OTHER party (counterpart of the actor that cancelled).
+            String counterpartEmail = actor.isCompany() ? npoEmail(npo) : companyEmail(company);
+            String actorName = actor.isCompany() ? companyName(company) : npoName(npo);
+            notificationService.negotiationCancelled(counterpartEmail, projectName, actorName);
+            return;
+        }
+
+        // 1st handshake response: notify the initiator.
         String initiatorEmail = companyInitiated ? companyEmail(company) : npoEmail(npo);
         String partnerName = companyInitiated ? npoName(npo) : companyName(company);
         if (accept) {
