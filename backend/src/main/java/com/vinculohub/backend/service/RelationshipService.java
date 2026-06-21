@@ -69,7 +69,9 @@ public class RelationshipService {
     @Transactional(readOnly = true)
     public List<OverduePartnershipAlertResponse> listOverdueRelationshipsForAdmin() {
         LocalDateTime threshold = LocalDateTime.now().minusDays(OVERDUE_DAYS);
-        return companyProjectRepository.findOverduePendingRelationships(threshold).stream()
+        return companyProjectRepository
+                .findOverduePendingRelationships(RelationshipStatus.pending, threshold)
+                .stream()
                 .map(
                         cp ->
                                 new OverduePartnershipAlertResponse(
