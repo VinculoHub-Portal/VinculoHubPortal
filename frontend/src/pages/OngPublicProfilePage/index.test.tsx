@@ -18,6 +18,10 @@ vi.mock("../../hooks/useNpoProfile", () => ({
   useNpoProfile: mocks.useNpoProfile,
 }))
 
+vi.mock("../../components/general/Header", () => ({
+  Header: () => <header data-testid="header" />,
+}))
+
 vi.mock("@auth0/auth0-react", () => ({
   useAuth0: () => ({
     getAccessTokenSilently: vi.fn(),
@@ -154,7 +158,6 @@ describe("OngPublicProfilePage", () => {
 
     expect(screen.getByText("Instituto Educação para Todos")).toBeInTheDocument()
     expect(screen.getByText("12.345.678/0001-90")).toBeInTheDocument()
-    expect(screen.getByText("Maria Silva Santos")).toBeInTheDocument()
   })
 
   it("renderiza os projetos da ONG com nome, status e ODS", async () => {
@@ -288,5 +291,17 @@ describe("OngPublicProfilePage", () => {
     })
     renderPage("42")
     expect(screen.queryByLabelText("Link do perfil público")).not.toBeInTheDocument()
+  })
+
+  it("exibe link 'Voltar ao Dashboard' quando autenticado", () => {
+    mocks.useNpoProfile.mockReturnValue({
+      profile: externalProfile,
+      loading: false,
+      error: null,
+      save: vi.fn(),
+      refetch: vi.fn(),
+    })
+    renderPage("42")
+    expect(screen.getByText("Voltar ao Dashboard")).toBeInTheDocument()
   })
 })

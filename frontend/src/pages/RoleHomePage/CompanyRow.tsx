@@ -19,9 +19,9 @@ export function CompanyRow({ company }: CompanyRowProps) {
   const showLogo = Boolean(company.logoUrl) && !logoFailed
 
   return (
-    <div className="grid grid-cols-1 gap-4 rounded-lg border border-slate-100 p-4 lg:grid-cols-[minmax(240px,2fr)_minmax(160px,1fr)_56px] lg:items-center lg:border-0 lg:p-0 lg:py-5">
+    <div className="grid grid-cols-1 gap-3 rounded-lg border border-slate-100 p-3 sm:p-4 lg:grid-cols-[minmax(240px,2fr)_minmax(160px,1fr)_56px] lg:items-center lg:rounded-none lg:border-0 lg:gap-0 lg:p-0 lg:py-4">
       <div className="flex items-center gap-3">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-vinculo-dark">
+        <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 aspect-square items-center justify-center overflow-hidden rounded-xl bg-vinculo-dark">
           {showLogo ? (
             <img
               src={company.logoUrl!}
@@ -30,21 +30,21 @@ export function CompanyRow({ company }: CompanyRowProps) {
               onError={() => setLogoFailed(true)}
             />
           ) : (
-            <ApartmentIcon sx={{ fontSize: 28, color: "white" }} aria-hidden />
+            <ApartmentIcon sx={{ fontSize: 22, color: "white" }} aria-hidden />
           )}
         </div>
         <div className="min-w-0">
-          <p className="font-bold leading-snug text-vinculo-dark">{company.legalName}</p>
+          <p className="font-bold leading-snug text-vinculo-dark text-sm sm:text-base">{company.legalName}</p>
           {company.socialName && (
-            <p className="text-sm text-slate-500">{company.socialName}</p>
+            <p className="text-xs sm:text-sm text-slate-500">{company.socialName}</p>
           )}
         </div>
       </div>
 
       <div>
         {location ? (
-          <p className="flex items-center gap-1 text-sm text-slate-500">
-            <LocationOnIcon sx={{ fontSize: 16 }} aria-hidden />
+          <p className="flex items-center gap-1 text-xs sm:text-sm text-slate-500">
+            <LocationOnIcon sx={{ fontSize: 14 }} aria-hidden />
             {location}
           </p>
         ) : (
@@ -56,7 +56,7 @@ export function CompanyRow({ company }: CompanyRowProps) {
         <button
           type="button"
           aria-label={`Ver perfil de ${company.legalName}`}
-          className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg text-vinculo-dark transition hover:bg-blue-50"
+          className="flex h-9 w-9 sm:h-10 sm:w-10 cursor-pointer items-center justify-center rounded-lg text-vinculo-dark transition hover:bg-blue-50"
           onClick={() => {
             /* TODO (#268): navigate to company profile when route exists */
           }}
