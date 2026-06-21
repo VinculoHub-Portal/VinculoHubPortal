@@ -3,6 +3,7 @@ package com.vinculohub.backend.repository;
 
 import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.repository.projection.AdminNpoCardProjection;
+import com.vinculohub.backend.repository.projection.CompanyNpoCardProjection;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -117,18 +118,4 @@ public interface NpoRepository extends JpaRepository<Npo, Integer> {
             @Param("area") String area,
             @Param("active") Boolean active,
             Pageable pageable);
-
-    interface CompanyNpoCardProjection {
-        Integer getId();
-
-        String getName();
-
-        String getDescription();
-
-        String getLogoUrl();
-
-        String getCity();
-
-        String getStateCode();
-    }
 }
