@@ -2,7 +2,7 @@ import { useState } from "react"
 import CorporateFareIcon from "@mui/icons-material/CorporateFare"
 import LocationOnIcon from "@mui/icons-material/LocationOn"
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined"
-import { Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import type { NpoListItem } from "../../api/npo"
 
 function buildLocation(city: string | null, stateCode: string | null): string | null {
@@ -15,12 +15,21 @@ interface OngRowProps {
 }
 
 export function OngRow({ npo }: OngRowProps) {
+  const navigate = useNavigate()
   const [logoFailed, setLogoFailed] = useState(false)
   const location = buildLocation(npo.city, npo.stateCode)
   const showLogo = Boolean(npo.logoUrl) && !logoFailed
+  const profilePath = `/ong/publico/${npo.id}`
 
   return (
-    <div className="grid grid-cols-1 gap-4 rounded-lg border border-slate-100 p-4 lg:grid-cols-[minmax(240px,2fr)_minmax(160px,1fr)_56px] lg:items-center lg:border-0 lg:p-0 lg:py-5">
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={`Ver perfil de ${npo.name}`}
+      onClick={() => navigate(profilePath)}
+      onKeyDown={(e) => e.key === "Enter" && navigate(profilePath)}
+      className="grid cursor-pointer grid-cols-1 gap-4 rounded-lg border border-slate-100 p-4 transition hover:bg-slate-50 lg:grid-cols-[minmax(240px,2fr)_minmax(160px,1fr)_auto] lg:items-center lg:gap-0 lg:rounded-none lg:border-0 lg:p-0 lg:py-5 lg:hover:bg-transparent"
+    >
       <div className="flex items-center gap-3">
         <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-vinculo-dark">
           {showLogo ? (
@@ -53,14 +62,16 @@ export function OngRow({ npo }: OngRowProps) {
         )}
       </div>
 
-      <div className="flex justify-end lg:justify-center">
-        <Link
-          to={`/ong/publico/${npo.id}`}
+      <div className="flex lg:justify-end">
+        <button
+          type="button"
           aria-label={`Ver perfil de ${npo.name}`}
-          className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg text-vinculo-dark transition hover:bg-blue-50"
+          onClick={(e) => { e.stopPropagation(); navigate(profilePath) }}
+          className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-vinculo-dark transition hover:border-vinculo-dark hover:bg-blue-50 lg:w-auto"
         >
-          <VisibilityOutlinedIcon fontSize="small" />
-        </Link>
+          <VisibilityOutlinedIcon sx={{ fontSize: 16 }} />
+          Ver perfil
+        </button>
       </div>
     </div>
   )

@@ -1,5 +1,6 @@
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined"
 import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined"
+import { Link } from "react-router-dom"
 import { Pagination } from "../../components/general/Pagination"
 import type { NpoProfileProject } from "../../api/npo"
 import type { ProjectStatus } from "../../api/projects"
@@ -63,8 +64,9 @@ function ProjectCard({ project }: ProjectCardProps) {
   const odsList = project.ods ?? []
 
   return (
+    <Link to={`/projeto/${project.id}`} className="block">
     <article
-      className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+      className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-vinculo-dark/30 hover:shadow-md"
       aria-label={`Projeto ${project.title}`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -106,6 +108,7 @@ function ProjectCard({ project }: ProjectCardProps) {
         <span>Publicado em {formatPublishedDate(project.createdAt)}</span>
       </p>
     </article>
+    </Link>
   )
 }
 

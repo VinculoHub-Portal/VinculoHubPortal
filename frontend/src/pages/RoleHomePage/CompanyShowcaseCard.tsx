@@ -96,7 +96,7 @@ export function CompanyShowcaseCard() {
         )}
       </div>
 
-      {!loading && !error && totalPages > 1 && (
+      {!loading && !error && totalPages > 0 && (
         <div className="mt-4 border-t border-slate-100">
           <Pagination
             currentPage={currentPage}
