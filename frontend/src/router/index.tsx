@@ -25,7 +25,6 @@ import { VinculosPage } from "../pages/VinculosPage"
 import { RelationshipsPage } from "../pages/RelationshipsPage"
 import { AdminOngsList } from "../pages/AdminOngsList"
 import { AdminVinculosList } from "../pages/AdminVinculosList"
-import { AdminNotificationsPage } from "../pages/AdminNotificationsPage"
 
 export const AppRouter = () => (
   <BrowserRouter>
