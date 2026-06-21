@@ -1,13 +1,20 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { useQuery } from "@tanstack/react-query";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import HandshakeOutlinedIcon from "@mui/icons-material/HandshakeOutlined";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
+import axios from "axios";
 import { useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { createRelationship } from "../../api/relationships";
+import { BaseButton } from "../../components/general/BaseButton";
 import { Header } from "../../components/general/Header";
 import { FlexibleButton } from "../../components/general/FlexibleButton";
+import { DemonstrarInteresseModal } from "../../components/projects/DemonstrarInteresseModal";
 import { ReportNpoModal } from "../../components/ong/ReportNpoModal";
+import { useToast } from "../../context/ToastContext";
+import { useExistingRelationship } from "../../hooks/useExistingRelationship";
 import { resolveDashboardPath } from "../../utils/dashboardPath";
 import { fetchProjectDetails } from "./fetchProjectDetails";
 import { FundingProgress } from "./FundingProgress";
@@ -41,6 +48,7 @@ export function ProjectDetailsPage() {
   const navigate = useNavigate();
   const dashboardPath = resolveDashboardPath(user);
   const companyUser = isCompanyUser(user);
+  const { showToast } = useToast();
   const locationState = location.state as { returnTo?: unknown } | null;
   const returnTo =
     typeof locationState?.returnTo === "string"
@@ -68,6 +76,54 @@ export function ProjectDetailsPage() {
   const reportableNpoId = project?.responsibleInstitution?.npoId ?? null;
   const canReportInstitution = companyUser && reportableNpoId != null;
   const canViewPublicProfile = reportableNpoId != null;
+
+  const numericProjectId = project ? Number(project.id) : null;
+  const validProjectId =
+    numericProjectId != null && Number.isFinite(numericProjectId) ? numericProjectId : null;
+  const { exists: alreadyHasRelationship, loading: existingRelationshipLoading } =
+    useExistingRelationship({
+      projectId: validProjectId,
+    });
+
+  const [interestModalOpen, setInterestModalOpen] = useState(false);
+  const [submittingInterest, setSubmittingInterest] = useState(false);
+  const [sentInThisSession, setSentInThisSession] = useState(false);
+
+  const showInterestButton = companyUser && project != null && validProjectId != null;
+  const interestButtonDisabled =
+    alreadyHasRelationship ||
+    sentInThisSession ||
+    existingRelationshipLoading ||
+    submittingInterest;
+  const interestButtonLabel =
+    alreadyHasRelationship || sentInThisSession
+      ? "Interesse já enviado"
+      : "Demonstrar Interesse";
+
+  async function handleConfirmInterest() {
+    if (!validProjectId) return;
+    setSubmittingInterest(true);
+    try {
+      const token = await getAccessTokenSilently();
+      await createRelationship(validProjectId, token);
+      setSentInThisSession(true);
+      setInterestModalOpen(false);
+      showToast("Interesse enviado com sucesso!", "success");
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
+        setSentInThisSession(true);
+        setInterestModalOpen(false);
+        showToast("Já existe vínculo em andamento para este projeto.", "warning");
+      } else {
+        showToast(
+          "Não foi possível enviar o interesse. Tente novamente.",
+          "error",
+        );
+      }
+    } finally {
+      setSubmittingInterest(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -129,6 +185,21 @@ export function ProjectDetailsPage() {
               {isIncentiveLaw && (
                 <FundingProgress progressPercent={project.progressPercent} />
               )}
+
+              {showInterestButton && (
+                <div className="mt-8 flex justify-end">
+                  <BaseButton
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setInterestModalOpen(true)}
+                    disabled={interestButtonDisabled}
+                    className="hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <HandshakeOutlinedIcon sx={{ fontSize: 18 }} aria-hidden />
+                    {interestButtonLabel}
+                  </BaseButton>
+                </div>
+              )}
             </article>
           )}
 
@@ -173,6 +244,13 @@ export function ProjectDetailsPage() {
               onClose={() => setIsReportModalOpen(false)}
             />
           )}
+
+          <DemonstrarInteresseModal
+            open={interestModalOpen}
+            onClose={() => setInterestModalOpen(false)}
+            onConfirm={() => void handleConfirmInterest()}
+            loading={submittingInterest}
+          />
         </div>
       </div>
     </div>

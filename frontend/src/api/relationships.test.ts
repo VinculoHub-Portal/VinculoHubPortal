@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import {
   acceptRelationship,
+  confirmRelationship,
+  createRelationship,
   fetchRelationships,
   rejectRelationship,
 } from "./relationships"
@@ -116,5 +118,61 @@ describe("rejectRelationship", () => {
     mocks.apiPostMock.mockRejectedValue(new Error("Forbidden"))
 
     await expect(rejectRelationship(10, 20, "meu-token")).rejects.toThrow("Forbidden")
+  })
+})
+
+describe("createRelationship", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.apiPostMock.mockResolvedValue({})
+  })
+
+  it("envia projectId apenas quando companyId não informado (empresa iniciando)", async () => {
+    await createRelationship(42, "tok")
+
+    expect(mocks.apiPostMock).toHaveBeenCalledWith(
+      "/api/relationships",
+      { projectId: 42 },
+      { headers: { Authorization: "Bearer tok" } },
+    )
+  })
+
+  it("envia projectId e companyId quando informado (ONG iniciando)", async () => {
+    await createRelationship(42, "tok", 7)
+
+    expect(mocks.apiPostMock).toHaveBeenCalledWith(
+      "/api/relationships",
+      { projectId: 42, companyId: 7 },
+      { headers: { Authorization: "Bearer tok" } },
+    )
+  })
+
+  it("propaga erros da requisição", async () => {
+    mocks.apiPostMock.mockRejectedValue(new Error("Conflict"))
+
+    await expect(createRelationship(42, "tok")).rejects.toThrow("Conflict")
+  })
+})
+
+describe("confirmRelationship", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.apiPostMock.mockResolvedValue({})
+  })
+
+  it("chama o POST de confirmação com bearer token e sem body", async () => {
+    await confirmRelationship(7, 42, "tok")
+
+    expect(mocks.apiPostMock).toHaveBeenCalledWith(
+      "/api/relationships/7/42/confirm",
+      undefined,
+      { headers: { Authorization: "Bearer tok" } },
+    )
+  })
+
+  it("propaga erros da requisição", async () => {
+    mocks.apiPostMock.mockRejectedValue(new Error("Forbidden"))
+
+    await expect(confirmRelationship(7, 42, "tok")).rejects.toThrow("Forbidden")
   })
 })

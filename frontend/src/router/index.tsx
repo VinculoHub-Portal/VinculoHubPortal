@@ -13,6 +13,7 @@ import { CompanyPrivateInvestmentPage } from "../pages/CompanyPrivateInvestmentP
 import { OngProjectsPage } from "../pages/OngProjectsPage"
 import { OngProfilePage } from "../pages/OngProfilePage"
 import { OngPublicProfilePage } from "../pages/OngPublicProfilePage"
+import { CompanyPublicProfilePage } from "../pages/CompanyPublicProfilePage"
 import { MyRelationshipsPage } from "../pages/MyRelationshipsPage"
 import { EditProjectPage } from "../pages/EditProjectPage"
 import { EditaisMuralPage } from "../pages/EditaisMuralPage"
@@ -101,6 +102,14 @@ export const AppRouter = () => (
         }
       />
       <Route path="/ong/publico/:id" element={<OngPublicProfilePage />} />
+      <Route
+        path="/empresa/publico/:companyId"
+        element={
+          <ProtectedRoute>
+            <CompanyPublicProfilePage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/ong/projetos/:projectId/editar"
         element={

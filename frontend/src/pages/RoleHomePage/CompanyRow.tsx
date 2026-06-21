@@ -2,6 +2,7 @@ import { useState } from "react"
 import ApartmentIcon from "@mui/icons-material/Apartment"
 import LocationOnIcon from "@mui/icons-material/LocationOn"
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined"
+import { useNavigate } from "react-router-dom"
 import type { CompanyListItem } from "../../api/companies"
 
 function buildLocation(city: string | null, state: string | null): string | null {
@@ -14,6 +15,7 @@ interface CompanyRowProps {
 }
 
 export function CompanyRow({ company }: CompanyRowProps) {
+  const navigate = useNavigate()
   const [logoFailed, setLogoFailed] = useState(false)
   const location = buildLocation(company.city, company.state)
   const showLogo = Boolean(company.logoUrl) && !logoFailed
@@ -57,9 +59,7 @@ export function CompanyRow({ company }: CompanyRowProps) {
           type="button"
           aria-label={`Ver perfil de ${company.legalName}`}
           className="flex h-9 w-9 sm:h-10 sm:w-10 cursor-pointer items-center justify-center rounded-lg text-vinculo-dark transition hover:bg-blue-50"
-          onClick={() => {
-            /* TODO (#268): navigate to company profile when route exists */
-          }}
+          onClick={() => navigate(`/empresa/publico/${company.id}`)}
         >
           <VisibilityOutlinedIcon fontSize="small" />
         </button>

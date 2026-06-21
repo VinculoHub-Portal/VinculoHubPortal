@@ -9,7 +9,14 @@ import type { ProjectDetails } from "./projectDetails.types";
 const mocks = vi.hoisted(() => ({
   fetchProjectDetailsMock: vi.fn(),
   getAccessTokenSilentlyMock: vi.fn(),
-  userMock: { "https://vinculohub/roles": ["COMPANY"] },
+  userMock: { "https://vinculohub/roles": ["COMPANY"] } as Record<string, unknown>,
+  createRelationshipMock: vi.fn(),
+  showToastMock: vi.fn(),
+  useExistingRelationshipMock: vi.fn(() => ({
+    exists: false,
+    loading: false,
+    refetch: vi.fn(),
+  })),
 }));
 
 vi.mock("@auth0/auth0-react", () => ({
@@ -31,8 +38,21 @@ vi.mock("../../components/ong/ReportNpoModal", () => ({
     open ? <div data-testid="report-modal">Modal de denúncia {npoId}</div> : null,
 }));
 
+vi.mock("../../api/relationships", () => ({
+  createRelationship: mocks.createRelationshipMock,
+  fetchRelationships: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock("../../hooks/useExistingRelationship", () => ({
+  useExistingRelationship: mocks.useExistingRelationshipMock,
+}));
+
+vi.mock("../../context/ToastContext", () => ({
+  useToast: () => ({ showToast: mocks.showToastMock }),
+}));
+
 const baseProject: ProjectDetails = {
-  id: "proj-1",
+  id: "1",
   name: "Saúde em Movimento",
   description: "Unidade móvel de saúde.",
   fundingType: "Lei de Incentivo",
@@ -69,6 +89,13 @@ describe("ProjectDetailsPage", () => {
     mocks.getAccessTokenSilentlyMock.mockResolvedValue("token-test");
     mocks.fetchProjectDetailsMock.mockResolvedValue(baseProject);
     mocks.userMock = { "https://vinculohub/roles": ["COMPANY"] };
+    mocks.createRelationshipMock.mockReset();
+    mocks.showToastMock.mockReset();
+    mocks.useExistingRelationshipMock.mockReturnValue({
+      exists: false,
+      loading: false,
+      refetch: vi.fn(),
+    });
   });
 
   afterEach(() => {
@@ -229,6 +256,101 @@ describe("ProjectDetailsPage", () => {
       await waitFor(() => {
         expect(screen.getByText(/voltar aos projetos/i)).toBeInTheDocument();
       });
+    });
+  });
+
+  describe("Demonstrar Interesse", () => {
+    it("exibe botão Demonstrar Interesse para usuário COMPANY com projeto carregado", async () => {
+      renderPage();
+      expect(
+        await screen.findByRole("button", { name: /demonstrar interesse/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("não exibe botão para NPO", async () => {
+      mocks.userMock = { "https://vinculohub/roles": ["NPO"] };
+      renderPage();
+      await waitFor(() => {
+        expect(screen.getByText("Saúde em Movimento")).toBeInTheDocument();
+      });
+      expect(
+        screen.queryByRole("button", { name: /demonstrar interesse/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("clicar no botão abre modal de confirmação", async () => {
+      const user = userEvent.setup();
+      renderPage();
+      await user.click(
+        await screen.findByRole("button", { name: /demonstrar interesse/i }),
+      );
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    it("confirmar chama createRelationship e mostra toast de sucesso", async () => {
+      mocks.createRelationshipMock.mockResolvedValueOnce(undefined);
+      const user = userEvent.setup();
+      renderPage();
+      await user.click(
+        await screen.findByRole("button", { name: /demonstrar interesse/i }),
+      );
+      await user.click(screen.getByRole("button", { name: /confirmar/i }));
+      await waitFor(() => {
+        expect(mocks.createRelationshipMock).toHaveBeenCalled();
+      });
+      expect(mocks.showToastMock).toHaveBeenCalledWith(
+        "Interesse enviado com sucesso!",
+        "success",
+      );
+    });
+
+    it("erro genérico mostra toast de erro", async () => {
+      mocks.createRelationshipMock.mockRejectedValueOnce(new Error("boom"));
+      const user = userEvent.setup();
+      renderPage();
+      await user.click(
+        await screen.findByRole("button", { name: /demonstrar interesse/i }),
+      );
+      await user.click(screen.getByRole("button", { name: /confirmar/i }));
+      await waitFor(() => {
+        expect(mocks.showToastMock).toHaveBeenCalledWith(
+          "Não foi possível enviar o interesse. Tente novamente.",
+          "error",
+        );
+      });
+    });
+
+    it("erro 409 (vínculo duplicado) mostra toast warning e desabilita botão", async () => {
+      mocks.createRelationshipMock.mockRejectedValueOnce({
+        isAxiosError: true,
+        response: { status: 409 },
+      });
+      const user = userEvent.setup();
+      renderPage();
+      await user.click(
+        await screen.findByRole("button", { name: /demonstrar interesse/i }),
+      );
+      await user.click(screen.getByRole("button", { name: /confirmar/i }));
+      await waitFor(() => {
+        expect(mocks.showToastMock).toHaveBeenCalledWith(
+          "Já existe vínculo em andamento para este projeto.",
+          "warning",
+        );
+      });
+      expect(
+        await screen.findByRole("button", { name: /interesse já enviado/i }),
+      ).toBeDisabled();
+    });
+
+    it("vínculo já existente desabilita botão e altera label", async () => {
+      mocks.useExistingRelationshipMock.mockReturnValue({
+        exists: true,
+        loading: false,
+        refetch: vi.fn(),
+      });
+      renderPage();
+      const button = await screen.findByRole("button", { name: /interesse já enviado/i });
+      expect(button).toBeDisabled();
     });
   });
 });
