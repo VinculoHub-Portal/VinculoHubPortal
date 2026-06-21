@@ -36,14 +36,7 @@ export const AppRouter = () => (
       <Route path="/cadastro" element={<GuestOnlyRoute><RegisterPage /></GuestOnlyRoute>} />
       <Route path="/cadastro/instituicao" element={<GuestOnlyRoute><RegisterPage /></GuestOnlyRoute>} />
       <Route path="/company/register" element={<GuestOnlyRoute><CompanyRegistrationPage /></GuestOnlyRoute>} />
-      <Route
-        path="/projeto/:projectId"
-        element={
-          <ProtectedRoute>
-            <ProjectDetailsPage />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/projeto/:projectId" element={<ProjectDetailsPage />} />
       <Route
         path="/admin/dashboard"
         element={
