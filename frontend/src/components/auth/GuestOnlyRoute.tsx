@@ -17,14 +17,14 @@ export function GuestOnlyRoute({ children }: { children: ReactNode }) {
     return children
   }
 
-  if (!profile?.registrationCompleted || profile.userId === null) {
-    return children
-  }
-
   const rawRoles = (user as Record<string, unknown> | undefined)?.[ROLES_CLAIM]
   const roles: string[] = Array.isArray(rawRoles) ? rawRoles.map((r: unknown) => String(r).toUpperCase()) : []
 
   if (roles.includes("ADMIN")) return <Navigate to="/admin/dashboard" replace />
+
+  if (!profile?.registrationCompleted || profile.userId === null) {
+    return children
+  }
   if (roles.includes("NPO")) return <Navigate to="/ong/dashboard" replace />
   if (roles.includes("COMPANY")) return <Navigate to="/empresa/dashboard" replace />
 

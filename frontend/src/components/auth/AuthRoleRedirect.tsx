@@ -113,17 +113,18 @@ export function AuthRoleRedirect() {
         const profile = await getAuthenticatedProfile(token);
         logger.info("AuthRedirect", "Profile loaded", profile);
 
+        const tokenRoles = getRolesFromToken(token);
+        const userRoles = getRolesFromUser(user);
+
+        const isAdmin = [...tokenRoles, ...userRoles].map((r) => r.toUpperCase()).includes("ADMIN");
         const isSignupFlow =
           hasNpoDraft || hasCompanyDraft || npoDraftSubmitted || companyDraftSubmitted;
-        if (!isSignupFlow && profile !== null && profile.userId === null) {
+        if (!isAdmin && !isSignupFlow && profile !== null && profile.userId === null) {
           logger.info("AuthRedirect", "Auth0 user has no DB record — redirecting to /cadastro");
           showToast("Para continuar, complete seu cadastro na plataforma.");
           navigate("/cadastro", { replace: true });
           return;
         }
-
-        const tokenRoles = getRolesFromToken(token);
-        const userRoles = getRolesFromUser(user);
         const role = profileRole(profile) ?? resolvePrimaryRole([...tokenRoles, ...userRoles]);
         const redirectPath = redirectPathAfterSignupDraft({
           profile,
