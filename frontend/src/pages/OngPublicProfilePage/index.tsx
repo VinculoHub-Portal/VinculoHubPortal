@@ -131,6 +131,16 @@ export function OngPublicProfilePage() {
           institutionalData={profile.institutionalData}
           editable={false}
           isEditing={false}
+          actions={canReport && numericId != null ? (
+            <button
+              type="button"
+              onClick={() => setIsReportModalOpen(true)}
+              className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
+            >
+              <ReportProblemOutlinedIcon fontSize="small" />
+              Denunciar ONG
+            </button>
+          ) : undefined}
         />
 
         <OrganizationInfoCard
@@ -150,18 +160,6 @@ export function OngPublicProfilePage() {
           totalPages={projectsPage.totalPages}
         />
 
-        {canReport && numericId != null && (
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={() => setIsReportModalOpen(true)}
-              className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
-            >
-              <ReportProblemOutlinedIcon fontSize="small" />
-              Denunciar ONG
-            </button>
-          </div>
-        )}
       </main>
 
       {canReport && numericId != null && (
