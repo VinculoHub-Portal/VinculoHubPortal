@@ -2,7 +2,6 @@ provider "aws" {
   region = "us-east-2" # Ohio
 }
 
-
 # Segurança (Security Groups)
 # Security Group para o Backend, Frontend e Docker Swarm
 resource "aws_security_group" "backend_sg" {
@@ -33,7 +32,6 @@ resource "aws_security_group" "backend_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  
   ingress {
     from_port   = 0
     to_port     = 0
@@ -77,7 +75,6 @@ resource "aws_s3_bucket_cors_configuration" "vinculohub_cors" {
   }
 }
 
-
 # Computação: Instâncias EC2
 # Instância para o Backend e Docker Swarm Manager
 resource "aws_instance" "backend_server" {
@@ -85,6 +82,11 @@ resource "aws_instance" "backend_server" {
   instance_type          = "t3.medium"
   key_name               = "vinculohub-key"
   vpc_security_group_ids = [aws_security_group.backend_sg.id]
+
+  root_block_device {
+    volume_size = 20
+    volume_type = "gp3"
+  }
 
   tags = {
     Name = "VinculoHub-Backend"
@@ -98,11 +100,15 @@ resource "aws_instance" "frontend_server" {
   key_name               = "vinculohub-key"
   vpc_security_group_ids = [aws_security_group.backend_sg.id]
 
+  root_block_device {
+    volume_size = 20
+    volume_type = "gp3"
+  }
+
   tags = {
     Name = "VinculoHub-Frontend"
   }
 }
-
 
 # Persistência: Volume EBS para PostgreSQL
 resource "aws_ebs_volume" "postgres_data" {
