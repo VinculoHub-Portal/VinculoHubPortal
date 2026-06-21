@@ -20,7 +20,7 @@ export function Pagination({ currentPage, totalPages, onChange }: PaginationProp
         onClick={() => onChange(currentPage - 1)}
         disabled={isFirst}
         aria-label="Página anterior"
-        className="cursor-pointer rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-vinculo-dark transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+        className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-vinculo-dark transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
       >
         ← Anterior
       </button>
@@ -34,7 +34,7 @@ export function Pagination({ currentPage, totalPages, onChange }: PaginationProp
         onClick={() => onChange(currentPage + 1)}
         disabled={isLast}
         aria-label="Próxima página"
-        className="cursor-pointer rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-vinculo-dark transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+        className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-vinculo-dark transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
       >
         Próxima →
       </button>
