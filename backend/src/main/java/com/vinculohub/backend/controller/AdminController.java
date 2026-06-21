@@ -49,7 +49,8 @@ public class AdminController {
             @PageableDefault(size = 10, sort = "updatedAt", direction = Sort.Direction.DESC)
                     Pageable pageable) {
         log.info(
-                "GET /api/admin/vinculos/search | companyName={} npoName={} projectTitle={} status={}",
+                "GET /api/admin/vinculos/search | companyName={} npoName={} projectTitle={}"
+                        + " status={}",
                 companyName,
                 npoName,
                 projectTitle,
