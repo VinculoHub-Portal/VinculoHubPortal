@@ -395,7 +395,6 @@ function redirectPathForRole(role: UserRole) {
 }
 
 function redirectPathAfterSignupDraft({
-  profile,
   role,
   npoDraftSubmitted,
   companyDraftSubmitted,
