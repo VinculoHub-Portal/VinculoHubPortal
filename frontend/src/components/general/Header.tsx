@@ -22,6 +22,7 @@ export function Header() {
 
   // A user is a platform user only when Auth0-authenticated AND has a DB record
   const isPlatformUser = isAuthenticated && profile?.userId != null
+  const canSeeVinculos = isPlatformUser && profile?.userType !== "admin"
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
   const openLoginRedirectNotice = () => {
@@ -74,10 +75,10 @@ export function Header() {
         </Link>
 
         <div className="hidden items-center gap-4 md:flex">
-          {isPlatformUser && (
+          {canSeeVinculos && (
             <Link
               to="/meus-vinculos"
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+              className="inline-flex items-center gap-2 rounded-lg border border-white/20 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
             >
               <LinkIcon fontSize="small" />
               Vínculos
@@ -102,7 +103,7 @@ export function Header() {
           </BaseButton>
         </div>
         <button
-          className="md:hidden text-white font-bold text-2xl w-8 h-8 flex items-center justify-center border border-white/20 rounded"
+          className="md:hidden text-white text-xl w-8 h-8 aspect-square shrink-0 flex items-center justify-center border border-white/20 rounded"
           onClick={toggleMenu}
           aria-label={isMenuOpen ? "Fechar menu" : "Abrir menu"}
         >
@@ -111,12 +112,12 @@ export function Header() {
       </div>
 
       {isMenuOpen && (
-        <div className="md:hidden bg-vinculo-dark border-t border-white/10 px-6 py-8 flex flex-col gap-4 animate-in slide-in-from-top duration-300">
-          {isPlatformUser && (
+        <div className="md:hidden bg-vinculo-dark border-t border-white/10 px-6 py-5 flex flex-col gap-3 animate-in slide-in-from-top duration-300">
+          {canSeeVinculos && (
             <Link
               to="/meus-vinculos"
               onClick={() => setIsMenuOpen(false)}
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-3 text-base font-medium text-white transition hover:bg-white/10"
+              className="inline-flex items-center gap-2 rounded-lg border border-white/20 px-4 py-3 text-base font-medium text-white transition hover:bg-white/10"
             >
               <LinkIcon fontSize="small" />
               Vínculos
@@ -127,7 +128,7 @@ export function Header() {
             <BaseButton
               variant="outline"
               fullWidth
-              className="border-white text-white rounded-full py-3"
+              className="border-white text-white py-3"
               onClick={() => navigate("/cadastro")}
             >
               Cadastro
@@ -136,7 +137,7 @@ export function Header() {
 
           <BaseButton
             fullWidth
-            className=" bg-white! text-vinculo-dark! rounded-full py-3"
+            className="bg-white! text-vinculo-dark! py-3"
             onClick={handleAuthClick}
           >
             {authButtonLabel}

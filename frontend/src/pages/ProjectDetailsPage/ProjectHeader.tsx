@@ -7,7 +7,7 @@ type ProjectHeaderProps = {
 export function ProjectHeader({ fundingType, requiredAmountFormatted, name }: ProjectHeaderProps) {
   return (
     <>
-      <div className="flex flex-wrap gap-2 mb-5">
+      <div className="flex flex-wrap gap-2 mb-3 sm:mb-4">
         <span className="inline-flex items-center rounded-full bg-vinculo-green px-3 py-1 text-xs font-semibold text-white">
           {fundingType}
         </span>
@@ -18,7 +18,7 @@ export function ProjectHeader({ fundingType, requiredAmountFormatted, name }: Pr
         )}
       </div>
 
-      <h1 className="text-2xl sm:text-3xl font-bold text-vinculo-dark leading-tight">{name}</h1>
+      <h1 className="text-[22px] sm:text-2xl md:text-3xl font-bold text-vinculo-dark leading-tight">{name}</h1>
     </>
   );
 }

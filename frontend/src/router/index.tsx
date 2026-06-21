@@ -22,6 +22,7 @@ import { VinculosPage } from "../pages/VinculosPage"
 import { RelationshipsPage } from "../pages/RelationshipsPage"
 import { AdminOngsList } from "../pages/AdminOngsList"
 import { AdminVinculosList } from "../pages/AdminVinculosList"
+import { AdminNotificationsPage } from "../pages/AdminNotificationsPage"
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -61,6 +62,14 @@ export const AppRouter = () => (
         element={
           <ProtectedRoute requiredRole="ADMIN">
             <AdminVinculosList />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/notificacoes"
+        element={
+          <ProtectedRoute requiredRole="ADMIN">
+            <AdminNotificationsPage />
           </ProtectedRoute>
         }
       />

@@ -6,9 +6,9 @@ export function GeneralProgress({ generalProgress }: GeneralProgressProps) {
   const pct = Math.min(100, Math.max(0, Math.round(generalProgress)));
 
   return (
-    <section className="mt-10">
-      <h2 className="text-base font-bold text-vinculo-dark mb-4">Progresso do Projeto</h2>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 mb-3">
+    <section className="mt-6 sm:mt-8">
+      <h2 className="text-sm sm:text-base font-bold text-vinculo-dark mb-2 sm:mb-3">Progresso do Projeto</h2>
+      <div className="flex items-center justify-between gap-4 mb-2">
         <span className="text-slate-600 text-sm">Conclusão</span>
         <span className="text-vinculo-green font-semibold text-sm">{pct}% concluído</span>
       </div>

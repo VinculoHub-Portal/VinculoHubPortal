@@ -179,7 +179,7 @@ describe("ProjectDetailsPage", () => {
       });
       renderPage();
       await waitFor(() => {
-        expect(screen.getByText("Organização Responsável")).toBeInTheDocument();
+        expect(screen.getAllByText("Organização Responsável")[0]).toBeInTheDocument();
         expect(screen.getByText("Saúde Solidária")).toBeInTheDocument();
       });
     });
@@ -210,9 +210,10 @@ describe("ProjectDetailsPage", () => {
 
       renderPage();
 
-      expect(await screen.findByRole("button", { name: "Denunciar" })).toBeInTheDocument();
+      const denuniciarButtons = await screen.findAllByRole("button", { name: "Denunciar" });
+      expect(denuniciarButtons[0]).toBeInTheDocument();
 
-      await user.click(screen.getByRole("button", { name: "Denunciar" }));
+      await user.click(denuniciarButtons[0]);
 
       expect(screen.getByTestId("report-modal")).toHaveTextContent("10");
     });

@@ -8,7 +8,6 @@ import { OrganizationInfoCard } from "./OrganizationInfoCard"
 import { ProfileHeaderCard } from "./ProfileHeaderCard"
 import { PrivateDocumentsCard } from "./PrivateDocumentsCard"
 import { PublicProfileCard } from "./PublicProfileCard"
-import { ResponsibleCard } from "./ResponsibleCard"
 
 interface DraftState {
   institutionalData: NpoInstitutionalData
@@ -154,23 +153,6 @@ export function OngProfilePage() {
                     address: prev.address
                       ? { ...prev.address, [field]: value }
                       : { id: null, state: null, stateCode: null, city: null, street: null, number: null, complement: null, zipCode: null, [field]: value },
-                  }
-                : prev,
-            )
-          }
-        />
-
-        <ResponsibleCard
-          responsible={current.responsible}
-          isEditing={isEditing}
-          onNameChange={(value) =>
-            setDraft((prev) =>
-              prev
-                ? {
-                    ...prev,
-                    responsible: prev.responsible
-                      ? { ...prev.responsible, name: value }
-                      : { id: null, name: value, email: null, auth0Id: null, userType: null },
                   }
                 : prev,
             )

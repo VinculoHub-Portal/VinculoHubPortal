@@ -256,7 +256,7 @@ export function MyRelationshipsPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col gap-10 bg-surface pb-20">
+    <div className="flex min-h-screen flex-col gap-10 bg-slate-50 pb-20">
       <Header />
 
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 sm:px-6">
