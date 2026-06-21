@@ -17,8 +17,12 @@ type ProporParceriaModalProps = {
   companyName: string
 }
 
-export function ProporParceriaModal({
-  open,
+export function ProporParceriaModal(props: ProporParceriaModalProps) {
+  if (!props.open) return null
+  return <ProporParceriaModalContent {...props} />
+}
+
+function ProporParceriaModalContent({
   onClose,
   onConfirm,
   loading,
@@ -30,15 +34,6 @@ export function ProporParceriaModal({
   const dropdownRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    if (!open) {
-      setSelected(null)
-      setDropdownOpen(false)
-    }
-  }, [open])
-
-  useEffect(() => {
-    if (!open) return
-
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape" && !loading) {
         onClose()
@@ -47,7 +42,7 @@ export function ProporParceriaModal({
 
     document.addEventListener("keydown", handleKeyDown)
     return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [open, loading, onClose])
+  }, [loading, onClose])
 
   useEffect(() => {
     if (!dropdownOpen) return
@@ -64,8 +59,6 @@ export function ProporParceriaModal({
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [dropdownOpen])
-
-  if (!open) return null
 
   const selectedProject = projects.find((p) => p.id === selected) ?? null
 
