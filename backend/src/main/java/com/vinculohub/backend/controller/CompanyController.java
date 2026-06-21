@@ -5,6 +5,8 @@ import com.vinculohub.backend.dto.CompanyDTO;
 import com.vinculohub.backend.dto.CompanyExportDTO;
 import com.vinculohub.backend.dto.CompanyListItemResponse;
 import com.vinculohub.backend.dto.CompanyProfileResponse;
+import com.vinculohub.backend.dto.CompanyPublicProfileResponse;
+import com.vinculohub.backend.dto.NpoListItemResponse;
 import com.vinculohub.backend.service.CompanyService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -46,6 +48,20 @@ public class CompanyController {
         return ResponseEntity.ok(companyService.findAllForNpoListing(pageable));
     }
 
+    @GetMapping("/api/company/npos")
+    @PreAuthorize("hasRole('COMPANY')")
+    public ResponseEntity<Page<NpoListItemResponse>> listNposForCompany(
+            @RequestParam(required = false) String name,
+            @PageableDefault(size = 10, sort = "name", direction = Sort.Direction.ASC)
+                    Pageable pageable) {
+        log.info(
+                "GET /api/company/npos | name={} page={} size={}",
+                name,
+                pageable.getPageNumber(),
+                pageable.getPageSize());
+        return ResponseEntity.ok(companyService.findAllForCompanyListing(name, pageable));
+    }
+
     @PostMapping("/api/company-accounts")
     @PreAuthorize("!hasRole('NPO') && !hasRole('ADMIN')")
     public ResponseEntity<CompanyDTO> createCompany(
@@ -67,5 +83,12 @@ public class CompanyController {
             @AuthenticationPrincipal Jwt jwt) {
         log.info("GET /api/me/company/profile | sub={}", jwt.getSubject());
         return ResponseEntity.ok(companyService.getCompanyProfileByAuth0Id(jwt.getSubject()));
+    }
+
+    @GetMapping("/api/companies/{id}/public")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<CompanyPublicProfileResponse> getPublicProfile(@PathVariable Integer id) {
+        log.info("GET /api/companies/{}/public", id);
+        return ResponseEntity.ok(companyService.getPublicProfile(id));
     }
 }

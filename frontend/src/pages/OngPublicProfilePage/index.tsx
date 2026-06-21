@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
+import { useAuth0 } from "@auth0/auth0-react"
+import ArrowBackIcon from "@mui/icons-material/ArrowBack"
 import {
   fetchNpoProfileProjects,
   type NpoProfileProjectPage,
 } from "../../api/npo"
+import { Header } from "../../components/general/Header"
 import { useNpoProfile } from "../../hooks/useNpoProfile"
+import { resolveDashboardPath } from "../../utils/dashboardPath"
 import { OrganizationInfoCard } from "../OngProfilePage/OrganizationInfoCard"
 import { ProfileHeaderCard } from "../OngProfilePage/ProfileHeaderCard"
-import { ResponsibleCard } from "../OngProfilePage/ResponsibleCard"
 import { PublicProjectsSection } from "./PublicProjectsSection"
 
 const PROJECTS_PER_PAGE = 5
@@ -30,6 +33,8 @@ export function OngPublicProfilePage() {
   const [projectsError, setProjectsError] = useState<string | null>(null)
   const [projectsLoading, setProjectsLoading] = useState(false)
   const { profile, loading, error } = useNpoProfile(numericId)
+  const { isAuthenticated, user } = useAuth0()
+  const dashboardPath = resolveDashboardPath(user)
 
   useEffect(() => {
     if (numericId === undefined || Number.isNaN(numericId)) {
@@ -70,12 +75,7 @@ export function OngPublicProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
-        <header className="bg-vinculo-dark px-6 py-4 shadow-md">
-          <span className="text-xl font-bold text-white">
-            VinculoHub<span className="text-vinculo-green">Portal</span>
-          </span>
-        </header>
-
+        <Header />
         <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 sm:px-6">
           <p className="text-sm text-slate-500">Carregando perfil...</p>
           <PublicProjectsSection loading projects={[]} />
@@ -86,26 +86,35 @@ export function OngPublicProfilePage() {
 
   if (error || !profile) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-vinculo-dark">Perfil não encontrado</h1>
-          <p className="mt-2 text-sm text-slate-500">
-            O perfil público desta organização não está disponível.
-          </p>
+      <div className="flex min-h-screen flex-col bg-slate-50">
+        <Header />
+        <div className="flex flex-1 items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-vinculo-dark">Perfil não encontrado</h1>
+            <p className="mt-2 text-sm text-slate-500">
+              O perfil público desta organização não está disponível.
+            </p>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col gap-10 pb-20">
-      <header className="bg-vinculo-dark px-6 py-4 shadow-md">
-        <span className="text-xl font-bold text-white">
-          VinculoHub<span className="text-vinculo-green">Portal</span>
-        </span>
-      </header>
+    <div className="min-h-screen bg-slate-50 flex flex-col gap-6 pb-20">
+      <Header />
 
       <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 sm:px-6">
+        {isAuthenticated && (
+          <a
+            href={dashboardPath}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-vinculo-dark hover:text-vinculo-dark-hover transition-colors"
+          >
+            <ArrowBackIcon sx={{ fontSize: 18 }} aria-hidden />
+            Voltar ao Dashboard
+          </a>
+        )}
+
         <ProfileHeaderCard
           institutionalData={profile.institutionalData}
           editable={false}
@@ -118,8 +127,6 @@ export function OngPublicProfilePage() {
           address={profile.address}
           isEditing={false}
         />
-
-        <ResponsibleCard responsible={profile.responsible} isEditing={false} />
 
         <PublicProjectsSection
           currentPage={projectsPage.number}

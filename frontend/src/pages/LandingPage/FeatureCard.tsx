@@ -21,28 +21,26 @@ export function FeatureCard({
   const checkColor = isGreen ? "text-vinculo-green" : "text-vinculo-dark"
 
   return (
-    <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-start gap-4">
-      <div className="flex items-center">
+    <div className="bg-white p-5 sm:p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-start gap-3 sm:gap-4">
+      <div className="flex items-center gap-3">
         <span
-          className={`w-15 h-15 rounded-full flex items-center justify-center font-bold shrink-0 ${iconBgColor}`}
+          className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold shrink-0 ${iconBgColor}`}
         >
           {icon}
         </span>
-        <span className="text-vinculo-dark text-3xl ml-3 font-bold">
+        <span className="text-vinculo-dark text-xl sm:text-2xl md:text-3xl font-bold">
           {title}
         </span>
       </div>
-      <div className="flex flex-row">
-        <span className="text-slate-600 text-lg mb-7 ml-1 mt-3">
-          {description}
-        </span>
-      </div>
+      <span className="text-slate-600 text-sm sm:text-base mt-1 mb-2 sm:mb-4 ml-1">
+        {description}
+      </span>
       {items.map((item, index) => (
         <div key={index} className="flex flex-row items-start">
           <CheckOutlinedIcon
-            className={`size-6 font-bold mr-2 shrink-0 mt-1 ${checkColor}`}
+            className={`size-5 sm:size-6 font-bold mr-2 shrink-0 mt-0.5 ${checkColor}`}
           />
-          <span className="text-slate-600 text-lg mb-2">{item}</span>
+          <span className="text-slate-600 text-sm sm:text-base mb-1">{item}</span>
         </div>
       ))}
     </div>

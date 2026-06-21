@@ -22,15 +22,7 @@ export function CompanyShowcaseCard() {
 
   const isFiltering = nameFilter !== debouncedName
 
-  const filteredCompanies = debouncedName
-    ? companies.filter((c) => {
-        const term = debouncedName.toLowerCase()
-        return (
-          c.legalName.toLowerCase().includes(term) ||
-          (c.socialName?.toLowerCase().includes(term) ?? false)
-        )
-      })
-    : companies
+  const filteredCompanies = companies
 
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">

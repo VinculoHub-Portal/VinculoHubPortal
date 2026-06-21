@@ -6,14 +6,14 @@ export function IncentiveCard() {
 
   return (
     <section>
-      <div className="bg-white rounded-[10px] shadow-md p-8">
-        <div className="flex items-start gap-4 mb-6">
-          <div className="w-14 h-14 rounded-full bg-vinculo-dark text-white grid place-items-center">
-            <DescriptionOutlinedIcon className="text-white" style={{ fontSize: 37 }} />
+      <div className="bg-white rounded-[10px] shadow-md p-5 sm:p-8">
+        <div className="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <div className="aspect-square w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-full bg-vinculo-dark text-white grid place-items-center">
+            <DescriptionOutlinedIcon className="text-white text-[28px] sm:text-[37px]" fontSize="inherit" />
           </div>
           <div>
-            <h3 className="text-2xl font-semibold text-vinculo-dark">Leis de Incentivo</h3>
-            <p className="text-slate-600 mt-2 max-w-xl">
+            <h3 className="text-xl sm:text-2xl font-semibold text-vinculo-dark">Leis de Incentivo</h3>
+            <p className="text-sm sm:text-base text-slate-600 mt-1 sm:mt-2 max-w-xl">
               Apoie projetos através de leis de incentivo fiscal e obtenha benefícios tributários.
             </p>
           </div>
@@ -21,7 +21,7 @@ export function IncentiveCard() {
 
         <button
           onClick={() => navigate("/empresa/leis-de-incentivo")}
-          className="mt-2 w-full rounded-2xl bg-vinculo-dark px-6 py-4 text-white text-lg hover:bg-slate-800 transition-colors"
+          className="mt-2 w-full cursor-pointer rounded-2xl bg-vinculo-dark px-6 py-3 sm:py-4 text-white text-base sm:text-lg hover:bg-slate-800 transition-colors"
         >
           Ver projetos disponíveis
         </button>

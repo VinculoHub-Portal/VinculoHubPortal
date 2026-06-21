@@ -25,40 +25,40 @@ const onDetails = vi.fn()
 
 describe("ProjectsGrid (Leis de Incentivo)", () => {
   it("exibe estado de loading", () => {
-    render(<MemoryRouter><ProjectsGrid projects={[]} loading={true} error={null} onDetails={onDetails} /></MemoryRouter>)
+    render(<MemoryRouter><ProjectsGrid projects={[]} totalElements={0} loading={true} error={null} onDetails={onDetails} /></MemoryRouter>)
     expect(screen.getByText("Carregando projetos...")).toBeInTheDocument()
   })
 
   it("exibe mensagem de erro", () => {
-    render(<MemoryRouter><ProjectsGrid projects={[]} loading={false} error="Falha na rede" onDetails={onDetails} /></MemoryRouter>)
+    render(<MemoryRouter><ProjectsGrid projects={[]} totalElements={0} loading={false} error="Falha na rede" onDetails={onDetails} /></MemoryRouter>)
     expect(screen.getByText(/Falha na rede/)).toBeInTheDocument()
   })
 
   it("exibe estado vazio quando não há projetos", () => {
-    render(<MemoryRouter><ProjectsGrid projects={[]} loading={false} error={null} onDetails={onDetails} /></MemoryRouter>)
+    render(<MemoryRouter><ProjectsGrid projects={[]} totalElements={0} loading={false} error={null} onDetails={onDetails} /></MemoryRouter>)
     expect(screen.getByText("Nenhum projeto disponível no momento.")).toBeInTheDocument()
   })
 
   it("renderiza os cards quando há projetos", () => {
-    render(<MemoryRouter><ProjectsGrid projects={mockProjects} loading={false} error={null} onDetails={onDetails} /></MemoryRouter>)
+    render(<MemoryRouter><ProjectsGrid projects={mockProjects} totalElements={mockProjects.length} loading={false} error={null} onDetails={onDetails} /></MemoryRouter>)
     expect(screen.getByText("Projeto Alpha")).toBeInTheDocument()
     expect(screen.getByText("Projeto Beta")).toBeInTheDocument()
   })
 
   it("exibe badge de valor e barra de progresso (Leis de Incentivo)", () => {
-    render(<MemoryRouter><ProjectsGrid projects={mockProjects} loading={false} error={null} onDetails={onDetails} /></MemoryRouter>)
+    render(<MemoryRouter><ProjectsGrid projects={mockProjects} totalElements={mockProjects.length} loading={false} error={null} onDetails={onDetails} /></MemoryRouter>)
     expect(screen.getByText("R$ 50.000")).toBeInTheDocument()
     expect(screen.getByText("R$ 80.000")).toBeInTheDocument()
     expect(screen.getAllByRole("progressbar")).toHaveLength(2)
   })
 
   it("exibe contagem correta de projetos encontrados", () => {
-    render(<MemoryRouter><ProjectsGrid projects={mockProjects} loading={false} error={null} onDetails={onDetails} /></MemoryRouter>)
+    render(<MemoryRouter><ProjectsGrid projects={mockProjects} totalElements={mockProjects.length} loading={false} error={null} onDetails={onDetails} /></MemoryRouter>)
     expect(screen.getByText("2 projetos encontrados")).toBeInTheDocument()
   })
 
   it("exibe singular quando há 1 projeto", () => {
-    render(<MemoryRouter><ProjectsGrid projects={[mockProjects[0]]} loading={false} error={null} onDetails={onDetails} /></MemoryRouter>)
+    render(<MemoryRouter><ProjectsGrid projects={[mockProjects[0]]} totalElements={1} loading={false} error={null} onDetails={onDetails} /></MemoryRouter>)
     expect(screen.getByText("1 projeto encontrado")).toBeInTheDocument()
   })
 })

@@ -13,6 +13,7 @@ import { CompanyPrivateInvestmentPage } from "../pages/CompanyPrivateInvestmentP
 import { OngProjectsPage } from "../pages/OngProjectsPage"
 import { OngProfilePage } from "../pages/OngProfilePage"
 import { OngPublicProfilePage } from "../pages/OngPublicProfilePage"
+import { CompanyPublicProfilePage } from "../pages/CompanyPublicProfilePage"
 import { MyRelationshipsPage } from "../pages/MyRelationshipsPage"
 import { EditProjectPage } from "../pages/EditProjectPage"
 import { EditaisMuralPage } from "../pages/EditaisMuralPage"
@@ -21,6 +22,7 @@ import { VinculosPage } from "../pages/VinculosPage"
 import { RelationshipsPage } from "../pages/RelationshipsPage"
 import { AdminOngsList } from "../pages/AdminOngsList"
 import { AdminVinculosList } from "../pages/AdminVinculosList"
+import { AdminNotificationsPage } from "../pages/AdminNotificationsPage"
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -64,6 +66,14 @@ export const AppRouter = () => (
         }
       />
       <Route
+        path="/admin/notificacoes"
+        element={
+          <ProtectedRoute requiredRole="ADMIN">
+            <AdminNotificationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/ong/dashboard"
         element={
           <ProtectedRoute requiredRole="NPO">
@@ -92,6 +102,14 @@ export const AppRouter = () => (
         }
       />
       <Route path="/ong/publico/:id" element={<OngPublicProfilePage />} />
+      <Route
+        path="/empresa/publico/:companyId"
+        element={
+          <ProtectedRoute>
+            <CompanyPublicProfilePage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/ong/projetos/:projectId/editar"
         element={

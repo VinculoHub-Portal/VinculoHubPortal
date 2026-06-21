@@ -3,6 +3,7 @@ package com.vinculohub.backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -39,14 +40,20 @@ class AdminMetricsServiceTest {
         when(editalRepository.countActive(any(LocalDateTime.class))).thenReturn(24L);
         when(companyProjectRepository.countByStatus(RelationshipStatus.active)).thenReturn(156L);
         when(npoReportRepository.countByStatus(NpoReportStatus.OPEN)).thenReturn(5L);
+        when(companyProjectRepository.countByStatusAndCreatedAtLessThanEqual(
+                        eq(RelationshipStatus.pending), any(LocalDateTime.class)))
+                .thenReturn(3L);
 
         AdminMetricsResponse response = adminMetricsService.getMetrics();
 
-        assertEquals(new AdminMetricsResponse(87L, 24L, 156L, 5L), response);
+        assertEquals(new AdminMetricsResponse(87L, 24L, 156L, 8L), response);
         verify(npoRepository).count();
         verify(editalRepository).countActive(any(LocalDateTime.class));
         verify(companyProjectRepository).countByStatus(RelationshipStatus.active);
         verify(npoReportRepository).countByStatus(NpoReportStatus.OPEN);
+        verify(companyProjectRepository)
+                .countByStatusAndCreatedAtLessThanEqual(
+                        eq(RelationshipStatus.pending), any(LocalDateTime.class));
     }
 
     @Test
@@ -55,6 +62,9 @@ class AdminMetricsServiceTest {
         when(editalRepository.countActive(any(LocalDateTime.class))).thenReturn(0L);
         when(companyProjectRepository.countByStatus(RelationshipStatus.active)).thenReturn(0L);
         when(npoReportRepository.countByStatus(NpoReportStatus.OPEN)).thenReturn(0L);
+        when(companyProjectRepository.countByStatusAndCreatedAtLessThanEqual(
+                        eq(RelationshipStatus.pending), any(LocalDateTime.class)))
+                .thenReturn(0L);
 
         AdminMetricsResponse response = adminMetricsService.getMetrics();
 

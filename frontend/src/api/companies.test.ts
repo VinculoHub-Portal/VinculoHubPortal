@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { fetchCompaniesForNpo } from "./companies"
+import { fetchCompaniesForNpo, fetchCompanyPublicProfile } from "./companies"
 
 const mocks = vi.hoisted(() => ({
   apiGetMock: vi.fn(),
@@ -75,5 +75,48 @@ describe("fetchCompaniesForNpo", () => {
   it("propaga o erro quando api.get rejeita", async () => {
     mocks.apiGetMock.mockRejectedValue(new Error("Network error"))
     await expect(fetchCompaniesForNpo({ page: 0, size: 10 })).rejects.toThrow("Network error")
+  })
+})
+
+describe("fetchCompanyPublicProfile", () => {
+  const publicProfile = {
+    id: 7,
+    legalName: "ACME LTDA",
+    socialName: "ACME",
+    description: "Empresa de tecnologia",
+    logoUrl: null,
+    cnpj: "12.345.678/0001-90",
+    city: "São Paulo",
+    state: "São Paulo",
+    stateCode: "SP",
+    street: "Rua Exemplo",
+    number: "123",
+    complement: null,
+    zipCode: "01000-000",
+    segment: null,
+    website: null,
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.apiGetMock.mockResolvedValue({ data: publicProfile })
+  })
+
+  it("chama GET /api/companies/{id}/public com bearer token", async () => {
+    await fetchCompanyPublicProfile(7, "meu-token")
+
+    expect(mocks.apiGetMock).toHaveBeenCalledWith("/api/companies/7/public", {
+      headers: { Authorization: "Bearer meu-token" },
+    })
+  })
+
+  it("retorna o perfil público da empresa", async () => {
+    const result = await fetchCompanyPublicProfile(7, "meu-token")
+    expect(result).toEqual(publicProfile)
+  })
+
+  it("propaga o erro quando api.get rejeita", async () => {
+    mocks.apiGetMock.mockRejectedValue(new Error("Not Found"))
+    await expect(fetchCompanyPublicProfile(7, "meu-token")).rejects.toThrow("Not Found")
   })
 })

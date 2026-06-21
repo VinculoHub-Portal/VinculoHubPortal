@@ -1,37 +1,34 @@
 const STEPS = [
   {
     title: "1. Escolha projetos alinhados",
-    description:
-      "Selecione projetos que estejam alinhados com os valores e objetivos estratégicos da sua empresa através dos temas de interesse.",
+    description: "Selecione iniciativas compatíveis com os temas de interesse da empresa.",
   },
   {
     title: "2. Demonstre interesse",
-    description:
-      "Entre em contato direto com as organizações e inicie o diálogo para entender melhor o projeto e as necessidades.",
+    description: "Entre em contato com as organizações responsáveis pelo projeto.",
   },
   {
     title: "3. Invista diretamente",
-    description:
-      "Realize o investimento direto no projeto, sem intermediários, garantindo que 100% do valor chegue à causa.",
+    description: "Realize o investimento sem intermediários, garantindo que o valor chegue à causa.",
   },
   {
     title: "4. Acompanhe o impacto",
-    description:
-      "Receba relatórios periódicos sobre o andamento do projeto e o impacto gerado pelo seu investimento.",
+    description: "Receba relatórios sobre o andamento do projeto e o impacto gerado.",
   },
 ]
 
 export function HowItWorksSection() {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 flex flex-col gap-6">
-      <h2 className="text-2xl font-medium leading-9 text-vinculo-dark">
-        Como funciona o Investimento Social Privado?
+    <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-8 flex flex-col gap-3 sm:gap-6">
+      <h2 className="text-base sm:text-xl font-medium leading-snug text-vinculo-dark">
+        <span className="sm:hidden">Como funciona?</span>
+        <span className="hidden sm:inline">Como funciona o Investimento Social Privado?</span>
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-3 sm:gap-y-6">
         {STEPS.map((step) => (
-          <div key={step.title} className="flex flex-col gap-2">
-            <h3 className="text-base font-semibold text-vinculo-dark">{step.title}</h3>
-            <p className="text-sm text-slate-600 leading-6">{step.description}</p>
+          <div key={step.title} className="flex flex-col gap-0.5">
+            <h3 className="text-sm font-semibold text-vinculo-dark">{step.title}</h3>
+            <p className="text-sm text-slate-500 leading-snug sm:leading-relaxed">{step.description}</p>
           </div>
         ))}
       </div>

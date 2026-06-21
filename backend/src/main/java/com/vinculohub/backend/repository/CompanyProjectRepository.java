@@ -101,12 +101,15 @@ public interface CompanyProjectRepository extends JpaRepository<CompanyProject, 
             JOIN FETCH cp.project p
             JOIN FETCH p.npo n
             LEFT JOIN FETCH n.npoUser
-            WHERE cp.status = com.vinculohub.backend.model.enums.RelationshipStatus.pending
+            WHERE cp.status = :status
               AND cp.createdAt <= :threshold
             ORDER BY cp.createdAt ASC
             """)
     List<CompanyProject> findOverduePendingRelationships(
+            @Param("status") RelationshipStatus status,
             @Param("threshold") LocalDateTime threshold);
+
+    long countByStatusAndCreatedAtLessThanEqual(RelationshipStatus status, LocalDateTime threshold);
 
     @Query(
             value =

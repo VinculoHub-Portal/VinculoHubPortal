@@ -7,11 +7,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.vinculohub.backend.dto.CompanyListItemResponse;
+import com.vinculohub.backend.dto.NpoListItemResponse;
 import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.model.Company;
 import com.vinculohub.backend.repository.CompanyRepository;
 import com.vinculohub.backend.repository.NpoRepository;
 import com.vinculohub.backend.repository.UserRepository;
+import com.vinculohub.backend.repository.projection.CompanyNpoCardProjection;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -83,5 +85,105 @@ class CompanyServiceTest {
         assertEquals("Empresa Sem Endereço LTDA", response.legalName());
         assertNull(response.city());
         assertNull(response.state());
+    }
+
+    @Test
+    void shouldListActiveNposForCompanyWithNameFilter() {
+        Pageable pageable = PageRequest.of(0, 10);
+        CompanyNpoCardProjection projection =
+                new CompanyNpoCardProjection() {
+                    @Override
+                    public Integer getId() {
+                        return 12;
+                    }
+
+                    @Override
+                    public String getName() {
+                        return "ONG Aurora";
+                    }
+
+                    @Override
+                    public String getDescription() {
+                        return "Capacitação profissional.";
+                    }
+
+                    @Override
+                    public String getLogoUrl() {
+                        return "https://example.com/aurora.png";
+                    }
+
+                    @Override
+                    public String getCity() {
+                        return "Fortaleza";
+                    }
+
+                    @Override
+                    public String getStateCode() {
+                        return "CE";
+                    }
+                };
+
+        when(npoRepository.findActiveCardsForCompany("Aur", pageable))
+                .thenReturn(new PageImpl<>(List.of(projection), pageable, 1));
+
+        Page<NpoListItemResponse> result = companyService.findAllForCompanyListing("Aur", pageable);
+
+        assertEquals(1, result.getTotalElements());
+        NpoListItemResponse response = result.getContent().get(0);
+        assertEquals(12, response.id());
+        assertEquals("ONG Aurora", response.name());
+        assertEquals("Capacitação profissional.", response.description());
+        assertEquals("https://example.com/aurora.png", response.logoUrl());
+        assertEquals("Fortaleza", response.city());
+        assertEquals("CE", response.stateCode());
+
+        verify(npoRepository).findActiveCardsForCompany("Aur", pageable);
+    }
+
+    @Test
+    void shouldMapNullableAddressForCompanyNpoListing() {
+        Pageable pageable = PageRequest.of(0, 10);
+        CompanyNpoCardProjection projection =
+                new CompanyNpoCardProjection() {
+                    @Override
+                    public Integer getId() {
+                        return 15;
+                    }
+
+                    @Override
+                    public String getName() {
+                        return "ONG Sem Endereço";
+                    }
+
+                    @Override
+                    public String getDescription() {
+                        return null;
+                    }
+
+                    @Override
+                    public String getLogoUrl() {
+                        return null;
+                    }
+
+                    @Override
+                    public String getCity() {
+                        return null;
+                    }
+
+                    @Override
+                    public String getStateCode() {
+                        return null;
+                    }
+                };
+
+        when(npoRepository.findActiveCardsForCompany(null, pageable))
+                .thenReturn(new PageImpl<>(List.of(projection), pageable, 1));
+
+        Page<NpoListItemResponse> result = companyService.findAllForCompanyListing(null, pageable);
+
+        NpoListItemResponse response = result.getContent().get(0);
+        assertEquals("ONG Sem Endereço", response.name());
+        assertNull(response.city());
+        assertNull(response.stateCode());
     }
 }

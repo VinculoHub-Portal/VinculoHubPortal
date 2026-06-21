@@ -29,6 +29,16 @@ export interface AdminVinculoPage {
   size: number
 }
 
+export interface OverdueRelationshipAlert {
+  companyId: number
+  companyName: string
+  npoId: number
+  npoName: string
+  projectId: number
+  projectName: string
+  requestedAt: string
+}
+
 export interface NpoExportData {
   id: number
   name: string
@@ -135,6 +145,27 @@ export async function fetchAdminVinculos(
     return data
   } catch (error) {
     logger.error("AdminAPI", "Failed to fetch admin vinculos", error)
+    throw error
+  }
+}
+
+export async function fetchOverdueRelationshipAlerts(
+  token: string,
+): Promise<OverdueRelationshipAlert[]> {
+  logger.info("AdminAPI", "Fetching overdue relationship alerts")
+  try {
+    const { data } = await api.get<OverdueRelationshipAlert[]>(
+      "/api/admin/relationships/overdue",
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    )
+    logger.info("AdminAPI", "Overdue relationship alerts fetched", {
+      count: data.length,
+    })
+    return data
+  } catch (error) {
+    logger.error("AdminAPI", "Failed to fetch overdue relationship alerts", error)
     throw error
   }
 }
