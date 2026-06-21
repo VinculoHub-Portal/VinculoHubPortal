@@ -5,7 +5,7 @@ interface PaginationProps {
 }
 
 export function Pagination({ currentPage, totalPages, onChange }: PaginationProps) {
-  if (totalPages <= 1) return null
+  if (totalPages === 0) return null
 
   const isFirst = currentPage === 0
   const isLast = currentPage >= totalPages - 1
