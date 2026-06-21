@@ -33,7 +33,7 @@ export function OngPublicProfilePage() {
   const [projectsError, setProjectsError] = useState<string | null>(null)
   const [projectsLoading, setProjectsLoading] = useState(false)
   const { profile, loading, error } = useNpoProfile(numericId)
-  const { isAuthenticated, user } = useAuth0()
+  const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth0()
   const dashboardPath = resolveDashboardPath(user)
 
   useEffect(() => {
@@ -105,7 +105,7 @@ export function OngPublicProfilePage() {
       <Header />
 
       <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 sm:px-6">
-        {isAuthenticated && (
+        {!isAuthLoading && isAuthenticated && (
           <a
             href={dashboardPath}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-vinculo-dark hover:text-vinculo-dark-hover transition-colors"
