@@ -105,9 +105,10 @@ public interface CompanyProjectRepository extends JpaRepository<CompanyProject, 
               AND cp.createdAt <= :threshold
             ORDER BY cp.createdAt ASC
             """)
-    List<CompanyProject> findOverduePendingRelationships(
+    Page<CompanyProject> findOverduePendingRelationships(
             @Param("status") RelationshipStatus status,
-            @Param("threshold") LocalDateTime threshold);
+            @Param("threshold") LocalDateTime threshold,
+            Pageable pageable);
 
     long countByStatusAndCreatedAtLessThanEqual(RelationshipStatus status, LocalDateTime threshold);
 
@@ -122,20 +123,20 @@ JOIN FETCH cp.project p
 JOIN FETCH p.npo n
 LEFT JOIN FETCH n.npoUser
 WHERE (
-        :status IS NULL
+        cast(:status as string) IS NULL
         OR cp.status = :status
 )
   AND (
-        :companyName IS NULL
-        OR LOWER(COALESCE(c.socialName, c.legalName)) LIKE LOWER(CONCAT('%', :companyName, '%'))
+        cast(:companyName as string) IS NULL
+        OR LOWER(COALESCE(c.socialName, c.legalName)) LIKE CONCAT('%', cast(:companyName as string), '%')
 )
   AND (
-        :npoName IS NULL
-        OR LOWER(n.name) LIKE LOWER(CONCAT('%', :npoName, '%'))
+        cast(:npoName as string) IS NULL
+        OR LOWER(n.name) LIKE CONCAT('%', cast(:npoName as string), '%')
 )
   AND (
-        :projectTitle IS NULL
-        OR LOWER(p.title) LIKE LOWER(CONCAT('%', :projectTitle, '%'))
+        cast(:projectTitle as string) IS NULL
+        OR LOWER(p.title) LIKE CONCAT('%', cast(:projectTitle as string), '%')
 )
 ORDER BY cp.updatedAt DESC, cp.createdAt DESC
 """,
@@ -147,20 +148,20 @@ JOIN cp.company c
 JOIN cp.project p
 JOIN p.npo n
 WHERE (
-        :status IS NULL
+        cast(:status as string) IS NULL
         OR cp.status = :status
 )
   AND (
-        :companyName IS NULL
-        OR LOWER(COALESCE(c.socialName, c.legalName)) LIKE LOWER(CONCAT('%', :companyName, '%'))
+        cast(:companyName as string) IS NULL
+        OR LOWER(COALESCE(c.socialName, c.legalName)) LIKE CONCAT('%', cast(:companyName as string), '%')
 )
   AND (
-        :npoName IS NULL
-        OR LOWER(n.name) LIKE LOWER(CONCAT('%', :npoName, '%'))
+        cast(:npoName as string) IS NULL
+        OR LOWER(n.name) LIKE CONCAT('%', cast(:npoName as string), '%')
 )
   AND (
-        :projectTitle IS NULL
-        OR LOWER(p.title) LIKE LOWER(CONCAT('%', :projectTitle, '%'))
+        cast(:projectTitle as string) IS NULL
+        OR LOWER(p.title) LIKE CONCAT('%', cast(:projectTitle as string), '%')
 )
 """)
     Page<CompanyProject> findAdminRelationships(

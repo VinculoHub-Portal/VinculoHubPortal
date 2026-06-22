@@ -282,19 +282,31 @@ export async function fetchAdminVinculos(
   }
 }
 
+export interface OverdueRelationshipAlertPage {
+  content: OverdueRelationshipAlert[]
+  totalElements: number
+  totalPages: number
+  number: number
+  size: number
+  first: boolean
+  last: boolean
+}
+
 export async function fetchOverdueRelationshipAlerts(
   token: string,
-): Promise<OverdueRelationshipAlert[]> {
+  params: { page?: number; size?: number } = {},
+): Promise<OverdueRelationshipAlertPage> {
   logger.info("AdminAPI", "Fetching overdue relationship alerts")
   try {
-    const { data } = await api.get<OverdueRelationshipAlert[]>(
+    const { data } = await api.get<OverdueRelationshipAlertPage>(
       "/api/admin/relationships/overdue",
       {
         headers: { Authorization: `Bearer ${token}` },
+        params: { page: params.page ?? 0, size: params.size ?? 10 },
       },
     )
     logger.info("AdminAPI", "Overdue relationship alerts fetched", {
-      count: data.length,
+      count: data.content.length,
     })
     return data
   } catch (error) {

@@ -43,15 +43,24 @@ const mockSetCurrentPage = vi.fn()
 
 beforeEach(() => {
   vi.clearAllMocks()
-  mocks.usePaginatedNpos.mockReturnValue({
-    npos: mockNpos,
-    loading: false,
-    error: null,
-    currentPage: 0,
-    totalPages: 1,
-    totalElements: 3,
-    setCurrentPage: mockSetCurrentPage,
-    refetch: mockRefetch,
+  mocks.usePaginatedNpos.mockImplementation(({ name }: { name?: string; pageSize?: number }) => {
+    const filtered = name
+      ? mockNpos.filter(
+          (n) =>
+            n.name.toLowerCase().includes(name.toLowerCase()) ||
+            (n.description ?? "").toLowerCase().includes(name.toLowerCase()),
+        )
+      : mockNpos
+    return {
+      npos: filtered,
+      loading: false,
+      error: null,
+      currentPage: 0,
+      totalPages: 1,
+      totalElements: filtered.length,
+      setCurrentPage: mockSetCurrentPage,
+      refetch: mockRefetch,
+    }
   })
 })
 
@@ -76,11 +85,14 @@ describe("OngShowcaseCard", () => {
     expect(screen.getByText("São Paulo, SP")).toBeInTheDocument()
   })
 
-  it("exibe links de ver perfil para cada ONG", () => {
+  it("exibe botões de ver perfil para cada ONG", () => {
     renderCard()
-    const links = screen.getAllByRole("link", { name: /ver perfil/i })
-    expect(links).toHaveLength(3)
-    expect(links[0]).toHaveAttribute("href", "/ong/publico/1")
+    // OngRow usa button + useNavigate em vez de <a href>
+    for (const npo of mockNpos) {
+      expect(
+        screen.getAllByRole("button", { name: `Ver perfil de ${npo.name}` }).length,
+      ).toBeGreaterThan(0)
+    }
   })
 
   it("exibe a paginação quando totalPages=3", () => {

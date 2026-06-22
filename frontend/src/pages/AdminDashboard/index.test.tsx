@@ -188,7 +188,7 @@ describe("AdminDashboard", () => {
       screen.getByRole("button", { name: "Ver Denúncias" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Mediações" }),
+      screen.getByRole("button", { name: "Notificações" }),
     ).toBeInTheDocument();
   });
 
@@ -320,7 +320,7 @@ describe("AdminDashboard", () => {
 
     render(<AdminDashboard />);
 
-    expect(await screen.findByText("Nenhuma denúncia pendente.")).toBeInTheDocument();
+    expect(await screen.findByText("Nenhuma denúncia aberta.")).toBeInTheDocument();
   });
 
   it("renderiza erro quando não consegue carregar denúncias", async () => {

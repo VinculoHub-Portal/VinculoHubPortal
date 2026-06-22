@@ -40,7 +40,8 @@ describe("CompanyRow", () => {
     const user = userEvent.setup()
     renderRow()
 
-    await user.click(screen.getByRole("button", { name: /ver perfil de ACME LTDA/i }))
+    // CompanyRow renderiza div[role=button] + button interno com mesmo aria-label; usa o primeiro
+    await user.click(screen.getAllByRole("button", { name: /ver perfil de ACME LTDA/i })[0])
 
     expect(screen.getByTestId("public-profile-page")).toBeInTheDocument()
   })
