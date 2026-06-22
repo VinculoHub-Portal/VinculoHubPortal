@@ -275,7 +275,7 @@ export function AdminDashboard() {
                 window.location.href = "/admin/notificacoes";
               }}
             >
-              Mediações
+              Notificações
             </FlexibleButton>
           </div>
         </header>
