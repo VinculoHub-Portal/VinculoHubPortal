@@ -105,9 +105,10 @@ public interface CompanyProjectRepository extends JpaRepository<CompanyProject, 
               AND cp.createdAt <= :threshold
             ORDER BY cp.createdAt ASC
             """)
-    List<CompanyProject> findOverduePendingRelationships(
+    Page<CompanyProject> findOverduePendingRelationships(
             @Param("status") RelationshipStatus status,
-            @Param("threshold") LocalDateTime threshold);
+            @Param("threshold") LocalDateTime threshold,
+            Pageable pageable);
 
     long countByStatusAndCreatedAtLessThanEqual(RelationshipStatus status, LocalDateTime threshold);
 

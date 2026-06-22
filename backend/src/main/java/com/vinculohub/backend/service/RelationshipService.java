@@ -25,6 +25,8 @@ import com.vinculohub.backend.repository.UserRepository;
 import com.vinculohub.backend.service.notification.NotificationService;
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,11 +69,10 @@ public class RelationshipService {
     private static final int OVERDUE_DAYS = 7;
 
     @Transactional(readOnly = true)
-    public List<OverduePartnershipAlertResponse> listOverdueRelationshipsForAdmin() {
+    public Page<OverduePartnershipAlertResponse> listOverdueRelationshipsForAdmin(Pageable pageable) {
         LocalDateTime threshold = LocalDateTime.now().minusDays(OVERDUE_DAYS);
         return companyProjectRepository
-                .findOverduePendingRelationships(RelationshipStatus.pending, threshold)
-                .stream()
+                .findOverduePendingRelationships(RelationshipStatus.pending, threshold, pageable)
                 .map(
                         cp ->
                                 new OverduePartnershipAlertResponse(
@@ -81,8 +82,7 @@ public class RelationshipService {
                                         npoName(cp.getProject().getNpo()),
                                         cp.getProject().getId(),
                                         cp.getProject().getTitle(),
-                                        cp.getCreatedAt()))
-                .toList();
+                                        cp.getCreatedAt()));
     }
 
     // ----------------------------------------------------------------------------------------

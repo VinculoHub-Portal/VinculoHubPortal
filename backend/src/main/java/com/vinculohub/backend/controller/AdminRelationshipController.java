@@ -5,9 +5,12 @@ import com.vinculohub.backend.dto.OverduePartnershipAlertResponse;
 import com.vinculohub.backend.service.RelationshipService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,8 +34,9 @@ public class AdminRelationshipController {
             description =
                     "Lista vínculos com status 'pending' há mais de 7 dias sem resposta da ONG,"
                             + " permitindo mediação pelo administrador.")
-    public ResponseEntity<List<OverduePartnershipAlertResponse>> listOverdueRelationships() {
+    public ResponseEntity<Page<OverduePartnershipAlertResponse>> listOverdueRelationships(
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.ASC) Pageable pageable) {
         log.info("GET /api/admin/relationships/overdue");
-        return ResponseEntity.ok(relationshipService.listOverdueRelationshipsForAdmin());
+        return ResponseEntity.ok(relationshipService.listOverdueRelationshipsForAdmin(pageable));
     }
 }
