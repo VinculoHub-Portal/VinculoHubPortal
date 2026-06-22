@@ -42,6 +42,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 @ExtendWith(MockitoExtension.class)
 class RelationshipServiceTest {
@@ -312,14 +315,14 @@ class RelationshipServiceTest {
         LocalDateTime requestedAt = LocalDateTime.now().minusDays(10);
         CompanyProject rel = relationship(RelationshipStatus.pending, InitiatorType.company);
         rel.setCreatedAt(requestedAt);
-        when(companyProjectRepository.findOverduePendingRelationships(any(), any()))
-                .thenReturn(List.of(rel));
+        when(companyProjectRepository.findOverduePendingRelationships(any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(rel)));
 
-        List<OverduePartnershipAlertResponse> result =
-                relationshipService.listOverdueRelationshipsForAdmin();
+        Page<OverduePartnershipAlertResponse> result =
+                relationshipService.listOverdueRelationshipsForAdmin(PageRequest.of(0, 10));
 
-        assertEquals(1, result.size());
-        OverduePartnershipAlertResponse alert = result.get(0);
+        assertEquals(1, result.getTotalElements());
+        OverduePartnershipAlertResponse alert = result.getContent().get(0);
         assertEquals(company.getId(), alert.companyId());
         assertEquals("Corp S.A.", alert.companyName());
         assertEquals(npo.getId(), alert.npoId());
@@ -332,25 +335,25 @@ class RelationshipServiceTest {
     @Test
     @DisplayName("ADM-06: sem parcerias em atraso retorna lista vazia")
     void listOverdueReturnsEmptyWhenNone() {
-        when(companyProjectRepository.findOverduePendingRelationships(any(), any()))
-                .thenReturn(List.of());
+        when(companyProjectRepository.findOverduePendingRelationships(any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of()));
 
-        assertTrue(relationshipService.listOverdueRelationshipsForAdmin().isEmpty());
+        assertTrue(relationshipService.listOverdueRelationshipsForAdmin(PageRequest.of(0, 10)).isEmpty());
     }
 
     @Test
     @DisplayName("ADM-06: usa o limite de 7 dias atrás como corte de atraso")
     void listOverdueUsesSevenDayThreshold() {
-        when(companyProjectRepository.findOverduePendingRelationships(any(), any()))
-                .thenReturn(List.of());
+        when(companyProjectRepository.findOverduePendingRelationships(any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of()));
 
         LocalDateTime before = LocalDateTime.now().minusDays(7);
-        relationshipService.listOverdueRelationshipsForAdmin();
+        relationshipService.listOverdueRelationshipsForAdmin(PageRequest.of(0, 10));
         LocalDateTime after = LocalDateTime.now().minusDays(7);
 
         ArgumentCaptor<LocalDateTime> captor = ArgumentCaptor.forClass(LocalDateTime.class);
         verify(companyProjectRepository)
-                .findOverduePendingRelationships(eq(RelationshipStatus.pending), captor.capture());
+                .findOverduePendingRelationships(eq(RelationshipStatus.pending), captor.capture(), any());
         LocalDateTime threshold = captor.getValue();
         assertFalse(threshold.isBefore(before), "limite não pode ser anterior a agora-7d");
         assertFalse(threshold.isAfter(after), "limite não pode ser posterior a agora-7d");
@@ -362,12 +365,12 @@ class RelationshipServiceTest {
         company.setSocialName("  ");
         CompanyProject rel = relationship(RelationshipStatus.pending, InitiatorType.company);
         rel.setCreatedAt(LocalDateTime.now().minusDays(8));
-        when(companyProjectRepository.findOverduePendingRelationships(any(), any()))
-                .thenReturn(List.of(rel));
+        when(companyProjectRepository.findOverduePendingRelationships(any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(rel)));
 
-        List<OverduePartnershipAlertResponse> result =
-                relationshipService.listOverdueRelationshipsForAdmin();
+        Page<OverduePartnershipAlertResponse> result =
+                relationshipService.listOverdueRelationshipsForAdmin(PageRequest.of(0, 10));
 
-        assertEquals("Corporation Ltda", result.get(0).companyName());
+        assertEquals("Corporation Ltda", result.getContent().get(0).companyName());
     }
 }
