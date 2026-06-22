@@ -42,6 +42,17 @@ type Props = {
   onStatusChanged: (updated: NpoReportResponse) => void
 }
 
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>
+      <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#6A7282", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+        {label}
+      </Typography>
+      <Typography sx={{ fontSize: 14, color: "#1A2332" }}>{value}</Typography>
+    </Box>
+  )
+}
+
 export function AdminReportDetailModal({ report, open, onClose, onStatusChanged }: Props) {
   const { getAccessTokenSilently } = useAuth0()
   const { showToast } = useToast()
