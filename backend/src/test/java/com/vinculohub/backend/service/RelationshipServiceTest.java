@@ -338,7 +338,10 @@ class RelationshipServiceTest {
         when(companyProjectRepository.findOverduePendingRelationships(any(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of()));
 
-        assertTrue(relationshipService.listOverdueRelationshipsForAdmin(PageRequest.of(0, 10)).isEmpty());
+        assertTrue(
+                relationshipService
+                        .listOverdueRelationshipsForAdmin(PageRequest.of(0, 10))
+                        .isEmpty());
     }
 
     @Test
@@ -353,7 +356,8 @@ class RelationshipServiceTest {
 
         ArgumentCaptor<LocalDateTime> captor = ArgumentCaptor.forClass(LocalDateTime.class);
         verify(companyProjectRepository)
-                .findOverduePendingRelationships(eq(RelationshipStatus.pending), captor.capture(), any());
+                .findOverduePendingRelationships(
+                        eq(RelationshipStatus.pending), captor.capture(), any());
         LocalDateTime threshold = captor.getValue();
         assertFalse(threshold.isBefore(before), "limite não pode ser anterior a agora-7d");
         assertFalse(threshold.isAfter(after), "limite não pode ser posterior a agora-7d");
