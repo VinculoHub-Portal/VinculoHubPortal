@@ -107,7 +107,12 @@ export function AdminNotificationsPage() {
   const totalLoading = reportsLoading && relationshipsLoading
 
   function handleReportStatusChanged(updated: NpoReportResponse) {
-    setReports((prev) => prev.map((r) => (r.id === updated.id ? updated : r)))
+    if (updated.status !== "OPEN") {
+      setReports((prev) => prev.filter((r) => r.id !== updated.id))
+      setReportsTotalElements((prev) => Math.max(0, prev - 1))
+    } else {
+      setReports((prev) => prev.map((r) => (r.id === updated.id ? updated : r)))
+    }
   }
 
   return (
