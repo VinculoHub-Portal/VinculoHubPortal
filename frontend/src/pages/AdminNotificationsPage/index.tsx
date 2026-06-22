@@ -51,25 +51,25 @@ export function AdminNotificationsPage() {
 
   useEffect(() => {
     let isMounted = true
-    setReportsLoading(true)
-    setReportsError("")
 
-    getAccessTokenSilently()
-      .then((token) =>
-        fetchAdminNpoReports(token, { status: "OPEN", page: reportsPage, size: PAGE_SIZE }),
-      )
-      .then((data) => {
+    async function load() {
+      setReportsLoading(true)
+      setReportsError("")
+      try {
+        const token = await getAccessTokenSilently()
+        const data = await fetchAdminNpoReports(token, { status: "OPEN", page: reportsPage, size: PAGE_SIZE })
         if (!isMounted) return
         setReports(data.content)
         setReportsTotalPages(data.totalPages)
         setReportsTotalElements(data.totalElements)
-      })
-      .catch(() => {
+      } catch {
         if (isMounted) setReportsError("Não foi possível carregar as denúncias.")
-      })
-      .finally(() => {
+      } finally {
         if (isMounted) setReportsLoading(false)
-      })
+      }
+    }
+
+    void load()
 
     return () => {
       isMounted = false
@@ -78,25 +78,25 @@ export function AdminNotificationsPage() {
 
   useEffect(() => {
     let isMounted = true
-    setRelationshipsLoading(true)
-    setRelationshipsError("")
 
-    getAccessTokenSilently()
-      .then((token) =>
-        fetchOverdueRelationshipAlerts(token, { page: relationshipsPage, size: PAGE_SIZE }),
-      )
-      .then((data) => {
+    async function load() {
+      setRelationshipsLoading(true)
+      setRelationshipsError("")
+      try {
+        const token = await getAccessTokenSilently()
+        const data = await fetchOverdueRelationshipAlerts(token, { page: relationshipsPage, size: PAGE_SIZE })
         if (!isMounted) return
         setRelationships(data.content)
         setRelationshipsTotalPages(data.totalPages)
         setRelationshipsTotalElements(data.totalElements)
-      })
-      .catch(() => {
+      } catch {
         if (isMounted) setRelationshipsError("Não foi possível carregar os vínculos vencidos.")
-      })
-      .finally(() => {
+      } finally {
         if (isMounted) setRelationshipsLoading(false)
-      })
+      }
+    }
+
+    void load()
 
     return () => {
       isMounted = false
