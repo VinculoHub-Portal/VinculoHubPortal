@@ -18,11 +18,14 @@ import { MyRelationshipsPage } from "../pages/MyRelationshipsPage"
 import { EditProjectPage } from "../pages/EditProjectPage"
 import { EditaisMuralPage } from "../pages/EditaisMuralPage"
 import { AdminDashboard } from "../pages/AdminDashboard"
+import { AdminNotificationsPage } from "../pages/AdminNotificationsPage"
+import { AdminOngsPage } from "../pages/AdminOngsPage"
+import { AdminVinculosPage } from "../pages/AdminVinculosPage"
 import { VinculosPage } from "../pages/VinculosPage"
 import { RelationshipsPage } from "../pages/RelationshipsPage"
 import { AdminOngsList } from "../pages/AdminOngsList"
 import { AdminVinculosList } from "../pages/AdminVinculosList"
-import { AdminNotificationsPage } from "../pages/AdminNotificationsPage"
+import { GuestOnlyRoute } from "../components/auth/GuestOnlyRoute"
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -30,17 +33,10 @@ export const AppRouter = () => (
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/components" element={<ComponentsPage />} />
-      <Route path="/cadastro" element={<RegisterPage />} />
-      <Route path="/cadastro/instituicao" element={<RegisterPage />} />
-      <Route path="/company/register" element={<CompanyRegistrationPage />} />
-      <Route
-        path="/projeto/:projectId"
-        element={
-          <ProtectedRoute>
-            <ProjectDetailsPage />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/cadastro" element={<GuestOnlyRoute><RegisterPage /></GuestOnlyRoute>} />
+      <Route path="/cadastro/instituicao" element={<GuestOnlyRoute><RegisterPage /></GuestOnlyRoute>} />
+      <Route path="/company/register" element={<GuestOnlyRoute><CompanyRegistrationPage /></GuestOnlyRoute>} />
+      <Route path="/projeto/:projectId" element={<ProjectDetailsPage />} />
       <Route
         path="/admin/dashboard"
         element={
@@ -53,7 +49,9 @@ export const AppRouter = () => (
         path="/admin/ongs"
         element={
           <ProtectedRoute requiredRole="ADMIN">
-            <AdminOngsList />
+            <AdminOngsPage>
+              <AdminOngsList />
+            </AdminOngsPage>
           </ProtectedRoute>
         }
       />
@@ -61,7 +59,17 @@ export const AppRouter = () => (
         path="/admin/vinculos"
         element={
           <ProtectedRoute requiredRole="ADMIN">
-            <AdminVinculosList />
+            <AdminVinculosPage>
+              <AdminVinculosList />
+            </AdminVinculosPage>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/notificacoes"
+        element={
+          <ProtectedRoute requiredRole="ADMIN">
+            <AdminNotificationsPage />
           </ProtectedRoute>
         }
       />

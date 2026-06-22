@@ -8,6 +8,9 @@ import {
   getMyOngDocumentDownloadUrl,
   type DocumentResponseDTO,
 } from "../../api/document"
+import { Pagination } from "../../components/general/Pagination"
+
+const PAGE_SIZE = 5
 
 function formatFileSize(bytes: number | null | undefined) {
   if (!bytes || bytes <= 0) return "Tamanho indisponível"
@@ -37,7 +40,11 @@ function formatDate(value: string | null | undefined) {
 export function PrivateDocumentsCard() {
   const { getAccessTokenSilently } = useAuth0()
   const [documents, setDocuments] = useState<DocumentResponseDTO[]>([])
+  const [currentPage, setCurrentPage] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const [totalElements, setTotalElements] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [fetching, setFetching] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [downloadError, setDownloadError] = useState<string | null>(null)
   const [downloadingId, setDownloadingId] = useState<number | null>(null)
@@ -47,15 +54,23 @@ export function PrivateDocumentsCard() {
 
     async function loadDocuments() {
       try {
-        setLoading(true)
+        if (currentPage === 0) setLoading(true)
+        else setFetching(true)
         setError(null)
         const token = await getAccessTokenSilently()
-        const response = await fetchMyOngDocuments(token)
-        if (!cancelled) setDocuments(response.content)
+        const response = await fetchMyOngDocuments(token, currentPage, PAGE_SIZE)
+        if (!cancelled) {
+          setDocuments(response.content)
+          setTotalPages(response.totalPages)
+          setTotalElements(response.totalElements)
+        }
       } catch {
         if (!cancelled) setError("Não foi possível carregar os documentos.")
       } finally {
-        if (!cancelled) setLoading(false)
+        if (!cancelled) {
+          setLoading(false)
+          setFetching(false)
+        }
       }
     }
 
@@ -64,7 +79,7 @@ export function PrivateDocumentsCard() {
     return () => {
       cancelled = true
     }
-  }, [getAccessTokenSilently])
+  }, [getAccessTokenSilently, currentPage])
 
   async function handleDownload(documentId: number) {
     try {
@@ -89,7 +104,7 @@ export function PrivateDocumentsCard() {
         </div>
         {!loading && !error && (
           <span className="text-sm text-slate-500">
-            {documents.length} documento{documents.length === 1 ? "" : "s"}
+            {totalElements} documento{totalElements === 1 ? "" : "s"}
           </span>
         )}
       </div>
@@ -123,41 +138,54 @@ export function PrivateDocumentsCard() {
       )}
 
       {!loading && !error && documents.length > 0 && (
-        <div className="mt-6 flex flex-col gap-3">
-          {documents.map((document) => (
-            <div
-              key={document.id}
-              className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="flex min-w-0 items-start gap-3">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-vinculo-dark text-white">
-                  <DescriptionOutlinedIcon fontSize="small" />
-                </span>
-                <div className="min-w-0">
-                  <p className="break-words text-sm font-semibold text-vinculo-dark">
-                    {document.title || document.fileName}
-                  </p>
-                  <p className="mt-1 break-words text-xs text-slate-500">
-                    {document.fileName}
-                  </p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {formatFileSize(document.fileSize)} · Enviado em {formatDate(document.createdAt)}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-vinculo-dark transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-                disabled={downloadingId === document.id}
-                onClick={() => void handleDownload(document.id)}
+        <>
+          <div className={`mt-6 flex flex-col gap-3 transition-opacity duration-150 ${fetching ? "opacity-50 pointer-events-none" : "opacity-100"}`}>
+            {documents.map((document) => (
+              <div
+                key={document.id}
+                className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between"
               >
-                <DownloadOutlinedIcon fontSize="small" />
-                {downloadingId === document.id ? "Gerando..." : "Baixar"}
-              </button>
-            </div>
-          ))}
-        </div>
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-vinculo-dark text-white">
+                    <DescriptionOutlinedIcon fontSize="small" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="break-words text-sm font-semibold text-vinculo-dark">
+                      {document.title || document.fileName}
+                    </p>
+                    <p className="mt-1 break-words text-xs text-slate-500">
+                      {document.fileName}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {formatFileSize(document.fileSize)} · Enviado em {formatDate(document.createdAt)}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-vinculo-dark transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                  disabled={downloadingId === document.id}
+                  onClick={() => void handleDownload(document.id)}
+                >
+                  <DownloadOutlinedIcon fontSize="small" />
+                  {downloadingId === document.id ? "Gerando..." : "Baixar"}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-2 border-t border-slate-100">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onChange={(page) => {
+                setCurrentPage(page)
+                setDownloadError(null)
+              }}
+            />
+          </div>
+        </>
       )}
     </article>
   )

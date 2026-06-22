@@ -67,10 +67,10 @@ INSERT INTO scenario_npo VALUES
 ('npo_projects', 'npo_projects', 'npo_projects', 'Instituto Projetos Vivos', 'ONG com projetos ativos.', 'medium', '529.982.247-25', '2130004000', true, true, false),
 ('npo_reported', 'npo_reported', 'npo_reported', 'Instituto Cidadania', 'ONG com denuncias registradas.', 'small', '168.995.350-09', '7130005000', false, true, true);
 INSERT INTO scenario_project VALUES
-('education', 'npo_projects', 'Educacao para Todos', 'Ampliacao do acesso a educacao de qualidade.', 'ACTIVE', 'SOCIAL', 120000, 45000, '2026-01-10', '2026-12-10', 'Educacao', '2026-09-30', 500, 'Rio de Janeiro', 'Atender estudantes da rede publica.', 40, 4),
-('climate', 'npo_projects', 'Clima em Acao', 'Formacao comunitaria para resiliencia climatica.', 'ACTIVE', 'ENVIRONMENTAL', 90000, 20000, '2026-02-01', '2026-11-30', 'Clima', '2026-08-31', 300, 'Niteroi', 'Preparar comunidades para eventos climaticos.', 25, 13),
-('cities', 'npo_projects', 'Bairros Sustentaveis', 'Melhorias urbanas conduzidas pela comunidade.', 'ACTIVE', 'GOVERNMENTAL', 150000, 60000, '2026-03-01', '2027-02-28', 'Cidades', '2026-10-31', 800, 'Duque de Caxias', 'Fortalecer infraestrutura comunitaria.', 55, 11),
-('poverty', 'npo_reported', 'Renda e Autonomia', 'Capacitacao profissional para familias vulneraveis.', 'ACTIVE', 'SOCIAL', 70000, 15000, '2026-01-15', '2026-10-15', 'Renda', '2026-07-31', 200, 'Salvador', 'Promover autonomia financeira.', 30, 1);
+('education', 'npo_projects', 'Educacao para Todos', 'Ampliacao do acesso a educacao de qualidade.', 'ACTIVE', 'TAX_INCENTIVE_LAW', 120000, 45000, '2026-01-10', '2026-12-10', 'Educacao', '2026-09-30', 500, 'Rio de Janeiro', 'Atender estudantes da rede publica.', 40, 4),
+('climate', 'npo_projects', 'Clima em Acao', 'Formacao comunitaria para resiliencia climatica.', 'ACTIVE', 'SOCIAL_INVESTMENT_LAW', 90000, 20000, '2026-02-01', '2026-11-30', 'Clima', '2026-08-31', 300, 'Niteroi', 'Preparar comunidades para eventos climaticos.', 25, 13),
+('cities', 'npo_projects', 'Bairros Sustentaveis', 'Melhorias urbanas conduzidas pela comunidade.', 'ACTIVE', 'TAX_INCENTIVE_LAW', 150000, 60000, '2026-03-01', '2027-02-28', 'Cidades', '2026-10-31', 800, 'Duque de Caxias', 'Fortalecer infraestrutura comunitaria.', 55, 11),
+('poverty', 'npo_reported', 'Renda e Autonomia', 'Capacitacao profissional para familias vulneraveis.', 'ACTIVE', 'SOCIAL_INVESTMENT_LAW', 70000, 15000, '2026-01-15', '2026-10-15', 'Renda', '2026-07-31', 200, 'Salvador', 'Promover autonomia financeira.', 30, 1);
 INSERT INTO scenario_relationship VALUES
 ('company_active', 'education', 'active', 'company', '2026-02-03 10:00', '2026-02-04 10:00', '2026-02-02 10:00', '2026-03-02 10:00'),
 ('company_multiple', 'climate', 'negotiation', 'company', '2026-03-03 10:00', NULL, '2026-03-02 10:00', '2026-04-02 10:00'),

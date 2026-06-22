@@ -23,10 +23,15 @@ export function vinculoStatusLabel(status: VinculoExportData["status"]): string 
   return VINCULO_STATUS_LABELS[status] ?? status
 }
 
+const flag = (v: boolean) => (v ? "X" : "")
+
 export function mapNposForCsvExport(npos: NpoExportData[]) {
-  return npos.map(({ npoSize, ...rest }) => ({
+  return npos.map(({ npoSize, environmental, social, governance, ...rest }) => ({
     ...rest,
     npoSize: npoSizeLabel(npoSize),
+    environmental: flag(environmental),
+    social: flag(social),
+    governance: flag(governance),
   }))
 }
 

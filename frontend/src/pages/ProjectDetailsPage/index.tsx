@@ -42,7 +42,7 @@ function formatBrl(amount: number) {
 
 export function ProjectDetailsPage() {
   const { projectId = "" } = useParams<{ projectId: string }>();
-  const { user, getAccessTokenSilently } = useAuth0();
+  const { isAuthenticated, isLoading: isAuthLoading, user, getAccessTokenSilently } = useAuth0();
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -131,7 +131,7 @@ export function ProjectDetailsPage() {
 
       <div className="flex-1 w-full px-4 sm:px-6 py-6 sm:py-8">
         <div className="max-w-[960px] mx-auto w-full">
-          {!showNotFound && (
+          {!showNotFound && !isAuthLoading && isAuthenticated && (
             <Link
               to={returnTo}
               className="inline-flex items-center gap-1.5 text-sm font-medium text-vinculo-dark hover:text-vinculo-dark-hover mb-4 sm:mb-6 transition-colors"

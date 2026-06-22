@@ -9,6 +9,11 @@ frontend/node_modules/
 frontend/dist/
 frontend/.env.local
 
+# Playwright (artefatos e estados de login com tokens Auth0 — nunca commitar)
+frontend/e2e/.auth/
+frontend/test-results/
+frontend/playwright-report/
+
 # Backend
 backend/target/
 backend/.project

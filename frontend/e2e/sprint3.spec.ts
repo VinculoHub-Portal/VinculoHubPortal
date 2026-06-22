@@ -28,13 +28,23 @@ test.describe("Rotas protegidas redirecionam para Auth0", () => {
   ]) {
     test(`${route} redireciona para login`, async ({ page }) => {
       await page.goto(route);
-      const url = page.url();
-      const isAuth0 = url.includes("auth0.com") || url.includes("dev-u4fix3y");
-      const isLoading = await page
-        .locator("text=Carregando")
-        .isVisible()
-        .catch(() => false);
-      expect(isAuth0 || isLoading || !url.endsWith(route)).toBeTruthy();
+      // O redirect para o Auth0 (ou /cadastro) ocorre em um efeito após a montagem,
+      // então fazemos polling em vez de checar a URL imediatamente (evita flake).
+      await expect
+        .poll(
+          async () => {
+            const url = page.url();
+            const isAuth0 =
+              url.includes("auth0.com") || url.includes("dev-u4fix3y");
+            const isLoading = await page
+              .locator("text=Carregando")
+              .isVisible()
+              .catch(() => false);
+            return isAuth0 || isLoading || !url.endsWith(route);
+          },
+          { timeout: 15000 },
+        )
+        .toBeTruthy();
     });
   }
 });
@@ -48,6 +58,18 @@ test.describe("Rotas públicas acessíveis sem login", () => {
     const redirectedToAuth0 =
       url.includes("auth0.com") || url.includes("dev-u4fix3y");
     expect(redirectedToAuth0).toBeFalsy();
+  });
+
+  test("/projeto/:id é público após PR #320 (sem redirect a Auth0)", async ({
+    page,
+  }) => {
+    await page.goto("/projeto/1");
+    const url = page.url();
+    const redirectedToAuth0 =
+      url.includes("auth0.com") || url.includes("dev-u4fix3y");
+    expect(redirectedToAuth0).toBeFalsy();
+    // Conteúdo do projeto renderiza sem login (detalhe ou "não encontrado").
+    await expect(page.locator("body")).not.toBeEmpty();
   });
 });
 
@@ -95,11 +117,16 @@ test.describe("API — segurança sem token", () => {
     expect(res.status()).toBe(401);
   });
 
-  test("GET /api/editais é público e retorna array", async ({ request }) => {
+  test("GET /api/editais é público e retorna lista paginada", async ({
+    request,
+  }) => {
     const res = await request.get("http://localhost:8080/api/editais");
     expect(res.status()).toBe(200);
     const body = await res.json();
-    expect(Array.isArray(body)).toBeTruthy();
+    // O endpoint passou a retornar um Page do Spring ({ content: [...] }).
+    // Aceita tanto o formato paginado quanto um array puro (retrocompat).
+    const content = Array.isArray(body) ? body : body.content;
+    expect(Array.isArray(content)).toBeTruthy();
   });
 
   test("GET /public/ping retorna ok", async ({ request }) => {

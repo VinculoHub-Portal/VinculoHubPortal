@@ -105,11 +105,71 @@ public interface CompanyProjectRepository extends JpaRepository<CompanyProject, 
               AND cp.createdAt <= :threshold
             ORDER BY cp.createdAt ASC
             """)
-    List<CompanyProject> findOverduePendingRelationships(
+    Page<CompanyProject> findOverduePendingRelationships(
             @Param("status") RelationshipStatus status,
-            @Param("threshold") LocalDateTime threshold);
+            @Param("threshold") LocalDateTime threshold,
+            Pageable pageable);
 
     long countByStatusAndCreatedAtLessThanEqual(RelationshipStatus status, LocalDateTime threshold);
+
+    @Query(
+            value =
+                    """
+SELECT cp
+FROM CompanyProject cp
+JOIN FETCH cp.company c
+LEFT JOIN FETCH c.user
+JOIN FETCH cp.project p
+JOIN FETCH p.npo n
+LEFT JOIN FETCH n.npoUser
+WHERE (
+        cast(:status as string) IS NULL
+        OR cp.status = :status
+)
+  AND (
+        cast(:companyName as string) IS NULL
+        OR LOWER(COALESCE(c.socialName, c.legalName)) LIKE CONCAT('%', cast(:companyName as string), '%')
+)
+  AND (
+        cast(:npoName as string) IS NULL
+        OR LOWER(n.name) LIKE CONCAT('%', cast(:npoName as string), '%')
+)
+  AND (
+        cast(:projectTitle as string) IS NULL
+        OR LOWER(p.title) LIKE CONCAT('%', cast(:projectTitle as string), '%')
+)
+ORDER BY cp.updatedAt DESC, cp.createdAt DESC
+""",
+            countQuery =
+                    """
+SELECT COUNT(cp)
+FROM CompanyProject cp
+JOIN cp.company c
+JOIN cp.project p
+JOIN p.npo n
+WHERE (
+        cast(:status as string) IS NULL
+        OR cp.status = :status
+)
+  AND (
+        cast(:companyName as string) IS NULL
+        OR LOWER(COALESCE(c.socialName, c.legalName)) LIKE CONCAT('%', cast(:companyName as string), '%')
+)
+  AND (
+        cast(:npoName as string) IS NULL
+        OR LOWER(n.name) LIKE CONCAT('%', cast(:npoName as string), '%')
+)
+  AND (
+        cast(:projectTitle as string) IS NULL
+        OR LOWER(p.title) LIKE CONCAT('%', cast(:projectTitle as string), '%')
+)
+""")
+    Page<CompanyProject> findAdminRelationships(
+            @Param("companyName") String companyName,
+            @Param("npoName") String npoName,
+            @Param("projectTitle") String projectTitle,
+            @Param("status") RelationshipStatus status,
+            Pageable pageable);
 
     @Query(
             value =

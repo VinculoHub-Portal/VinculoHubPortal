@@ -18,6 +18,7 @@ import {
 import { CreateNoticeModal } from "../../announcement/CreateAnnouncementModal";
 import { FlexibleButton } from "../../components/general/FlexibleButton";
 import { Header } from "../../components/general/Header";
+import { Pagination } from "../../components/general/Pagination";
 import { MetricCard } from "../../components/general/MetricCard";
 import { useToast } from "../../context/ToastContext";
 import{ mapNposForCsvExport, mapVinculosForCsvExport } from "../../utils/adminExportDisplay";
@@ -274,7 +275,7 @@ export function AdminDashboard() {
                 window.location.href = "/admin/notificacoes";
               }}
             >
-              Mediações
+              Notificações
             </FlexibleButton>
           </div>
         </header>
@@ -358,7 +359,7 @@ export function AdminDashboard() {
               </p>
             </div>
             <span className="inline-flex w-fit items-center rounded-full bg-vinculo-red/10 px-3 py-1 text-sm font-semibold text-vinculo-red">
-              {openReportsCount} pendentes
+              {openReportsCount} abertas
             </span>
           </div>
 
@@ -411,7 +412,7 @@ export function AdminDashboard() {
 
             {!isLoadingReports && !reportsError && reports.length === 0 && (
               <p className="text-sm text-slate-600">
-                {statusFilter === "OPEN" && "Nenhuma denúncia pendente."}
+                {statusFilter === "OPEN" && "Nenhuma denúncia aberta."}
                 {statusFilter === "RESOLVED" && "Nenhuma denúncia resolvida."}
                 {statusFilter === "DISMISSED" && "Nenhuma denúncia descartada."}
               </p>
@@ -423,21 +424,11 @@ export function AdminDashboard() {
                   <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
                     <thead>
                       <tr className="text-slate-500">
-                        <th scope="col" className="py-3 pr-4 font-semibold">
-                          ONG
-                        </th>
-                        <th scope="col" className="px-4 py-3 font-semibold">
-                          Empresa
-                        </th>
-                        <th scope="col" className="px-4 py-3 font-semibold">
-                          Motivo
-                        </th>
-                        <th scope="col" className="px-4 py-3 font-semibold">
-                          Status
-                        </th>
-                        <th scope="col" className="py-3 pl-4 font-semibold">
-                          Recebida em
-                        </th>
+                        <th scope="col" className="py-3 pr-4 font-semibold">ONG</th>
+                        <th scope="col" className="px-4 py-3 font-semibold">Empresa</th>
+                        <th scope="col" className="px-4 py-3 font-semibold">Motivo</th>
+                        <th scope="col" className="px-4 py-3 font-semibold">Status</th>
+                        <th scope="col" className="py-3 pl-4 font-semibold">Recebida em</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -450,12 +441,8 @@ export function AdminDashboard() {
                             )}
                           </td>
                           <td className="px-4 py-4">
-                            <p className="font-medium text-slate-800">
-                              {report.reporterCompany.name}
-                            </p>
-                            <p className="mt-1 text-xs text-slate-500">
-                              {report.reporterUser.email}
-                            </p>
+                            <p className="font-medium text-slate-800">{report.reporterCompany.name}</p>
+                            <p className="mt-1 text-xs text-slate-500">{report.reporterUser.email}</p>
                           </td>
                           <td className="max-w-md px-4 py-4 leading-6">{report.reason}</td>
                           <td className="px-4 py-4">
@@ -464,50 +451,31 @@ export function AdminDashboard() {
                               value={report.status}
                               disabled={updatingReportId === report.id}
                               onChange={(event) =>
-                                void handleStatusChange(
-                                  report.id,
-                                  event.target.value as NpoReportStatus,
-                                )
+                                void handleStatusChange(report.id, event.target.value as NpoReportStatus)
                               }
                               className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-none focus:border-vinculo-dark focus:ring-2 focus:ring-vinculo-dark/20 disabled:opacity-60"
                             >
                               {REPORT_STATUS_OPTIONS.map((s) => (
-                                <option key={s} value={s}>
-                                  {REPORT_STATUS_LABELS[s]}
-                                </option>
+                                <option key={s} value={s}>{REPORT_STATUS_LABELS[s]}</option>
                               ))}
                             </select>
                           </td>
-                          <td className="py-4 pl-4 text-slate-500">
-                            {formatReportDate(report.createdAt)}
-                          </td>
+                          <td className="py-4 pl-4 text-slate-500">{formatReportDate(report.createdAt)}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
-                  <span>{totalElements} resultado{totalElements !== 1 ? "s" : ""}</span>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setPage((p) => p - 1)}
-                      disabled={page === 0}
-                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      ← Anterior
-                    </button>
-                    <span>
-                      Página {page + 1} de {totalPages}
-                    </span>
-                    <button
-                      onClick={() => setPage((p) => p + 1)}
-                      disabled={page >= totalPages - 1}
-                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      Próxima →
-                    </button>
+                <div className="mt-2 border-t border-slate-100">
+                  <div className="px-1 pt-3 text-sm text-slate-500">
+                    {totalElements} resultado{totalElements !== 1 ? "s" : ""}
                   </div>
+                  <Pagination
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onChange={setPage}
+                  />
                 </div>
               </>
             )}

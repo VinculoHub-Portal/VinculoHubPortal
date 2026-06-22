@@ -2,16 +2,26 @@ import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { useAuth0 } from "@auth0/auth0-react"
 import ArrowBackIcon from "@mui/icons-material/ArrowBack"
+import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined"
 import {
   fetchNpoProfileProjects,
   type NpoProfileProjectPage,
 } from "../../api/npo"
 import { Header } from "../../components/general/Header"
+import { ReportNpoModal } from "../../components/ong/ReportNpoModal"
 import { useNpoProfile } from "../../hooks/useNpoProfile"
 import { resolveDashboardPath } from "../../utils/dashboardPath"
 import { OrganizationInfoCard } from "../OngProfilePage/OrganizationInfoCard"
 import { ProfileHeaderCard } from "../OngProfilePage/ProfileHeaderCard"
 import { PublicProjectsSection } from "./PublicProjectsSection"
+
+const ROLES_CLAIM = "https://vinculohub/roles"
+
+function isCompanyUser(user: unknown) {
+  const rawRoles = (user as Record<string, unknown> | undefined)?.[ROLES_CLAIM]
+  const roles: string[] = Array.isArray(rawRoles) ? rawRoles : []
+  return roles.some((r) => String(r).toUpperCase() === "COMPANY")
+}
 
 const PROJECTS_PER_PAGE = 5
 const EMPTY_PROJECTS_PAGE: NpoProfileProjectPage = {
@@ -33,8 +43,10 @@ export function OngPublicProfilePage() {
   const [projectsError, setProjectsError] = useState<string | null>(null)
   const [projectsLoading, setProjectsLoading] = useState(false)
   const { profile, loading, error } = useNpoProfile(numericId)
-  const { isAuthenticated, user } = useAuth0()
+  const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth0()
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false)
   const dashboardPath = resolveDashboardPath(user)
+  const canReport = !isAuthLoading && isAuthenticated && isCompanyUser(user)
 
   useEffect(() => {
     if (numericId === undefined || Number.isNaN(numericId)) {
@@ -105,7 +117,7 @@ export function OngPublicProfilePage() {
       <Header />
 
       <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 sm:px-6">
-        {isAuthenticated && (
+        {!isAuthLoading && isAuthenticated && (
           <a
             href={dashboardPath}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-vinculo-dark hover:text-vinculo-dark-hover transition-colors"
@@ -119,6 +131,16 @@ export function OngPublicProfilePage() {
           institutionalData={profile.institutionalData}
           editable={false}
           isEditing={false}
+          actions={canReport && numericId != null ? (
+            <button
+              type="button"
+              onClick={() => setIsReportModalOpen(true)}
+              className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
+            >
+              <ReportProblemOutlinedIcon fontSize="small" />
+              Denunciar ONG
+            </button>
+          ) : undefined}
         />
 
         <OrganizationInfoCard
@@ -137,7 +159,16 @@ export function OngPublicProfilePage() {
           totalElements={projectsPage.totalElements}
           totalPages={projectsPage.totalPages}
         />
+
       </main>
+
+      {canReport && numericId != null && (
+        <ReportNpoModal
+          npoId={numericId}
+          open={isReportModalOpen}
+          onClose={() => setIsReportModalOpen(false)}
+        />
+      )}
     </div>
   )
 }

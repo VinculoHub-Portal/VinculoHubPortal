@@ -22,15 +22,7 @@ export function OngShowcaseCard() {
 
   const isFiltering = nameFilter !== debouncedName
 
-  const filteredNpos = debouncedName
-    ? npos.filter((npo) => {
-        const term = debouncedName.toLowerCase()
-        return (
-          npo.name.toLowerCase().includes(term) ||
-          (npo.description?.toLowerCase().includes(term) ?? false)
-        )
-      })
-    : npos
+  const filteredNpos = npos
 
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
@@ -102,7 +94,7 @@ export function OngShowcaseCard() {
         )}
       </div>
 
-      {!loading && !error && totalPages > 1 && (
+      {!loading && !error && totalPages > 0 && (
         <div className="mt-4 border-t border-slate-100">
           <Pagination
             currentPage={currentPage}
