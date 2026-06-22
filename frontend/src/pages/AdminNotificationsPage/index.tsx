@@ -243,7 +243,7 @@ export function AdminNotificationsPage() {
                 <td className="px-4 py-4 text-slate-500">{formatDate(alert.requestedAt)}</td>
                 <td className="px-4 py-4">
                   <a
-                    href="/admin/vinculos"
+                    href={`/admin/vinculos?companyName=${encodeURIComponent(alert.companyName)}&npoName=${encodeURIComponent(alert.npoName)}&status=pending`}
                     className="text-sm font-semibold text-vinculo-dark hover:underline"
                   >
                     Ver detalhes

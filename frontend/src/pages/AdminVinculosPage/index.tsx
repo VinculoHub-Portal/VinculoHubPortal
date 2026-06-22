@@ -1,5 +1,6 @@
 import { useAuth0 } from "@auth0/auth0-react"
 import { type ReactNode, useEffect, useState } from "react"
+import { useSearchParams } from "react-router-dom"
 import {
   fetchAdminRelationships,
   type AdminRelationshipCard,
@@ -8,22 +9,36 @@ import {
 import { AdminVinculosPageContext } from "./useAdminVinculosPage"
 
 const PAGE_SIZE = 10
+const VALID_STATUSES: AdminRelationshipStatusFilter[] = ["all", "pending", "negotiation", "active", "inactive"]
+
+function isValidStatus(value: string | null): value is AdminRelationshipStatusFilter {
+  return VALID_STATUSES.includes(value as AdminRelationshipStatusFilter)
+}
 
 export function AdminVinculosPage({ children }: { children: ReactNode }) {
   const { getAccessTokenSilently } = useAuth0()
+  const [searchParams] = useSearchParams()
+
+  const initialCompany = searchParams.get("companyName") ?? ""
+  const initialNpo = searchParams.get("npoName") ?? ""
+  const initialProject = searchParams.get("projectTitle") ?? ""
+  const initialStatus = searchParams.get("status")
+  const initialStatusFilter: AdminRelationshipStatusFilter =
+    isValidStatus(initialStatus) ? initialStatus : "all"
+
   const [relationships, setRelationships] = useState<AdminRelationshipCard[]>([])
   const [page, setPage] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   const [totalElements, setTotalElements] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
-  const [companyNameFilter, setCompanyNameFilter] = useState("")
-  const [npoNameFilter, setNpoNameFilter] = useState("")
-  const [projectTitleFilter, setProjectTitleFilter] = useState("")
-  const [debouncedCompanyName, setDebouncedCompanyName] = useState("")
-  const [debouncedNpoName, setDebouncedNpoName] = useState("")
-  const [debouncedProjectTitle, setDebouncedProjectTitle] = useState("")
-  const [statusFilter, setStatusFilter] = useState<AdminRelationshipStatusFilter>("all")
+  const [companyNameFilter, setCompanyNameFilter] = useState(initialCompany)
+  const [npoNameFilter, setNpoNameFilter] = useState(initialNpo)
+  const [projectTitleFilter, setProjectTitleFilter] = useState(initialProject)
+  const [debouncedCompanyName, setDebouncedCompanyName] = useState(initialCompany)
+  const [debouncedNpoName, setDebouncedNpoName] = useState(initialNpo)
+  const [debouncedProjectTitle, setDebouncedProjectTitle] = useState(initialProject)
+  const [statusFilter, setStatusFilter] = useState<AdminRelationshipStatusFilter>(initialStatusFilter)
 
   useEffect(() => {
     const timer = setTimeout(() => {
