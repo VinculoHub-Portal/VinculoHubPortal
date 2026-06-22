@@ -35,7 +35,8 @@ public class AdminRelationshipController {
                     "Lista vínculos com status 'pending' há mais de 7 dias sem resposta da ONG,"
                             + " permitindo mediação pelo administrador.")
     public ResponseEntity<Page<OverduePartnershipAlertResponse>> listOverdueRelationships(
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.ASC) Pageable pageable) {
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.ASC)
+                    Pageable pageable) {
         log.info("GET /api/admin/relationships/overdue");
         return ResponseEntity.ok(relationshipService.listOverdueRelationshipsForAdmin(pageable));
     }

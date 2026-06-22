@@ -27,12 +27,16 @@ public class AdminRelationshipService {
             String projectTitle,
             RelationshipStatus status,
             Pageable pageable) {
-        String normalizedCompanyName = companyName != null ? companyName.trim().toLowerCase() : null;
+        String normalizedCompanyName =
+                companyName != null ? companyName.trim().toLowerCase() : null;
         String normalizedNpoName = npoName != null ? npoName.trim().toLowerCase() : null;
-        String normalizedProjectTitle = projectTitle != null ? projectTitle.trim().toLowerCase() : null;
-        if (normalizedCompanyName != null && normalizedCompanyName.isEmpty()) normalizedCompanyName = null;
+        String normalizedProjectTitle =
+                projectTitle != null ? projectTitle.trim().toLowerCase() : null;
+        if (normalizedCompanyName != null && normalizedCompanyName.isEmpty())
+            normalizedCompanyName = null;
         if (normalizedNpoName != null && normalizedNpoName.isEmpty()) normalizedNpoName = null;
-        if (normalizedProjectTitle != null && normalizedProjectTitle.isEmpty()) normalizedProjectTitle = null;
+        if (normalizedProjectTitle != null && normalizedProjectTitle.isEmpty())
+            normalizedProjectTitle = null;
         Page<CompanyProject> page =
                 companyProjectRepository.findAdminRelationships(
                         normalizedCompanyName,
