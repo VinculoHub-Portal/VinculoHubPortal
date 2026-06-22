@@ -127,15 +127,15 @@ WHERE (
 )
   AND (
         :companyName IS NULL
-        OR LOWER(COALESCE(c.socialName, c.legalName)) LIKE LOWER(CONCAT('%', :companyName, '%'))
+        OR LOWER(COALESCE(c.socialName, c.legalName)) LIKE CONCAT('%', :companyName, '%')
 )
   AND (
         :npoName IS NULL
-        OR LOWER(n.name) LIKE LOWER(CONCAT('%', :npoName, '%'))
+        OR LOWER(n.name) LIKE CONCAT('%', :npoName, '%')
 )
   AND (
         :projectTitle IS NULL
-        OR LOWER(p.title) LIKE LOWER(CONCAT('%', :projectTitle, '%'))
+        OR LOWER(p.title) LIKE CONCAT('%', :projectTitle, '%')
 )
 ORDER BY cp.updatedAt DESC, cp.createdAt DESC
 """,
@@ -152,15 +152,15 @@ WHERE (
 )
   AND (
         :companyName IS NULL
-        OR LOWER(COALESCE(c.socialName, c.legalName)) LIKE LOWER(CONCAT('%', :companyName, '%'))
+        OR LOWER(COALESCE(c.socialName, c.legalName)) LIKE CONCAT('%', :companyName, '%')
 )
   AND (
         :npoName IS NULL
-        OR LOWER(n.name) LIKE LOWER(CONCAT('%', :npoName, '%'))
+        OR LOWER(n.name) LIKE CONCAT('%', :npoName, '%')
 )
   AND (
         :projectTitle IS NULL
-        OR LOWER(p.title) LIKE LOWER(CONCAT('%', :projectTitle, '%'))
+        OR LOWER(p.title) LIKE CONCAT('%', :projectTitle, '%')
 )
 """)
     Page<CompanyProject> findAdminRelationships(
