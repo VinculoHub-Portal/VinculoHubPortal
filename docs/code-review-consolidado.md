@@ -70,6 +70,13 @@ A base é sólida. Os itens abaixo são incrementais, exceto o P0 de segurança.
 | 29 | Ícones de modalidade do card "Projetos Apoiados" muito pequenos | UX | P3 | trivial | `CompanyDashboard` (card Projetos Apoiados) |
 | 30 | Renomear botão "Mediações" → "Notificações" no dashboard admin (decisão §7.3) | UX | P3 | trivial | `AdminDashboard/index.tsx:271-279` |
 | 31 | Detalhe do próprio projeto da ONG deve ir ao perfil privado, não ao público (decisão §7.4) | Bug/UX | P2 | baixo | navegação do card de projeto da ONG |
+| 32 | 503 em `GET /api/admin/vinculos/search` — admin não consegue ver vínculos (**em correção**) | Bug | P1 | — | backend admin relationships |
+| 33 | Telefone sem validação no cadastro (ONG e Empresa, passo 3) | Bug/Validação | P2 | baixo | `NpoRegistration`/`CompanyRegistration` passo 3 |
+| 34 | ONG não consegue alterar o status do projeto (ativo→concluído/cancelado) | Feature gap | P2 | médio | `EditProjectPage` + status no backend |
+| 35 | Empresa: botão de interesse mostra "Interesse já enviado" mesmo com vínculo já **ativo** | Bug/UX | P2 | baixo | página do projeto (empresa) |
+| 36 | Mensagem genérica ao bloquear a proposta da ONG quando a empresa já demonstrou interesse | UX/Mensageria | P3 | baixo | perfil público da empresa (ator ONG) |
+| 37 | Botão "Propor Parceria" sem feedback de "proposta enviada" | UX | P3 | baixo | perfil público da empresa |
+| 38 | Input de data do edital em formato MM/DD/YY (locale en) em vez de DD/MM/YY | UX/i18n | P3 | trivial | `CreateAnnouncementModal` |
 
 ---
 
@@ -147,6 +154,17 @@ Confirmado em teste manual (E2E-REG-01 ONG e E2E-REG-02 Empresa): ao concluir o 
 Confirmado em teste manual (E2E-REG-02/09): se o e-mail já tem conta no **Auth0** porém **não** há usuário correspondente no banco local, o cadastro **não conclui** (loop/retorno ao formulário, sem mensagem clara). É a materialização funcional da situação descrita em §7.2 (sessão Auth0 sem usuário local).
 - **Fix (decisão §7.2 = exigir logout):** ao detectar o estado (sessão Auth0 ok + sem usuário local), **forçar logout** e exibir mensagem clara em vez de voltar ao formulário em loop. Assim a pessoa parte de um estado limpo para logar/cadastrar corretamente.
 
+### 4.12 [#32] Admin não consegue listar vínculos — 503 em `/api/admin/vinculos/search` (em correção)
+Reportado em QA (2026-06-22): ao abrir os vínculos no painel admin, a chamada `GET /api/admin/vinculos/search?page=0&size=10` retorna **503 Service Unavailable**, deixando o admin sem ver nenhum vínculo da plataforma. Logs do cliente:
+```
+GET http://localhost:8080/api/admin/vinculos/search?page=0&size=10 503 (Service Unavailable)
+[VinculoHub] [HTTP] ← 503 /api/admin/vinculos/search {status: 503, message: 'Serviço temporariamente indisponível. Tente novamente em instantes.'}
+[VinculoHub] [AdminAPI] Failed to fetch admin relationships AxiosError: Request failed with status code 503
+```
+- **Status:** **em correção** (sinalizado pelo QA com `-> Está sendo corrigido`). Manter aberto até confirmar a correção em runtime.
+- Atenção ao distinguir do endpoint **morto** `/api/admin/vinculos` (#10/#11): o caminho usado pelo app é `/api/admin/vinculos/search` (canônico via `fetchAdminRelationships`). O 503 é no caminho vivo.
+- **Fix/verificação:** identificar a causa do 503 (provável exceção no serviço/consulta de relacionamentos do admin), cobrir com teste e validar no painel.
+
 ---
 
 ## 5. P2 — Redundância, validações e estrutura
@@ -210,6 +228,20 @@ Confirmado em teste manual (E2E-EMP-04): na seção de Impacto ESG do dashboard 
 - **Bônus (DRY):** os três blocos `UNION ALL` são quase idênticos (diferem só na coluna de flag) — candidatos a refatorar.
 - **Fix (requer decisão de produto sobre a semântica):** ou (a) o percentual de cada pilar passa a ser sobre a **soma dos investimentos por pilar** (somando 100% no conjunto), ou (b) o investimento do projeto é **rateado** entre os pilares da ONG, ou (c) o pilar passa a ser uma classificação **por projeto** (um pilar dominante) em vez das flags da ONG. Hoje o teste unitário (`ProjectServiceTest`) usa dados sem sobreposição de pilar, por isso não pega o caso.
 
+### 5.11 [#33] Campo de telefone aceita qualquer entrada no cadastro
+No passo 3 do cadastro — **tanto ONG quanto Empresa** — o campo de telefone aceita qualquer coisa (letras, números negativos, decimais). Não há máscara nem validação de formato.
+- O QA marcou o campo de **endereço** do mesmo passo como `-> Tudo bem` (aceitável texto livre); a ressalva é **só no telefone**.
+- **Fix:** aplicar máscara/validação de telefone (formato BR, apenas dígitos + formatação) nos dois fluxos de cadastro, idealmente com regra centralizada e replicada no backend (mesmo espírito do #6 de e-mail).
+
+### 5.12 [#34] ONG não consegue alterar o status do projeto
+Uma vez criado, o projeto não pode ter o status trocado pela ONG (ex.: de **ativo** para **concluído** ou **cancelado**). Falta o controle de transição de status na edição.
+- **Fix:** expor a mudança de status em `EditProjectPage` (seleção de status com transições válidas) e suportar no backend. Confirmar com produto quais transições são permitidas.
+
+### 5.13 [#35] Botão de interesse mostra "Interesse já enviado" mesmo com vínculo já ativo
+Na página do projeto (ator **Empresa**), quando a empresa já tem um vínculo **ativo** com aquele projeto, o botão de registrar interesse exibe **"Interesse já enviado"** em vez de refletir que o projeto **já está ativo** (ou ocultar/desabilitar o botão).
+- Provavelmente um sintoma do mapeamento de status espalhado (#17): o front trata "tem vínculo" como "interesse enviado" e não distingue o estado `active`.
+- **Fix:** diferenciar os estados do vínculo no botão (sem vínculo → "Demonstrar interesse"; `pending` → "Interesse já enviado"; `active` → "Projeto já ativo"/ocultar). Centralizar o mapeamento de status (ver #17).
+
 ---
 
 ## 6. P3 — Refino e consistência
@@ -247,6 +279,15 @@ Decisão de produto §7.3: manter a página `/admin/notificacoes` e o card como 
 ### 6.8 [#31] Detalhe do próprio projeto da ONG deve abrir o perfil privado
 Decisão de produto §7.4: quando a ONG abre o detalhe de um projeto **seu**, o destino deve ser o **perfil privado**. Hoje leva ao perfil público. **Fix:** ajustar a navegação do card/detalhe do projeto para o perfil privado quando o ator for o dono. P2 por mudar comportamento de navegação real.
 
+### 6.9 [#36] Mensagem genérica ao bloquear a proposta da ONG quando a empresa já demonstrou interesse
+Quando a **empresa registra interesse** numa ONG, a ONG **não consegue** propor parceria de volta com aquela empresa — isso é o comportamento esperado. O problema é a **mensagem**: o sistema diz que é "necessário possuir pelo menos um projeto ativo", que não tem nada a ver com a situação real. **Fix:** exibir mensagem específica do caso (ex.: "Esta empresa já demonstrou interesse na sua ONG — responda pela tela de vínculos") em vez da genérica de "sem projeto ativo".
+
+### 6.10 [#37] Botão "Propor Parceria" sem feedback de "proposta enviada"
+No perfil público da empresa, ao clicar em **"Propor Parceria"** o botão não muda de estado para sinalizar à ONG que a solicitação foi enviada. **Fix:** dar ao botão um estado pós-clique ("Proposta enviada"/desabilitado), com atualização imediata em sessão. Mesma família de read-after-write de #7 e §10.3 (invalidar/refetch após criar o vínculo).
+
+### 6.11 [#38] Input de data do edital em formato MM/DD/YY
+No cadastro de edital, o campo de **prazo de inscrição** apresenta a data no formato **MM/DD/YY** (locale en) em vez de **DD/MM/YY** (pt-BR). **Fix:** garantir o locale pt-BR na exibição/seleção da data (complementa o #5, que trata da validação de data no passado no mesmo campo).
+
 ---
 
 ## 7. Decisões de produto (definidas)
@@ -279,6 +320,12 @@ O time implementou uma **página** dedicada (`/admin/notificacoes`); a especific
 - **Decisão:** **bloquear a exclusão** de projetos que tenham vínculos.
 - **Ação:** impedir a exclusão quando houver vínculos (com mensagem clara orientando encerrar/desfazer o vínculo antes). É o fix do #22 — ver §4.9.
 
+### 7.7 Itens conceituais / perguntas em aberto (registro — sem ação imediata)
+Levantados pelo QA, mas **fora do escopo atual** ou **aguardando decisão**. Registrados aqui para não se perderem; não entram no backlog priorizado por ora.
+- **⚠️ PENDENTE — "Uma ONG pode estar inativa?"** No painel admin de ONGs, não há estado/inativação de ONG. Definir com produto se ONGs devem ter status ativo/inativo e quem controla.
+- **Conceitual (não será abordado agora) — progresso de projeto manual.** Hoje a ONG digita o **percentual** de progresso à mão; conceitualmente a ONG deveria definir **etapas** e o avanço delas é que regeria o percentual. Avaliar se cabe no contexto atual do projeto.
+- **Conceitual (não será abordado agora) — quem pode excluir projeto.** A ONG pode excluir o próprio projeto; o QA pondera que excluir do banco dá "controle demais" à ONG e que, havendo o papel, isso deveria ser do **ADMIN**. Relaciona-se ao #22 (que já decidiu bloquear exclusão com vínculos).
+
 ---
 
 ## 8. Itens que exigem validação em runtime
@@ -309,6 +356,11 @@ Suspeitas que **não dá para confirmar só lendo o código** — precisam da ap
 - **Sintoma suspeito:** ao filtrar/criar projetos no dashboard da ONG a tela "pisca" (some e volta) e o que foi criado só aparece após recarregar a página.
 - **Como reproduzir:** trocar o filtro de status; criar um projeto e observar se ele aparece sem reload.
 - **OK quando:** as transições são suaves e o novo projeto aparece imediatamente. Provável solução: padronizar o data-fetching em React Query (#7), que resolve cache e atualização imediata.
+
+### 8.6 "Sem projeto ativo" após excluir um projeto que tinha proposta de parceria
+- **Sintoma suspeito (não reproduzido):** com dois projetos de tipos diferentes, a empresa propôs parceria a partir de um deles; depois **excluiu esse projeto**; ao tentar propor de novo, o sistema acusou que ela **não tinha nenhum projeto ativo**, mesmo havendo outro projeto ativo.
+- **Como reproduzir:** repetir o cenário (criar 2 projetos, propor parceria por um, excluí-lo, tentar nova proposta) observando o estado de "projeto ativo".
+- **OK quando:** após excluir um projeto, a checagem de "projeto ativo" continua refletindo os projetos remanescentes corretamente. Provável relação com a exclusão de projeto atrelado a vínculo (#22) e com o mapeamento de estado do botão (#35).
 
 ---
 
