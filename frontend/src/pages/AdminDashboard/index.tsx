@@ -359,7 +359,7 @@ export function AdminDashboard() {
               </p>
             </div>
             <span className="inline-flex w-fit items-center rounded-full bg-vinculo-red/10 px-3 py-1 text-sm font-semibold text-vinculo-red">
-              {openReportsCount} pendentes
+              {openReportsCount} abertas
             </span>
           </div>
 
@@ -412,7 +412,7 @@ export function AdminDashboard() {
 
             {!isLoadingReports && !reportsError && reports.length === 0 && (
               <p className="text-sm text-slate-600">
-                {statusFilter === "OPEN" && "Nenhuma denúncia pendente."}
+                {statusFilter === "OPEN" && "Nenhuma denúncia aberta."}
                 {statusFilter === "RESOLVED" && "Nenhuma denúncia resolvida."}
                 {statusFilter === "DISMISSED" && "Nenhuma denúncia descartada."}
               </p>
