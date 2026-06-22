@@ -15,10 +15,10 @@
 4. [P1 — Bugs e dívidas prioritárias](#4-p1--bugs-e-dívidas-prioritárias)
 5. [P2 — Redundância, validações e estrutura](#5-p2--redundância-validações-e-estrutura)
 6. [P3 — Refino e consistência](#6-p3--refino-e-consistência)
-7. [Já corrigido — não reabrir](#7-já-corrigido--não-reabrir)
-8. [Decisões de produto pendentes](#8-decisões-de-produto-pendentes)
-9. [Itens que exigem validação em runtime](#9-itens-que-exigem-validação-em-runtime)
-10. [Sequência sugerida de execução](#10-sequência-sugerida-de-execução)
+7. [Decisões de produto pendentes](#7-decisões-de-produto-pendentes)
+8. [Itens que exigem validação em runtime](#8-itens-que-exigem-validação-em-runtime)
+9. [Sequência sugerida de execução](#9-sequência-sugerida-de-execução)
+10. [Achados da automação E2E (Playwright)](#10-achados-da-automação-e2e-playwright)
 
 ---
 
@@ -30,7 +30,7 @@
 - **Cobertura:** 72 arquivos de teste no frontend, 35 no backend.
 - **Boas práticas presentes:** interceptors HTTP com logging, `NotificationService` abstrato (impl `Resend` real + `Logging` em dev), `JOIN FETCH` evitando N+1 em vínculos.
 
-**Contexto importante:** o backlog de QA E2E foi escrito sobre a base `0bf4dcc` (19/06), **anterior** aos merges de VNC-02 (#318), vitrine admin (#286) e do fix do botão de vínculos (#319). Por isso muitos itens que o QA marcou `ABERTA` **já estão corrigidos** (ver §7).
+**Contexto importante:** este documento lista **apenas itens em aberto**. Defeitos já resolvidos foram removidos; o histórico de correções fica no git/PRs. O backlog de QA E2E original (base `0bf4dcc`, 19/06) é anterior a vários merges — ao reconciliá-lo, considere que muito do que o QA marcou `ABERTA` já não consta aqui por já estar resolvido.
 
 A base é sólida. Os itens abaixo são incrementais, exceto o P0 de segurança.
 
@@ -46,12 +46,11 @@ A base é sólida. Os itens abaixo são incrementais, exceto o P0 de segurança.
 | 4 | Três páginas/4 rotas/2 clientes de "Vínculos" redundantes | Dívida estrutural | P1 | médio | `MyRelationshipsPage`/`RelationshipsPage`/`VinculosPage` |
 | 5 | Prazo de edital no passado aceito (front+back) | Bug | P1 | baixo | `CreateAnnouncementModal.tsx:348`, `EditalRequestDTO.java:12` |
 | 6 | E-mail com TLD numérico aceito (`xx@xx.23`) | Bug | P1 | trivial | `CompanyRegistration/.../index.tsx:190` |
-| 7 | Padrões de data-fetching inconsistentes | Consistência | P1 | alto | vários (ver §5.4) |
+| 7 | Padrões de data-fetching inconsistentes | Consistência | P1 | alto | vários (ver §4.6) |
 | 8 | Teste desabilitado (freeze) | Qualidade | P1 | baixo | `AdminNotificationsPage/index.test.tsx:76` |
 | 9 | ADM-06 sem disparo automático (sem `@Scheduled`) | Produto/Débito | P1 | médio | backend (decisão) |
 | 10 | Endpoint/cliente de vínculos admin morto | Dead code | P2 | baixo | `fetchAdminVinculos`, `/api/admin/vinculos` |
 | 11 | `GET /api/admin/vinculos` no controller errado | Smell | P2 | baixo | `AdminMetricsController.java:36` |
-| 12 | Número de endereço aceita letras/negativos | Bug | P2 | baixo | `CompanyRegistration/.../index.tsx:526` |
 | 13 | Edital/doc abrem em nova guia em vez de download | Bug | P2 | baixo | `EditalCard.tsx:35,116`, `PrivateDocumentsCard.tsx:75` |
 | 14 | Projetos não aparecem no perfil **privado** da ONG | Feature gap | P2 | médio | `OngProfilePage` |
 | 15 | Componentes "god" (>500 linhas) | Smell | P2 | alto | ver §5.5 |
@@ -61,6 +60,14 @@ A base é sólida. Os itens abaixo são incrementais, exceto o P0 de segurança.
 | 19 | Sem reset de scroll entre etapas do cadastro | UX | P3 | trivial | `CompanyRegistration` |
 | 20 | Mistura de sistemas de UI (MUI + Tailwind) | Consistência | P3 | alto | global |
 | 21 | ADM-05 sem botão dedicado de export | Sprint 4 | P3 | baixo | `AdminDashboard` |
+| 22 | Excluir projeto atrelado a vínculo "some" com o vínculo (sem safeguard/aviso) | Bug/Integridade | P1 | médio | exclusão de projeto + `MyRelationshipsPage` |
+| 23 | Notificação de vínculo: falha silenciosa + `companyEmail` sem fallback + sem teste no fluxo ONG→empresa | Robustez/Observabilidade | P2 | baixo | `RelationshipService.java:191,414`, `ResendNotificationService.java:79` |
+| 24 | Botão "Ver Denúncias" no dashboard admin é redundante (scroll sem efeito perceptível) | UX/Dead UI | P3 | trivial | `AdminDashboard/index.tsx:258-269` |
+| 25 | `ReportNpoModal` (denunciar ONG) destoa do padrão dos demais modais (MUI + hex hardcoded) | UX/Consistência | P3 | baixo | `ReportNpoModal.tsx` |
+| 26 | Pós-cadastro: ONG e Empresa são devolvidas ao formulário em vez do dashboard | Bug | P1 | médio | `RegisterPage/index.tsx:250`, `CompanyRegistration/registration/index.tsx`, `AuthRoleRedirect` |
+| 27 | Cadastro trava se o e-mail já existe no Auth0 mas não no banco local | Bug | P1 | médio | fluxo de signup (front + `AuthRoleRedirect`); ver decisão §7.2 |
+| 28 | Impacto ESG: pilares/projetos aparecem como 100% do total (soma > 100%) | Bug/Cálculo | P2 | médio | `ProjectService.java:296-320`, `ProjectRepository.java:46-96` |
+| 29 | Ícones de modalidade do card "Projetos Apoiados" muito pequenos | UX | P3 | trivial | `CompanyDashboard` (card Projetos Apoiados) |
 
 ---
 
@@ -117,6 +124,32 @@ Não há `@Scheduled`/`@EnableScheduling`. Vínculos vencidos (SLA 7 dias) são 
 
 ---
 
+### 4.9 [#22] Excluir projeto atrelado a um vínculo faz o vínculo desaparecer
+Ao **excluir um projeto** que está vinculado a um relacionamento (empresa↔ONG), o vínculo correspondente **deixa de ser exibido** (some de `/meus-vinculos`), sem qualquer safeguard ou aviso. Hoje a exclusão é silenciosa e leva embora o histórico do relacionamento.
+
+- **Impacto:** perda de visibilidade/histórico do vínculo — pior se o vínculo já estava `active` (parceria efetivada). Pode confundir tanto a empresa quanto a ONG, que veem o vínculo "evaporar".
+- **A confirmar em código:** se a exclusão é física (DELETE com `ON DELETE CASCADE` / órfão removido) ou apenas a query de listagem filtra projetos inativos/excluídos (vínculo persiste no banco, mas não aparece). Isso muda a gravidade e o fix.
+
+**Decisões a tomar (produto + técnico):**
+1. **Bloquear** a exclusão de projeto que tenha vínculos (especialmente `negotiation`/`active`), exigindo desfazer/encerrar o vínculo antes; ou
+2. **Soft-delete** do projeto (arquivar) preservando o vínculo e exibindo "projeto arquivado/removido" no card do vínculo; ou
+3. **Permitir** a exclusão, mas com **aviso explícito** ("este projeto possui N vínculos; eles serão encerrados/ocultados") e registro do encerramento.
+
+**Fix mínimo enquanto não há decisão:** confirmação clara antes de excluir + não ocultar o vínculo silenciosamente (manter o card com o projeto marcado como removido). Ver também a decisão de produto em §7.6.
+
+### 4.10 [#26] Pós-cadastro devolve o usuário ao formulário em vez do dashboard
+Confirmado em teste manual (E2E-REG-01 ONG e E2E-REG-02 Empresa): ao concluir o cadastro, em vez de cair no dashboard do papel, o usuário é **devolvido ao formulário de cadastro**.
+- **ONG:** `RegisterPage.handleNpoSignup` grava um draft em `sessionStorage` e chama `loginWithRedirect({ appState: { returnTo: "/ong/dashboard" } })` (`RegisterPage/index.tsx:245-259`). No retorno do Auth0, o `returnTo`/draft não está levando ao dashboard — a sessão volta para `/cadastro`.
+- **Empresa:** mesmo sintoma no fluxo `CompanyRegistration/registration/index.tsx`.
+- **Provável origem:** a resolução de papel pós-login em `AuthRoleRedirect` (vide #27) e/ou o consumo do draft de signup não concluem a criação/roteamento antes da guarda redirecionar de volta.
+- **Fix:** garantir que, após o callback do Auth0 com draft de signup válido, o backend conclua o cadastro e o roteamento leve ao dashboard do papel; cobrir com E2E de cadastro feliz (hoje só há login das personas já criadas).
+
+### 4.11 [#27] Cadastro trava quando o e-mail já existe no Auth0 mas não no banco local
+Confirmado em teste manual (E2E-REG-02/09): se o e-mail já tem conta no **Auth0** porém **não** há usuário correspondente no banco local, o cadastro **não conclui** (loop/retorno ao formulário, sem mensagem clara). É a materialização funcional da decisão pendente §7.2 (sessão Auth0 residual): hoje não há caminho para "conta Auth0 existe, registro local não".
+- **Fix (depende de §7.2):** detectar o estado (Auth0 ok + sem usuário local) e ou (a) concluir o cadastro local reaproveitando a identidade Auth0, ou (b) exibir mensagem clara orientando login/contato. Em qualquer caso, **não** voltar silenciosamente ao formulário.
+
+---
+
 ## 5. P2 — Redundância, validações e estrutura
 
 ### 5.1 [#10] Endpoint + cliente de vínculos admin morto
@@ -127,16 +160,13 @@ Não há `@Scheduled`/`@EnableScheduling`. Vínculos vencidos (SLA 7 dias) são 
 ### 5.2 [#11] Endpoint de listagem no controller de métricas
 Mesmo que #10 não seja removido, `GET /api/admin/vinculos` está em `AdminMetricsController` — responsabilidade fora do lugar. Mover para `AdminController`/`AdminRelationshipController`.
 
-### 5.3 [#12] Número de endereço aceita letras/negativos (AN-11/12)
-Campo "Número" é texto livre (`CompanyRegistration/.../index.tsx:526-540`, `maxLength=20`); validação só checa não-vazio (`:176-177`). **Fix:** sanitizar para dígitos / validar inteiro não-negativo no front e no backend (DTO).
-
-### 5.4 [#13] Edital/documento abrem em nova guia em vez de baixar (AN-33)
+### 5.3 [#13] Edital/documento abrem em nova guia em vez de baixar (AN-33)
 `EditalCard.tsx:35` `window.open(fileUrl, "_blank")` e `:116` `target="_blank"`; mesmo padrão em `PrivateDocumentsCard.tsx:75`. **Fix:** download via `Content-Disposition: attachment` (backend) + âncora `download`, sem `window.open`; tratar erro sem navegar.
 
-### 5.5 [#14] Projetos não aparecem no perfil privado da ONG (AN-21)
+### 5.4 [#14] Projetos não aparecem no perfil privado da ONG (AN-21)
 `OngProfilePage` não referencia projetos (sem `ProjectsSection`/`fetchNpoProfileProjects`). O perfil **público** mostra (`PublicProjectsSection`), o **privado** não. **Fix:** reusar o componente público no perfil privado.
 
-### 5.6 [#15] Componentes "god" (>500 linhas)
+### 5.5 [#15] Componentes "god" (>500 linhas)
 
 | Arquivo | Linhas |
 |---------|--------|
@@ -148,64 +178,86 @@ Campo "Número" é texto livre (`CompanyRegistration/.../index.tsx:526-540`, `ma
 
 Extrair subcomponentes e hooks de dados. Prioridade interna: `MyRelationshipsPage` (já contém `SummaryCard`, `VinculoCard`, `ActionButton`, etc. no mesmo arquivo).
 
-### 5.7 [#16] Duplicação de helpers de display
+### 5.6 [#16] Duplicação de helpers de display
 `companyDisplayName`/`npoName`/`companyName` (lógica "socialName senão legalName") duplicados em `RelationshipService.java` e `AdminRelationshipService.java`. Extrair para helper compartilhado.
 
-### 5.8 [#17] Mapeamento de status de vínculo espalhado
+### 5.7 [#17] Mapeamento de status de vínculo espalhado
 Backend usa enum lowercase (`pending`/`negotiation`/`active`/`inactive`); o frontend remapeia para `pending_interest`/`pending_waiting`/etc. em `MyRelationshipsPage/vinculo.ts`. Centralizar para evitar divergência entre as páginas de vínculo.
 
-### 5.9 [#18] ADM-03 tabela em vez de cards + logo
+### 5.8 [#18] ADM-03 tabela em vez de cards + logo
 `AdminOngsList` renderiza tabela; o critério pedia cards com logo (`logoUrl` existe no DTO mas não é exibido). Converter para cards ou alinhar o critério. (Detalhe em `sprint4-validacao.md`.)
+
+---
+
+### 5.9 [#23] Robustez/observabilidade das notificações de vínculo (fluxo ONG→empresa)
+O envio de e-mail quando a **ONG propõe parceria** com uma empresa **funciona** (`RelationshipService.java:191-193` chama `interestReceived(companyEmail(company), ...)`; frontend envia `companyId` corretamente). Mas o fluxo tem pontos frágeis que tornam qualquer falha **invisível** e o tornam propenso a regressão:
+
+1. **Falha de envio é engolida silenciosamente (por design).** `ResendNotificationService.send` captura qualquer erro e só loga (`ResendNotificationService.java:79-88`) — para não estourar a transação do `@Transactional`. Efeito colateral: o vínculo é criado, a UI mostra "Proposta enviada com sucesso!", mas se o e-mail falhou (destinatário nulo, endereço inválido, erro da API) **ninguém percebe**. É a explicação mais provável para a sensação de "não está enviando".
+2. **`companyEmail` não tem fallback — assimetria com `npoEmail`.** `companyEmail(company)` (`RelationshipService.java:414-417`) faz `company.getUser().getEmail()` direto e devolve `null` se o `user` vier nulo/não carregado. Já `npoEmail` (`:419-429`) tem fallback via `userRepository`. No fluxo ONG→empresa o destinatário é a empresa (sem rede de proteção); no fluxo empresa→ONG é a ONG (com fallback).
+3. **Cobertura de teste assimétrica.** Existe teste só para empresa-inicia (`RelationshipServiceTest.java:167` verifica `interestReceived` para a ONG). O caso ONG-inicia→empresa só tem o teste de *rejeição* de projeto alheio (`:170-185`); a **notificação para a empresa não é coberta** → regressão passa despercebida.
+4. **Envio depende de config de ambiente.** Com `RESEND_API_KEY` vazio (`application.properties:31`) cai no `LoggingNotificationService` e **nenhum e-mail real sai** (vale para todos os fluxos, não só ONG→empresa).
+
+**Fix sugerido (esforço baixo):**
+- Dar a `companyEmail` o mesmo fallback de `npoEmail` (resolver via `userRepository` quando `user` vier nulo).
+- Logar em **warn/error** quando o destinatário resolver para `null` *antes* de chamar `send` (hoje o nulo só falha lá no Resend, sem contexto do vínculo).
+- Adicionar teste `createByNpoNotifiesCompany` espelhando o de empresa.
+- (Opcional) Métrica/contador de falhas de envio para dar observabilidade ao item 1 sem quebrar a transação.
+
+### 5.10 [#28] Impacto ESG: pilares somam mais de 100% (cada um pode dar 100%)
+Confirmado em teste manual (E2E-EMP-04): na seção de Impacto ESG do dashboard da empresa os pilares aparecem com percentuais inflados — **cada pilar pode mostrar 100%** e a soma ultrapassa 100%.
+- **Raiz:** o pilar ESG é derivado das **flags da ONG** (`npo.environmental`/`social`/`governance`), não do projeto. A query `ProjectRepository.sumByEsgPillarForCompany` (`ProjectRepository.java:46-96`) soma `invested_amount` por pilar via três blocos `UNION ALL` filtrando por `n.<flag> IS TRUE`. Uma ONG marcada como **ambiental+social** faz o investimento **inteiro** do projeto entrar nos **dois** pilares.
+- O denominador `totalInvested` (`sumPortfolioTotalsByCompanyId`) conta **cada projeto uma vez**. Já o numerador por pilar (`pillarInvested`) **duplica** projetos de ONGs multi-flag. Logo `investmentPercentage = pillarInvested / totalInvested` (`ProjectService.java:332-340`) não é uma partição do total: cada pilar pode chegar a 100% e a soma estoura.
+- **Evidência no seed:** `Instituto Projetos Vivos` é ambiental+social → um único vínculo ativo com um projeto seu aparece como Ambiental 100% **e** Social 100%.
+- **Bônus (DRY):** os três blocos `UNION ALL` são quase idênticos (diferem só na coluna de flag) — candidatos a refatorar.
+- **Fix (requer decisão de produto sobre a semântica):** ou (a) o percentual de cada pilar passa a ser sobre a **soma dos investimentos por pilar** (somando 100% no conjunto), ou (b) o investimento do projeto é **rateado** entre os pilares da ONG, ou (c) o pilar passa a ser uma classificação **por projeto** (um pilar dominante) em vez das flags da ONG. Hoje o teste unitário (`ProjectServiceTest`) usa dados sem sobreposição de pilar, por isso não pega o caso.
 
 ---
 
 ## 6. P3 — Refino e consistência
 
 ### 6.1 [#19] Sem reset de scroll entre etapas do cadastro (AN-10)
-Nenhum `window.scrollTo` no fluxo `CompanyRegistration`. Ao avançar etapa (inclusive ODS), a rolagem não volta ao topo. **Fix:** `scrollTo({top:0})` na troca de `currentStep`.
+Nenhum `window.scrollTo` no fluxo `CompanyRegistration`. Ao avançar etapa (inclusive ODS), a rolagem não volta ao topo. **Fix:** `scrollTo({top:0})` na troca de `currentStep`. ⚠️ **Não reproduzido** em teste manual (E2E-REG-05) — confirmar se ainda ocorre antes de priorizar; pode já não acontecer dependendo da altura da etapa/viewport.
 
-### 6.2 [#20] Dois sistemas de UI
+### 6.2 [#24] Botão "Ver Denúncias" no dashboard admin é redundante
+O botão "Ver Denúncias" (`AdminDashboard/index.tsx:258-269`) só faz `document.getElementById("denuncias")?.scrollIntoView(...)` para a seção de denúncias que **já está na mesma página** (alvo em `:348`). Quando a seção já está visível ou a página é curta, o scroll não tem efeito perceptível — passa a impressão de que o botão "não faz nada". É **redundante** com a seção presente no próprio dashboard. **Fix:** remover o botão (provável) ou, se mantido, transformá-lo em algo útil (ex.: filtrar/abrir só denúncias pendentes). Confirmar com produto antes de remover.
+
+### 6.3 [#25] Modal de denúncia da ONG (`ReportNpoModal`) destoa do padrão dos modais
+Instância concreta de #20 (dois sistemas de UI). O `ReportNpoModal.tsx` é **MUI puro** (`Dialog`/`DialogContent`/`Button`/`TextField`/`Typography`/`Box`) com **cores hex hardcoded**, enquanto todos os outros modais (`DemonstrarInteresseModal`, `ConfirmDeleteProjectModal`, `ProporParceriaModal`) seguem o mesmo padrão Tailwind. Divergências:
+
+| Aspecto | Padrão dos demais modais | `ReportNpoModal` |
+|---------|--------------------------|------------------|
+| Container | `<div>` overlay Tailwind (`fixed inset-0 z-[100] bg-slate-950/65`) + card `rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl` | MUI `<Dialog>`/`<DialogContent>`, `borderRadius: "10px"` |
+| Botões | `BaseButton` (variants `ghost`/`secondary`/`outline`) | MUI `<Button>` `outlined`/`contained`, `height: 52` |
+| Cores | tokens (`text-vinculo-dark`, `vinculo-red`, `vinculo-green`) | hex hardcoded (`#00467F`, `#E7000B`/`#C70009`, `#EFF6FF`, `#FFE2E2`, `#364153`, `#6A7282`) |
+| Comportamento | `data-testid="modal-overlay"`, `Escape`/click-outside próprios | `onClose` do MUI |
+
+**Efeito:** raio de borda, paleta, tipografia e botões diferentes dos demais diálogos — daí a sensação de "styling inconsistente". As cores hex inclusive **divergem dos tokens**: `#00467F` ≠ `vinculo-dark`, `#E7000B` ≠ `vinculo-red`. **Fix:** reescrever o modal no mesmo padrão Tailwind + `BaseButton` dos outros (ou, no mínimo, trocar os hex pelos tokens do tema). Bom candidato para padronizar junto de #20.
+
+### 6.4 [#20] Dois sistemas de UI
 Convivem MUI (`Button`/`Card`/`Chip`), Tailwind puro e componentes próprios (`FlexibleButton`, `MetricCard`). Definir sistema primário e encapsular o outro.
 
-### 6.3 [#21] ADM-05 sem botão dedicado de export
+### 6.5 [#21] ADM-05 sem botão dedicado de export
 Export de vínculos embutido no botão único "Exportar Dados". Funcional; separar só se o critério exigir literalmente.
 
----
-
-## 7. Já corrigido — não reabrir
-
-Itens que o backlog de QA marca `ABERTA`/`A DEFINIR` mas **já estão resolvidos** em `development`. Atualizar o backlog de QA.
-
-| QA | Anotação | Evidência no código |
-|----|----------|---------------------|
-| QA-NAV-01.1 | AN-03 | Admin não vê "Vínculos": `Header.tsx:25` `canSeeVinculos = isPlatformUser && userType !== "admin"` |
-| QA-VINC-01.2 | AN-08/25 | `createRelationship` no cliente canônico `api/relationships.ts` |
-| QA-VINC-01.3 | AN-25 | `DemonstrarInteresseModal` no detalhe do projeto (`ProjectDetailsPage/index.tsx:248`) |
-| QA-VINC-01.4 | AN-08 | `ProporParceriaModal` no perfil da empresa, com seleção de projeto próprio |
-| QA-VINC-01.6 | — | Confirmação bilateral em `/meus-vinculos` (`EfetivarParceriaModal` + `confirmRelationship`) |
-| QA-ONG-01.5 | AN-18 | Endpoint público `GET /api/companies/{id}/public` (`CompanyController.java:88`) |
-| QA-COMP-01.4 | AN-27 | `SupportedProjectsCard` linka `/meus-vinculos?filter=active` |
-| QA-ADM-01.1 | AN-29 | `/admin/vinculos` registrada + card funcional |
-| QA-AUTH-01.1/01.2 | AN-09/15 | Já marcados CORRIGIDA pelo QA; manter testes de `AuthRoleRedirect` |
-| DEBT-01 (frontend) | AT-01 | `npoId` real do perfil no upload + testes (`RoleHomePage/index.test.tsx:211`) — **mas o backend segue vulnerável, ver #1** |
-
-> Recomenda-se confirmar QA-VINC-01.3/01.4/01.6 em runtime (E2E); o código necessário existe.
+### 6.6 [#29] Ícones de modalidade do card "Projetos Apoiados" muito pequenos
+No dashboard da empresa (E2E-EMP-02), os ícones de modalidade ("documento" para Lei de Incentivo e "dinheiro" para Investimento Social) ficam **pequenos demais** ao lado dos contadores, prejudicando a leitura. **Fix:** aumentar o tamanho/`fontSize` dos ícones no card de Projetos Apoiados (`CompanyDashboard`).
 
 ---
 
-## 8. Decisões de produto pendentes
+## 7. Decisões de produto pendentes
 
 1. **Posicionamento do acesso a vínculos** (QA-NAV-01.2): só no header, só nos dashboards, ou ambos — antes de remover botões.
-2. **Sessão Auth0 residual** (QA-AUTH-01.3, AN-14): forçar login, selecionar conta ou exigir logout quando há sessão sem usuário no banco.
+2. **Sessão Auth0 residual** (QA-AUTH-01.3, AN-14): forçar login, selecionar conta ou exigir logout quando há sessão sem usuário no banco. ⚠️ Já causa bug funcional confirmado — ver #27 (cadastro trava com e-mail Auth0 órfão).
 3. **Admin — mediações/notificações** (QA-ADM-01.2/01.3/01.6/01.7): o time implementou uma **página** `/admin/notificacoes`, enquanto o QA pedia uma **seção** no dashboard e a **remoção** dessa rota — caminhos opostos. Além disso, o card "Notificações Pendentes" hoje soma denúncias + vínculos vencidos (`AdminMetricsService.java:37`); o QA pedia renomear para "Denúncias Pendentes". Alinhar.
 4. **Destino da própria ONG no detalhe do seu projeto** (QA-ONG-02.5, AN-24): perfil privado, dashboard ou ambos.
 5. **Destaque visual do mural de editais** (QA-ONG-01.7, AN-20): intencional? quando some?
+6. **Exclusão de projeto com vínculos** (#22): definir a política — bloquear exclusão, soft-delete/arquivamento preservando o vínculo, ou permitir com aviso e encerramento explícito do vínculo. Decide o comportamento esperado e o fix de §4.9.
 
 Nenhuma decisão acima deve ser assumida silenciosamente na implementação.
 
 ---
 
-## 9. Itens que exigem validação em runtime
+## 8. Itens que exigem validação em runtime
 
 Não verificáveis por inspeção estática — exigem E2E/observabilidade:
 
@@ -217,58 +269,39 @@ Não verificáveis por inspeção estática — exigem E2E/observabilidade:
 
 ---
 
-## 10. Sequência sugerida de execução
+## 9. Sequência sugerida de execução
 
 1. **Hotfix de segurança (1 PR):** #1 (P0) — backend do upload de documentos.
-2. **Quick wins (1 PR):** #2, #3, #6, #8 — correções triviais de bug/teste/validação.
-3. **Validações de formulário (1 PR):** #5, #12, #19 — edital (data), número de endereço, scroll.
-4. **Download correto (1 PR):** #13 — editais e documentos privados.
-5. **Limpeza de dead code (1 PR):** #10, #11 — baixo risco.
-6. **Consolidação de vínculos (1 PR, requer decisão §8.1):** #4, #17.
-7. **Feature gap (1 PR):** #14 — projetos no perfil privado.
-8. **Padronização incremental:** #7 (React Query) — resolve junto AN-16/17/19.
-9. **Refino contínuo:** #15, #16, #18, #20, #21 conforme tocar nas áreas.
-10. **Decisões de produto:** §8 + #9.
+2. **Bugs de cadastro (1 PR):** #26, #27 — pós-cadastro volta ao formulário + e-mail Auth0 órfão (P1; depende de decisão §7.2).
+3. **Quick wins (1 PR):** #2, #3, #6, #8 — correções triviais de bug/teste/validação.
+4. **Validações de formulário (1 PR):** #5, #19 — edital (data) e scroll (confirmar #19 antes).
+5. **Cálculo ESG (1 PR, requer decisão de semântica):** #28 — corrigir percentuais de pilar.
+6. **Download correto (1 PR):** #13 — editais e documentos privados.
+7. **Limpeza de dead code (1 PR):** #10, #11 — baixo risco.
+8. **Consolidação de vínculos (1 PR, requer decisão §7.1):** #4, #17.
+9. **Feature gap (1 PR):** #14 — projetos no perfil privado.
+10. **Padronização incremental:** #7 (React Query) — resolve junto AN-16/17/19.
+11. **Refino contínuo:** #15, #16, #18, #20, #21, #24, #25, #29 conforme tocar nas áreas.
+12. **Decisões de produto:** §7 + #9 + #22.
 
 ---
 
-## 11. Achados da automação E2E (Playwright)
+## 10. Achados da automação E2E (Playwright)
 
-> Levantados ao implementar a suíte E2E (`frontend/e2e/`, junho/2026) com a stack rodando e os cenários seedados. A suíte de leitura/navegação (`auth`/`empresa`/`ong`/`admin`/`sprint3`) e a de fluxos mutantes (`mutating.spec.ts` — criação de projeto/edital + handshake completo) passam 100%.
+> Achados **em aberto** levantados ao implementar a suíte E2E (`frontend/e2e/`). A cobertura Playwright vs. teste manual está consolidada em [`e2e-checklist.md`](./e2e-checklist.md) §11.
 
-### 11.1 [✅ corrigido no PR #320] Empresa não tinha caminho de UI para abrir um projeto e demonstrar interesse — **P2**
-~~Os cards de projeto no perfil público da ONG não eram clicáveis e `/projeto/:id` era protegido.~~ **Resolvido pelo PR #320 (Bug 5):** `PublicProjectsSection.ProjectCard` agora é um `<Link to="/projeto/:id">` e a rota `/projeto/:projectId` saiu do `ProtectedRoute` (pública). A empresa percorre vitrine → "Ver perfil" → perfil público → card do projeto → detalhe → "Demonstrar Interesse". Coberto por E2E `empresa.spec` (EMP-06/07) e `mutating.spec` (handshake), além de `sprint3.spec` (rota `/projeto/1` pública).
+### 10.1 Contrato de `GET /api/editais` mudou para paginado — **P3 (doc/contrato)**
+O endpoint passou a retornar um `Page` do Spring (`{ content: [...], totalElements, ... }`) em vez de um array puro. É **intencional** (o cliente `api/editais.ts:143` lê `paged.content`), mas pode surpreender outros consumidores. Registrar a mudança de contrato para quem integra.
 
-### 11.2 [novo] Contrato de `GET /api/editais` mudou para paginado — **P3 (doc/contrato)**
-O endpoint passou a retornar um `Page` do Spring (`{ content: [...], totalElements, ... }`) em vez de um array puro. É **intencional** (o cliente `api/editais.ts:143` lê `paged.content`), mas quebrava o teste de contrato antigo (que esperava array) e pode surpreender outros consumidores. Atualizado em `sprint3.spec.ts`; registrar a mudança de contrato para quem integra.
-
-### 11.3 [novo] Nome de exibição do parceiro empresa diverge do da ONG nos vínculos — **P3**
+### 10.2 Nome de exibição do parceiro empresa diverge do da ONG nos vínculos — **P3**
 Em `/meus-vinculos`, a **empresa** aparece pelo nome fantasia (ex.: "Horizonte", "Alianca", "Multipla") enquanto a **ONG** aparece com o nome completo ("Instituto Projetos Vivos"). Provém da regra `socialName` senão `legalName` (ver #16). Confirmar se a assimetria é intencional; se não, padronizar a exibição.
 
-### 11.5 [novo] Atraso read-after-write no botão "Demonstrar Interesse" — **P3**
-Logo após a empresa enviar interesse e **recarregar** a página do projeto, `useExistingRelationship` (`hooks/useExistingRelationship.ts`) às vezes ainda não enxerga o vínculo recém-criado, mantendo o botão como "Demonstrar Interesse" por alguns segundos (o teste E2E precisou de retry/reload para refletir). Em sessão (sem reload) o estado é imediato via `sentInThisSession`. Mesma família de AN-16/17/19 (atualização imediata). **Fix:** invalidar/refetch da lista de relationships após `createRelationship` (ou usar React Query com invalidação), em vez de depender de novo fetch no mount.
-
-### 11.7 [corrigido] Seeder usava `project_type` errado (resolve QA-COMP-01.1) — **P2**
-O seeder de cenários (`backend/.../db/test-scenarios/01_scenario_definitions.sql`) gravava `project_type` = `SOCIAL`/`ENVIRONMENTAL`/`GOVERNMENTAL` (constantes válidas do enum `ProjectType`, mas que representam **área/tema**, não **modalidade de captação**). A app trata `project_type` como modalidade: o resumo da empresa conta por `project_type IN ('TAX_INCENTIVE_LAW','SOCIAL_INVESTMENT_LAW')` (`CompanyProjectRepository.getSupportedProjectsSummaryByCompanyId`), o card "Projetos por Tipo" da ONG só itera essas duas (`DASHBOARD_PROJECT_TYPES`) e o cadastro de projeto só gera essas duas. **Efeito:** cards de modalidade da empresa e "Projetos por Tipo" da ONG vinham **vazios/zerados** para os dados seedados. **Fix aplicado:** Educacao→`TAX_INCENTIVE_LAW`, Clima→`SOCIAL_INVESTMENT_LAW`, Bairros→`TAX_INCENTIVE_LAW`, Renda→`SOCIAL_INVESTMENT_LAW` (área ESG segue em `focus_area`+ODS+flags da ONG). Requer **rebuild** da imagem do backend (`docker compose up -d --build`) pois o SQL é empacotado no JAR. Testes E2E reforçados para assertir os contadores reais (`empresa.spec` EMP-02/02b, `ong.spec` Projetos por Tipo).
-
-### 11.6 Evidência positiva — handshake completo funciona em runtime
-O fluxo `pending → negotiation → active` com revelação de contato após o aceite foi validado fim-a-fim por `mutating.spec.ts` (empresa demonstra interesse → ONG aceita → ambos efetivam). Isso **confirma em runtime** QA-VINC-01.3/01.4/01.6 (§7 pedia validação E2E) e E2E-FLOW-01/02. Observado: a efetivação é **sequencial** (cada parte confirma na sua vez); ambos os lados exibem "Efetivar Parceria" enquanto pendentes da própria confirmação.
-
-> ⚠️ Nota operacional: `mutating.spec.ts` **altera o seed** (cria projetos/editais e ativa um vínculo de `company.empty`↔`Educacao para Todos`). É resiliente a reexecução, mas para um "happy path" limpo rode com seed fresco (`docker compose down -v && up`).
-
-### 11.8 Validação do PR #320 (fix/ui) por E2E
-Mudanças validadas e cobertas por testes (suíte verde 59 ✔ + mutante 11 ✔):
-- **Bug 1/2 (redirect pós-signup / admin):** `AuthRoleRedirect` agora resolve papéis antes da guarda `userId === null` e redireciona por tipo de draft. Cobertura E2E indireta via login das personas (`auth.setup`) + GuestOnlyRoute.
-- **Bug 3 (GuestOnlyRoute):** logado em `/cadastro*` → redireciona ao dashboard do papel. Novos testes `auth.spec` (ONG/empresa/admin).
-- **Bug 5 (perfil público navegável + `/projeto/:id` público):** novos testes `empresa.spec` EMP-06/07, `sprint3.spec` rota pública. Resolve §11.1.
-- **Bug 6 (Denunciar ONG no perfil público p/ empresa):** novo teste `empresa.spec` EMP-06b.
-- **Melhoria (card clicável "Ver perfil"):** `OngRow`/`CompanyRow` deixaram de ser `<Link>` (ícone) e viraram `role="button"` + botão "Ver perfil" — seletores E2E ajustados de `link` para `button`.
-- **Bug 4 (paginação de documentos da ONG):** sem dados seedados de documento; validar manualmente (perfil ONG com 6+ docs).
-- ⚠️ **Lembrete reforçado:** o frontend é build estático servido por nginx — **toda** mudança de front exige `docker compose up -d --build frontend` para o container refletir o código (rodar testes contra container desatualizado dá falsos negativos).
+### 10.3 Atraso read-after-write no botão "Demonstrar Interesse" — **P3**
+Logo após a empresa enviar interesse e **recarregar** a página do projeto, `useExistingRelationship` (`hooks/useExistingRelationship.ts`) às vezes ainda não enxerga o vínculo recém-criado, mantendo o botão como "Demonstrar Interesse" por alguns segundos. Em sessão (sem reload) o estado é imediato via `sentInThisSession`. Mesma família de AN-16/17/19 (atualização imediata). **Fix:** invalidar/refetch da lista de relationships após `createRelationship` (ou usar React Query com invalidação), em vez de depender de novo fetch no mount.
 
 ---
 
 ### Referências
 - [`sprint4-validacao.md`](./sprint4-validacao.md) — validação detalhada de aceite do Sprint 4.
-- Backlog de QA E2E original — base `0bf4dcc`; usar §7 para atualizá-lo.
+- [`e2e-checklist.md`](./e2e-checklist.md) — roteiro de testes E2E + cobertura Playwright vs. manual (§11).
 - Suíte E2E: `frontend/e2e/` — `auth.setup.ts` (login das 6 personas via Auth0 + storageState), specs por persona + `mutating.spec.ts`. Rodar: `cd frontend && npm.cmd run test:e2e` (headless).

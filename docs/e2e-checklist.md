@@ -57,7 +57,7 @@
 - `Instituto Cidadania` denunciada por `Empresa Alianca` → **OPEN**.
 - `Instituto Cidadania` denunciada por `Empresa Multipla` → **RESOLVED**.
 
-> ✅ Corrigido: o seeder agora usa `project_type` = `TAX_INCENTIVE_LAW`/`SOCIAL_INVESTMENT_LAW` (antes usava `SOCIAL`/`ENVIRONMENTAL`/`GOVERNMENTAL`, que não eram contabilizados pelo dashboard nem pelo card "Projetos por Tipo"). Resolve QA-COMP-01.1. Vínculos **ativos** por modalidade: `Empresa Alianca`→*Educacao* (Lei de Incentivo); `Empresa Multipla`→*Renda e Autonomia* (Investimento Social Privado).
+> ℹ️ Vínculos **ativos** por modalidade (úteis para conferir contadores): `Empresa Alianca`→*Educacao* (Lei de Incentivo); `Empresa Multipla`→*Renda e Autonomia* (Investimento Social Privado).
 
 ---
 
@@ -75,7 +75,7 @@
 | E2E-AUTH-06 | Login Admin | Entrar com `admin` | Redireciona para `/admin/dashboard` | [X] |
 | E2E-AUTH-07 | Logout | Clicar "Sair" no header | Volta à landing; rotas protegidas voltam a redirecionar | [x] |
 | E2E-AUTH-08 | Header por papel | Logado como admin | **NÃO** mostra botão "Vínculos"; ONG/Empresa mostram | [x] |
-| E2E-AUTH-09 | Sessão Auth0 residual | Logar Auth0 com conta sem registro no banco | Não cadastra silenciosamente (ver decisão de produto §8.2 do backlog) | [?] |
+| E2E-AUTH-09 | Sessão Auth0 residual | Logar Auth0 com conta sem registro no banco | Não cadastra silenciosamente (ver decisão de produto §7.2 do backlog; bug relacionado #27) | [?] |
 
 ---
 
@@ -83,15 +83,15 @@
 
 | ID | Fluxo | Passos | Esperado | ✔ |
 |----|-------|--------|----------|---|
-| E2E-REG-01 | Cadastro ONG — happy path | Percorrer wizard de `/cadastro/instituicao` até concluir | Cria conta e vai ao `/ong/dashboard` | [~] | Ong retornada para o cadastro após registro
-| E2E-REG-02 | Cadastro Empresa — happy path | Percorrer `/company/register` até concluir | Cria conta e vai ao `/empresa/dashboard` | [~] | Não consegue finalizar cadastro se email já existe no auth0 e não existe no banco local. Empresa retornada para o cadastro após registro
+| E2E-REG-01 | Cadastro ONG — happy path | Percorrer wizard de `/cadastro/instituicao` até concluir | Cria conta e vai ao `/ong/dashboard` | [!] | **backlog #26** — ONG devolvida ao formulário de cadastro após registro (deveria ir ao dashboard)
+| E2E-REG-02 | Cadastro Empresa — happy path | Percorrer `/company/register` até concluir | Cria conta e vai ao `/empresa/dashboard` | [!] | **backlog #26** (empresa devolvida ao formulário) + **#27** (não finaliza se e-mail já existe no Auth0 e não no banco local)
 | E2E-REG-03 | Reinício após sucesso | Concluir um cadastro e iniciar outro | Novo cadastro começa **vazio** (sem draft antigo) | [x] |
 | E2E-REG-04 | CEP autopreenche endereço | Informar CEP válido | Cidade/UF/rua preenchidos | [x] |
-| E2E-REG-05 | Scroll entre etapas | Avançar etapas (incl. ODS) | Rolagem volta ao topo *(hoje falha — backlog #19)* | [?] | Não consegui replicar esse
-| E2E-REG-06 | Número do endereço — letras | Digitar/colar letras no "Número" | Deve rejeitar/sanitizar *(hoje aceita — backlog #12)* | [?] | Número deve aceitar letras e números.
-| E2E-REG-07 | Número do endereço — negativo | Digitar `-5` | Deve rejeitar *(hoje aceita — backlog #12)* | [-] | Irrelevante.
-| E2E-REG-08 | E-mail TLD numérico | Usar `xx@xx.23` | Deve rejeitar antes do Auth0 *(hoje aceita — backlog #6)* | [corrigir] | Está errado.
-| E2E-REG-09 | E-mail já em uso | Cadastrar e-mail existente | Bloqueia com mensagem clara | [corrigir] |
+| E2E-REG-05 | Scroll entre etapas | Avançar etapas (incl. ODS) | Rolagem volta ao topo *(backlog #19)* | [?] | Não consegui replicar — backlog #19 marcado "não reproduzido"
+| E2E-REG-06 | Número do endereço — alfanumérico | Digitar letras+números no "Número" (ex.: `123A`, `S/N`) | **Aceitar** letras e números (decisão de produto) | [x] | Comportamento correto; #12 removido do backlog
+| E2E-REG-07 | Número do endereço — negativo | Digitar `-5` | — | [-] | Irrelevante (decisão de produto)
+| E2E-REG-08 | E-mail TLD numérico | Usar `xx@xx.23` | Deve rejeitar antes do Auth0 *(hoje aceita — backlog #6)* | [!] | Confirmado — backlog #6
+| E2E-REG-09 | E-mail já em uso | Cadastrar e-mail existente | Bloqueia com mensagem clara | [!] |
 | E2E-REG-10 | CNPJ inválido | Informar CNPJ inválido | Validação impede avanço | [x] |
 | E2E-REG-11 | Validações obrigatórias | Avançar com campos vazios | Mensagens por campo, sem avançar | [x] |
 
@@ -102,9 +102,9 @@
 | ID | Fluxo | Passos | Esperado | ✔ |
 |----|-------|--------|----------|---|
 | E2E-EMP-01 | Dashboard — nome real | Logar `company.multiple` | Cabeçalho "Bem-vindo de volta, Empresa Multipla" (sem mock) | [x] |
-| E2E-EMP-02 | Card Projetos Apoiados | Ver dashboard | Total ativos + "Leis de incentivo" + "Investimento privado" com dados reais | [~] | Dados validados em `empresa.spec` EMP-02/02b (contadores reais após fix do seeder). UI: ícones de modalidade (documento e dinheirinho) estão muito pequenos. |
+| E2E-EMP-02 | Card Projetos Apoiados | Ver dashboard | Total ativos + "Leis de incentivo" + "Investimento privado" com dados reais | [~] | Dados OK em `empresa.spec` EMP-02/02b (contadores reais). UI: ícones de modalidade muito pequenos → **backlog #29** |
 | E2E-EMP-03 | "Ver todos os projetos" | Clicar no card | Vai a `/meus-vinculos?filter=active` com filtro "Ativos" | [x] |
-| E2E-EMP-04 | Impacto ESG | Ver seção ESG | Pilares carregam (loading/erro tratados); só vínculos **ativos** contam | [~?] | Ambos projetos aparecem como 100% do investimento total
+| E2E-EMP-04 | Impacto ESG | Ver seção ESG | Pilares carregam (loading/erro tratados); só vínculos **ativos** contam | [!] | **backlog #28** — pilares aparecem como 100% (soma > 100%); pilar vem das flags da ONG e duplica investimento
 | E2E-EMP-05 | Vitrine de ONGs | Seção de ONGs no dashboard | Lista ONGs; card clicável + botão "Ver perfil" abre perfil público | [x] | `empresa.spec` (card virou `button`, não mais ícone — PR #320) |
 | E2E-EMP-06 | Perfil público da ONG | Abrir ONG da vitrine | Mostra dados + **projetos** (nome, status, ODS), somente leitura | [x] | ✅ PR #320: agora **dá** para abrir o detalhe do projeto pelos cards (eram estáticos). `empresa.spec` EMP-06 |
 | E2E-EMP-06b | Denunciar ONG (perfil público) | Empresa logada abre perfil público | Botão "Denunciar ONG" visível (abre modal) | [x] | PR #320, Bug 6; `empresa.spec` EMP-06b |
@@ -156,7 +156,7 @@
 | E2E-ADM-05 | Listagem de vínculos + filtros | `/admin/vinculos` | Filtra por empresa/ONG/projeto/status; paginação | [x] | `admin.spec` ADM-05 (abertura) |
 | E2E-ADM-06 | Denúncias | Seção de denúncias | Lista (1 OPEN, 1 RESOLVED de *Instituto Cidadania*); trocar status funciona | [x] | `admin.spec` ADM-06 |
 | E2E-ADM-07 | Filtro de denúncias | Tabs OPEN/RESOLVED/DISMISSED + nome | Filtra corretamente; contador "pendentes" | [x] | `admin.spec` ADM-07 |
-| E2E-ADM-08 | Botão Mediações | Clicar "Mediações" | Abre `/admin/notificacoes` (ver divergência de design §8.3 do backlog) | [x] | `admin.spec` ADM-08 |
+| E2E-ADM-08 | Botão Mediações | Clicar "Mediações" | Abre `/admin/notificacoes` (ver divergência de design §7.3 do backlog) | [x] | `admin.spec` ADM-08 |
 | E2E-ADM-09 | Notificações/Mediações | `/admin/notificacoes` | Lista vínculos vencidos (overdue 7d) + denúncias; campos empresa/ONG/projeto/data | [ ] |
 | E2E-ADM-10 | Exportar dados | Clicar "Exportar Dados" | Baixa 3 CSVs (ONGs, Empresas, Vínculos) | [ ] |
 | E2E-ADM-11 | Cadastrar Edital | Abrir modal e publicar | Cria edital; aparece no mural | [x] | `mutating.spec` ADM-11 |
@@ -207,3 +207,35 @@
 2. Para cada `[!]` (falha) confirmado, **abra/atualize um item no backlog** [`code-review-consolidado.md`](./code-review-consolidado.md), com persona, passos, comportamento observado vs esperado e `file:line` se conhecido.
 3. Itens que já têm defeito mapeado citam o número do backlog (ex.: *backlog #1*) — basta confirmar e anexar evidência.
 4. Bloqueios de ambiente (Docker/Testcontainers/Auth0) são registrados como **bloqueio ambiental**, não como falha funcional.
+
+---
+
+## 11. Cobertura: Playwright (automatizado) vs. teste manual
+
+> Como cada item **que passou** foi verificado. `[ ]` (a testar), `[!]` (falha) e `[?]` (inconclusivo) **não** entram aqui — estão nas tabelas acima e, quando confirmados, no backlog.
+
+### 11.1 Passaram por Playwright (automatizado)
+
+Specs em `frontend/e2e/`. Login das 6 personas é feito por `auth.setup.ts` (Auth0 + `storageState`), então os logins/redirect por papel já são exercidos automaticamente.
+
+| Spec | Itens cobertos |
+|------|----------------|
+| `auth.setup.ts` | E2E-AUTH-04, -05, -06 (login + redirect por papel) |
+| `auth.spec.ts` | E2E-AUTH-10 (GuestOnlyRoute ONG/empresa/admin) |
+| `sprint3.spec.ts` | E2E-AUTH-02 (rotas protegidas), E2E-AUTH-03b (`/projeto/1` pública) |
+| `empresa.spec.ts` | E2E-EMP-05, -06, -06b, -07, -11, -12 (visibilidade), -13, -15; E2E-ONG-13 |
+| `ong.spec.ts` | E2E-ONG-01, -02, -03, -11, -17 |
+| `admin.spec.ts` | E2E-ADM-01, -02, -03, -04, -05, -06, -07, -08 |
+| `mutating.spec.ts` | E2E-EMP-08, -09, -12 (aceite real), -13 (FLOW-01); E2E-ONG-04, -09, -10; E2E-ADM-11; E2E-FLOW-01, -02 |
+
+### 11.2 Passaram por teste manual (sem cobertura automatizada)
+
+- **Auth:** E2E-AUTH-01 (landing pública), -03 (rota pública de ONG deslogado), -07 (logout), -08 (header por papel).
+- **Cadastro:** E2E-REG-03 (reinício sem draft), -04 (CEP autopreenche), -06 (número aceita alfanumérico — decisão de produto), -10 (CNPJ inválido), -11 (validações obrigatórias).
+- **Empresa:** E2E-EMP-01 (nome real no dashboard), -02 (dados do card — *parcial*, ver #29), -03 ("Ver todos" → `/meus-vinculos?filter=active`).
+
+### 11.3 Notas operacionais da suíte
+
+- **`mutating.spec.ts` altera o seed** (cria projetos/editais e ativa um vínculo `company.empty`↔*Educacao para Todos*). É resiliente a reexecução, mas para um "happy path" limpo rode com seed fresco: `docker compose down -v && docker compose up -d --build`.
+- **Frontend é build estático servido por nginx** — toda mudança de front exige `docker compose up -d --build frontend` para o container refletir o código (rodar testes contra container desatualizado dá falsos negativos).
+- **Evidência positiva (handshake):** o fluxo `pending → negotiation → active` com revelação de contato após o aceite foi validado fim-a-fim por `mutating.spec.ts` (E2E-FLOW-01/02). A efetivação é **sequencial** — cada parte confirma na sua vez; ambos os lados exibem "Efetivar Parceria" enquanto pendentes da própria confirmação.
