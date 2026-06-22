@@ -71,11 +71,11 @@ test.describe("Persona ADMIN", () => {
     });
   });
 
-  test("E2E-ADM-08 botão Mediações abre /admin/notificacoes", async ({
+  test("E2E-ADM-08 botão Notificações abre /admin/notificacoes", async ({
     page,
   }) => {
     await page.goto("/admin/dashboard");
-    await page.getByRole("button", { name: "Mediações" }).click();
+    await page.getByRole("button", { name: "Notificações" }).click();
     await expect(page).toHaveURL(/\/admin\/notificacoes/);
   });
 
