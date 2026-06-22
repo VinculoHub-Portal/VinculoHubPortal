@@ -11,6 +11,9 @@ import {
 const AUTH0_AUDIENCE =
   import.meta.env.VITE_AUTH0_AUDIENCE || "https://api.vinculohub"
 
+const PAGE_SIZE = 3
+const METRICS_SIZE = 100
+
 export type OngDashboardFilter = "all" | ProjectStatus
 
 export interface OngProjectTypeMetric {
@@ -34,9 +37,15 @@ export interface OngDashboardProject {
 interface UseOngDashboardResult {
   projects: OngDashboardProject[]
   typeMetrics: OngProjectTypeMetric[]
+  filter: OngDashboardFilter
+  setFilter: (filter: OngDashboardFilter) => void
   loading: boolean
+  loadingMore: boolean
+  hasMore: boolean
   error: string | null
+  npoId: number | null
   refetch: () => Promise<void>
+  loadMore: () => Promise<void>
 }
 
 const PROJECT_TYPE_DISPLAY: Partial<Record<
@@ -104,20 +113,35 @@ export function useOngDashboard(): UseOngDashboardResult {
   const { getAccessTokenSilently, isAuthenticated, isLoading } = useAuth0()
   const [projects, setProjects] = useState<OngDashboardProject[]>([])
   const [typeMetrics, setTypeMetrics] = useState<OngProjectTypeMetric[]>([])
+  const [filter, setFilterState] = useState<OngDashboardFilter>("all")
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [npoId, setNpoId] = useState<number | null>(null)
   const requestIdRef = useRef(0)
+  const pageRef = useRef(0)
+  const filterRef = useRef<OngDashboardFilter>("all")
 
+  const getAuth = useCallback(async () => {
+    const token = await getAccessTokenSilently({
+      authorizationParams: { audience: AUTH0_AUDIENCE },
+    })
+    const profile = await fetchAuthenticatedProfile(token)
+    if (!profile.npoId) throw new Error("ONG não encontrada para o usuário autenticado.")
+    setNpoId(profile.npoId)
+    return { token, npoId: profile.npoId as number }
+  }, [getAccessTokenSilently])
+
+  // Recarrega tudo do zero: lista (com filtro) + métricas (sem filtro)
   const refetch = useCallback(async () => {
-    if (isLoading) {
-      return
-    }
+    if (isLoading) return
 
     const requestId = ++requestIdRef.current
     const isCurrent = () => requestIdRef.current === requestId
+    pageRef.current = 0
 
     if (!isAuthenticated) {
-      if (!isCurrent()) return
       setProjects([])
       setTypeMetrics([])
       setError("Faça login para visualizar seus projetos.")
@@ -125,59 +149,127 @@ export function useOngDashboard(): UseOngDashboardResult {
       return
     }
 
+    setLoading(true)
+    setError(null)
+
     try {
-      setLoading(true)
-      setError(null)
-      const token = await getAccessTokenSilently({
-        authorizationParams: {
-          audience: AUTH0_AUDIENCE,
-        },
-      })
-      const profile = await fetchAuthenticatedProfile(token)
+      const { token, npoId } = await getAuth()
       if (!isCurrent()) return
 
-      if (!profile.npoId) {
-        throw new Error("ONG não encontrada para o usuário autenticado.")
-      }
+      const statusParam = filterRef.current !== "all" ? filterRef.current : undefined
 
-      const data = await fetchProjects({ npoId: profile.npoId, size: 50 }, token)
+      const [listData, metricsData] = await Promise.all([
+        fetchProjects({ npoId, size: PAGE_SIZE, page: 0, status: statusParam }, token),
+        fetchProjects({ npoId, size: METRICS_SIZE }, token),
+      ])
       if (!isCurrent()) return
 
-      const mappedProjects = data.content.map(mapProjectToDashboardProject)
-      setProjects(mappedProjects)
-      setTypeMetrics(buildTypeMetrics(data.content))
+      setProjects(listData.content.map(mapProjectToDashboardProject))
+      setHasMore(!listData.last)
+      setTypeMetrics(buildTypeMetrics(metricsData.content))
     } catch {
       if (!isCurrent()) return
       setProjects([])
       setTypeMetrics([])
       setError("Não foi possível carregar os dados do dashboard.")
     } finally {
-      if (isCurrent()) {
-        setLoading(false)
-      }
+      if (isCurrent()) setLoading(false)
     }
-  }, [getAccessTokenSilently, isAuthenticated, isLoading])
+  }, [isLoading, isAuthenticated, getAuth])
+
+  // Muda o filtro e recarrega apenas a lista (métricas não mudam)
+  const setFilter = useCallback(
+    (newFilter: OngDashboardFilter) => {
+      filterRef.current = newFilter
+      setFilterState(newFilter)
+      pageRef.current = 0
+
+      const requestId = ++requestIdRef.current
+      const isCurrent = () => requestIdRef.current === requestId
+
+      setLoading(true)
+      setError(null)
+
+      const run = async () => {
+        try {
+          const { token, npoId } = await getAuth()
+          if (!isCurrent()) return
+
+          const statusParam = newFilter !== "all" ? newFilter : undefined
+          const data = await fetchProjects(
+            { npoId, size: PAGE_SIZE, page: 0, status: statusParam },
+            token,
+          )
+          if (!isCurrent()) return
+
+          setProjects(data.content.map(mapProjectToDashboardProject))
+          setHasMore(!data.last)
+        } catch {
+          if (!isCurrent()) return
+          setProjects([])
+          setError("Não foi possível carregar os dados do dashboard.")
+        } finally {
+          if (isCurrent()) setLoading(false)
+        }
+      }
+
+      void run()
+    },
+    [getAuth],
+  )
+
+  const loadMore = useCallback(async () => {
+    const nextPage = pageRef.current + 1
+    pageRef.current = nextPage
+
+    const requestId = ++requestIdRef.current
+    const isCurrent = () => requestIdRef.current === requestId
+
+    setLoadingMore(true)
+
+    try {
+      const { token, npoId } = await getAuth()
+      if (!isCurrent()) return
+
+      const statusParam = filterRef.current !== "all" ? filterRef.current : undefined
+      const data = await fetchProjects(
+        { npoId, size: PAGE_SIZE, page: nextPage, status: statusParam },
+        token,
+      )
+      if (!isCurrent()) return
+
+      setProjects((prev) => [...prev, ...data.content.map(mapProjectToDashboardProject)])
+      setHasMore(!data.last)
+    } catch {
+      // não limpa projetos existentes em erro de loadMore
+    } finally {
+      if (requestIdRef.current === requestId) setLoadingMore(false)
+    }
+  }, [getAuth])
 
   useEffect(() => {
     void refetch()
   }, [refetch])
 
-  return { projects, typeMetrics, loading, error, refetch }
-}
-
-export function statusMatchesFilter(
-  status: ProjectStatus,
-  filter: OngDashboardFilter,
-) {
-  return filter === "all" || status === filter
+  return {
+    projects,
+    typeMetrics,
+    filter,
+    setFilter,
+    loading,
+    loadingMore,
+    hasMore,
+    error,
+    npoId,
+    refetch,
+    loadMore,
+  }
 }
 
 function mapProjectToDashboardProject(project: ProjectListItem): OngDashboardProject {
   const display = project.type
     ? PROJECT_TYPE_DISPLAY[project.type] ?? FALLBACK_TYPE_DISPLAY
     : FALLBACK_TYPE_DISPLAY
-  const amountNeeded = Number(project.budgetNeeded ?? 0)
-  const investedAmount = Number(project.investedAmount ?? 0)
 
   return {
     id: project.id,
@@ -185,7 +277,7 @@ function mapProjectToDashboardProject(project: ProjectListItem): OngDashboardPro
     type: display.label,
     status: project.status,
     statusLabel: projectStatusLabel(project.status),
-    progress: project.progressPercent ?? calculateProgress(investedAmount, amountNeeded),
+    progress: project.progress ?? 0,
     iconClassName: display.iconClassName,
   }
 }
@@ -226,12 +318,4 @@ function projectStatusLabel(status: ProjectStatus) {
   }
 
   return labels[status] ?? status
-}
-
-function calculateProgress(investedAmount: number, amountNeeded: number) {
-  if (!amountNeeded || amountNeeded <= 0) {
-    return 0
-  }
-
-  return Math.max(0, Math.min(100, Math.round((investedAmount / amountNeeded) * 100)))
 }

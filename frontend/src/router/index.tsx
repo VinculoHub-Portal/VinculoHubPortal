@@ -13,9 +13,19 @@ import { CompanyPrivateInvestmentPage } from "../pages/CompanyPrivateInvestmentP
 import { OngProjectsPage } from "../pages/OngProjectsPage"
 import { OngProfilePage } from "../pages/OngProfilePage"
 import { OngPublicProfilePage } from "../pages/OngPublicProfilePage"
+import { CompanyPublicProfilePage } from "../pages/CompanyPublicProfilePage"
+import { MyRelationshipsPage } from "../pages/MyRelationshipsPage"
 import { EditProjectPage } from "../pages/EditProjectPage"
 import { EditaisMuralPage } from "../pages/EditaisMuralPage"
 import { AdminDashboard } from "../pages/AdminDashboard"
+import { AdminNotificationsPage } from "../pages/AdminNotificationsPage"
+import { AdminOngsPage } from "../pages/AdminOngsPage"
+import { AdminVinculosPage } from "../pages/AdminVinculosPage"
+import { VinculosPage } from "../pages/VinculosPage"
+import { RelationshipsPage } from "../pages/RelationshipsPage"
+import { AdminOngsList } from "../pages/AdminOngsList"
+import { AdminVinculosList } from "../pages/AdminVinculosList"
+import { GuestOnlyRoute } from "../components/auth/GuestOnlyRoute"
 
 export const AppRouter = () => (
   <BrowserRouter>
@@ -23,22 +33,51 @@ export const AppRouter = () => (
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/components" element={<ComponentsPage />} />
-      <Route path="/cadastro" element={<RegisterPage />} />
-      <Route path="/cadastro/instituicao" element={<RegisterPage />} />
-      <Route path="/company/register" element={<CompanyRegistrationPage />} />
-      <Route
-        path="/projeto/:projectId"
-        element={
-          <ProtectedRoute>
-            <ProjectDetailsPage />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/cadastro" element={<GuestOnlyRoute><RegisterPage /></GuestOnlyRoute>} />
+      <Route path="/cadastro/instituicao" element={<GuestOnlyRoute><RegisterPage /></GuestOnlyRoute>} />
+      <Route path="/company/register" element={<GuestOnlyRoute><CompanyRegistrationPage /></GuestOnlyRoute>} />
+      <Route path="/projeto/:projectId" element={<ProjectDetailsPage />} />
       <Route
         path="/admin/dashboard"
         element={
           <ProtectedRoute requiredRole="ADMIN">
             <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/ongs"
+        element={
+          <ProtectedRoute requiredRole="ADMIN">
+            <AdminOngsPage>
+              <AdminOngsList />
+            </AdminOngsPage>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/vinculos"
+        element={
+          <ProtectedRoute requiredRole="ADMIN">
+            <AdminVinculosPage>
+              <AdminVinculosList />
+            </AdminVinculosPage>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/notificacoes"
+        element={
+          <ProtectedRoute requiredRole="ADMIN">
+            <AdminNotificationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/notificacoes"
+        element={
+          <ProtectedRoute requiredRole="ADMIN">
+            <AdminNotificationsPage />
           </ProtectedRoute>
         }
       />
@@ -72,6 +111,14 @@ export const AppRouter = () => (
       />
       <Route path="/ong/publico/:id" element={<OngPublicProfilePage />} />
       <Route
+        path="/empresa/publico/:companyId"
+        element={
+          <ProtectedRoute>
+            <CompanyPublicProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/ong/projetos/:projectId/editar"
         element={
           <ProtectedRoute requiredRole="NPO">
@@ -88,10 +135,26 @@ export const AppRouter = () => (
         }
       />
       <Route
+        path="/vinculos"
+        element={
+          <ProtectedRoute requiredRoles={["NPO", "COMPANY"]}>
+            <RelationshipsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/empresa/dashboard"
         element={
           <ProtectedRoute requiredRole="COMPANY">
             <CompanyDashboard />
+          </ProtectedRoute>
+          }
+        />
+      <Route
+        path="/meus-vinculos"
+        element={
+          <ProtectedRoute requiredRoles={["COMPANY", "NPO"]}>
+            <MyRelationshipsPage />
           </ProtectedRoute>
         }
       />
@@ -108,6 +171,22 @@ export const AppRouter = () => (
         element={
           <ProtectedRoute requiredRole="COMPANY">
             <CompanyPrivateInvestmentPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/empresa/vinculos"
+        element={
+          <ProtectedRoute requiredRole="COMPANY">
+            <VinculosPage role="COMPANY" dashboardPath="/empresa/dashboard" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/ong/vinculos"
+        element={
+          <ProtectedRoute requiredRole="NPO">
+            <VinculosPage role="NPO" dashboardPath="/ong/dashboard" />
           </ProtectedRoute>
         }
       />

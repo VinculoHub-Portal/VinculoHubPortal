@@ -4,7 +4,7 @@ import { Hero } from "./Hero"
 
 export function LandingPage() {
   return (
-    <div className="pb-6">
+    <div className="bg-slate-50">
       <Header />
       <Hero />
       <InfoTab />

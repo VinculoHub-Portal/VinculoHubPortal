@@ -1,0 +1,29 @@
+meta {
+  name: 02 - Mint NPO Token (CMP-01)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/dev/token?sub=dev%7Cnpo&roles=NPO
+  body: none
+}
+
+script:post-response {
+  const rawBody = res.getBody()
+  const body = typeof rawBody === "string" ? JSON.parse(rawBody) : rawBody
+
+  if (res.getStatus() !== 200) {
+    throw new Error(`Esperado 200 ao emitir token NPO, recebido ${res.getStatus()}`)
+  }
+
+  if (!body?.access_token) {
+    throw new Error("Resposta sem access_token para o token NPO")
+  }
+
+  bru.setVar("npoToken", body.access_token)
+}
+
+docs {
+  Emite um JWT local com ROLE_NPO para validar o bloqueio de acesso na rota de vitrine da empresa.
+}

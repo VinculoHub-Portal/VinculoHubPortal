@@ -1,15 +1,25 @@
 import { render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
-import { describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { OngPublicProfilePage } from "."
-import type { NpoProfileResponse } from "../../api/npo"
+import type { NpoProfileProjectPage, NpoProfileResponse } from "../../api/npo"
 
 const mocks = vi.hoisted(() => ({
+  fetchNpoProfileProjects: vi.fn(),
   useNpoProfile: vi.fn(),
+}))
+
+vi.mock("../../api/npo", () => ({
+  fetchNpoProfileProjects: mocks.fetchNpoProfileProjects,
 }))
 
 vi.mock("../../hooks/useNpoProfile", () => ({
   useNpoProfile: mocks.useNpoProfile,
+}))
+
+vi.mock("../../components/general/Header", () => ({
+  Header: () => <header data-testid="header" />,
 }))
 
 vi.mock("@auth0/auth0-react", () => ({
@@ -20,6 +30,10 @@ vi.mock("@auth0/auth0-react", () => ({
     logout: vi.fn(),
     user: { "https://vinculohub/roles": ["COMPANY"] },
   }),
+}))
+
+vi.mock("../../context/ToastContext", () => ({
+  useToast: () => ({ showToast: vi.fn() }),
 }))
 
 const externalProfile: NpoProfileResponse = {
@@ -57,7 +71,48 @@ const externalProfile: NpoProfileResponse = {
     auth0Id: "auth0|owner",
     userType: "npo",
   },
+  projects: [],
 }
+
+const projectsPage: NpoProfileProjectPage = {
+  content: [
+    {
+      id: 100,
+      title: "Projeto Alfabetizacao",
+      description: "Aulas no contraturno.",
+      status: "ACTIVE",
+      type: "SOCIAL_INVESTMENT_LAW",
+      budgetNeeded: 50000,
+      investedAmount: 10000,
+      ods: [
+        {
+          id: 4,
+          name: "ODS 4 - Educacao de Qualidade",
+          description: "Educacao inclusiva e equitativa.",
+        },
+      ],
+      startDate: "2026-01-10",
+      endDate: null,
+      focusArea: null,
+      fundraisingDeadline: null,
+      beneficiariesCount: 120,
+      location: "Sao Paulo",
+      mainObjective: "Ampliar acesso a educacao.",
+      createdAt: "2026-03-15T12:00:00",
+    },
+  ],
+    totalElements: 1,
+    totalPages: 1,
+    number: 0,
+    size: 5,
+    first: true,
+    last: true,
+}
+
+beforeEach(() => {
+  vi.clearAllMocks()
+  mocks.fetchNpoProfileProjects.mockResolvedValue(projectsPage)
+})
 
 function renderPage(id: string) {
   return render(
@@ -79,7 +134,8 @@ describe("OngPublicProfilePage", () => {
       refetch: vi.fn(),
     })
     renderPage("42")
-    expect(screen.getByText("Carregando perfil…")).toBeInTheDocument()
+    expect(screen.getByText("Carregando perfil...")).toBeInTheDocument()
+    expect(screen.getAllByLabelText("Carregando projeto")).toHaveLength(3)
   })
 
   it("exibe estado de erro quando perfil não encontrado", () => {
@@ -106,7 +162,101 @@ describe("OngPublicProfilePage", () => {
 
     expect(screen.getByText("Instituto Educação para Todos")).toBeInTheDocument()
     expect(screen.getByText("12.345.678/0001-90")).toBeInTheDocument()
-    expect(screen.getByText("Maria Silva Santos")).toBeInTheDocument()
+  })
+
+  it("renderiza os projetos da ONG com nome, status e ODS", async () => {
+    mocks.useNpoProfile.mockReturnValue({
+      profile: externalProfile,
+      loading: false,
+      error: null,
+      save: vi.fn(),
+      refetch: vi.fn(),
+    })
+    renderPage("42")
+
+    expect(await screen.findByText("Projetos Publicados (1)")).toBeInTheDocument()
+    expect(screen.getByText("Projeto Alfabetizacao")).toBeInTheDocument()
+    expect(screen.getByText("Ativo")).toBeInTheDocument()
+    expect(screen.getByText("ODS 4 - Educacao de Qualidade")).toBeInTheDocument()
+    expect(screen.getByText("Publicado em 15/03/2026")).toBeInTheDocument()
+  })
+
+  it("solicita a proxima pagina de projetos ao clicar na paginacao", async () => {
+    mocks.fetchNpoProfileProjects.mockResolvedValueOnce({
+      content: Array.from({ length: 5 }, (_, index) => ({
+        ...projectsPage.content[0],
+        id: 100 + index,
+        title: `Projeto ${index + 1}`,
+        createdAt: `2026-03-${String(index + 1).padStart(2, "0")}T12:00:00`,
+      })),
+      totalElements: 6,
+      totalPages: 2,
+      number: 0,
+      size: 5,
+      first: true,
+      last: false,
+    })
+
+    mocks.useNpoProfile.mockReturnValue({
+      profile: externalProfile,
+      loading: false,
+      error: null,
+      save: vi.fn(),
+      refetch: vi.fn(),
+    })
+    renderPage("42")
+
+    expect(await screen.findByText("Projetos Publicados (6)")).toBeInTheDocument()
+    expect(screen.getByText("Projeto 1")).toBeInTheDocument()
+    expect(screen.getByText("Projeto 5")).toBeInTheDocument()
+    expect(screen.queryByText("Projeto 6")).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole("button", { name: /próxima página/i }))
+
+    expect(mocks.fetchNpoProfileProjects).toHaveBeenLastCalledWith(42, 1, 5)
+  })
+
+  it("exibe estado vazio quando a ONG nao possui projetos", async () => {
+    mocks.fetchNpoProfileProjects.mockResolvedValueOnce({
+      content: [],
+      totalElements: 0,
+      totalPages: 0,
+      number: 0,
+      size: 5,
+      first: true,
+      last: true,
+    })
+    mocks.useNpoProfile.mockReturnValue({
+      profile: externalProfile,
+      loading: false,
+      error: null,
+      save: vi.fn(),
+      refetch: vi.fn(),
+    })
+    renderPage("42")
+
+    expect(
+      await screen.findByText("Esta ONG ainda não possui projetos cadastrados."),
+    ).toBeInTheDocument()
+  })
+
+  it("exibe erro quando nao consegue carregar os projetos", async () => {
+    mocks.fetchNpoProfileProjects.mockRejectedValueOnce(new Error("Unauthorized"))
+    mocks.useNpoProfile.mockReturnValue({
+      profile: externalProfile,
+      loading: false,
+      error: null,
+      save: vi.fn(),
+      refetch: vi.fn(),
+    })
+    renderPage("42")
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Não foi possível carregar os projetos desta ONG.",
+    )
+    expect(
+      screen.queryByText("Esta ONG ainda não possui projetos cadastrados."),
+    ).not.toBeInTheDocument()
   })
 
   it("chama useNpoProfile com o id numérico da URL", () => {
@@ -131,6 +281,8 @@ describe("OngPublicProfilePage", () => {
     })
     renderPage("42")
     expect(screen.queryByText("Editar Perfil")).not.toBeInTheDocument()
+    expect(screen.queryByText("Editar Projeto")).not.toBeInTheDocument()
+    expect(screen.queryByText("Excluir Projeto")).not.toBeInTheDocument()
   })
 
   it("não exibe card 'Perfil Público'", () => {
@@ -143,5 +295,17 @@ describe("OngPublicProfilePage", () => {
     })
     renderPage("42")
     expect(screen.queryByLabelText("Link do perfil público")).not.toBeInTheDocument()
+  })
+
+  it("exibe link 'Voltar ao Dashboard' quando autenticado", () => {
+    mocks.useNpoProfile.mockReturnValue({
+      profile: externalProfile,
+      loading: false,
+      error: null,
+      save: vi.fn(),
+      refetch: vi.fn(),
+    })
+    renderPage("42")
+    expect(screen.getByText("Voltar ao Dashboard")).toBeInTheDocument()
   })
 })

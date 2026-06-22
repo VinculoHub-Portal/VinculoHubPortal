@@ -29,6 +29,7 @@ export interface ProjectListItem {
   budgetNeeded?: number | null
   investedAmount?: number | null
   progressPercent?: number | null
+  progress?: number | null
   focusArea?: string | null
   fundraisingDeadline?: string | null
   beneficiariesCount?: number | null
@@ -104,6 +105,7 @@ export interface CreateProjectResponse {
   beneficiariesCount?: number | null
   location?: string | null
   mainObjective?: string | null
+  progress?: number | null
 }
 
 export async function createProject(
@@ -127,8 +129,10 @@ export interface UpdateProjectPayload {
   title: string
   description: string
   budgetNeeded: number | null
+  investedAmount?: number | null
   odsIds: number[]
   type: "SOCIAL_INVESTMENT_LAW" | "TAX_INCENTIVE_LAW"
+  progress?: number
 }
 
 export async function fetchProjectById(
@@ -162,6 +166,25 @@ export async function updateProject(
     return data
   } catch (error) {
     logger.error("ProjectsAPI", "Failed to update project", error)
+    throw error
+  }
+}
+
+export interface NpoProjectSummary {
+  total: number
+  taxIncentiveLaw: number
+  socialInvestmentLaw: number
+}
+
+export async function fetchNpoProjectSummary(token: string): Promise<NpoProjectSummary> {
+  logger.info("ProjectsAPI", "Fetching NPO project summary")
+  try {
+    const { data } = await api.get<NpoProjectSummary>("/api/projects/my-summary", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    return data
+  } catch (error) {
+    logger.error("ProjectsAPI", "Failed to fetch NPO project summary", error)
     throw error
   }
 }

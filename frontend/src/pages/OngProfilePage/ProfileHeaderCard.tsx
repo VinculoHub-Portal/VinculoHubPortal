@@ -7,6 +7,7 @@ import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined"
 import { BaseButton } from "../../components/general/BaseButton"
 import { TextArea } from "../../components/general/TextArea"
 import { Input } from "../../components/general/Input"
+import type { ReactNode } from "react"
 import type { NpoInstitutionalData } from "../../api/npo"
 import { buildBadges } from "./npoProfileDisplay"
 
@@ -14,6 +15,7 @@ interface ProfileHeaderCardProps {
   institutionalData: NpoInstitutionalData
   editable: boolean
   isEditing: boolean
+  actions?: ReactNode
   onEdit?: () => void
   onSave?: () => void
   onCancel?: () => void
@@ -33,6 +35,7 @@ export function ProfileHeaderCard({
   institutionalData,
   editable,
   isEditing,
+  actions,
   onEdit,
   onSave,
   onCancel,
@@ -84,26 +87,29 @@ export function ProfileHeaderCard({
           </div>
         </div>
 
-        {editable && (
+        {(editable || actions) && (
           <div className="flex shrink-0 items-center gap-2">
-            {isEditing ? (
-              <>
-                <BaseButton variant="outline" onClick={onCancel}>
-                  Cancelar
-                </BaseButton>
-                <BaseButton variant="secondary" onClick={onSave}>
-                  Salvar
-                </BaseButton>
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={onEdit}
-                className="inline-flex items-center gap-1 text-sm font-semibold text-vinculo-dark transition hover:opacity-70"
-              >
-                <EditOutlinedIcon fontSize="small" />
-                Editar Perfil
-              </button>
+            {actions}
+            {editable && (
+              isEditing ? (
+                <>
+                  <BaseButton variant="outline" onClick={onCancel}>
+                    Cancelar
+                  </BaseButton>
+                  <BaseButton variant="secondary" onClick={onSave}>
+                    Salvar
+                  </BaseButton>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onEdit}
+                  className="inline-flex items-center gap-1 text-sm font-semibold text-vinculo-dark transition hover:opacity-70"
+                >
+                  <EditOutlinedIcon fontSize="small" />
+                  Editar Perfil
+                </button>
+              )
             )}
           </div>
         )}
@@ -120,7 +126,7 @@ export function ProfileHeaderCard({
           />
         ) : (
           <p className="text-sm leading-relaxed text-slate-600">
-            {institutionalData.description}
+            {institutionalData.description || "Não informado"}
           </p>
         )}
       </div>

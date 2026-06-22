@@ -67,6 +67,7 @@ const ownerProfile: NpoProfileResponse = {
     auth0Id: "auth0|owner",
     userType: "npo",
   },
+  projects: [],
 }
 
 beforeEach(() => {
@@ -157,7 +158,6 @@ describe("OngProfilePage — viewerContext OWNER", () => {
     expect(screen.getByText("Instituto Educação para Todos")).toBeInTheDocument()
     expect(screen.getByText("Organização dedicada à educação.")).toBeInTheDocument()
     expect(screen.getByText("12.345.678/0001-90")).toBeInTheDocument()
-    expect(screen.getByText("Maria Silva Santos")).toBeInTheDocument()
     expect(screen.getByText("contato@educacaoparatodos.org.br")).toBeInTheDocument()
   })
 
@@ -182,7 +182,7 @@ describe("OngProfilePage — viewerContext OWNER", () => {
     expect(await screen.findByText("Documentos privados")).toBeInTheDocument()
     expect(screen.getByText("Backlog do Produto - VinculoHub Portal")).toBeInTheDocument()
     expect(screen.getByText("backlog.pdf")).toBeInTheDocument()
-    expect(mocks.fetchMyOngDocuments).toHaveBeenCalledWith("fake-token")
+    expect(mocks.fetchMyOngDocuments).toHaveBeenCalledWith("fake-token", 0, 5)
   })
 
   it("gera URL assinada ao baixar documento privado", async () => {

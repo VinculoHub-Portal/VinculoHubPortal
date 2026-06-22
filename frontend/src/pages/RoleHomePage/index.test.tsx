@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   fetchProjectsMock: vi.fn(),
   fetchOdsCatalogMock: vi.fn(),
   createProjectMock: vi.fn(),
+  uploadDocumentMock: vi.fn(),
   showToastMock: vi.fn(),
 }))
 
@@ -37,6 +38,23 @@ vi.mock("../../api/projects", () => ({
 
 vi.mock("../../api/me", () => ({
   fetchAuthenticatedProfile: mocks.fetchAuthenticatedProfileMock,
+}))
+
+vi.mock("../../api/document", () => ({
+  uploadDocument: mocks.uploadDocumentMock,
+}))
+
+vi.mock("../../hooks/usePaginatedCompanies", () => ({
+  usePaginatedCompanies: () => ({
+    companies: [],
+    loading: false,
+    error: null,
+    currentPage: 0,
+    totalPages: 0,
+    totalElements: 0,
+    setCurrentPage: vi.fn(),
+    refetch: vi.fn(),
+  }),
 }))
 
 const dashboardProjectsPage = {
@@ -101,6 +119,7 @@ function renderOngDashboard() {
           }
         />
         <Route path="/ong/projetos" element={<p>Meus Projetos</p>} />
+        <Route path="/meus-vinculos" element={<p>Página de Vínculos</p>} />
       </Routes>
     </MemoryRouter>,
   )
@@ -116,6 +135,7 @@ describe("RoleHomePage - dashboard da ONG", () => {
       { id: 1, name: "ODS 1", description: "Erradicação da pobreza" },
     ])
     mocks.createProjectMock.mockResolvedValue({ id: 1 })
+    mocks.uploadDocumentMock.mockResolvedValue({ id: 1 })
   })
 
   it("renderiza o dashboard da ONG com projetos reais", async () => {
@@ -131,12 +151,23 @@ describe("RoleHomePage - dashboard da ONG", () => {
     expect(screen.getByText("Novas Oportunidades de Financiamento Disponíveis")).toBeInTheDocument()
     expect(mocks.fetchAuthenticatedProfileMock).toHaveBeenCalledWith("token")
     expect(mocks.fetchProjectsMock).toHaveBeenCalledWith(
-      { npoId: 42, size: 50 },
+      { npoId: 42, size: 3, page: 0, status: undefined },
+      "token",
+    )
+    expect(mocks.fetchProjectsMock).toHaveBeenCalledWith(
+      { npoId: 42, size: 100 },
       "token",
     )
   })
 
   it("filtra projetos pelos status reais da aplicação", async () => {
+    mocks.fetchProjectsMock.mockImplementation(({ status }: { status?: string }) => {
+      const content = status
+        ? dashboardProjectsPage.content.filter((p) => p.status === status)
+        : dashboardProjectsPage.content
+      return Promise.resolve({ ...dashboardProjectsPage, content, totalElements: content.length })
+    })
+
     renderOngDashboard()
 
     expect(await screen.findByText("Projeto Ativo")).toBeInTheDocument()
@@ -144,7 +175,7 @@ describe("RoleHomePage - dashboard da ONG", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Concluídos" }))
 
-    expect(screen.getByText("Projeto Concluído")).toBeInTheDocument()
+    expect(await screen.findByText("Projeto Concluído")).toBeInTheDocument()
     expect(screen.queryByText("Projeto Ativo")).not.toBeInTheDocument()
     expect(screen.queryByText("Projeto Cancelado")).not.toBeInTheDocument()
   })
@@ -159,6 +190,14 @@ describe("RoleHomePage - dashboard da ONG", () => {
     expect(screen.getByText("Meus Projetos")).toBeInTheDocument()
   })
 
+  it("navega para a página de vínculos", async () => {
+    renderOngDashboard()
+
+    await userEvent.click(screen.getByRole("button", { name: "Ver vínculos" }))
+
+    expect(screen.getByText("Página de Vínculos")).toBeInTheDocument()
+  })
+
   it("abre o modal de novo projeto", async () => {
     renderOngDashboard()
 
@@ -167,6 +206,65 @@ describe("RoleHomePage - dashboard da ONG", () => {
     expect(
       screen.getByRole("dialog", { name: "Cadastrar Novo Projeto" }),
     ).toBeInTheDocument()
+  })
+
+  it("envia documento com o npoId real do usuário autenticado", async () => {
+    renderOngDashboard()
+    await screen.findByText("Projeto Ativo")
+
+    await userEvent.click(screen.getByRole("button", { name: /Upload de Documentos/i }))
+
+    await userEvent.type(
+      screen.getByPlaceholderText("Ex: Estatuto Social da ONG"),
+      "Estatuto",
+    )
+    await userEvent.type(
+      screen.getByPlaceholderText("Descreva os detalhes deste documento..."),
+      "Descrição do documento",
+    )
+    const fileInput = screen.getByLabelText(/Clique para fazer upload/i)
+    await userEvent.upload(
+      fileInput,
+      new File(["conteudo"], "estatuto.pdf", { type: "application/pdf" }),
+    )
+
+    await userEvent.click(screen.getByRole("button", { name: /Adicionar documento/i }))
+
+    await waitFor(() => expect(mocks.uploadDocumentMock).toHaveBeenCalled())
+    expect(mocks.uploadDocumentMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ npoId: 42 }),
+      "token",
+    )
+  })
+
+  it("não envia documento quando o usuário não tem npoId vinculado", async () => {
+    mocks.fetchAuthenticatedProfileMock.mockResolvedValue({ npoId: null })
+    renderOngDashboard()
+    await screen.findAllByText("Não foi possível carregar os dados do dashboard.")
+
+    await userEvent.click(screen.getByRole("button", { name: /Upload de Documentos/i }))
+
+    await userEvent.type(
+      screen.getByPlaceholderText("Ex: Estatuto Social da ONG"),
+      "Estatuto",
+    )
+    await userEvent.type(
+      screen.getByPlaceholderText("Descreva os detalhes deste documento..."),
+      "Descrição do documento",
+    )
+    const fileInput = screen.getByLabelText(/Clique para fazer upload/i)
+    await userEvent.upload(
+      fileInput,
+      new File(["conteudo"], "estatuto.pdf", { type: "application/pdf" }),
+    )
+
+    await userEvent.click(screen.getByRole("button", { name: /Adicionar documento/i }))
+
+    expect(mocks.uploadDocumentMock).not.toHaveBeenCalled()
+    expect(mocks.showToastMock).toHaveBeenCalledWith(
+      "ONG não encontrada para o usuário autenticado.",
+    )
   })
 })
 

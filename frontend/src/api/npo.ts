@@ -1,5 +1,7 @@
 import { api } from "../services/api"
 import { logger } from "../utils/logger"
+import type { ProjectOdsItem, ProjectStatus, ProjectType } from "./projects"
+import type { PageResponse } from "./projects"
 
 export type ViewerContext = "OWNER" | "EXTERNAL"
 export type NpoSize = "small" | "medium" | "large"
@@ -42,12 +44,58 @@ export interface NpoResponsibleData {
   userType: NpoUserType | null
 }
 
+export interface NpoProfileProject {
+  id: number
+  title: string
+  description: string | null
+  status: ProjectStatus
+  type: ProjectType | null
+  budgetNeeded: number | null
+  investedAmount: number | null
+  ods: ProjectOdsItem[]
+  startDate: string | null
+  endDate: string | null
+  focusArea: string | null
+  fundraisingDeadline: string | null
+  beneficiariesCount: number | null
+  location: string | null
+  mainObjective: string | null
+  createdAt: string | null
+}
+
+export interface NpoProfileProjectPage {
+  content: NpoProfileProject[]
+  totalElements: number
+  totalPages: number
+  number: number
+  size: number
+  first: boolean
+  last: boolean
+}
+
 export interface NpoProfileResponse {
   viewerContext: ViewerContext
   institutionalData: NpoInstitutionalData
   contact: NpoContactData
   address: NpoAddressData | null
   responsible: NpoResponsibleData | null
+  projects: NpoProfileProject[]
+}
+
+export interface NpoListItem {
+  id: number
+  name: string
+  description: string | null
+  logoUrl: string | null
+  city: string | null
+  stateCode: string | null
+}
+
+export interface NpoFilterParams {
+  page?: number
+  size?: number
+  sort?: string
+  name?: string
 }
 
 export interface NpoInstitutionalUpdate {
@@ -104,6 +152,48 @@ export async function fetchNpoProfile(
     return data
   } catch (error) {
     logger.error("NpoAPI", `Failed to fetch profile for npo ${id}`, error)
+    throw error
+  }
+}
+
+export async function fetchNposForCompany(
+  params: NpoFilterParams = {},
+  token?: string,
+): Promise<PageResponse<NpoListItem>> {
+  logger.info("NpoAPI", "Fetching NPOs for company", params)
+  try {
+    const { data } = await api.get<PageResponse<NpoListItem>>("/api/company/npos", {
+      params,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    })
+    logger.info("NpoAPI", "NPOs fetched for company", {
+      count: data.totalElements,
+      pageSize: data.size,
+    })
+    return data
+  } catch (error) {
+    logger.error("NpoAPI", "Failed to fetch NPOs for company", error)
+    throw error
+  }
+}
+
+export async function fetchNpoProfileProjects(
+  id: number,
+  page = 0,
+  size = 5,
+): Promise<NpoProfileProjectPage> {
+  logger.info("NpoAPI", `Fetching public projects for npo ${id}`, { page, size })
+  try {
+    const { data } = await api.get<NpoProfileProjectPage>(`/api/npos/${id}/projects`, {
+      params: { page, size },
+    })
+    logger.info("NpoAPI", `Public projects fetched for npo ${id}`, {
+      totalElements: data.totalElements,
+      page: data.number,
+    })
+    return data
+  } catch (error) {
+    logger.error("NpoAPI", `Failed to fetch public projects for npo ${id}`, error)
     throw error
   }
 }

@@ -8,7 +8,7 @@ import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
 import PendingActionsOutlinedIcon from "@mui/icons-material/PendingActionsOutlined";
 import { useEffect, useState } from "react";
-import { fetchAllCompanies, fetchAllNpos } from "../../api/admin";
+import { fetchAllCompanies, fetchAllNpos, fetchAllVinculos, fetchAdminMetrics, type AdminMetrics } from "../../api/admin";
 import {
   fetchAdminNpoReports,
   updateAdminNpoReportStatus,
@@ -18,52 +18,18 @@ import {
 import { CreateNoticeModal } from "../../announcement/CreateAnnouncementModal";
 import { FlexibleButton } from "../../components/general/FlexibleButton";
 import { Header } from "../../components/general/Header";
+import { Pagination } from "../../components/general/Pagination";
 import { MetricCard } from "../../components/general/MetricCard";
 import { useToast } from "../../context/ToastContext";
+import{ mapNposForCsvExport, mapVinculosForCsvExport } from "../../utils/adminExportDisplay";
 import { downloadCsv } from "../../utils/exportCsv";
 
 const PAGE_SIZE = 5;
-
-const dashboardMetrics = [
-  {
-    label: "Total de ONGs",
-    value: 87,
-    description: "Cadastradas no sistema",
-    icon: <CorporateFareOutlinedIcon fontSize="small" />,
-    variant: "brand" as const,
-    href: "/admin/ongs",
-  },
-  {
-    label: "Editais Publicados",
-    value: 24,
-    description: "Ativos no mural",
-    icon: <DescriptionOutlinedIcon fontSize="small" />,
-    variant: "success" as const,
-    href: "/editais",
-  },
-  {
-    label: "Vínculos Ativos",
-    value: 156,
-    description: "Empresas e ONGs conectadas",
-    icon: <HubOutlinedIcon fontSize="small" />,
-    variant: "accent" as const,
-    href: "/admin/vinculos",
-  },
-  {
-    label: "Notificações Pendentes",
-    value: 5,
-    description: "Mediações necessárias",
-    icon: <PendingActionsOutlinedIcon fontSize="small" />,
-    variant: "warning" as const,
-    href: "/admin/notificacoes",
-  },
-];
 
 const NPO_HEADERS = {
   id: "ID",
   name: "Nome",
   cnpj: "CNPJ",
-  cpf: "CPF",
   phone: "Telefone",
   npoSize: "Porte",
   environmental: "Ambiental",
@@ -88,6 +54,13 @@ const COMPANY_HEADERS = {
   createdAt: "Data de Cadastro",
 }
 
+const VINCULOS_HEADERS = {
+  companyName: "Empresa",
+  npoName: "ONG",
+  projectTitle: "Projeto",
+  status: "Status",
+}
+
 const REPORT_STATUS_LABELS: Record<NpoReportResponse["status"], string> = {
   OPEN: "Aberta",
   RESOLVED: "Resolvida",
@@ -110,6 +83,9 @@ export function AdminDashboard() {
   const { getAccessTokenSilently } = useAuth0();
   const { showToast } = useToast();
   const [exporting, setExporting] = useState(false);
+  const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
+  const [metricsLoading, setMetricsLoading] = useState(true);
+  const [metricsError, setMetricsError] = useState("");
   const [reports, setReports] = useState<NpoReportResponse[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -125,6 +101,29 @@ export function AdminDashboard() {
   const [debouncedNpoName, setDebouncedNpoName] = useState("");
   const [debouncedCompanyName, setDebouncedCompanyName] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadMetrics() {
+      setMetricsLoading(true);
+      setMetricsError("");
+      try {
+        const token = await getAccessTokenSilently();
+        const data = await fetchAdminMetrics(token);
+        if (isMounted) setMetrics(data);
+      } catch {
+        if (isMounted) setMetricsError("Não foi possível carregar as métricas.");
+      } finally {
+        if (isMounted) setMetricsLoading(false);
+      }
+    }
+
+    void loadMetrics();
+    return () => {
+      isMounted = false;
+    };
+  }, [getAccessTokenSilently]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -184,10 +183,15 @@ export function AdminDashboard() {
     setExporting(true);
     try {
       const token = await getAccessTokenSilently();
-      const [npos, companies] = await Promise.all([fetchAllNpos(token), fetchAllCompanies(token)]);
+      const [npos, companies, vinculos] = await Promise.all([
+        fetchAllNpos(token),
+        fetchAllCompanies(token),
+        fetchAllVinculos(token),
+      ]);
       const date = new Date().toISOString().slice(0, 10);
-      downloadCsv(`ongs_${date}.csv`, npos, NPO_HEADERS);
+      downloadCsv(`ongs_${date}.csv`, mapNposForCsvExport(npos), NPO_HEADERS);
       downloadCsv(`empresas_${date}.csv`, companies, COMPANY_HEADERS);
+      downloadCsv(`vinculos_${date}.csv`, mapVinculosForCsvExport(vinculos), VINCULOS_HEADERS);
     } finally {
       setExporting(false);
     }
@@ -268,13 +272,10 @@ export function AdminDashboard() {
               icon={<ReportProblemOutlinedIcon fontSize="small" />}
               variant="warning"
               onClick={() => {
-                document.getElementById("mediacoes")?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "start",
-                });
+                window.location.href = "/admin/notificacoes";
               }}
             >
-              Mediações
+              Notificações
             </FlexibleButton>
           </div>
         </header>
@@ -283,17 +284,64 @@ export function AdminDashboard() {
           className="grid grid-cols-1 gap-4 sm:grid-cols-2"
           aria-label="Métricas do dashboard"
         >
-          {dashboardMetrics.map((metric) => (
-            <MetricCard
-              key={metric.label}
-              label={metric.label}
-              value={metric.value}
-              description={metric.description}
-              icon={metric.icon}
-              variant={metric.variant}
-              href={metric.href}
-            />
-          ))}
+          {metricsError && (
+            <p className="col-span-full text-sm font-medium text-vinculo-red" role="alert">
+              {metricsError}
+            </p>
+          )}
+          {metricsLoading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-36 animate-pulse rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                  aria-hidden="true"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-3">
+                      <div className="h-3 w-28 rounded bg-slate-200" />
+                      <div className="h-7 w-16 rounded bg-slate-200" />
+                    </div>
+                    <div className="h-12 w-12 rounded-2xl bg-slate-200" />
+                  </div>
+                  <div className="mt-5 h-3 w-40 rounded bg-slate-200" />
+                </div>
+              ))
+            : !metricsError && metrics && (
+                <>
+                  <MetricCard
+                    label="Total de ONGs"
+                    value={metrics.totalNpos}
+                    description="Cadastradas no sistema"
+                    icon={<CorporateFareOutlinedIcon fontSize="small" />}
+                    variant="brand"
+                    href="/admin/ongs"
+                  />
+                  <MetricCard
+                    label="Editais Publicados"
+                    value={metrics.publishedEditais}
+                    description="Ativos no mural"
+                    icon={<DescriptionOutlinedIcon fontSize="small" />}
+                    variant="success"
+                    href="/editais"
+                  />
+                  <MetricCard
+                    label="Vínculos Ativos"
+                    value={metrics.activeVinculos}
+                    description="Empresas e ONGs conectadas"
+                    icon={<HubOutlinedIcon fontSize="small" />}
+                    variant="accent"
+                    href="/admin/vinculos"
+                  />
+                  <MetricCard
+                    label="Notificações Pendentes"
+                    value={metrics.pendingNotifications}
+                    description="Mediações necessárias"
+                    icon={<PendingActionsOutlinedIcon fontSize="small" />}
+                    variant="warning"
+                    href="/admin/notificacoes"
+                  />
+                </>
+              )}
         </section>
 
         <section
@@ -311,7 +359,7 @@ export function AdminDashboard() {
               </p>
             </div>
             <span className="inline-flex w-fit items-center rounded-full bg-vinculo-red/10 px-3 py-1 text-sm font-semibold text-vinculo-red">
-              {openReportsCount} pendentes
+              {openReportsCount} abertas
             </span>
           </div>
 
@@ -376,21 +424,11 @@ export function AdminDashboard() {
                   <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
                     <thead>
                       <tr className="text-slate-500">
-                        <th scope="col" className="py-3 pr-4 font-semibold">
-                          ONG
-                        </th>
-                        <th scope="col" className="px-4 py-3 font-semibold">
-                          Empresa
-                        </th>
-                        <th scope="col" className="px-4 py-3 font-semibold">
-                          Motivo
-                        </th>
-                        <th scope="col" className="px-4 py-3 font-semibold">
-                          Status
-                        </th>
-                        <th scope="col" className="py-3 pl-4 font-semibold">
-                          Recebida em
-                        </th>
+                        <th scope="col" className="py-3 pr-4 font-semibold">ONG</th>
+                        <th scope="col" className="px-4 py-3 font-semibold">Empresa</th>
+                        <th scope="col" className="px-4 py-3 font-semibold">Motivo</th>
+                        <th scope="col" className="px-4 py-3 font-semibold">Status</th>
+                        <th scope="col" className="py-3 pl-4 font-semibold">Recebida em</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -403,12 +441,8 @@ export function AdminDashboard() {
                             )}
                           </td>
                           <td className="px-4 py-4">
-                            <p className="font-medium text-slate-800">
-                              {report.reporterCompany.name}
-                            </p>
-                            <p className="mt-1 text-xs text-slate-500">
-                              {report.reporterUser.email}
-                            </p>
+                            <p className="font-medium text-slate-800">{report.reporterCompany.name}</p>
+                            <p className="mt-1 text-xs text-slate-500">{report.reporterUser.email}</p>
                           </td>
                           <td className="max-w-md px-4 py-4 leading-6">{report.reason}</td>
                           <td className="px-4 py-4">
@@ -417,50 +451,31 @@ export function AdminDashboard() {
                               value={report.status}
                               disabled={updatingReportId === report.id}
                               onChange={(event) =>
-                                void handleStatusChange(
-                                  report.id,
-                                  event.target.value as NpoReportStatus,
-                                )
+                                void handleStatusChange(report.id, event.target.value as NpoReportStatus)
                               }
                               className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-none focus:border-vinculo-dark focus:ring-2 focus:ring-vinculo-dark/20 disabled:opacity-60"
                             >
                               {REPORT_STATUS_OPTIONS.map((s) => (
-                                <option key={s} value={s}>
-                                  {REPORT_STATUS_LABELS[s]}
-                                </option>
+                                <option key={s} value={s}>{REPORT_STATUS_LABELS[s]}</option>
                               ))}
                             </select>
                           </td>
-                          <td className="py-4 pl-4 text-slate-500">
-                            {formatReportDate(report.createdAt)}
-                          </td>
+                          <td className="py-4 pl-4 text-slate-500">{formatReportDate(report.createdAt)}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
-                  <span>{totalElements} resultado{totalElements !== 1 ? "s" : ""}</span>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setPage((p) => p - 1)}
-                      disabled={page === 0}
-                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      ← Anterior
-                    </button>
-                    <span>
-                      Página {page + 1} de {totalPages}
-                    </span>
-                    <button
-                      onClick={() => setPage((p) => p + 1)}
-                      disabled={page >= totalPages - 1}
-                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      Próxima →
-                    </button>
+                <div className="mt-2 border-t border-slate-100">
+                  <div className="px-1 pt-3 text-sm text-slate-500">
+                    {totalElements} resultado{totalElements !== 1 ? "s" : ""}
                   </div>
+                  <Pagination
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onChange={setPage}
+                  />
                 </div>
               </>
             )}

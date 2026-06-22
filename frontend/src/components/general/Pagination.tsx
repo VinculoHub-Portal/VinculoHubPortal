@@ -8,7 +8,7 @@ export function Pagination({ currentPage, totalPages, onChange }: PaginationProp
   if (totalPages <= 1) return null
 
   const isFirst = currentPage === 0
-  const isLast = currentPage === totalPages - 1
+  const isLast = currentPage >= totalPages - 1
 
   return (
     <nav

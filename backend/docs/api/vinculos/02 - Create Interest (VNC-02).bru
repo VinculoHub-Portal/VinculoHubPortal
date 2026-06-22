@@ -1,0 +1,28 @@
+meta {
+  name: 02 - Create Interest (VNC-02)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/relationships
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{bearerToken}}
+}
+
+body:json {
+  {
+    "projectId": 1,
+    "companyId": null
+  }
+}
+
+docs {
+  1º aperto de mão (envio). Empresa: envie apenas `projectId` (companyId é ignorado).
+  ONG: `projectId` deve ser um projeto da própria ONG e `companyId` é a empresa alvo (obrigatório).
+  Resposta: 201 Created. Status do vínculo passa a 'pending'.
+}

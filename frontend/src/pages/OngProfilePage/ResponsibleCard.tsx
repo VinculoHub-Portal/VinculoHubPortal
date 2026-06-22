@@ -50,16 +50,14 @@ export function ResponsibleCard({
           ) : (
             <>
               <div className="flex-1">
-                <p className="font-semibold text-slate-800">{responsible.name}</p>
+                <p className="font-semibold text-slate-800">{responsible.name || "Não informado"}</p>
               </div>
-              {responsible.email && (
-                <div className="flex flex-col gap-1 text-sm sm:items-end">
-                  <span className="inline-flex items-center gap-1 text-slate-600">
-                    <MailOutlinedIcon fontSize="inherit" />
-                    {responsible.email}
-                  </span>
-                </div>
-              )}
+              <div className="flex flex-col gap-1 text-sm sm:items-end">
+                <span className="inline-flex items-center gap-1 text-slate-600">
+                  <MailOutlinedIcon fontSize="inherit" />
+                  {responsible.email ?? "Não informado"}
+                </span>
+              </div>
             </>
           )}
         </div>

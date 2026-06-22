@@ -1,0 +1,25 @@
+meta {
+  name: 06 - Admin Forbidden on Company Showcase (CMP-05)
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/company/npos
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminToken}}
+}
+
+script:post-response {
+  if (res.getStatus() !== 403) {
+    throw new Error(`Esperado 403 para ADMIN na vitrine da empresa, recebido ${res.getStatus()}`)
+  }
+}
+
+docs {
+  Confirma que um admin autenticado também não acessa a rota exclusiva da empresa.
+}
