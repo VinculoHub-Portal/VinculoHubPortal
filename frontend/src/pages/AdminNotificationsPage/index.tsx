@@ -12,6 +12,7 @@ import {
   fetchAdminNpoReports,
   type NpoReportResponse,
 } from "../../api/npoReports"
+import { AdminReportDetailModal } from "../../components/admin/AdminReportDetailModal"
 import { Header } from "../../components/general/Header"
 import { Pagination } from "../../components/general/Pagination"
 
@@ -39,6 +40,7 @@ export function AdminNotificationsPage() {
   const [reportsPage, setReportsPage] = useState(0)
   const [reportsLoading, setReportsLoading] = useState(true)
   const [reportsError, setReportsError] = useState("")
+  const [selectedReport, setSelectedReport] = useState<NpoReportResponse | null>(null)
 
   const [relationships, setRelationships] = useState<OverdueRelationshipAlert[]>([])
   const [relationshipsTotalPages, setRelationshipsTotalPages] = useState(0)
@@ -104,6 +106,10 @@ export function AdminNotificationsPage() {
   const totalNotifications = reportsTotalElements + relationshipsTotalElements
   const totalLoading = reportsLoading && relationshipsLoading
 
+  function handleReportStatusChanged(updated: NpoReportResponse) {
+    setReports((prev) => prev.map((r) => (r.id === updated.id ? updated : r)))
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 pb-8">
       <Header />
@@ -168,24 +174,31 @@ export function AdminNotificationsPage() {
             {reports.map((report) => (
               <tr key={report.id} className="text-slate-700 hover:bg-slate-50">
                 <td className="px-6 py-4">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700">
+                  <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                    report.status === "OPEN"
+                      ? "bg-red-100 text-red-700"
+                      : report.status === "RESOLVED"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-slate-100 text-slate-600"
+                  }`}>
                     <ReportProblemOutlinedIcon sx={{ fontSize: 14 }} aria-hidden />
-                    Denúncia de ONG aberta
+                    {report.status === "OPEN" ? "Aberta" : report.status === "RESOLVED" ? "Resolvida" : "Descartada"}
                   </span>
                 </td>
                 <td className="px-4 py-4">
                   <p className="font-medium text-vinculo-dark">{report.npo.name}</p>
                   <p className="mt-1 text-xs text-slate-500">{report.reporterCompany.name}</p>
                 </td>
-                <td className="max-w-md px-4 py-4 leading-6">{report.reason}</td>
+                <td className="max-w-md px-4 py-4 leading-6 text-slate-600 line-clamp-2">{report.reason}</td>
                 <td className="px-4 py-4 text-slate-500">{formatDate(report.createdAt)}</td>
                 <td className="px-4 py-4">
-                  <a
-                    href="/admin/dashboard#denuncias"
+                  <button
+                    type="button"
+                    onClick={() => setSelectedReport(report)}
                     className="text-sm font-semibold text-vinculo-dark hover:underline"
                   >
                     Ver detalhes
-                  </a>
+                  </button>
                 </td>
               </tr>
             ))}
@@ -236,6 +249,15 @@ export function AdminNotificationsPage() {
           </NotificationTable>
         )}
       </main>
+
+      {selectedReport && (
+        <AdminReportDetailModal
+          report={selectedReport}
+          open={selectedReport !== null}
+          onClose={() => setSelectedReport(null)}
+          onStatusChanged={handleReportStatusChanged}
+        />
+      )}
     </div>
   )
 }
