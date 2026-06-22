@@ -246,26 +246,63 @@ No dashboard da empresa (E2E-EMP-02), os ícones de modalidade ("documento" para
 
 ## 7. Decisões de produto pendentes
 
-1. **Posicionamento do acesso a vínculos** (QA-NAV-01.2): só no header, só nos dashboards, ou ambos — antes de remover botões.
-2. **Sessão Auth0 residual** (QA-AUTH-01.3, AN-14): forçar login, selecionar conta ou exigir logout quando há sessão sem usuário no banco. ⚠️ Já causa bug funcional confirmado — ver #27 (cadastro trava com e-mail Auth0 órfão).
-3. **Admin — mediações/notificações** (QA-ADM-01.2/01.3/01.6/01.7): o time implementou uma **página** `/admin/notificacoes`, enquanto o QA pedia uma **seção** no dashboard e a **remoção** dessa rota — caminhos opostos. Além disso, o card "Notificações Pendentes" hoje soma denúncias + vínculos vencidos (`AdminMetricsService.java:37`); o QA pedia renomear para "Denúncias Pendentes". Alinhar.
-4. **Destino da própria ONG no detalhe do seu projeto** (QA-ONG-02.5, AN-24): perfil privado, dashboard ou ambos.
-5. **Destaque visual do mural de editais** (QA-ONG-01.7, AN-20): intencional? quando some?
-6. **Exclusão de projeto com vínculos** (#22): definir a política — bloquear exclusão, soft-delete/arquivamento preservando o vínculo, ou permitir com aviso e encerramento explícito do vínculo. Decide o comportamento esperado e o fix de §4.9.
+Pontos em que falta uma **definição de produto** antes de implementar. Não devem ser decididos no código por conta própria.
 
-Nenhuma decisão acima deve ser assumida silenciosamente na implementação.
+### 7.1 Onde fica o acesso a "Vínculos"?
+Hoje há botões para a tela de vínculos no header **e** nos dashboards. Decidir o lugar canônico (só header, só dashboards, ou ambos) **antes** de remover qualquer botão — isso destrava a limpeza das páginas duplicadas (#4).
+
+### 7.2 O que fazer quando há sessão no Auth0 mas o usuário não existe no banco?
+Cenário: a pessoa tem login válido no Auth0, porém não há registro correspondente no banco local. Opções: forçar novo login, deixar escolher a conta, ou exigir logout.
+⚠️ **Já causa bug funcional confirmado** — ver #27 (o cadastro trava nesse caso). Decidir aqui destrava o fix.
+
+### 7.3 Mediações do admin: página separada ou seção no dashboard?
+O time implementou uma **página** dedicada (`/admin/notificacoes`); a especificação original pedia uma **seção dentro do dashboard** e a remoção dessa rota — direções opostas. Decidir qual caminho seguir.
+- Ponto extra: o card "Notificações Pendentes" hoje soma **denúncias + vínculos vencidos** (`AdminMetricsService.java:37`). A especificação pedia que ele contasse só denúncias (e fosse renomeado para "Denúncias Pendentes"). Alinhar o que o card representa.
+
+### 7.4 Para onde a ONG vai ao abrir o detalhe do próprio projeto?
+Quando a ONG clica no seu próprio projeto, o destino deveria ser o perfil privado, o dashboard, ou ambos? Definir.
+
+### 7.5 O destaque visual do mural de editais é intencional?
+O mural de editais aparece com um destaque visual diferente. Confirmar se é proposital e, se for, em que condição ele some.
+
+### 7.6 O que acontece ao excluir um projeto que tem vínculos? (#22)
+Definir a política de exclusão:
+- **Bloquear** a exclusão enquanto houver vínculos (principalmente em negociação/ativos);
+- **Arquivar** (soft-delete) o projeto, preservando o vínculo e mostrando "projeto arquivado/removido";
+- **Permitir**, mas com aviso explícito e encerrando os vínculos de forma registrada.
+
+A escolha define o comportamento esperado e o fix descrito em §4.9.
 
 ---
 
 ## 8. Itens que exigem validação em runtime
 
-Não verificáveis por inspeção estática — exigem E2E/observabilidade:
+Suspeitas que **não dá para confirmar só lendo o código** — precisam da aplicação rodando (passo a passo manual, E2E ou medição). Cada item traz como reproduzir e o que considerar "OK".
 
-- **AN-01/02** (QA-DOC-01.6): contaminação de estado após erro (upload → consulta CNPJ).
-- **AN-14** (QA-AUTH-01.3/01.4): sessão Auth0 residual sem usuário no banco.
-- **AN-31** (QA-ADM-01.4): lentidão do dashboard admin (medir por request; hoje são 3 fetches independentes).
-- **AN-23** (QA-ONG-02.3/02.4): lentidão do perfil público (evitar carregamento duplicado).
-- **AN-16/17/19** (QA-ONG-01.*): transições bruscas, cache de projetos e atualização imediata após criação — mitigáveis pela padronização React Query (#7).
+### 8.1 Estado contaminado depois de um erro de upload
+- **Sintoma suspeito:** após uma falha no upload de documento, a tela seguinte (ex.: consulta de CNPJ) se comporta como se ainda estivesse no estado anterior.
+- **Como reproduzir:** force um erro no upload e, sem recarregar, navegue para outra ação que reaproveite o mesmo estado/contexto.
+- **OK quando:** o erro é exibido e o estado é limpo — a próxima ação parte do zero, sem resíduo do fluxo que falhou.
+
+### 8.2 Sessão do Auth0 sobra sem usuário no banco
+- **Sintoma suspeito:** existe sessão válida no Auth0, mas nenhum usuário correspondente no banco local — e a aplicação não trata esse caso.
+- **Como reproduzir:** logar no Auth0 com uma conta que não tem registro local (mesma situação do bug de cadastro #27).
+- **OK quando:** o sistema reage de forma previsível (forçar login/seleção de conta ou mensagem clara), sem loop nem cadastro silencioso. Depende da decisão de produto §7.2.
+
+### 8.3 Lentidão do dashboard do admin
+- **Sintoma suspeito:** o dashboard demora a carregar. Hoje ele dispara **3 requisições independentes** (métricas, listagens, denúncias).
+- **Como medir:** abrir o painel de rede do navegador e observar quantidade/tempo das requisições ao abrir `/admin/dashboard`.
+- **OK quando:** carrega em tempo aceitável; se não, consolidar chamadas no backend ou paralelizar/cachear no front.
+
+### 8.4 Lentidão do perfil público da ONG
+- **Sintoma suspeito:** o perfil público (`/ong/publico/:id`) carrega devagar, possivelmente buscando os mesmos dados duas vezes.
+- **Como medir:** painel de rede ao abrir o perfil — procurar requisições duplicadas para o mesmo recurso.
+- **OK quando:** cada dado é buscado uma vez e a página carrega sem atraso perceptível.
+
+### 8.5 UX da ONG: transições bruscas e dados desatualizados
+- **Sintoma suspeito:** ao filtrar/criar projetos no dashboard da ONG a tela "pisca" (some e volta) e o que foi criado só aparece após recarregar a página.
+- **Como reproduzir:** trocar o filtro de status; criar um projeto e observar se ele aparece sem reload.
+- **OK quando:** as transições são suaves e o novo projeto aparece imediatamente. Provável solução: padronizar o data-fetching em React Query (#7), que resolve cache e atualização imediata.
 
 ---
 
