@@ -123,19 +123,19 @@ JOIN FETCH cp.project p
 JOIN FETCH p.npo n
 LEFT JOIN FETCH n.npoUser
 WHERE (
-        :status IS NULL
+        cast(:status as string) IS NULL
         OR cp.status = :status
 )
   AND (
-        :companyName IS NULL
+        cast(:companyName as string) IS NULL
         OR LOWER(COALESCE(c.socialName, c.legalName)) LIKE CONCAT('%', cast(:companyName as string), '%')
 )
   AND (
-        :npoName IS NULL
+        cast(:npoName as string) IS NULL
         OR LOWER(n.name) LIKE CONCAT('%', cast(:npoName as string), '%')
 )
   AND (
-        :projectTitle IS NULL
+        cast(:projectTitle as string) IS NULL
         OR LOWER(p.title) LIKE CONCAT('%', cast(:projectTitle as string), '%')
 )
 ORDER BY cp.updatedAt DESC, cp.createdAt DESC
@@ -148,19 +148,19 @@ JOIN cp.company c
 JOIN cp.project p
 JOIN p.npo n
 WHERE (
-        :status IS NULL
+        cast(:status as string) IS NULL
         OR cp.status = :status
 )
   AND (
-        :companyName IS NULL
+        cast(:companyName as string) IS NULL
         OR LOWER(COALESCE(c.socialName, c.legalName)) LIKE CONCAT('%', cast(:companyName as string), '%')
 )
   AND (
-        :npoName IS NULL
+        cast(:npoName as string) IS NULL
         OR LOWER(n.name) LIKE CONCAT('%', cast(:npoName as string), '%')
 )
   AND (
-        :projectTitle IS NULL
+        cast(:projectTitle as string) IS NULL
         OR LOWER(p.title) LIKE CONCAT('%', cast(:projectTitle as string), '%')
 )
 """)
