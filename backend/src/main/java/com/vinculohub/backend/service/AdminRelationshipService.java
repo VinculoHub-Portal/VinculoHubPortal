@@ -77,6 +77,4 @@ public class AdminRelationshipService {
         }
         return company.getLegalName();
     }
-
-
 }
