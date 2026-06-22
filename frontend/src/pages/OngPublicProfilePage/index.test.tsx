@@ -32,6 +32,10 @@ vi.mock("@auth0/auth0-react", () => ({
   }),
 }))
 
+vi.mock("../../context/ToastContext", () => ({
+  useToast: () => ({ showToast: vi.fn() }),
+}))
+
 const externalProfile: NpoProfileResponse = {
   viewerContext: "EXTERNAL",
   institutionalData: {

@@ -182,7 +182,7 @@ describe("OngProfilePage — viewerContext OWNER", () => {
     expect(await screen.findByText("Documentos privados")).toBeInTheDocument()
     expect(screen.getByText("Backlog do Produto - VinculoHub Portal")).toBeInTheDocument()
     expect(screen.getByText("backlog.pdf")).toBeInTheDocument()
-    expect(mocks.fetchMyOngDocuments).toHaveBeenCalledWith("fake-token")
+    expect(mocks.fetchMyOngDocuments).toHaveBeenCalledWith("fake-token", 0, 5)
   })
 
   it("gera URL assinada ao baixar documento privado", async () => {

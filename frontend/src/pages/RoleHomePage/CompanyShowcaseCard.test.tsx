@@ -89,10 +89,14 @@ describe("CompanyShowcaseCard", () => {
       expect(screen.getByText("—")).toBeInTheDocument()
     })
 
-    it("exibe 3 botões de ação com aria-label contendo 'Ver perfil'", () => {
+    it("exibe botões de ação com aria-label contendo 'Ver perfil' para cada empresa", () => {
       renderCard()
-      const buttons = screen.getAllByRole("button", { name: /ver perfil/i })
-      expect(buttons).toHaveLength(3)
+      // CompanyRow renderiza div[role=button] + button interno, ambos com mesmo aria-label
+      for (const company of mockCompanies) {
+        expect(
+          screen.getAllByRole("button", { name: `Ver perfil de ${company.legalName}` }).length,
+        ).toBeGreaterThan(0)
+      }
     })
   })
 
