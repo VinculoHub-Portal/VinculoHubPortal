@@ -68,6 +68,8 @@ A base é sólida. Os itens abaixo são incrementais, exceto o P0 de segurança.
 | 27 | Cadastro trava se o e-mail já existe no Auth0 mas não no banco local | Bug | P1 | médio | fluxo de signup (front + `AuthRoleRedirect`); ver decisão §7.2 |
 | 28 | Impacto ESG: pilares/projetos aparecem como 100% do total (soma > 100%) | Bug/Cálculo | P2 | médio | `ProjectService.java:296-320`, `ProjectRepository.java:46-96` |
 | 29 | Ícones de modalidade do card "Projetos Apoiados" muito pequenos | UX | P3 | trivial | `CompanyDashboard` (card Projetos Apoiados) |
+| 30 | Renomear botão "Mediações" → "Notificações" no dashboard admin (decisão §7.3) | UX | P3 | trivial | `AdminDashboard/index.tsx:271-279` |
+| 31 | Detalhe do próprio projeto da ONG deve ir ao perfil privado, não ao público (decisão §7.4) | Bug/UX | P2 | baixo | navegação do card de projeto da ONG |
 
 ---
 
@@ -101,7 +103,7 @@ A base é sólida. Os itens abaixo são incrementais, exceto o P0 de segurança.
 
 - 2 clientes HTTP: `api/relationships.ts` (canônico, completo) e `api/vinculos.ts` (parcial, importado só por `VinculosPage`).
 - As páginas órfãs já **divergem** da canônica → risco alto de manutenção.
-- **Fix:** eleger `MyRelationshipsPage`, remover `RelationshipsPage`, `VinculosPage` e `api/vinculos.ts`, redirecionar rotas legadas → `/meus-vinculos`. ⚠️ Confirmar com produto antes de apagar (pode haver intenção de variação por papel).
+- **Fix:** eleger `MyRelationshipsPage`, remover `RelationshipsPage`, `VinculosPage` e `api/vinculos.ts`, redirecionar rotas legadas → `/meus-vinculos`. Produto já decidiu o acesso só pelo header (§7.1), então também remover os botões dos dashboards.
 
 ### 4.4 [#5] Prazo de edital no passado é aceito (AN-34)
 - **Frontend:** input `type="date"` **sem `min`** (`CreateAnnouncementModal.tsx:348-350`).
@@ -130,12 +132,9 @@ Ao **excluir um projeto** que está vinculado a um relacionamento (empresa↔ONG
 - **Impacto:** perda de visibilidade/histórico do vínculo — pior se o vínculo já estava `active` (parceria efetivada). Pode confundir tanto a empresa quanto a ONG, que veem o vínculo "evaporar".
 - **A confirmar em código:** se a exclusão é física (DELETE com `ON DELETE CASCADE` / órfão removido) ou apenas a query de listagem filtra projetos inativos/excluídos (vínculo persiste no banco, mas não aparece). Isso muda a gravidade e o fix.
 
-**Decisões a tomar (produto + técnico):**
-1. **Bloquear** a exclusão de projeto que tenha vínculos (especialmente `negotiation`/`active`), exigindo desfazer/encerrar o vínculo antes; ou
-2. **Soft-delete** do projeto (arquivar) preservando o vínculo e exibindo "projeto arquivado/removido" no card do vínculo; ou
-3. **Permitir** a exclusão, mas com **aviso explícito** ("este projeto possui N vínculos; eles serão encerrados/ocultados") e registro do encerramento.
+**Decisão de produto (§7.6): bloquear a exclusão** de projetos que tenham vínculos.
 
-**Fix mínimo enquanto não há decisão:** confirmação clara antes de excluir + não ocultar o vínculo silenciosamente (manter o card com o projeto marcado como removido). Ver também a decisão de produto em §7.6.
+**Fix:** impedir a exclusão quando o projeto tiver qualquer vínculo (no mínimo em `pending`/`negotiation`/`active`), retornando erro claro que oriente a encerrar/desfazer o vínculo antes. Validar tanto no backend (serviço de exclusão de projeto) quanto na UI (desabilitar/explicar o botão de excluir). Cobrir com teste.
 
 ### 4.10 [#26] Pós-cadastro devolve o usuário ao formulário em vez do dashboard
 Confirmado em teste manual (E2E-REG-01 ONG e E2E-REG-02 Empresa): ao concluir o cadastro, em vez de cair no dashboard do papel, o usuário é **devolvido ao formulário de cadastro**.
@@ -145,8 +144,8 @@ Confirmado em teste manual (E2E-REG-01 ONG e E2E-REG-02 Empresa): ao concluir o 
 - **Fix:** garantir que, após o callback do Auth0 com draft de signup válido, o backend conclua o cadastro e o roteamento leve ao dashboard do papel; cobrir com E2E de cadastro feliz (hoje só há login das personas já criadas).
 
 ### 4.11 [#27] Cadastro trava quando o e-mail já existe no Auth0 mas não no banco local
-Confirmado em teste manual (E2E-REG-02/09): se o e-mail já tem conta no **Auth0** porém **não** há usuário correspondente no banco local, o cadastro **não conclui** (loop/retorno ao formulário, sem mensagem clara). É a materialização funcional da decisão pendente §7.2 (sessão Auth0 residual): hoje não há caminho para "conta Auth0 existe, registro local não".
-- **Fix (depende de §7.2):** detectar o estado (Auth0 ok + sem usuário local) e ou (a) concluir o cadastro local reaproveitando a identidade Auth0, ou (b) exibir mensagem clara orientando login/contato. Em qualquer caso, **não** voltar silenciosamente ao formulário.
+Confirmado em teste manual (E2E-REG-02/09): se o e-mail já tem conta no **Auth0** porém **não** há usuário correspondente no banco local, o cadastro **não conclui** (loop/retorno ao formulário, sem mensagem clara). É a materialização funcional da situação descrita em §7.2 (sessão Auth0 sem usuário local).
+- **Fix (decisão §7.2 = exigir logout):** ao detectar o estado (sessão Auth0 ok + sem usuário local), **forçar logout** e exibir mensagem clara em vez de voltar ao formulário em loop. Assim a pessoa parte de um estado limpo para logar/cadastrar corretamente.
 
 ---
 
@@ -242,36 +241,43 @@ Export de vínculos embutido no botão único "Exportar Dados". Funcional; separ
 ### 6.6 [#29] Ícones de modalidade do card "Projetos Apoiados" muito pequenos
 No dashboard da empresa (E2E-EMP-02), os ícones de modalidade ("documento" para Lei de Incentivo e "dinheiro" para Investimento Social) ficam **pequenos demais** ao lado dos contadores, prejudicando a leitura. **Fix:** aumentar o tamanho/`fontSize` dos ícones no card de Projetos Apoiados (`CompanyDashboard`).
 
+### 6.7 [#30] Renomear botão "Mediações" → "Notificações" (admin)
+Decisão de produto §7.3: manter a página `/admin/notificacoes` e o card como estão; apenas renomear o botão de acesso no dashboard admin de "Mediações" para **"Notificações"** (`AdminDashboard/index.tsx:271-279`). Mudança cosmética; atualizar também os testes que buscam o texto do botão.
+
+### 6.8 [#31] Detalhe do próprio projeto da ONG deve abrir o perfil privado
+Decisão de produto §7.4: quando a ONG abre o detalhe de um projeto **seu**, o destino deve ser o **perfil privado**. Hoje leva ao perfil público. **Fix:** ajustar a navegação do card/detalhe do projeto para o perfil privado quando o ator for o dono. P2 por mudar comportamento de navegação real.
+
 ---
 
-## 7. Decisões de produto pendentes
+## 7. Decisões de produto (definidas)
 
-Pontos em que falta uma **definição de produto** antes de implementar. Não devem ser decididos no código por conta própria.
+Decisões já tomadas pelo time de produto. Cada uma traz o contexto, a **decisão** e a **ação** resultante.
 
 ### 7.1 Onde fica o acesso a "Vínculos"?
-Hoje há botões para a tela de vínculos no header **e** nos dashboards. Decidir o lugar canônico (só header, só dashboards, ou ambos) **antes** de remover qualquer botão — isso destrava a limpeza das páginas duplicadas (#4).
+Hoje há botões para a tela de vínculos no header **e** nos dashboards.
+- **Decisão:** preferência por manter **só no header**; manter como está também é aceitável (não bloqueante).
+- **Ação:** ao executar a limpeza das páginas duplicadas (#4), remover os botões dos dashboards e deixar o acesso só no header. Baixa prioridade.
 
-### 7.2 O que fazer quando há sessão no Auth0 mas o usuário não existe no banco?
-Cenário: a pessoa tem login válido no Auth0, porém não há registro correspondente no banco local. Opções: forçar novo login, deixar escolher a conta, ou exigir logout.
-⚠️ **Já causa bug funcional confirmado** — ver #27 (o cadastro trava nesse caso). Decidir aqui destrava o fix.
+### 7.2 Sessão no Auth0 sem usuário correspondente no banco
+A pessoa tem login válido no Auth0, mas não há registro local. ⚠️ Já causa bug confirmado (#27 — cadastro trava).
+- **Decisão:** **exigir logout** quando houver sessão Auth0 sem usuário local.
+- **Ação:** implementar o logout forçado nesse estado; isso destrava o fix do #27.
 
 ### 7.3 Mediações do admin: página separada ou seção no dashboard?
-O time implementou uma **página** dedicada (`/admin/notificacoes`); a especificação original pedia uma **seção dentro do dashboard** e a remoção dessa rota — direções opostas. Decidir qual caminho seguir.
-- Ponto extra: o card "Notificações Pendentes" hoje soma **denúncias + vínculos vencidos** (`AdminMetricsService.java:37`). A especificação pedia que ele contasse só denúncias (e fosse renomeado para "Denúncias Pendentes"). Alinhar o que o card representa.
+O time implementou uma **página** dedicada (`/admin/notificacoes`); a especificação original pedia uma seção no dashboard. O card "Notificações Pendentes" hoje soma **denúncias + vínculos vencidos** (`AdminMetricsService.java:37`).
+- **Decisão:** **manter exatamente como está** (página dedicada + card somando denúncias e vínculos vencidos — intencional). A única mudança é cosmética: renomear o botão de acesso para **"Notificações"**.
+- **Ação:** renomear o botão "Mediações" → "Notificações" (ver #30). Nada mais muda.
 
 ### 7.4 Para onde a ONG vai ao abrir o detalhe do próprio projeto?
-Quando a ONG clica no seu próprio projeto, o destino deveria ser o perfil privado, o dashboard, ou ambos? Definir.
+- **Decisão:** deve ir para o **perfil privado**. Hoje vai para o perfil público — comportamento a corrigir.
+- **Ação:** ajustar o destino para o perfil privado (ver #31).
 
 ### 7.5 O destaque visual do mural de editais é intencional?
-O mural de editais aparece com um destaque visual diferente. Confirmar se é proposital e, se for, em que condição ele some.
+- **Decisão:** **sim, é intencional** — manter o mural sempre visível com o destaque atual. Nenhuma ação.
 
 ### 7.6 O que acontece ao excluir um projeto que tem vínculos? (#22)
-Definir a política de exclusão:
-- **Bloquear** a exclusão enquanto houver vínculos (principalmente em negociação/ativos);
-- **Arquivar** (soft-delete) o projeto, preservando o vínculo e mostrando "projeto arquivado/removido";
-- **Permitir**, mas com aviso explícito e encerrando os vínculos de forma registrada.
-
-A escolha define o comportamento esperado e o fix descrito em §4.9.
+- **Decisão:** **bloquear a exclusão** de projetos que tenham vínculos.
+- **Ação:** impedir a exclusão quando houver vínculos (com mensagem clara orientando encerrar/desfazer o vínculo antes). É o fix do #22 — ver §4.9.
 
 ---
 
@@ -287,7 +293,7 @@ Suspeitas que **não dá para confirmar só lendo o código** — precisam da ap
 ### 8.2 Sessão do Auth0 sobra sem usuário no banco
 - **Sintoma suspeito:** existe sessão válida no Auth0, mas nenhum usuário correspondente no banco local — e a aplicação não trata esse caso.
 - **Como reproduzir:** logar no Auth0 com uma conta que não tem registro local (mesma situação do bug de cadastro #27).
-- **OK quando:** o sistema reage de forma previsível (forçar login/seleção de conta ou mensagem clara), sem loop nem cadastro silencioso. Depende da decisão de produto §7.2.
+- **OK quando:** o sistema **força logout** (decisão §7.2) e mostra mensagem clara, sem loop nem cadastro silencioso.
 
 ### 8.3 Lentidão do dashboard do admin
 - **Sintoma suspeito:** o dashboard demora a carregar. Hoje ele dispara **3 requisições independentes** (métricas, listagens, denúncias).
@@ -309,17 +315,18 @@ Suspeitas que **não dá para confirmar só lendo o código** — precisam da ap
 ## 9. Sequência sugerida de execução
 
 1. **Hotfix de segurança (1 PR):** #1 (P0) — backend do upload de documentos.
-2. **Bugs de cadastro (1 PR):** #26, #27 — pós-cadastro volta ao formulário + e-mail Auth0 órfão (P1; depende de decisão §7.2).
-3. **Quick wins (1 PR):** #2, #3, #6, #8 — correções triviais de bug/teste/validação.
+2. **Bugs de cadastro (1 PR):** #26, #27 — pós-cadastro volta ao formulário + e-mail Auth0 órfão (decisão §7.2 = forçar logout).
+3. **Quick wins (1 PR):** #2, #3, #6, #8, #30 — correções triviais de bug/teste/validação + renomear botão admin.
 4. **Validações de formulário (1 PR):** #5, #19 — edital (data) e scroll (confirmar #19 antes).
 5. **Cálculo ESG (1 PR, requer decisão de semântica):** #28 — corrigir percentuais de pilar.
 6. **Download correto (1 PR):** #13 — editais e documentos privados.
 7. **Limpeza de dead code (1 PR):** #10, #11 — baixo risco.
-8. **Consolidação de vínculos (1 PR, requer decisão §7.1):** #4, #17.
-9. **Feature gap (1 PR):** #14 — projetos no perfil privado.
-10. **Padronização incremental:** #7 (React Query) — resolve junto AN-16/17/19.
-11. **Refino contínuo:** #15, #16, #18, #20, #21, #24, #25, #29 conforme tocar nas áreas.
-12. **Decisões de produto:** §7 + #9 + #22.
+8. **Consolidação de vínculos (1 PR):** #4, #17 — decisão §7.1 (acesso só no header) já tomada; remover páginas órfãs e botões dos dashboards.
+9. **Bloquear exclusão de projeto com vínculos (1 PR):** #22 — decisão §7.6.
+10. **Navegação e feature gaps (1 PR):** #14 (projetos no perfil privado da ONG), #31 (detalhe do próprio projeto → perfil privado).
+11. **Padronização incremental:** #7 (React Query) — resolve junto os itens de UX da §8.5.
+12. **Refino contínuo:** #15, #16, #18, #20, #21, #24, #25, #29 conforme tocar nas áreas.
+13. **Job agendado (decisão):** #9 — disparo automático de vínculos vencidos.
 
 ---
 
