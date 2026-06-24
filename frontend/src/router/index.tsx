@@ -74,14 +74,6 @@ export const AppRouter = () => (
         }
       />
       <Route
-        path="/admin/notificacoes"
-        element={
-          <ProtectedRoute requiredRole="ADMIN">
-            <AdminNotificationsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/ong/dashboard"
         element={
           <ProtectedRoute requiredRole="NPO">
