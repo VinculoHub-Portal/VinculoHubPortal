@@ -39,7 +39,6 @@ export interface PaginatedDocumentsResponse {
  */
 export interface DocumentRequestDTO {
   id?: number;
-  npoId?: number;
   projectId?: number;
   title: string;
   description?: string;

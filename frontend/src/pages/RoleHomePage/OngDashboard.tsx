@@ -59,7 +59,7 @@ export function OngDashboard({
     }
     try {
       const token = await getAccessTokenSilently()
-      await uploadDocument(file, { title, description, npoId }, token)
+      await uploadDocument(file, { title, description }, token)
       showToast("Documento enviado com sucesso!", "success")
       setIsUploadModalOpen(false)
     } catch (error) {

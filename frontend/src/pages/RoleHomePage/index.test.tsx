@@ -208,7 +208,7 @@ describe("RoleHomePage - dashboard da ONG", () => {
     ).toBeInTheDocument()
   })
 
-  it("envia documento com o npoId real do usuário autenticado", async () => {
+  it("envia documento sem npoId no payload", async () => {
     renderOngDashboard()
     await screen.findByText("Projeto Ativo")
 
@@ -233,7 +233,7 @@ describe("RoleHomePage - dashboard da ONG", () => {
     await waitFor(() => expect(mocks.uploadDocumentMock).toHaveBeenCalled())
     expect(mocks.uploadDocumentMock).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ npoId: 42 }),
+      expect.not.objectContaining({ npoId: expect.anything() }),
       "token",
     )
   })
