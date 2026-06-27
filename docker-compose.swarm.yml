@@ -6,7 +6,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    image: 127.0.0.1:5000/vinculohubportal-backend:dev
+    image: ${DOCKERHUB_USERNAME}/vinculohubportal-backend:dev
     ports:
       - "8080:8080"
     environment:
@@ -39,9 +39,9 @@ services:
         - VITE_AUTH0_CLIENT_ID=${VITE_AUTH0_CLIENT_ID}
         - VITE_AUTH0_AUDIENCE=${VITE_AUTH0_AUDIENCE}
         - VITE_AUTH0_REDIRECT_URI=${DEV_VITE_AUTH0_REDIRECT_URI}
-    image: 127.0.0.1:5000/vinculohubportal-frontend:dev
+    image: ${DOCKERHUB_USERNAME}/vinculohubportal-frontend:dev
     ports:
-      - "80:80"
+      - "83:80"
     deploy:
       placement:
         constraints: [node.role == worker]
@@ -84,7 +84,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    image: 127.0.0.1:5000/vinculohubportal-backend:prod
+    image: ${DOCKERHUB_USERNAME}/vinculohubportal-backend:prod
     ports:
       - "8081:8080" # Acesso externo via porta 8081
     environment:
@@ -117,7 +117,7 @@ services:
         - VITE_AUTH0_CLIENT_ID=${VITE_AUTH0_CLIENT_ID}
         - VITE_AUTH0_AUDIENCE=${VITE_AUTH0_AUDIENCE}
         - VITE_AUTH0_REDIRECT_URI=${PROD_VITE_AUTH0_REDIRECT_URI}
-    image: 127.0.0.1:5000/vinculohubportal-frontend:prod
+    image: ${DOCKERHUB_USERNAME}/vinculohubportal-frontend:prod
     ports:
       - "81:80" # Acesso externo via porta 81
     deploy:
