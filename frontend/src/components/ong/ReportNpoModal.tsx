@@ -1,19 +1,11 @@
 import { useAuth0 } from "@auth0/auth0-react"
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogContent,
-  TextField,
-  Typography,
-  IconButton,
-} from "@mui/material"
-import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded"
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded"
-import { useState } from "react"
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded"
+import { useEffect, useState } from "react"
 
 import { createNpoReport } from "../../api/npoReports"
 import { useToast } from "../../context/ToastContext"
+import { BaseButton } from "../general/BaseButton"
 
 type ReportNpoModalProps = {
   npoId: number
@@ -42,6 +34,8 @@ export function ReportNpoModal({
   }
 
   function handleClose() {
+    if (isSubmitting) return
+
     clearFields()
     onClose()
   }
@@ -73,138 +67,98 @@ export function ReportNpoModal({
     try {
       const token = await getAccessTokenSilently()
 
-      await createNpoReport(
-        npoId,
-        { reason: reason.trim() },
-        token
-      )
+      await createNpoReport(npoId, { reason: reason.trim() }, token)
 
-      showToast(
-        "Denúncia enviada para análise do administrador.",
-        "success"
-      )
+      showToast("Denúncia enviada para análise do administrador.", "success")
 
       handleClose()
     } catch {
       showToast(
         "Não foi possível enviar a denúncia. Tente novamente.",
-        "error"
+        "error",
       )
     } finally {
       setIsSubmitting(false)
     }
   }
 
+  useEffect(() => {
+    if (!open) return
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape" && !isSubmitting) {
+        setReason("")
+        setError("")
+        onClose()
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [open, isSubmitting, onClose])
+
+  if (!open) return null
+
   return (
-    <Dialog
-      open={open}
-      onClose={isSubmitting ? undefined : handleClose}
-      fullWidth
-      maxWidth="sm"
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/65 px-4 py-6"
+      role="dialog"
+      aria-modal="true"
       aria-labelledby="report-npo-dialog-title"
-      PaperProps={{
-        sx: {
-          borderRadius: "10px",
-          p: 1,
-        },
+      data-testid="modal-overlay"
+      onClick={(event) => {
+        if (event.target === event.currentTarget && !isSubmitting) {
+          handleClose()
+        }
       }}
     >
-      <DialogContent
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 3,
-          p: 3,
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1.5,
-            }}
-          >
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: "999px",
-                backgroundColor: "#FFE2E2",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
+      <div className="flex w-full max-w-lg flex-col gap-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-50">
               <WarningAmberRoundedIcon
-                sx={{
-                  color: "#E7000B",
-                  fontSize: 20,
-                }}
+                className="text-vinculo-red"
+                fontSize="medium"
               />
-            </Box>
+            </div>
 
-            <Typography
+            <h2
               id="report-npo-dialog-title"
-              sx={{
-                fontSize: 18,
-                fontWeight: 500,
-                color: "#00467F",
-              }}
+              className="text-xl font-bold text-vinculo-dark"
             >
               Denunciar ONG
-            </Typography>
-          </Box>
+            </h2>
+          </div>
 
-          <IconButton
+          <button
+            type="button"
+            aria-label="Fechar modal"
             onClick={handleClose}
             disabled={isSubmitting}
-            size="small"
+            className="rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <CloseRoundedIcon />
-          </IconButton>
-        </Box>
+            <CloseRoundedIcon fontSize="small" />
+          </button>
+        </div>
 
-        <Box
-          sx={{
-            p: 2,
-            borderRadius: "10px",
-            backgroundColor: "#EFF6FF",
-            border: "1px solid #BEDBFF",
-          }}
-        >
-          <Typography
-            sx={{
-              color: "#1C398E",
-              fontSize: 14,
-              lineHeight: "20px",
-            }}
-          >
+        <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+          <p className="text-sm leading-6 text-blue-900">
             <strong>Confidencial:</strong> Esta denúncia será enviada para
             análise dos administradores da plataforma. Forneça o máximo de
             informações possível para auxiliar na investigação.
-          </Typography>
-        </Box>
+          </p>
+        </div>
 
-        <Box>
-          <Typography
-            sx={{
-              mb: 1,
-              fontSize: 14,
-              fontWeight: 500,
-              color: "#364153",
-            }}
+        <div>
+          <label
+            htmlFor="report-npo-reason"
+            className="mb-1.5 block text-sm font-semibold text-slate-700"
           >
             Descrição Detalhada *
-          </Typography>
+          </label>
 
-          <TextField
+          <textarea
+            id="report-npo-reason"
             value={reason}
             onChange={(event) => {
               setReason(event.target.value)
@@ -213,81 +167,63 @@ export function ReportNpoModal({
                 setError("")
               }
             }}
-            multiline
-            minRows={6}
-            fullWidth
+            rows={6}
+            maxLength={MAX_REASON_LENGTH}
+            aria-label="Motivo da suspeita"
+            aria-describedby="report-npo-reason-help"
             placeholder="Descreva em detalhes o motivo da sua denúncia..."
-            error={Boolean(error)}
-            helperText={
-              error ||
-              `${reason.length}/${MAX_REASON_LENGTH}`
-            }
-            inputProps={{
-              maxLength: MAX_REASON_LENGTH,
-              "aria-label": "Motivo da suspeita",
-            }}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "10px",
-              },
-            }}
+            disabled={isSubmitting}
+            className={`w-full resize-none rounded-xl border bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition-colors placeholder:text-slate-400 focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 ${
+              error
+                ? "border-vinculo-red focus:border-vinculo-red focus:ring-vinculo-red/10"
+                : "border-slate-300 focus:border-vinculo-dark focus:ring-vinculo-dark/10"
+            }`}
           />
 
-          {!error && (
-            <Typography
-              sx={{
-                mt: 1,
-                fontSize: 12,
-                color: "#6A7282",
-              }}
+          {error ? (
+            <p
+              id="report-npo-reason-help"
+              className="mt-1.5 text-sm text-vinculo-red"
             >
-              Forneça o máximo de detalhes possível para auxiliar na análise.
-            </Typography>
+              {error}
+            </p>
+          ) : (
+            <div
+              id="report-npo-reason-help"
+              className="mt-1.5 flex flex-col gap-1 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <span>
+                Forneça o máximo de detalhes possível para auxiliar na análise.
+              </span>
+              <span>
+                {reason.length}/{MAX_REASON_LENGTH}
+              </span>
+            </div>
           )}
-        </Box>
+        </div>
 
-        <Box
-          sx={{
-            display: "flex",
-            gap: 1.5,
-          }}
-        >
-          <Button
-            fullWidth
-            variant="outlined"
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <BaseButton
+            type="button"
+            variant="ghost"
+            className="w-full bg-transparent! text-slate-600! hover:bg-slate-100! sm:w-fit"
             onClick={clearFields}
             disabled={isSubmitting}
-            sx={{
-              height: 52,
-              borderRadius: "10px",
-              textTransform: "none",
-              borderWidth: 2,
-            }}
           >
             Limpar Campos
-          </Button>
+          </BaseButton>
 
-          <Button
-            fullWidth
-            variant="contained"
+          <BaseButton
+            type="button"
+            variant="attention"
+            className="w-full border-vinculo-red! bg-vinculo-red! py-2 text-white! hover:opacity-90! sm:w-fit"
             onClick={() => void handleSubmit()}
             disabled={isSubmitting}
-            sx={{
-              height: 52,
-              borderRadius: "10px",
-              textTransform: "none",
-              backgroundColor: "#E7000B",
-              boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
-
-              "&:hover": {
-                backgroundColor: "#C70009",
-              },
-            }}
           >
             {isSubmitting ? "Enviando..." : "Enviar denúncia"}
-          </Button>
-        </Box>
-      </DialogContent>
-    </Dialog>
+          </BaseButton>
+        </div>
+      </div>
+    </div>
   )
 }

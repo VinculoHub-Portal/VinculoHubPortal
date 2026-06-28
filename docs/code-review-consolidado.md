@@ -63,7 +63,7 @@ A base é sólida. Os itens abaixo são incrementais, exceto o P0 de segurança.
 | 22 | Excluir projeto atrelado a vínculo "some" com o vínculo (sem safeguard/aviso) | Bug/Integridade | P1 | médio | exclusão de projeto + `MyRelationshipsPage` |
 | 23 | Notificação de vínculo: falha silenciosa + `companyEmail` sem fallback + sem teste no fluxo ONG→empresa | Robustez/Observabilidade | P2 | baixo | `RelationshipService.java:191,414`, `ResendNotificationService.java:79` |
 | 24 | [Resolvido] Botão "Ver Denúncias" no dashboard admin é redundante (scroll sem efeito perceptível) | UX/Dead UI | P3 | trivial | `AdminDashboard/index.tsx` |
-| 25 | `ReportNpoModal` (denunciar ONG) destoa do padrão dos demais modais (MUI + hex hardcoded) | UX/Consistência | P3 | baixo | `ReportNpoModal.tsx` |
+| 25 | [Resolvido] `ReportNpoModal` (denunciar ONG) destoa do padrão dos demais modais (MUI + hex hardcoded) | UX/Consistência | P3 | baixo | `ReportNpoModal.tsx` |
 | 26 | Pós-cadastro: ONG e Empresa são devolvidas ao formulário em vez do dashboard | Bug | P1 | médio | `RegisterPage/index.tsx:250`, `CompanyRegistration/registration/index.tsx`, `AuthRoleRedirect` |
 | 27 | Cadastro trava se o e-mail já existe no Auth0 mas não no banco local | Bug | P1 | médio | fluxo de signup (front + `AuthRoleRedirect`); ver decisão §7.2 |
 | 28 | Impacto ESG: pilares/projetos aparecem como 100% do total (soma > 100%) | Bug/Cálculo | P2 | médio | `ProjectService.java:296-320`, `ProjectRepository.java:46-96` |
@@ -269,6 +269,8 @@ Instância concreta de #20 (dois sistemas de UI). O `ReportNpoModal.tsx` é **MU
 | Comportamento | `data-testid="modal-overlay"`, `Escape`/click-outside próprios | `onClose` do MUI |
 
 **Efeito:** raio de borda, paleta, tipografia e botões diferentes dos demais diálogos — daí a sensação de "styling inconsistente". As cores hex inclusive **divergem dos tokens**: `#00467F` ≠ `vinculo-dark`, `#E7000B` ≠ `vinculo-red`. **Fix:** reescrever o modal no mesmo padrão Tailwind + `BaseButton` dos outros (ou, no mínimo, trocar os hex pelos tokens do tema). Bom candidato para padronizar junto de #20.
+
+**Status:** resolvido em `ReportNpoModal.tsx`; o modal foi reescrito no padrão Tailwind + `BaseButton`, preservando o fluxo de envio da denúncia.
 
 ### 6.4 [#20] Dois sistemas de UI
 Convivem MUI (`Button`/`Card`/`Chip`), Tailwind puro e componentes próprios (`FlexibleButton`, `MetricCard`). Definir sistema primário e encapsular o outro.
