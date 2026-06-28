@@ -31,7 +31,8 @@ class AdminRelationshipServiceTest {
     @DisplayName("Deve listar relacionamentos com todos os filtros nulos")
     void shouldListRelationshipsWithNullFilters() {
         Pageable pageable = PageRequest.of(0, 10);
-        CompanyProject cp = buildRelationship("Empresa Alpha", "Alpha Social", "ONG Verde", "Projeto A");
+        CompanyProject cp =
+                buildRelationship("Empresa Alpha", "Alpha Social", "ONG Verde", "Projeto A");
 
         when(companyProjectRepository.findAdminRelationships(null, null, null, null, pageable))
                 .thenReturn(new PageImpl<>(List.of(cp), pageable, 1));
@@ -74,15 +75,15 @@ class AdminRelationshipServiceTest {
 
         adminRelationshipService.listRelationships("   ", "   ", "   ", null, pageable);
 
-        verify(companyProjectRepository)
-                .findAdminRelationships(null, null, null, null, pageable);
+        verify(companyProjectRepository).findAdminRelationships(null, null, null, null, pageable);
     }
 
     @Test
     @DisplayName("Deve usar socialName da empresa quando disponível")
     void shouldUseCompanySocialNameWhenAvailable() {
         Pageable pageable = PageRequest.of(0, 10);
-        CompanyProject cp = buildRelationship("Empresa Legal LTDA", "Nome Social", "ONG X", "Projeto B");
+        CompanyProject cp =
+                buildRelationship("Empresa Legal LTDA", "Nome Social", "ONG X", "Projeto B");
 
         when(companyProjectRepository.findAdminRelationships(any(), any(), any(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of(cp), pageable, 1));
@@ -132,7 +133,8 @@ class AdminRelationshipServiceTest {
                         null, null, null, RelationshipStatus.active, pageable))
                 .thenReturn(new PageImpl<>(List.of(), pageable, 0));
 
-        adminRelationshipService.listRelationships(null, null, null, RelationshipStatus.active, pageable);
+        adminRelationshipService.listRelationships(
+                null, null, null, RelationshipStatus.active, pageable);
 
         verify(companyProjectRepository)
                 .findAdminRelationships(null, null, null, RelationshipStatus.active, pageable);

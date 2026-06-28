@@ -32,7 +32,8 @@ class ProjectValidationServiceTest {
     @DisplayName("Deve rejeitar request nulo")
     void shouldRejectNullRequest() {
         IllegalArgumentException ex =
-                assertThrows(IllegalArgumentException.class, () -> service.validateFirstProject(null));
+                assertThrows(
+                        IllegalArgumentException.class, () -> service.validateFirstProject(null));
         assertTrue(ex.getMessage().contains("obrigatórios"));
     }
 
@@ -41,10 +42,15 @@ class ProjectValidationServiceTest {
     void shouldRejectNullName() {
         NpoFirstProjectSignupRequest req =
                 new NpoFirstProjectSignupRequest(
-                        null, "Descrição", BigDecimal.TEN, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW);
+                        null,
+                        "Descrição",
+                        BigDecimal.TEN,
+                        List.of("1"),
+                        ProjectType.SOCIAL_INVESTMENT_LAW);
 
         IllegalArgumentException ex =
-                assertThrows(IllegalArgumentException.class, () -> service.validateFirstProject(req));
+                assertThrows(
+                        IllegalArgumentException.class, () -> service.validateFirstProject(req));
         assertTrue(ex.getMessage().contains("Nome"));
     }
 
@@ -53,7 +59,11 @@ class ProjectValidationServiceTest {
     void shouldRejectBlankName() {
         NpoFirstProjectSignupRequest req =
                 new NpoFirstProjectSignupRequest(
-                        "   ", "Descrição", BigDecimal.TEN, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW);
+                        "   ",
+                        "Descrição",
+                        BigDecimal.TEN,
+                        List.of("1"),
+                        ProjectType.SOCIAL_INVESTMENT_LAW);
 
         assertThrows(IllegalArgumentException.class, () -> service.validateFirstProject(req));
     }
@@ -63,10 +73,15 @@ class ProjectValidationServiceTest {
     void shouldRejectNullDescription() {
         NpoFirstProjectSignupRequest req =
                 new NpoFirstProjectSignupRequest(
-                        "Nome", null, BigDecimal.TEN, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW);
+                        "Nome",
+                        null,
+                        BigDecimal.TEN,
+                        List.of("1"),
+                        ProjectType.SOCIAL_INVESTMENT_LAW);
 
         IllegalArgumentException ex =
-                assertThrows(IllegalArgumentException.class, () -> service.validateFirstProject(req));
+                assertThrows(
+                        IllegalArgumentException.class, () -> service.validateFirstProject(req));
         assertTrue(ex.getMessage().contains("Descrição") || ex.getMessage().contains("descrição"));
     }
 
@@ -82,7 +97,8 @@ class ProjectValidationServiceTest {
                         ProjectType.SOCIAL_INVESTMENT_LAW);
 
         IllegalArgumentException ex =
-                assertThrows(IllegalArgumentException.class, () -> service.validateFirstProject(req));
+                assertThrows(
+                        IllegalArgumentException.class, () -> service.validateFirstProject(req));
         assertTrue(ex.getMessage().contains("negativa"));
     }
 
@@ -101,7 +117,11 @@ class ProjectValidationServiceTest {
     void shouldAcceptZeroCapital() {
         NpoFirstProjectSignupRequest req =
                 new NpoFirstProjectSignupRequest(
-                        "Nome", "Descrição", BigDecimal.ZERO, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW);
+                        "Nome",
+                        "Descrição",
+                        BigDecimal.ZERO,
+                        List.of("1"),
+                        ProjectType.SOCIAL_INVESTMENT_LAW);
 
         assertDoesNotThrow(() -> service.validateFirstProject(req));
     }
@@ -111,10 +131,15 @@ class ProjectValidationServiceTest {
     void shouldRejectNullOds() {
         NpoFirstProjectSignupRequest req =
                 new NpoFirstProjectSignupRequest(
-                        "Nome", "Descrição", BigDecimal.TEN, null, ProjectType.SOCIAL_INVESTMENT_LAW);
+                        "Nome",
+                        "Descrição",
+                        BigDecimal.TEN,
+                        null,
+                        ProjectType.SOCIAL_INVESTMENT_LAW);
 
         IllegalArgumentException ex =
-                assertThrows(IllegalArgumentException.class, () -> service.validateFirstProject(req));
+                assertThrows(
+                        IllegalArgumentException.class, () -> service.validateFirstProject(req));
         assertTrue(ex.getMessage().contains("ODS"));
     }
 
@@ -123,10 +148,15 @@ class ProjectValidationServiceTest {
     void shouldRejectEmptyOds() {
         NpoFirstProjectSignupRequest req =
                 new NpoFirstProjectSignupRequest(
-                        "Nome", "Descrição", BigDecimal.TEN, List.of(), ProjectType.SOCIAL_INVESTMENT_LAW);
+                        "Nome",
+                        "Descrição",
+                        BigDecimal.TEN,
+                        List.of(),
+                        ProjectType.SOCIAL_INVESTMENT_LAW);
 
         IllegalArgumentException ex =
-                assertThrows(IllegalArgumentException.class, () -> service.validateFirstProject(req));
+                assertThrows(
+                        IllegalArgumentException.class, () -> service.validateFirstProject(req));
         assertTrue(ex.getMessage().contains("ODS"));
     }
 
@@ -135,10 +165,15 @@ class ProjectValidationServiceTest {
     void shouldRejectBlankOdsValue() {
         NpoFirstProjectSignupRequest req =
                 new NpoFirstProjectSignupRequest(
-                        "Nome", "Descrição", BigDecimal.TEN, List.of("1", "  "), ProjectType.SOCIAL_INVESTMENT_LAW);
+                        "Nome",
+                        "Descrição",
+                        BigDecimal.TEN,
+                        List.of("1", "  "),
+                        ProjectType.SOCIAL_INVESTMENT_LAW);
 
         IllegalArgumentException ex =
-                assertThrows(IllegalArgumentException.class, () -> service.validateFirstProject(req));
+                assertThrows(
+                        IllegalArgumentException.class, () -> service.validateFirstProject(req));
         assertTrue(ex.getMessage().contains("ODS"));
     }
 
@@ -150,7 +185,8 @@ class ProjectValidationServiceTest {
                         "Nome", "Descrição", BigDecimal.TEN, List.of("1"), null);
 
         IllegalArgumentException ex =
-                assertThrows(IllegalArgumentException.class, () -> service.validateFirstProject(req));
+                assertThrows(
+                        IllegalArgumentException.class, () -> service.validateFirstProject(req));
         assertTrue(ex.getMessage().contains("Tipo"));
     }
 }

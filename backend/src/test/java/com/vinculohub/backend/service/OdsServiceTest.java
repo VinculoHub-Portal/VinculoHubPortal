@@ -80,13 +80,15 @@ class OdsServiceTest {
     @Test
     @DisplayName("resolveSelection lança exceção para valor em branco na lista")
     void shouldThrowForBlankOdsValue() {
-        assertThrows(IllegalArgumentException.class, () -> odsService.resolveSelection(List.of("  ")));
+        assertThrows(
+                IllegalArgumentException.class, () -> odsService.resolveSelection(List.of("  ")));
     }
 
     @Test
     @DisplayName("resolveSelection lança exceção para valor não numérico")
     void shouldThrowForNonNumericOdsValue() {
-        assertThrows(IllegalArgumentException.class, () -> odsService.resolveSelection(List.of("abc")));
+        assertThrows(
+                IllegalArgumentException.class, () -> odsService.resolveSelection(List.of("abc")));
     }
 
     @Test
@@ -94,6 +96,7 @@ class OdsServiceTest {
     void shouldThrowWhenOdsNotFound() {
         when(odsRepository.findAllById(any())).thenReturn(List.of());
 
-        assertThrows(IllegalArgumentException.class, () -> odsService.resolveSelection(List.of("99")));
+        assertThrows(
+                IllegalArgumentException.class, () -> odsService.resolveSelection(List.of("99")));
     }
 }

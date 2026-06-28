@@ -12,7 +12,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.vinculohub.backend.dto.NpoProfileResponse;
-import com.vinculohub.backend.model.Document;
 import com.vinculohub.backend.exception.ForbiddenException;
 import com.vinculohub.backend.exception.NotFoundException;
 import com.vinculohub.backend.model.Address;
@@ -184,9 +183,7 @@ class NpoProfileServiceTest {
     @DisplayName("getProfile com ONG não encontrada lança NotFoundException")
     void shouldThrowNotFoundWhenNpoDoesNotExist() {
         when(npoRepository.findById(999)).thenReturn(Optional.empty());
-        assertThrows(
-                NotFoundException.class,
-                () -> npoProfileService.getProfile(999, null));
+        assertThrows(NotFoundException.class, () -> npoProfileService.getProfile(999, null));
     }
 
     @Test
@@ -269,7 +266,11 @@ class NpoProfileServiceTest {
     void shouldThrowWhenUpdateProfileNpoIdIsNull() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> npoProfileService.updateProfile(null, "auth0|x", new NpoProfileResponse.UpdateRequest(null, null, null, null)));
+                () ->
+                        npoProfileService.updateProfile(
+                                null,
+                                "auth0|x",
+                                new NpoProfileResponse.UpdateRequest(null, null, null, null)));
     }
 
     @Test
@@ -286,9 +287,11 @@ class NpoProfileServiceTest {
         when(npoRepository.findById(999)).thenReturn(Optional.empty());
         assertThrows(
                 NotFoundException.class,
-                () -> npoProfileService.updateProfile(
-                        999, "auth0|x",
-                        new NpoProfileResponse.UpdateRequest(null, null, null, null)));
+                () ->
+                        npoProfileService.updateProfile(
+                                999,
+                                "auth0|x",
+                                new NpoProfileResponse.UpdateRequest(null, null, null, null)));
     }
 
     @Test
@@ -301,13 +304,17 @@ class NpoProfileServiceTest {
 
         assertThrows(
                 ForbiddenException.class,
-                () -> npoProfileService.updateProfile(
-                        5, "auth0|impostor",
-                        new NpoProfileResponse.UpdateRequest(null, null, null, null)));
+                () ->
+                        npoProfileService.updateProfile(
+                                5,
+                                "auth0|impostor",
+                                new NpoProfileResponse.UpdateRequest(null, null, null, null)));
     }
 
     @Test
-    @DisplayName("updateProfile com InstitutionalUpdate com campos em branco/nulos não sobrescreve valores")
+    @DisplayName(
+            "updateProfile com InstitutionalUpdate com campos em branco/nulos não sobrescreve"
+                    + " valores")
     void shouldNotOverwriteFieldsWhenInstitutionalUpdateFieldsAreNullOrBlank() {
         User owner = User.builder().id(1).auth0Id("auth0|owner").email("o@o.com").build();
         Npo npo = Npo.builder().id(5).name("ONG Original").userId(1).npoSize(NpoSize.small).build();
@@ -345,8 +352,15 @@ class NpoProfileServiceTest {
 
         NpoProfileResponse.InstitutionalUpdate inst =
                 new NpoProfileResponse.InstitutionalUpdate(
-                        "ONG Nova", "desc nova", null, NpoSize.medium,
-                        null, null, true, false, true);
+                        "ONG Nova",
+                        "desc nova",
+                        null,
+                        NpoSize.medium,
+                        null,
+                        null,
+                        true,
+                        false,
+                        true);
         NpoProfileResponse.UpdateRequest req =
                 new NpoProfileResponse.UpdateRequest(inst, null, null, null);
 
@@ -393,7 +407,8 @@ class NpoProfileServiceTest {
         when(documentRepository.findByNpo_Id(5)).thenReturn(List.of());
 
         NpoProfileResponse.AddressUpdate addrUpdate =
-                new NpoProfileResponse.AddressUpdate("São Paulo", "SP", "São Paulo", "Rua A", "1", null, "01000-000");
+                new NpoProfileResponse.AddressUpdate(
+                        "São Paulo", "SP", "São Paulo", "Rua A", "1", null, "01000-000");
         NpoProfileResponse.UpdateRequest req =
                 new NpoProfileResponse.UpdateRequest(null, null, addrUpdate, null);
 
@@ -418,8 +433,8 @@ class NpoProfileServiceTest {
         NpoProfileResponse.InstitutionalUpdate inst =
                 new NpoProfileResponse.InstitutionalUpdate(
                         "   ", null, null, null, null, null, null, null, null);
-        npoProfileService.updateProfile(5, "auth0|owner",
-                new NpoProfileResponse.UpdateRequest(inst, null, null, null));
+        npoProfileService.updateProfile(
+                5, "auth0|owner", new NpoProfileResponse.UpdateRequest(inst, null, null, null));
 
         assertEquals("ONG Original", npo.getName());
     }
@@ -436,10 +451,9 @@ class NpoProfileServiceTest {
         when(projectRepository.findAllByNpoId(5L)).thenReturn(List.of());
         when(documentRepository.findByNpo_Id(5)).thenReturn(List.of());
 
-        NpoProfileResponse.ContactUpdate contact =
-                new NpoProfileResponse.ContactUpdate("  ", null);
-        npoProfileService.updateProfile(5, "auth0|owner",
-                new NpoProfileResponse.UpdateRequest(null, contact, null, null));
+        NpoProfileResponse.ContactUpdate contact = new NpoProfileResponse.ContactUpdate("  ", null);
+        npoProfileService.updateProfile(
+                5, "auth0|owner", new NpoProfileResponse.UpdateRequest(null, contact, null, null));
 
         assertEquals("old@o.com", owner.getEmail());
     }
@@ -447,7 +461,13 @@ class NpoProfileServiceTest {
     @Test
     @DisplayName("updateProfile com responsibleUpdate atualiza nome e email")
     void shouldApplyResponsibleUpdate() {
-        User owner = User.builder().id(1).auth0Id("auth0|owner").name("Old Name").email("old@o.com").build();
+        User owner =
+                User.builder()
+                        .id(1)
+                        .auth0Id("auth0|owner")
+                        .name("Old Name")
+                        .email("old@o.com")
+                        .build();
         Npo npo = Npo.builder().id(5).name("ONG").userId(1).build();
         when(npoRepository.findById(5)).thenReturn(Optional.of(npo));
         when(userRepository.findById(1)).thenReturn(Optional.of(owner));
@@ -470,7 +490,13 @@ class NpoProfileServiceTest {
     @Test
     @DisplayName("updateProfile com nome em branco no responsibleUpdate não atualiza")
     void shouldNotUpdateResponsibleNameWhenBlank() {
-        User owner = User.builder().id(1).auth0Id("auth0|owner").name("Old Name").email("o@o.com").build();
+        User owner =
+                User.builder()
+                        .id(1)
+                        .auth0Id("auth0|owner")
+                        .name("Old Name")
+                        .email("o@o.com")
+                        .build();
         Npo npo = Npo.builder().id(5).name("ONG").userId(1).build();
         when(npoRepository.findById(5)).thenReturn(Optional.of(npo));
         when(userRepository.findById(1)).thenReturn(Optional.of(owner));
@@ -481,8 +507,8 @@ class NpoProfileServiceTest {
 
         NpoProfileResponse.ResponsibleUpdate resp =
                 new NpoProfileResponse.ResponsibleUpdate("   ", "   ");
-        npoProfileService.updateProfile(5, "auth0|owner",
-                new NpoProfileResponse.UpdateRequest(null, null, null, resp));
+        npoProfileService.updateProfile(
+                5, "auth0|owner", new NpoProfileResponse.UpdateRequest(null, null, null, resp));
 
         assertEquals("Old Name", owner.getName());
     }
@@ -495,9 +521,13 @@ class NpoProfileServiceTest {
         when(npoRepository.findById(5)).thenReturn(Optional.of(npo));
         when(userRepository.findById(1)).thenReturn(Optional.of(owner));
 
-        assertThrows(ForbiddenException.class,
-                () -> npoProfileService.updateProfile(5, null,
-                        new NpoProfileResponse.UpdateRequest(null, null, null, null)));
+        assertThrows(
+                ForbiddenException.class,
+                () ->
+                        npoProfileService.updateProfile(
+                                5,
+                                null,
+                                new NpoProfileResponse.UpdateRequest(null, null, null, null)));
     }
 
     @Test
@@ -514,10 +544,17 @@ class NpoProfileServiceTest {
 
         NpoProfileResponse.InstitutionalUpdate inst =
                 new NpoProfileResponse.InstitutionalUpdate(
-                        null, null, "https://logo.png", null,
-                        "12345678000100", "12345678900", null, null, null);
-        npoProfileService.updateProfile(5, "auth0|owner",
-                new NpoProfileResponse.UpdateRequest(inst, null, null, null));
+                        null,
+                        null,
+                        "https://logo.png",
+                        null,
+                        "12345678000100",
+                        "12345678900",
+                        null,
+                        null,
+                        null);
+        npoProfileService.updateProfile(
+                5, "auth0|owner", new NpoProfileResponse.UpdateRequest(inst, null, null, null));
 
         assertEquals("https://logo.png", npo.getLogoUrl());
         assertEquals("12345678000100", npo.getCnpj());
@@ -537,8 +574,8 @@ class NpoProfileServiceTest {
         when(documentRepository.findByNpo_Id(5)).thenReturn(List.of());
 
         NpoProfileResponse.ContactUpdate contact = new NpoProfileResponse.ContactUpdate(null, "  ");
-        npoProfileService.updateProfile(5, "auth0|owner",
-                new NpoProfileResponse.UpdateRequest(null, contact, null, null));
+        npoProfileService.updateProfile(
+                5, "auth0|owner", new NpoProfileResponse.UpdateRequest(null, contact, null, null));
 
         assertNull(npo.getPhone());
     }
@@ -558,7 +595,9 @@ class NpoProfileServiceTest {
 
         NpoProfileResponse.AddressUpdate addrUpdate =
                 new NpoProfileResponse.AddressUpdate(null, null, null, null, null, "Sala 2", null);
-        npoProfileService.updateProfile(5, "auth0|owner",
+        npoProfileService.updateProfile(
+                5,
+                "auth0|owner",
                 new NpoProfileResponse.UpdateRequest(null, null, addrUpdate, null));
 
         assertEquals("Sala 2", npo.getAddress().getComplement());
@@ -567,7 +606,8 @@ class NpoProfileServiceTest {
     @Test
     @DisplayName("updateProfile com responsibleUpdate campos nulos não atualiza")
     void shouldNotUpdateResponsibleWhenFieldsAreNull() {
-        User owner = User.builder().id(1).auth0Id("auth0|owner").name("Old").email("old@o.com").build();
+        User owner =
+                User.builder().id(1).auth0Id("auth0|owner").name("Old").email("old@o.com").build();
         Npo npo = Npo.builder().id(5).name("ONG").userId(1).build();
         when(npoRepository.findById(5)).thenReturn(Optional.of(npo));
         when(userRepository.findById(1)).thenReturn(Optional.of(owner));
@@ -576,9 +616,10 @@ class NpoProfileServiceTest {
         when(projectRepository.findAllByNpoId(5L)).thenReturn(List.of());
         when(documentRepository.findByNpo_Id(5)).thenReturn(List.of());
 
-        NpoProfileResponse.ResponsibleUpdate resp = new NpoProfileResponse.ResponsibleUpdate(null, null);
-        npoProfileService.updateProfile(5, "auth0|owner",
-                new NpoProfileResponse.UpdateRequest(null, null, null, resp));
+        NpoProfileResponse.ResponsibleUpdate resp =
+                new NpoProfileResponse.ResponsibleUpdate(null, null);
+        npoProfileService.updateProfile(
+                5, "auth0|owner", new NpoProfileResponse.UpdateRequest(null, null, null, resp));
 
         assertEquals("Old", owner.getName());
         assertEquals("old@o.com", owner.getEmail());
@@ -588,8 +629,14 @@ class NpoProfileServiceTest {
     @DisplayName("getProfile com documento com projeto retorna projectId não nulo")
     void shouldReturnProjectIdInDocumentWhenProjectPresent() {
         Npo npo = Npo.builder().id(5).name("ONG").userId(null).build();
-        Project project = Project.builder().id(7L).title("Proj").status(ProjectStatus.ACTIVE)
-                .ods(new LinkedHashSet<>()).createdAt(LocalDateTime.now()).build();
+        Project project =
+                Project.builder()
+                        .id(7L)
+                        .title("Proj")
+                        .status(ProjectStatus.ACTIVE)
+                        .ods(new LinkedHashSet<>())
+                        .createdAt(LocalDateTime.now())
+                        .build();
         com.vinculohub.backend.model.Document doc = new com.vinculohub.backend.model.Document();
         doc.setId(1);
         doc.setTitle("Doc");
@@ -621,8 +668,11 @@ class NpoProfileServiceTest {
         when(documentRepository.findByNpo_Id(5)).thenReturn(List.of());
 
         NpoProfileResponse.AddressUpdate addrUpdate =
-                new NpoProfileResponse.AddressUpdate(null, null, "São Paulo", null, null, null, null);
-        npoProfileService.updateProfile(5, "auth0|owner",
+                new NpoProfileResponse.AddressUpdate(
+                        null, null, "São Paulo", null, null, null, null);
+        npoProfileService.updateProfile(
+                5,
+                "auth0|owner",
                 new NpoProfileResponse.UpdateRequest(null, null, addrUpdate, null));
 
         assertEquals("São Paulo", existing.getCity());

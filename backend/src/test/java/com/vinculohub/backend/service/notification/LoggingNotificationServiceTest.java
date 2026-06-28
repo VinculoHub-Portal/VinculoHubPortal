@@ -31,18 +31,21 @@ class LoggingNotificationServiceTest {
     @Test
     @DisplayName("confirmationRequested não deve lançar exceção")
     void shouldNotThrowOnConfirmationRequested() {
-        assertDoesNotThrow(() -> service.confirmationRequested("to@email.com", "Projeto A", "ONG B"));
+        assertDoesNotThrow(
+                () -> service.confirmationRequested("to@email.com", "Projeto A", "ONG B"));
     }
 
     @Test
     @DisplayName("partnershipActivated não deve lançar exceção")
     void shouldNotThrowOnPartnershipActivated() {
-        assertDoesNotThrow(() -> service.partnershipActivated("to@email.com", "Projeto A", "ONG B"));
+        assertDoesNotThrow(
+                () -> service.partnershipActivated("to@email.com", "Projeto A", "ONG B"));
     }
 
     @Test
     @DisplayName("negotiationCancelled não deve lançar exceção")
     void shouldNotThrowOnNegotiationCancelled() {
-        assertDoesNotThrow(() -> service.negotiationCancelled("to@email.com", "Projeto A", "ONG B"));
+        assertDoesNotThrow(
+                () -> service.negotiationCancelled("to@email.com", "Projeto A", "ONG B"));
     }
 }

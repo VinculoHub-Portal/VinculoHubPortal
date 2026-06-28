@@ -22,7 +22,6 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -162,7 +161,8 @@ class CompanyServiceTest {
         user.setEmail("export@empresa.com");
         company.setUser(user);
 
-        Address address = Address.builder().city("Curitiba").state("PR").zipCode("80000-000").build();
+        Address address =
+                Address.builder().city("Curitiba").state("PR").zipCode("80000-000").build();
         company.setAddress(address);
 
         when(companyRepository.findAll()).thenReturn(List.of(company));
@@ -209,9 +209,17 @@ class CompanyServiceTest {
         user.setAuth0Id("auth0|company123");
         user.setUserType(UserType.company);
 
-        Address address = Address.builder().id(5).state("SP").stateCode("SP")
-                .city("São Paulo").street("Av. Paulista").number("100")
-                .complement("Sala 1").zipCode("01310-100").build();
+        Address address =
+                Address.builder()
+                        .id(5)
+                        .state("SP")
+                        .stateCode("SP")
+                        .city("São Paulo")
+                        .street("Av. Paulista")
+                        .number("100")
+                        .complement("Sala 1")
+                        .zipCode("01310-100")
+                        .build();
 
         Company company = new Company();
         company.setId(20);
@@ -236,20 +244,24 @@ class CompanyServiceTest {
     @Test
     @DisplayName("Deve lançar BadRequestException para auth0Id nulo")
     void shouldThrowForNullAuth0IdInProfile() {
-        assertThrows(BadRequestException.class, () -> companyService.getCompanyProfileByAuth0Id(null));
+        assertThrows(
+                BadRequestException.class, () -> companyService.getCompanyProfileByAuth0Id(null));
     }
 
     @Test
     @DisplayName("Deve lançar BadRequestException para auth0Id em branco")
     void shouldThrowForBlankAuth0IdInProfile() {
-        assertThrows(BadRequestException.class, () -> companyService.getCompanyProfileByAuth0Id("  "));
+        assertThrows(
+                BadRequestException.class, () -> companyService.getCompanyProfileByAuth0Id("  "));
     }
 
     @Test
     @DisplayName("Deve lançar NotFoundException quando usuário não encontrado")
     void shouldThrowNotFoundWhenUserNotFoundInProfile() {
         when(userRepository.findByAuth0Id("auth0|ghost")).thenReturn(Optional.empty());
-        assertThrows(NotFoundException.class, () -> companyService.getCompanyProfileByAuth0Id("auth0|ghost"));
+        assertThrows(
+                NotFoundException.class,
+                () -> companyService.getCompanyProfileByAuth0Id("auth0|ghost"));
     }
 
     @Test
@@ -260,7 +272,9 @@ class CompanyServiceTest {
         when(userRepository.findByAuth0Id("auth0|nocompany")).thenReturn(Optional.of(user));
         when(companyRepository.findByUserId(99)).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> companyService.getCompanyProfileByAuth0Id("auth0|nocompany"));
+        assertThrows(
+                NotFoundException.class,
+                () -> companyService.getCompanyProfileByAuth0Id("auth0|nocompany"));
     }
 
     @Test
@@ -309,8 +323,15 @@ class CompanyServiceTest {
     @Test
     @DisplayName("Deve retornar perfil público com endereço")
     void shouldReturnPublicProfileWithAddress() {
-        Address address = Address.builder().city("Belo Horizonte").state("Minas Gerais")
-                .stateCode("MG").street("Rua C").number("300").zipCode("30000-000").build();
+        Address address =
+                Address.builder()
+                        .city("Belo Horizonte")
+                        .state("Minas Gerais")
+                        .stateCode("MG")
+                        .street("Rua C")
+                        .number("300")
+                        .zipCode("30000-000")
+                        .build();
         Company company = new Company();
         company.setId(5);
         company.setLegalName("Public LTDA");
@@ -360,13 +381,25 @@ class CompanyServiceTest {
     @Test
     @DisplayName("Deve criar empresa com sucesso")
     void shouldCreateCompanySuccessfully() {
-        AddressDTO addressDTO = AddressDTO.builder().state("SP").stateCode("SP")
-                .city("São Paulo").street("Rua A").number("1").zipCode("01000-000").build();
+        AddressDTO addressDTO =
+                AddressDTO.builder()
+                        .state("SP")
+                        .stateCode("SP")
+                        .city("São Paulo")
+                        .street("Rua A")
+                        .number("1")
+                        .zipCode("01000-000")
+                        .build();
         UserDTO userDTO = UserDTO.builder().name("Resp").email("resp@empresa.com").build();
-        CompanyDTO dto = CompanyDTO.builder()
-                .legalName("Nova Empresa LTDA").socialName("Nova Empresa")
-                .cnpj("12.345.678/0001-99").phone("(11) 99999-0000")
-                .address(addressDTO).user(userDTO).build();
+        CompanyDTO dto =
+                CompanyDTO.builder()
+                        .legalName("Nova Empresa LTDA")
+                        .socialName("Nova Empresa")
+                        .cnpj("12.345.678/0001-99")
+                        .phone("(11) 99999-0000")
+                        .address(addressDTO)
+                        .user(userDTO)
+                        .build();
 
         Address savedAddress = Address.builder().id(1).city("São Paulo").build();
         User savedUser = new User();
@@ -400,51 +433,76 @@ class CompanyServiceTest {
     @Test
     @DisplayName("Deve lançar BadRequestException para auth0Id nulo na criação")
     void shouldThrowForNullAuth0IdOnCreate() {
-        CompanyDTO dto = CompanyDTO.builder().legalName("X").socialName("X")
-                .cnpj("123").address(AddressDTO.builder().build())
-                .user(UserDTO.builder().build()).build();
+        CompanyDTO dto =
+                CompanyDTO.builder()
+                        .legalName("X")
+                        .socialName("X")
+                        .cnpj("123")
+                        .address(AddressDTO.builder().build())
+                        .user(UserDTO.builder().build())
+                        .build();
 
-        assertThrows(BadRequestException.class, () -> companyService.createCompany(null, "e@e.com", dto));
+        assertThrows(
+                BadRequestException.class,
+                () -> companyService.createCompany(null, "e@e.com", dto));
     }
 
     @Test
     @DisplayName("Deve lançar CompanyAlreadyExistsException para CNPJ duplicado na NPO")
     void shouldThrowForDuplicateCnpjInNpo() {
-        CompanyDTO dto = CompanyDTO.builder().legalName("X").socialName("X")
-                .cnpj("12345678000199").address(AddressDTO.builder().build())
-                .user(UserDTO.builder().build()).build();
+        CompanyDTO dto =
+                CompanyDTO.builder()
+                        .legalName("X")
+                        .socialName("X")
+                        .cnpj("12345678000199")
+                        .address(AddressDTO.builder().build())
+                        .user(UserDTO.builder().build())
+                        .build();
 
         when(npoRepository.existsByCnpj("12345678000199")).thenReturn(true);
 
-        assertThrows(CompanyAlreadyExistsException.class,
+        assertThrows(
+                CompanyAlreadyExistsException.class,
                 () -> companyService.createCompany("auth0|dup", "a@b.com", dto));
     }
 
     @Test
     @DisplayName("Deve lançar CompanyAlreadyExistsException para CNPJ duplicado na Company")
     void shouldThrowForDuplicateCnpjInCompany() {
-        CompanyDTO dto = CompanyDTO.builder().legalName("X").socialName("X")
-                .cnpj("12345678000199").address(AddressDTO.builder().build())
-                .user(UserDTO.builder().build()).build();
+        CompanyDTO dto =
+                CompanyDTO.builder()
+                        .legalName("X")
+                        .socialName("X")
+                        .cnpj("12345678000199")
+                        .address(AddressDTO.builder().build())
+                        .user(UserDTO.builder().build())
+                        .build();
 
         when(companyRepository.existsByCnpj("12345678000199")).thenReturn(true);
 
-        assertThrows(CompanyAlreadyExistsException.class,
+        assertThrows(
+                CompanyAlreadyExistsException.class,
                 () -> companyService.createCompany("auth0|dup", "a@b.com", dto));
     }
 
     @Test
     @DisplayName("Deve lançar CompanyAlreadyExistsException para auth0Id duplicado")
     void shouldThrowForDuplicateAuth0Id() {
-        CompanyDTO dto = CompanyDTO.builder().legalName("X").socialName("X")
-                .cnpj("12345678000199").address(AddressDTO.builder().build())
-                .user(UserDTO.builder().build()).build();
+        CompanyDTO dto =
+                CompanyDTO.builder()
+                        .legalName("X")
+                        .socialName("X")
+                        .cnpj("12345678000199")
+                        .address(AddressDTO.builder().build())
+                        .user(UserDTO.builder().build())
+                        .build();
 
         when(npoRepository.existsByCnpj("12345678000199")).thenReturn(false);
         when(companyRepository.existsByCnpj("12345678000199")).thenReturn(false);
         when(userRepository.existsByAuth0Id("auth0|dup")).thenReturn(true);
 
-        assertThrows(CompanyAlreadyExistsException.class,
+        assertThrows(
+                CompanyAlreadyExistsException.class,
                 () -> companyService.createCompany("auth0|dup", "a@b.com", dto));
     }
 
@@ -452,31 +510,43 @@ class CompanyServiceTest {
     @DisplayName("Deve lançar BadRequestException quando email não está disponível")
     void shouldThrowForNullEmail() {
         UserDTO userDTO = UserDTO.builder().email(null).build();
-        CompanyDTO dto = CompanyDTO.builder().legalName("X").socialName("X")
-                .cnpj("12345678000199").address(AddressDTO.builder().build())
-                .user(userDTO).build();
+        CompanyDTO dto =
+                CompanyDTO.builder()
+                        .legalName("X")
+                        .socialName("X")
+                        .cnpj("12345678000199")
+                        .address(AddressDTO.builder().build())
+                        .user(userDTO)
+                        .build();
 
         when(npoRepository.existsByCnpj("12345678000199")).thenReturn(false);
         when(companyRepository.existsByCnpj("12345678000199")).thenReturn(false);
         when(userRepository.existsByAuth0Id("auth0|new")).thenReturn(false);
 
-        assertThrows(BadRequestException.class,
+        assertThrows(
+                BadRequestException.class,
                 () -> companyService.createCompany("auth0|new", null, dto));
     }
 
     @Test
     @DisplayName("Deve lançar CompanyAlreadyExistsException para e-mail duplicado")
     void shouldThrowForDuplicateEmail() {
-        CompanyDTO dto = CompanyDTO.builder().legalName("X").socialName("X")
-                .cnpj("12345678000199").address(AddressDTO.builder().build())
-                .user(UserDTO.builder().build()).build();
+        CompanyDTO dto =
+                CompanyDTO.builder()
+                        .legalName("X")
+                        .socialName("X")
+                        .cnpj("12345678000199")
+                        .address(AddressDTO.builder().build())
+                        .user(UserDTO.builder().build())
+                        .build();
 
         when(npoRepository.existsByCnpj("12345678000199")).thenReturn(false);
         when(companyRepository.existsByCnpj("12345678000199")).thenReturn(false);
         when(userRepository.existsByAuth0Id("auth0|ok")).thenReturn(false);
         when(userRepository.existsByEmailIgnoreCase("dup@email.com")).thenReturn(true);
 
-        assertThrows(CompanyAlreadyExistsException.class,
+        assertThrows(
+                CompanyAlreadyExistsException.class,
                 () -> companyService.createCompany("auth0|ok", "dup@email.com", dto));
     }
 

@@ -397,7 +397,8 @@ class RelationshipServiceTest {
                 () -> relationshipService.listMyRelationships("   ", null));
     }
 
-    // ------------------------------------------------------------------ createRelationship branches
+    // ------------------------------------------------------------------ createRelationship
+    // branches
 
     @Test
     @DisplayName("VNC-02: request nulo lança BadRequest")
@@ -469,8 +470,7 @@ class RelationshipServiceTest {
         relationshipService.createRelationship(
                 NPO_AUTH, new CreateRelationshipRequest(project.getId(), company.getId()));
 
-        verify(notificationService)
-                .interestReceived(eq("empresa@corp.com"), any(), any());
+        verify(notificationService).interestReceived(eq("empresa@corp.com"), any(), any());
     }
 
     // ------------------------------------------------------------------ respond branches
@@ -595,7 +595,10 @@ class RelationshipServiceTest {
     void listNpoRelationshipsWithoutStatusFilter() {
         mockNpoActor();
         when(companyProjectRepository.findVisibleRelationshipsByNpoId(npo.getId()))
-                .thenReturn(List.of(relationship(RelationshipStatus.negotiation, InitiatorType.company)));
+                .thenReturn(
+                        List.of(
+                                relationship(
+                                        RelationshipStatus.negotiation, InitiatorType.company)));
 
         List<RelationshipListItemResponse> result =
                 relationshipService.listMyRelationships(NPO_AUTH, null);
@@ -626,9 +629,9 @@ class RelationshipServiceTest {
     void listNpoRelationshipsWithStatusFilter() {
         mockNpoActor();
         company.setSocialName(null);
-        when(companyProjectRepository.findRelationshipsByNpoIdAndStatusIn(
-                        eq(npo.getId()), any()))
-                .thenReturn(List.of(relationship(RelationshipStatus.pending, InitiatorType.company)));
+        when(companyProjectRepository.findRelationshipsByNpoIdAndStatusIn(eq(npo.getId()), any()))
+                .thenReturn(
+                        List.of(relationship(RelationshipStatus.pending, InitiatorType.company)));
 
         List<RelationshipListItemResponse> result =
                 relationshipService.listMyRelationships(NPO_AUTH, RelationshipStatus.pending);

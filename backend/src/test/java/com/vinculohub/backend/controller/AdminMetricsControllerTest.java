@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.vinculohub.backend.dto.AdminMetricsResponse;
-import com.vinculohub.backend.model.CompanyProject;
 import com.vinculohub.backend.repository.CompanyProjectRepository;
 import com.vinculohub.backend.service.AdminMetricsService;
 import java.util.List;

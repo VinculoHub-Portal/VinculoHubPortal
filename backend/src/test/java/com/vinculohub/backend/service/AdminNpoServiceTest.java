@@ -30,7 +30,8 @@ class AdminNpoServiceTest {
     @DisplayName("Deve listar ONGs com todos os filtros nulos")
     void shouldListNposWithAllNullFilters() {
         Pageable pageable = PageRequest.of(0, 10);
-        AdminNpoCardProjection projection = buildProjection(1, "ONG Alfa", true, true, false, false, "SP");
+        AdminNpoCardProjection projection =
+                buildProjection(1, "ONG Alfa", true, true, false, false, "SP");
 
         when(npoRepository.findAdminCards(null, null, null, pageable))
                 .thenReturn(new PageImpl<>(List.of(projection), pageable, 1));
@@ -135,12 +136,14 @@ class AdminNpoServiceTest {
     @DisplayName("Deve mapear projection com flags boolean null como false")
     void shouldMapNullBooleanFlagsAsFalse() {
         Pageable pageable = PageRequest.of(0, 10);
-        AdminNpoCardProjection projection = buildProjection(5, "ONG Beta", null, null, null, null, "RJ");
+        AdminNpoCardProjection projection =
+                buildProjection(5, "ONG Beta", null, null, null, null, "RJ");
 
         when(npoRepository.findAdminCards(null, null, null, pageable))
                 .thenReturn(new PageImpl<>(List.of(projection), pageable, 1));
 
-        AdminNpoCardResponse resp = adminNpoService.listNpos(null, null, null, pageable).getContent().get(0);
+        AdminNpoCardResponse resp =
+                adminNpoService.listNpos(null, null, null, pageable).getContent().get(0);
 
         assertFalse(resp.active());
         assertFalse(resp.environmental());
@@ -169,16 +172,55 @@ class AdminNpoServiceTest {
             Boolean governance,
             String stateCode) {
         return new AdminNpoCardProjection() {
-            @Override public Integer getId() { return id; }
-            @Override public String getName() { return name; }
-            @Override public String getLogoUrl() { return null; }
-            @Override public Boolean getActive() { return active; }
-            @Override public Boolean getEnvironmental() { return environmental; }
-            @Override public Boolean getSocial() { return social; }
-            @Override public Boolean getGovernance() { return governance; }
-            @Override public String getCity() { return "Cidade"; }
-            @Override public String getStateCode() { return stateCode; }
-            @Override public LocalDateTime getCreatedAt() { return LocalDateTime.now(); }
+            @Override
+            public Integer getId() {
+                return id;
+            }
+
+            @Override
+            public String getName() {
+                return name;
+            }
+
+            @Override
+            public String getLogoUrl() {
+                return null;
+            }
+
+            @Override
+            public Boolean getActive() {
+                return active;
+            }
+
+            @Override
+            public Boolean getEnvironmental() {
+                return environmental;
+            }
+
+            @Override
+            public Boolean getSocial() {
+                return social;
+            }
+
+            @Override
+            public Boolean getGovernance() {
+                return governance;
+            }
+
+            @Override
+            public String getCity() {
+                return "Cidade";
+            }
+
+            @Override
+            public String getStateCode() {
+                return stateCode;
+            }
+
+            @Override
+            public LocalDateTime getCreatedAt() {
+                return LocalDateTime.now();
+            }
         };
     }
 }

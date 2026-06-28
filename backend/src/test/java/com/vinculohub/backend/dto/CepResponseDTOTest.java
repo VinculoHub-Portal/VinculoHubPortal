@@ -13,7 +13,13 @@ class CepResponseDTOTest {
     void shouldBuildFromRawDto() {
         CepRawResponseDTO raw =
                 new CepRawResponseDTO(
-                        "01310-100", "Avenida Paulista", "Complemento", "São Paulo", "SP", "São Paulo", null);
+                        "01310-100",
+                        "Avenida Paulista",
+                        "Complemento",
+                        "São Paulo",
+                        "SP",
+                        "São Paulo",
+                        null);
 
         CepResponseDTO dto = CepResponseDTO.from(raw);
 

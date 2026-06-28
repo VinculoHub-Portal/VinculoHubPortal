@@ -174,7 +174,9 @@ class NpoAccountServiceTest {
 
         assertThrows(
                 DuplicateLoginException.class,
-                () -> npoAccountService.registerInstitutionalAccount("auth0|npo", "a@b.com", request));
+                () ->
+                        npoAccountService.registerInstitutionalAccount(
+                                "auth0|npo", "a@b.com", request));
 
         verify(userRepository, never()).save(any());
     }
@@ -191,18 +193,45 @@ class NpoAccountServiceTest {
     void shouldParseMediumNpoSize() {
         NpoInstitutionalSignupRequest request =
                 new NpoInstitutionalSignupRequest(
-                        "ONG Media", "a@b.com", "529.982.247-25", null, "media",
-                        "Desc", null, true, false, false,
+                        "ONG Media",
+                        "a@b.com",
+                        "529.982.247-25",
+                        null,
+                        "media",
+                        "Desc",
+                        null,
+                        true,
+                        false,
+                        false,
                         new AddressSignupRequest(null, null, null, null, null, null, null),
-                        new NpoFirstProjectSignupRequest("P", "D", null, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW));
+                        new NpoFirstProjectSignupRequest(
+                                "P", "D", null, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW));
 
         when(userRepository.existsByAuth0Id(any())).thenReturn(false);
         when(userRepository.existsByEmailIgnoreCase(any())).thenReturn(false);
-        when(userRepository.save(any())).thenAnswer(inv -> { User u = inv.getArgument(0); u.setId(1); return u; });
+        when(userRepository.save(any()))
+                .thenAnswer(
+                        inv -> {
+                            User u = inv.getArgument(0);
+                            u.setId(1);
+                            return u;
+                        });
         when(npoDocumentService.sanitizeCpf(any())).thenReturn("52998224725");
         when(npoDocumentService.sanitizeCnpj(any())).thenReturn(null);
-        when(npoService.saveWithAddress(any(), any())).thenAnswer(inv -> { Npo n = inv.getArgument(0); n.setId(2); return n; });
-        when(projectService.createFirstProject(any(), any())).thenAnswer(inv -> { Project p = new Project(); p.setId(3L); return p; });
+        when(npoService.saveWithAddress(any(), any()))
+                .thenAnswer(
+                        inv -> {
+                            Npo n = inv.getArgument(0);
+                            n.setId(2);
+                            return n;
+                        });
+        when(projectService.createFirstProject(any(), any()))
+                .thenAnswer(
+                        inv -> {
+                            Project p = new Project();
+                            p.setId(3L);
+                            return p;
+                        });
 
         NpoInstitutionalSignupResponse resp =
                 npoAccountService.registerInstitutionalAccount("auth0|m", "a@b.com", request);
@@ -215,22 +244,35 @@ class NpoAccountServiceTest {
     void shouldThrowForInvalidNpoSize() {
         NpoInstitutionalSignupRequest request =
                 new NpoInstitutionalSignupRequest(
-                        "ONG X", "a@b.com", "529.982.247-25", null, "gigante",
-                        "Desc", null, true, false, false,
+                        "ONG X",
+                        "a@b.com",
+                        "529.982.247-25",
+                        null,
+                        "gigante",
+                        "Desc",
+                        null,
+                        true,
+                        false,
+                        false,
                         new AddressSignupRequest(null, null, null, null, null, null, null),
-                        new NpoFirstProjectSignupRequest("P", "D", null, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW));
+                        new NpoFirstProjectSignupRequest(
+                                "P", "D", null, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW));
 
         when(userRepository.existsByAuth0Id(any())).thenReturn(false);
         when(userRepository.existsByEmailIgnoreCase(any())).thenReturn(false);
-        when(userRepository.save(any())).thenAnswer(inv -> {
-            User u = inv.getArgument(0);
-            u.setId(1);
-            return u;
-        });
+        when(userRepository.save(any()))
+                .thenAnswer(
+                        inv -> {
+                            User u = inv.getArgument(0);
+                            u.setId(1);
+                            return u;
+                        });
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> npoAccountService.registerInstitutionalAccount("auth0|x", "a@b.com", request));
+                () ->
+                        npoAccountService.registerInstitutionalAccount(
+                                "auth0|x", "a@b.com", request));
     }
 
     @Test
@@ -238,18 +280,45 @@ class NpoAccountServiceTest {
     void shouldParseLargeNpoSize() {
         NpoInstitutionalSignupRequest request =
                 new NpoInstitutionalSignupRequest(
-                        "ONG Grande", "a@b.com", "529.982.247-25", null, "grande",
-                        "Desc", null, true, false, false,
+                        "ONG Grande",
+                        "a@b.com",
+                        "529.982.247-25",
+                        null,
+                        "grande",
+                        "Desc",
+                        null,
+                        true,
+                        false,
+                        false,
                         new AddressSignupRequest(null, null, null, null, null, null, null),
-                        new NpoFirstProjectSignupRequest("P", "D", null, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW));
+                        new NpoFirstProjectSignupRequest(
+                                "P", "D", null, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW));
 
         when(userRepository.existsByAuth0Id(any())).thenReturn(false);
         when(userRepository.existsByEmailIgnoreCase(any())).thenReturn(false);
-        when(userRepository.save(any())).thenAnswer(inv -> { User u = inv.getArgument(0); u.setId(1); return u; });
+        when(userRepository.save(any()))
+                .thenAnswer(
+                        inv -> {
+                            User u = inv.getArgument(0);
+                            u.setId(1);
+                            return u;
+                        });
         when(npoDocumentService.sanitizeCpf(any())).thenReturn("52998224725");
         when(npoDocumentService.sanitizeCnpj(any())).thenReturn(null);
-        when(npoService.saveWithAddress(any(), any())).thenAnswer(inv -> { Npo n = inv.getArgument(0); n.setId(2); return n; });
-        when(projectService.createFirstProject(any(), any())).thenAnswer(inv -> { Project p = new Project(); p.setId(3L); return p; });
+        when(npoService.saveWithAddress(any(), any()))
+                .thenAnswer(
+                        inv -> {
+                            Npo n = inv.getArgument(0);
+                            n.setId(2);
+                            return n;
+                        });
+        when(projectService.createFirstProject(any(), any()))
+                .thenAnswer(
+                        inv -> {
+                            Project p = new Project();
+                            p.setId(3L);
+                            return p;
+                        });
 
         NpoInstitutionalSignupResponse resp =
                 npoAccountService.registerInstitutionalAccount("auth0|g", "a@b.com", request);
@@ -262,18 +331,45 @@ class NpoAccountServiceTest {
     void shouldRegisterWithNullAddressWhenAllFieldsBlank() {
         NpoInstitutionalSignupRequest request =
                 new NpoInstitutionalSignupRequest(
-                        "ONG Sem Endereço", "a@b.com", "529.982.247-25", null, "pequena",
-                        "Desc", null, true, false, false,
+                        "ONG Sem Endereço",
+                        "a@b.com",
+                        "529.982.247-25",
+                        null,
+                        "pequena",
+                        "Desc",
+                        null,
+                        true,
+                        false,
+                        false,
                         new AddressSignupRequest("  ", "  ", "  ", "  ", "  ", "  ", "  "),
-                        new NpoFirstProjectSignupRequest("P", "D", null, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW));
+                        new NpoFirstProjectSignupRequest(
+                                "P", "D", null, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW));
 
         when(userRepository.existsByAuth0Id(any())).thenReturn(false);
         when(userRepository.existsByEmailIgnoreCase(any())).thenReturn(false);
-        when(userRepository.save(any())).thenAnswer(inv -> { User u = inv.getArgument(0); u.setId(1); return u; });
+        when(userRepository.save(any()))
+                .thenAnswer(
+                        inv -> {
+                            User u = inv.getArgument(0);
+                            u.setId(1);
+                            return u;
+                        });
         when(npoDocumentService.sanitizeCpf(any())).thenReturn("52998224725");
         when(npoDocumentService.sanitizeCnpj(any())).thenReturn(null);
-        when(npoService.saveWithAddress(any(), any())).thenAnswer(inv -> { Npo n = inv.getArgument(0); n.setId(2); return n; });
-        when(projectService.createFirstProject(any(), any())).thenAnswer(inv -> { Project p = new Project(); p.setId(3L); return p; });
+        when(npoService.saveWithAddress(any(), any()))
+                .thenAnswer(
+                        inv -> {
+                            Npo n = inv.getArgument(0);
+                            n.setId(2);
+                            return n;
+                        });
+        when(projectService.createFirstProject(any(), any()))
+                .thenAnswer(
+                        inv -> {
+                            Project p = new Project();
+                            p.setId(3L);
+                            return p;
+                        });
 
         NpoInstitutionalSignupResponse resp =
                 npoAccountService.registerInstitutionalAccount("auth0|nsa", "a@b.com", request);
@@ -289,11 +385,29 @@ class NpoAccountServiceTest {
 
         when(userRepository.existsByAuth0Id(any())).thenReturn(false);
         when(userRepository.existsByEmailIgnoreCase(any())).thenReturn(false);
-        when(userRepository.save(any())).thenAnswer(inv -> { User u = inv.getArgument(0); u.setId(1); return u; });
+        when(userRepository.save(any()))
+                .thenAnswer(
+                        inv -> {
+                            User u = inv.getArgument(0);
+                            u.setId(1);
+                            return u;
+                        });
         when(npoDocumentService.sanitizeCpf(any())).thenReturn("52998224725");
         when(npoDocumentService.sanitizeCnpj(any())).thenReturn(null);
-        when(npoService.saveWithAddress(any(), any())).thenAnswer(inv -> { Npo n = inv.getArgument(0); n.setId(2); return n; });
-        when(projectService.createFirstProject(any(), any())).thenAnswer(inv -> { Project p = new Project(); p.setId(3L); return p; });
+        when(npoService.saveWithAddress(any(), any()))
+                .thenAnswer(
+                        inv -> {
+                            Npo n = inv.getArgument(0);
+                            n.setId(2);
+                            return n;
+                        });
+        when(projectService.createFirstProject(any(), any()))
+                .thenAnswer(
+                        inv -> {
+                            Project p = new Project();
+                            p.setId(3L);
+                            return p;
+                        });
 
         // auth0Email is blank → firstPresent returns request.email()
         NpoInstitutionalSignupResponse resp =
@@ -306,7 +420,8 @@ class NpoAccountServiceTest {
     @DisplayName("auth0Id em branco lança IllegalArgumentException via requireText")
     void shouldThrowWhenAuth0IdIsBlank() {
         NpoInstitutionalSignupRequest request = validRequest();
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(
+                IllegalArgumentException.class,
                 () -> npoAccountService.registerInstitutionalAccount("   ", "a@b.com", request));
     }
 
@@ -315,18 +430,45 @@ class NpoAccountServiceTest {
     void shouldRegisterWithNullAddressRequest() {
         NpoInstitutionalSignupRequest request =
                 new NpoInstitutionalSignupRequest(
-                        "ONG Sem Addr", "a@b.com", "529.982.247-25", null, "pequena",
-                        "Desc", null, true, false, false,
+                        "ONG Sem Addr",
+                        "a@b.com",
+                        "529.982.247-25",
                         null,
-                        new NpoFirstProjectSignupRequest("P", "D", null, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW));
+                        "pequena",
+                        "Desc",
+                        null,
+                        true,
+                        false,
+                        false,
+                        null,
+                        new NpoFirstProjectSignupRequest(
+                                "P", "D", null, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW));
 
         when(userRepository.existsByAuth0Id(any())).thenReturn(false);
         when(userRepository.existsByEmailIgnoreCase(any())).thenReturn(false);
-        when(userRepository.save(any())).thenAnswer(inv -> { User u = inv.getArgument(0); u.setId(1); return u; });
+        when(userRepository.save(any()))
+                .thenAnswer(
+                        inv -> {
+                            User u = inv.getArgument(0);
+                            u.setId(1);
+                            return u;
+                        });
         when(npoDocumentService.sanitizeCpf(any())).thenReturn("52998224725");
         when(npoDocumentService.sanitizeCnpj(any())).thenReturn(null);
-        when(npoService.saveWithAddress(any(), isNull())).thenAnswer(inv -> { Npo n = inv.getArgument(0); n.setId(2); return n; });
-        when(projectService.createFirstProject(any(), any())).thenAnswer(inv -> { Project p = new Project(); p.setId(3L); return p; });
+        when(npoService.saveWithAddress(any(), isNull()))
+                .thenAnswer(
+                        inv -> {
+                            Npo n = inv.getArgument(0);
+                            n.setId(2);
+                            return n;
+                        });
+        when(projectService.createFirstProject(any(), any()))
+                .thenAnswer(
+                        inv -> {
+                            Project p = new Project();
+                            p.setId(3L);
+                            return p;
+                        });
 
         NpoInstitutionalSignupResponse resp =
                 npoAccountService.registerInstitutionalAccount("auth0|x", "a@b.com", request);
@@ -338,54 +480,87 @@ class NpoAccountServiceTest {
     @Test
     @DisplayName("isBlankAddress retorna false quando apenas stateCode é preenchido")
     void shouldDetectNonBlankWhenOnlyStateCodeFilled() {
-        assertIsBlankAddressFalse(new AddressSignupRequest(null, "SP", null, null, null, null, null));
+        assertIsBlankAddressFalse(
+                new AddressSignupRequest(null, "SP", null, null, null, null, null));
     }
 
     @Test
     @DisplayName("isBlankAddress retorna false quando apenas city é preenchido")
     void shouldDetectNonBlankWhenOnlyCityFilled() {
-        assertIsBlankAddressFalse(new AddressSignupRequest(null, null, "São Paulo", null, null, null, null));
+        assertIsBlankAddressFalse(
+                new AddressSignupRequest(null, null, "São Paulo", null, null, null, null));
     }
 
     @Test
     @DisplayName("isBlankAddress retorna false quando apenas street é preenchido")
     void shouldDetectNonBlankWhenOnlyStreetFilled() {
-        assertIsBlankAddressFalse(new AddressSignupRequest(null, null, null, "Rua A", null, null, null));
+        assertIsBlankAddressFalse(
+                new AddressSignupRequest(null, null, null, "Rua A", null, null, null));
     }
 
     @Test
     @DisplayName("isBlankAddress retorna false quando apenas number é preenchido")
     void shouldDetectNonBlankWhenOnlyNumberFilled() {
-        assertIsBlankAddressFalse(new AddressSignupRequest(null, null, null, null, "1", null, null));
+        assertIsBlankAddressFalse(
+                new AddressSignupRequest(null, null, null, null, "1", null, null));
     }
 
     @Test
     @DisplayName("isBlankAddress retorna false quando apenas complement é preenchido")
     void shouldDetectNonBlankWhenOnlyComplementFilled() {
-        assertIsBlankAddressFalse(new AddressSignupRequest(null, null, null, null, null, "Apto 2", null));
+        assertIsBlankAddressFalse(
+                new AddressSignupRequest(null, null, null, null, null, "Apto 2", null));
     }
 
     @Test
     @DisplayName("isBlankAddress retorna false quando apenas zipCode é preenchido")
     void shouldDetectNonBlankWhenOnlyZipCodeFilled() {
-        assertIsBlankAddressFalse(new AddressSignupRequest(null, null, null, null, null, null, "01000-000"));
+        assertIsBlankAddressFalse(
+                new AddressSignupRequest(null, null, null, null, null, null, "01000-000"));
     }
 
     private void assertIsBlankAddressFalse(AddressSignupRequest addr) {
         NpoInstitutionalSignupRequest request =
                 new NpoInstitutionalSignupRequest(
-                        "ONG X", "a@b.com", "529.982.247-25", null, "pequena",
-                        "Desc", null, true, false, false,
+                        "ONG X",
+                        "a@b.com",
+                        "529.982.247-25",
+                        null,
+                        "pequena",
+                        "Desc",
+                        null,
+                        true,
+                        false,
+                        false,
                         addr,
-                        new NpoFirstProjectSignupRequest("P", "D", null, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW));
+                        new NpoFirstProjectSignupRequest(
+                                "P", "D", null, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW));
 
         when(userRepository.existsByAuth0Id(any())).thenReturn(false);
         when(userRepository.existsByEmailIgnoreCase(any())).thenReturn(false);
-        when(userRepository.save(any())).thenAnswer(inv -> { User u = inv.getArgument(0); u.setId(1); return u; });
+        when(userRepository.save(any()))
+                .thenAnswer(
+                        inv -> {
+                            User u = inv.getArgument(0);
+                            u.setId(1);
+                            return u;
+                        });
         when(npoDocumentService.sanitizeCpf(any())).thenReturn("52998224725");
         when(npoDocumentService.sanitizeCnpj(any())).thenReturn(null);
-        when(npoService.saveWithAddress(any(), any(Address.class))).thenAnswer(inv -> { Npo n = inv.getArgument(0); n.setId(2); return n; });
-        when(projectService.createFirstProject(any(), any())).thenAnswer(inv -> { Project p = new Project(); p.setId(3L); return p; });
+        when(npoService.saveWithAddress(any(), any(Address.class)))
+                .thenAnswer(
+                        inv -> {
+                            Npo n = inv.getArgument(0);
+                            n.setId(2);
+                            return n;
+                        });
+        when(projectService.createFirstProject(any(), any()))
+                .thenAnswer(
+                        inv -> {
+                            Project p = new Project();
+                            p.setId(3L);
+                            return p;
+                        });
 
         NpoInstitutionalSignupResponse resp =
                 npoAccountService.registerInstitutionalAccount("auth0|x", "a@b.com", request);

@@ -31,7 +31,8 @@ class GlobalExceptionHandlerTest {
     void shouldHandleNoResourceFound() throws NoSuchFieldException {
         NoResourceFoundException ex = mock(NoResourceFoundException.class);
         when(ex.getResourcePath()).thenReturn("/nao-existe");
-        ResponseEntity<GlobalExceptionHandler.ErrorResponse> resp = handler.handleNoResourceFound(ex);
+        ResponseEntity<GlobalExceptionHandler.ErrorResponse> resp =
+                handler.handleNoResourceFound(ex);
         assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
         assertEquals(404, resp.getBody().status());
     }
@@ -40,7 +41,8 @@ class GlobalExceptionHandlerTest {
     @DisplayName("handleUnprocessableEntity retorna 422")
     void shouldHandle422() {
         UnprocessableEntityException ex = new UnprocessableEntityException("Entidade inválida");
-        ResponseEntity<GlobalExceptionHandler.ErrorResponse> resp = handler.handleUnprocessableEntity(ex);
+        ResponseEntity<GlobalExceptionHandler.ErrorResponse> resp =
+                handler.handleUnprocessableEntity(ex);
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, resp.getStatusCode());
         assertEquals(422, resp.getBody().status());
         assertEquals("Entidade inválida", resp.getBody().message());
@@ -70,7 +72,8 @@ class GlobalExceptionHandlerTest {
     @DisplayName("handleIllegalArgument retorna 400")
     void shouldHandleIllegalArgument() {
         IllegalArgumentException ex = new IllegalArgumentException("Argumento inválido");
-        ResponseEntity<GlobalExceptionHandler.ErrorResponse> resp = handler.handleIllegalArgument(ex);
+        ResponseEntity<GlobalExceptionHandler.ErrorResponse> resp =
+                handler.handleIllegalArgument(ex);
         assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
         assertEquals("Argumento inválido", resp.getBody().message());
     }
@@ -119,7 +122,8 @@ class GlobalExceptionHandlerTest {
         AuthorizationDeniedException ex = mock(AuthorizationDeniedException.class);
         when(ex.getMessage()).thenReturn("Acesso negado");
 
-        ResponseEntity<GlobalExceptionHandler.ErrorResponse> resp = handler.handleAuthorizationDenied(ex);
+        ResponseEntity<GlobalExceptionHandler.ErrorResponse> resp =
+                handler.handleAuthorizationDenied(ex);
 
         assertEquals(HttpStatus.FORBIDDEN, resp.getStatusCode());
         assertTrue(resp.getBody().message().contains("permissão"));
@@ -145,5 +149,8 @@ class GlobalExceptionHandlerTest {
         assertEquals("teste", resp.message());
     }
 
-    enum TestEnum { VALUE_A, VALUE_B }
+    enum TestEnum {
+        VALUE_A,
+        VALUE_B
+    }
 }

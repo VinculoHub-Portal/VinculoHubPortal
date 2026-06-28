@@ -52,10 +52,14 @@ class CnpjValidationServiceTest {
     @Test
     @DisplayName("validate lança CnpjNotFoundException quando API retorna 404")
     void shouldThrowCnpjNotFoundExceptionOnNotFound() {
-        HttpClientErrorException.NotFound notFound = (HttpClientErrorException.NotFound)
-                HttpClientErrorException.create(
-                        HttpStatus.NOT_FOUND, "Not Found",
-                        HttpHeaders.EMPTY, new byte[0], StandardCharsets.UTF_8);
+        HttpClientErrorException.NotFound notFound =
+                (HttpClientErrorException.NotFound)
+                        HttpClientErrorException.create(
+                                HttpStatus.NOT_FOUND,
+                                "Not Found",
+                                HttpHeaders.EMPTY,
+                                new byte[0],
+                                StandardCharsets.UTF_8);
         when(restClient.get().uri(anyString()).retrieve().body(CnpjResponseDTO.class))
                 .thenThrow(notFound);
 
@@ -74,7 +78,8 @@ class CnpjValidationServiceTest {
     @Test
     @DisplayName("validate lança CnpjInactiveException quando situação não é Ativa")
     void shouldThrowCnpjInactiveExceptionWhenSituationIsNotAtiva() {
-        CnpjResponseDTO inactive = new CnpjResponseDTO("12345678000195", "Razão", "Fantasia", "Baixada");
+        CnpjResponseDTO inactive =
+                new CnpjResponseDTO("12345678000195", "Razão", "Fantasia", "Baixada");
         when(restClient.get().uri(anyString()).retrieve().body(CnpjResponseDTO.class))
                 .thenReturn(inactive);
 

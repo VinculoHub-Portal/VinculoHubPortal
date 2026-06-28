@@ -43,7 +43,8 @@ class EditalControllerTest {
     @DisplayName("GET /api/editais retorna lista paginada quando active=false (default)")
     void shouldListAllEditais() throws Exception {
         EditalResponseDTO edital = buildEdital(1L, "Edital 2026");
-        when(editalService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(edital)));
+        when(editalService.findAll(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(edital)));
 
         mockMvc.perform(get("/api/editais").param("active", "false"))
                 .andExpect(status().isOk())
@@ -57,7 +58,8 @@ class EditalControllerTest {
     @DisplayName("GET /api/editais retorna somente ativos quando active=true")
     void shouldListActiveEditais() throws Exception {
         EditalResponseDTO edital = buildEdital(2L, "Edital Ativo");
-        when(editalService.findAllActive(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(edital)));
+        when(editalService.findAllActive(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(edital)));
 
         mockMvc.perform(get("/api/editais").param("active", "true"))
                 .andExpect(status().isOk())
@@ -79,8 +81,13 @@ class EditalControllerTest {
 
     private EditalResponseDTO buildEdital(Long id, String title) {
         return new EditalResponseDTO(
-                id, title, "Desc", "https://url.com/edital.pdf",
-                "edital.pdf", 1024L, "application/pdf",
+                id,
+                title,
+                "Desc",
+                "https://url.com/edital.pdf",
+                "edital.pdf",
+                1024L,
+                "application/pdf",
                 List.of(),
                 LocalDateTime.now().plusDays(30),
                 LocalDateTime.now(),

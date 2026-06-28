@@ -82,11 +82,23 @@ class NpoServiceTest {
     @Test
     @DisplayName("Deve exportar lista de ONGs com endereço")
     void shouldExportAllNposWithAddress() {
-        Address address = Address.builder().city("Porto Alegre").state("Rio Grande do Sul").zipCode("90000-000").build();
-        Npo npo = Npo.builder()
-                .id(1).name("ONG Exemplo").cnpj("12345678000199")
-                .npoSize(NpoSize.small).environmental(true).social(false).governance(true)
-                .address(address).build();
+        Address address =
+                Address.builder()
+                        .city("Porto Alegre")
+                        .state("Rio Grande do Sul")
+                        .zipCode("90000-000")
+                        .build();
+        Npo npo =
+                Npo.builder()
+                        .id(1)
+                        .name("ONG Exemplo")
+                        .cnpj("12345678000199")
+                        .npoSize(NpoSize.small)
+                        .environmental(true)
+                        .social(false)
+                        .governance(true)
+                        .address(address)
+                        .build();
 
         when(npoRepository.findAll()).thenReturn(List.of(npo));
 
@@ -105,7 +117,13 @@ class NpoServiceTest {
     @Test
     @DisplayName("Deve exportar ONG sem endereço mapeando campos como null")
     void shouldExportNpoWithNullAddress() {
-        Npo npo = Npo.builder().id(2).name("ONG Sem End").npoSize(NpoSize.medium).address(null).build();
+        Npo npo =
+                Npo.builder()
+                        .id(2)
+                        .name("ONG Sem End")
+                        .npoSize(NpoSize.medium)
+                        .address(null)
+                        .build();
 
         when(npoRepository.findAll()).thenReturn(List.of(npo));
 

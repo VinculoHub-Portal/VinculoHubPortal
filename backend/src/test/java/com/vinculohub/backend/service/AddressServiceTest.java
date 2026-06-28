@@ -36,9 +36,17 @@ class AddressServiceTest {
                         .zipCode("01310-100")
                         .build();
 
-        Address saved = Address.builder().id(99).state("São Paulo").stateCode("SP")
-                .city("São Paulo").street("Avenida Paulista").number("1000")
-                .complement("Sala 10").zipCode("01310-100").build();
+        Address saved =
+                Address.builder()
+                        .id(99)
+                        .state("São Paulo")
+                        .stateCode("SP")
+                        .city("São Paulo")
+                        .street("Avenida Paulista")
+                        .number("1000")
+                        .complement("Sala 10")
+                        .zipCode("01310-100")
+                        .build();
 
         when(addressRepository.save(any(Address.class))).thenReturn(saved);
 
@@ -62,16 +70,17 @@ class AddressServiceTest {
     @Test
     @DisplayName("Deve converter Address para DTO com todos os campos")
     void shouldConvertAddressToDto() {
-        Address address = Address.builder()
-                .id(5)
-                .state("Rio de Janeiro")
-                .stateCode("RJ")
-                .city("Niterói")
-                .street("Rua B")
-                .number("200")
-                .complement("Apto 3")
-                .zipCode("24000-000")
-                .build();
+        Address address =
+                Address.builder()
+                        .id(5)
+                        .state("Rio de Janeiro")
+                        .stateCode("RJ")
+                        .city("Niterói")
+                        .street("Rua B")
+                        .number("200")
+                        .complement("Apto 3")
+                        .zipCode("24000-000")
+                        .build();
 
         AddressDTO dto = addressService.addressToAddressDTO(address);
 

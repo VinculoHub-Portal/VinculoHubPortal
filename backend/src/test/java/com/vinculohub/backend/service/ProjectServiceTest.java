@@ -675,9 +675,21 @@ class ProjectServiceTest {
                         .build();
 
         ProjectUpdateRequest req =
-                new ProjectUpdateRequest("T", "D".repeat(50), null, new BigDecimal("50.00"),
-                        null, null, List.of(1), ProjectType.SOCIAL_INVESTMENT_LAW,
-                        null, null, null, null, null, 30);
+                new ProjectUpdateRequest(
+                        "T",
+                        "D".repeat(50),
+                        null,
+                        new BigDecimal("50.00"),
+                        null,
+                        null,
+                        List.of(1),
+                        ProjectType.SOCIAL_INVESTMENT_LAW,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        30);
 
         when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
         when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
@@ -708,9 +720,21 @@ class ProjectServiceTest {
                         .build();
 
         ProjectUpdateRequest req =
-                new ProjectUpdateRequest("T", "D".repeat(50), null, new BigDecimal("75.00"),
-                        null, null, List.of(1), ProjectType.SOCIAL_INVESTMENT_LAW,
-                        null, null, null, null, null, null);
+                new ProjectUpdateRequest(
+                        "T",
+                        "D".repeat(50),
+                        null,
+                        new BigDecimal("75.00"),
+                        null,
+                        null,
+                        List.of(1),
+                        ProjectType.SOCIAL_INVESTMENT_LAW,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
 
         when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
         when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
@@ -740,9 +764,21 @@ class ProjectServiceTest {
                         .build();
 
         ProjectUpdateRequest req =
-                new ProjectUpdateRequest("T", "D".repeat(50), null, new BigDecimal("-50.00"),
-                        null, null, List.of(1), ProjectType.SOCIAL_INVESTMENT_LAW,
-                        null, null, null, null, null, null);
+                new ProjectUpdateRequest(
+                        "T",
+                        "D".repeat(50),
+                        null,
+                        new BigDecimal("-50.00"),
+                        null,
+                        null,
+                        List.of(1),
+                        ProjectType.SOCIAL_INVESTMENT_LAW,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
 
         when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
         when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
@@ -772,16 +808,29 @@ class ProjectServiceTest {
                         .build();
 
         ProjectUpdateRequest req =
-                new ProjectUpdateRequest("T", "D".repeat(50), new BigDecimal("500.00"), new BigDecimal("200.00"),
-                        null, null, List.of(1), ProjectType.SOCIAL_INVESTMENT_LAW,
-                        null, null, null, null, null, null);
+                new ProjectUpdateRequest(
+                        "T",
+                        "D".repeat(50),
+                        new BigDecimal("500.00"),
+                        new BigDecimal("200.00"),
+                        null,
+                        null,
+                        List.of(1),
+                        ProjectType.SOCIAL_INVESTMENT_LAW,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
 
         when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
         when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(existing));
         when(odsService.resolveSelection(any())).thenReturn(new LinkedHashSet<>());
 
-        assertThrows(BadRequestException.class,
+        assertThrows(
+                BadRequestException.class,
                 () -> projectService.updateProject(auth0Id, projectId, req));
     }
 
@@ -795,16 +844,34 @@ class ProjectServiceTest {
         Npo npo = Npo.builder().id(20).build();
 
         ProjectCreateRequest req =
-                new ProjectCreateRequest("Titulo", "Descricao", null,
-                        null, null, null, ProjectType.SOCIAL_INVESTMENT_LAW,
-                        null, null, null, null, null, null);
+                new ProjectCreateRequest(
+                        "Titulo",
+                        "Descricao",
+                        null,
+                        null,
+                        null,
+                        null,
+                        ProjectType.SOCIAL_INVESTMENT_LAW,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
 
         when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
         when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
         when(odsService.resolveSelection(null)).thenReturn(new LinkedHashSet<>());
-        Project saved = Project.builder().id(1L).npo(npo).title("Titulo").status(ProjectStatus.ACTIVE)
-                .type(ProjectType.SOCIAL_INVESTMENT_LAW).investedAmount(BigDecimal.ZERO)
-                .ods(new LinkedHashSet<>()).build();
+        Project saved =
+                Project.builder()
+                        .id(1L)
+                        .npo(npo)
+                        .title("Titulo")
+                        .status(ProjectStatus.ACTIVE)
+                        .type(ProjectType.SOCIAL_INVESTMENT_LAW)
+                        .investedAmount(BigDecimal.ZERO)
+                        .ods(new LinkedHashSet<>())
+                        .build();
         when(projectRepository.save(any())).thenReturn(saved);
 
         ProjectCreateResponse resp = projectService.createProject(auth0Id, req);
@@ -813,29 +880,28 @@ class ProjectServiceTest {
         verify(odsService).resolveSelection(null);
     }
 
-    // ------------------------------------------------------------------ getNpoProjectSummary branches
+    // ------------------------------------------------------------------ getNpoProjectSummary
+    // branches
 
     @Test
     @DisplayName("getNpoProjectSummary com auth0Id nulo lança BadRequest")
     void shouldThrowWhenNpoProjectSummaryAuth0IdIsNull() {
-        assertThrows(BadRequestException.class,
-                () -> projectService.getNpoProjectSummary(null));
+        assertThrows(BadRequestException.class, () -> projectService.getNpoProjectSummary(null));
     }
 
     @Test
     @DisplayName("getNpoProjectSummary com auth0Id em branco lança BadRequest")
     void shouldThrowWhenNpoProjectSummaryAuth0IdIsBlank() {
-        assertThrows(BadRequestException.class,
-                () -> projectService.getNpoProjectSummary("  "));
+        assertThrows(BadRequestException.class, () -> projectService.getNpoProjectSummary("  "));
     }
 
-    // ------------------------------------------------------------------ getEsgImpactDashboard branches
+    // ------------------------------------------------------------------ getEsgImpactDashboard
+    // branches
 
     @Test
     @DisplayName("getEsgImpactDashboard com auth0Id nulo lança BadRequest")
     void shouldThrowWhenEsgDashboardAuth0IdIsNull() {
-        assertThrows(BadRequestException.class,
-                () -> projectService.getEsgImpactDashboard(null));
+        assertThrows(BadRequestException.class, () -> projectService.getEsgImpactDashboard(null));
     }
 
     @Test
@@ -866,16 +932,43 @@ class ProjectServiceTest {
         company.setId(10);
         PortfolioTotalsProjection totals =
                 new PortfolioTotalsProjection() {
-                    @Override public Long getProjectCount() { return null; }
-                    @Override public BigDecimal getTotalInvested() { return null; }
-                    @Override public BigDecimal getTotalBudgetNeeded() { return null; }
+                    @Override
+                    public Long getProjectCount() {
+                        return null;
+                    }
+
+                    @Override
+                    public BigDecimal getTotalInvested() {
+                        return null;
+                    }
+
+                    @Override
+                    public BigDecimal getTotalBudgetNeeded() {
+                        return null;
+                    }
                 };
-        EsgPillarAggregationProjection rowWithNullCount = new EsgPillarAggregationProjection() {
-            @Override public String getPillar() { return "ENVIRONMENTAL"; }
-            @Override public Long getProjectCount() { return null; }
-            @Override public BigDecimal getTotalInvested() { return new BigDecimal("100"); }
-            @Override public BigDecimal getTotalBudgetNeeded() { return new BigDecimal("200"); }
-        };
+        EsgPillarAggregationProjection rowWithNullCount =
+                new EsgPillarAggregationProjection() {
+                    @Override
+                    public String getPillar() {
+                        return "ENVIRONMENTAL";
+                    }
+
+                    @Override
+                    public Long getProjectCount() {
+                        return null;
+                    }
+
+                    @Override
+                    public BigDecimal getTotalInvested() {
+                        return new BigDecimal("100");
+                    }
+
+                    @Override
+                    public BigDecimal getTotalBudgetNeeded() {
+                        return new BigDecimal("200");
+                    }
+                };
 
         when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
         when(companyRepository.findByUserId(5)).thenReturn(Optional.of(company));
@@ -896,8 +989,7 @@ class ProjectServiceTest {
     void shouldThrowWhenDeleteProjectNotFound() {
         when(projectRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class,
-                () -> projectService.deleteProject("auth0|x", 99L));
+        assertThrows(NotFoundException.class, () -> projectService.deleteProject("auth0|x", 99L));
     }
 
     @Test
@@ -910,8 +1002,8 @@ class ProjectServiceTest {
         when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
         when(userRepository.findByAuth0Id("auth0|other")).thenReturn(Optional.of(user));
 
-        assertThrows(ForbiddenException.class,
-                () -> projectService.deleteProject("auth0|other", 1L));
+        assertThrows(
+                ForbiddenException.class, () -> projectService.deleteProject("auth0|other", 1L));
     }
 
     @Test
@@ -939,62 +1031,85 @@ class ProjectServiceTest {
         assertThrows(IllegalArgumentException.class, () -> projectService.save(null));
     }
 
-    // ------------------------------------------------------------------ createFirstProject branches
+    // ------------------------------------------------------------------ createFirstProject
+    // branches
 
     @Test
     @DisplayName("createFirstProject com npo nulo lança IllegalArgumentException")
     void shouldThrowWhenCreateFirstProjectNpoIsNull() {
-        NpoFirstProjectSignupRequest req = new NpoFirstProjectSignupRequest(
-                "Titulo", "Descricao", null, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW);
-        assertThrows(IllegalArgumentException.class,
-                () -> projectService.createFirstProject(null, req));
+        NpoFirstProjectSignupRequest req =
+                new NpoFirstProjectSignupRequest(
+                        "Titulo",
+                        "Descricao",
+                        null,
+                        List.of("1"),
+                        ProjectType.SOCIAL_INVESTMENT_LAW);
+        assertThrows(
+                IllegalArgumentException.class, () -> projectService.createFirstProject(null, req));
     }
 
     @Test
     @DisplayName("createFirstProject com request nulo lança IllegalArgumentException")
     void shouldThrowWhenCreateFirstProjectRequestIsNull() {
         Npo npo = Npo.builder().id(1).build();
-        assertThrows(IllegalArgumentException.class,
-                () -> projectService.createFirstProject(npo, null));
+        assertThrows(
+                IllegalArgumentException.class, () -> projectService.createFirstProject(npo, null));
     }
 
     @Test
     @DisplayName("createFirstProject com nome nulo lança IllegalArgumentException via requireText")
     void shouldThrowWhenCreateFirstProjectNameIsNull() {
         Npo npo = Npo.builder().id(1).build();
-        NpoFirstProjectSignupRequest req = new NpoFirstProjectSignupRequest(
-                null, "Descricao", null, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW);
-        assertThrows(IllegalArgumentException.class,
-                () -> projectService.createFirstProject(npo, req));
+        NpoFirstProjectSignupRequest req =
+                new NpoFirstProjectSignupRequest(
+                        null, "Descricao", null, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW);
+        assertThrows(
+                IllegalArgumentException.class, () -> projectService.createFirstProject(npo, req));
     }
 
     @Test
-    @DisplayName("createFirstProject com nome em branco lança IllegalArgumentException via requireText")
+    @DisplayName(
+            "createFirstProject com nome em branco lança IllegalArgumentException via requireText")
     void shouldThrowWhenCreateFirstProjectNameIsBlank() {
         Npo npo = Npo.builder().id(1).build();
-        NpoFirstProjectSignupRequest req = new NpoFirstProjectSignupRequest(
-                "   ", "Descricao", null, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW);
-        assertThrows(IllegalArgumentException.class,
-                () -> projectService.createFirstProject(npo, req));
+        NpoFirstProjectSignupRequest req =
+                new NpoFirstProjectSignupRequest(
+                        "   ", "Descricao", null, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW);
+        assertThrows(
+                IllegalArgumentException.class, () -> projectService.createFirstProject(npo, req));
     }
 
-    // ------------------------------------------------------------------ updateProject additional branches
+    // ------------------------------------------------------------------ updateProject additional
+    // branches
 
     @Test
     @DisplayName("updateProject com request nulo lança BadRequest")
     void shouldThrowBadRequestWhenUpdateRequestIsNull() {
-        assertThrows(BadRequestException.class,
+        assertThrows(
+                BadRequestException.class,
                 () -> projectService.updateProject("auth0|npo", 1L, null));
     }
 
     @Test
     @DisplayName("updateProject com auth0Id em branco lança BadRequest")
     void shouldThrowBadRequestWhenUpdateAuth0IdIsBlank() {
-        ProjectUpdateRequest req = new ProjectUpdateRequest("T", "D".repeat(50), null, null,
-                null, null, List.of(1), ProjectType.SOCIAL_INVESTMENT_LAW,
-                null, null, null, null, null, null);
-        assertThrows(BadRequestException.class,
-                () -> projectService.updateProject("  ", 1L, req));
+        ProjectUpdateRequest req =
+                new ProjectUpdateRequest(
+                        "T",
+                        "D".repeat(50),
+                        null,
+                        null,
+                        null,
+                        null,
+                        List.of(1),
+                        ProjectType.SOCIAL_INVESTMENT_LAW,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
+        assertThrows(BadRequestException.class, () -> projectService.updateProject("  ", 1L, req));
     }
 
     @Test
@@ -1004,12 +1119,25 @@ class ProjectServiceTest {
         Long projectId = 1L;
         User user = User.builder().id(10).auth0Id(auth0Id).build();
         Npo npo = Npo.builder().id(20).build();
-        Project existing = Project.builder().id(projectId).npo(npo)
-                .ods(new LinkedHashSet<>()).build();
+        Project existing =
+                Project.builder().id(projectId).npo(npo).ods(new LinkedHashSet<>()).build();
 
-        ProjectUpdateRequest req = new ProjectUpdateRequest("T", "D".repeat(50), null, null,
-                null, null, null, ProjectType.SOCIAL_INVESTMENT_LAW,
-                null, null, null, null, null, null);
+        ProjectUpdateRequest req =
+                new ProjectUpdateRequest(
+                        "T",
+                        "D".repeat(50),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        ProjectType.SOCIAL_INVESTMENT_LAW,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
 
         when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
         when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
@@ -1029,14 +1157,30 @@ class ProjectServiceTest {
         Long projectId = 1L;
         User user = User.builder().id(10).auth0Id(auth0Id).build();
         Npo npo = Npo.builder().id(20).build();
-        Project existing = Project.builder().id(projectId).npo(npo)
-                .investedAmount(new BigDecimal("100.00"))
-                .ods(new LinkedHashSet<>()).build();
+        Project existing =
+                Project.builder()
+                        .id(projectId)
+                        .npo(npo)
+                        .investedAmount(new BigDecimal("100.00"))
+                        .ods(new LinkedHashSet<>())
+                        .build();
 
-        ProjectUpdateRequest req = new ProjectUpdateRequest("T", "D".repeat(50),
-                new BigDecimal("1000.00"), new BigDecimal("50.00"),
-                null, null, List.of(1), ProjectType.SOCIAL_INVESTMENT_LAW,
-                null, null, null, null, null, null);
+        ProjectUpdateRequest req =
+                new ProjectUpdateRequest(
+                        "T",
+                        "D".repeat(50),
+                        new BigDecimal("1000.00"),
+                        new BigDecimal("50.00"),
+                        null,
+                        null,
+                        List.of(1),
+                        ProjectType.SOCIAL_INVESTMENT_LAW,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
 
         when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
         when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
@@ -1049,12 +1193,14 @@ class ProjectServiceTest {
         assertEquals(new BigDecimal("150.00"), result.getInvestedAmount());
     }
 
-    // ------------------------------------------------------------------ createProject additional branches
+    // ------------------------------------------------------------------ createProject additional
+    // branches
 
     @Test
     @DisplayName("createProject com auth0Id nulo lança BadRequest")
     void shouldThrowBadRequestWhenCreateAuth0IdIsNull() {
-        assertThrows(BadRequestException.class,
+        assertThrows(
+                BadRequestException.class,
                 () -> projectService.createProject(null, validCreateRequest()));
     }
 
@@ -1065,15 +1211,33 @@ class ProjectServiceTest {
         User user = User.builder().id(10).auth0Id(auth0Id).build();
         Npo npo = Npo.builder().id(20).build();
 
-        ProjectCreateRequest req = new ProjectCreateRequest("Titulo", "Descricao", null,
-                null, null, null, ProjectType.SOCIAL_INVESTMENT_LAW,
-                null, null, null, null, null, 42);
+        ProjectCreateRequest req =
+                new ProjectCreateRequest(
+                        "Titulo",
+                        "Descricao",
+                        null,
+                        null,
+                        null,
+                        null,
+                        ProjectType.SOCIAL_INVESTMENT_LAW,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        42);
 
         when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
         when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
         when(odsService.resolveSelection(null)).thenReturn(new LinkedHashSet<>());
-        Project saved = Project.builder().id(1L).npo(npo).status(ProjectStatus.ACTIVE)
-                .ods(new LinkedHashSet<>()).progress(42).build();
+        Project saved =
+                Project.builder()
+                        .id(1L)
+                        .npo(npo)
+                        .status(ProjectStatus.ACTIVE)
+                        .ods(new LinkedHashSet<>())
+                        .progress(42)
+                        .build();
         when(projectRepository.save(any())).thenReturn(saved);
 
         ProjectCreateResponse resp = projectService.createProject(auth0Id, req);
@@ -1091,15 +1255,27 @@ class ProjectServiceTest {
         User user = User.builder().id(10).auth0Id(auth0Id).build();
         Npo npo = Npo.builder().id(20).build();
 
-        ProjectCreateRequest req = new ProjectCreateRequest("Titulo", "Descricao", null,
-                null, null, null, ProjectType.SOCIAL_INVESTMENT_LAW,
-                null, null, null, null, null, null);
+        ProjectCreateRequest req =
+                new ProjectCreateRequest(
+                        "Titulo",
+                        "Descricao",
+                        null,
+                        null,
+                        null,
+                        null,
+                        ProjectType.SOCIAL_INVESTMENT_LAW,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
 
         when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
         when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
         when(odsService.resolveSelection(null)).thenReturn(new LinkedHashSet<>());
-        Project saved = Project.builder().id(1L).npo(npo).status(ProjectStatus.ACTIVE)
-                .ods(null).build();
+        Project saved =
+                Project.builder().id(1L).npo(npo).status(ProjectStatus.ACTIVE).ods(null).build();
         when(projectRepository.save(any())).thenReturn(saved);
 
         ProjectCreateResponse resp = projectService.createProject(auth0Id, req);
@@ -1107,7 +1283,8 @@ class ProjectServiceTest {
         assertEquals(0, resp.ods().size());
     }
 
-    // ------------------------------------------------------------------ getNpoProjectSummary success
+    // ------------------------------------------------------------------ getNpoProjectSummary
+    // success
 
     @Test
     @DisplayName("getNpoProjectSummary retorna totais quando usuário e ONG encontrados")
@@ -1119,8 +1296,12 @@ class ProjectServiceTest {
         when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
         when(npoRepository.findByUserId(5)).thenReturn(Optional.of(npo));
         when(projectRepository.countByNpoIdAndDeletedAtIsNull(10L)).thenReturn(3L);
-        when(projectRepository.countByNpoIdAndTypeAndDeletedAtIsNull(10L, ProjectType.TAX_INCENTIVE_LAW)).thenReturn(1L);
-        when(projectRepository.countByNpoIdAndTypeAndDeletedAtIsNull(10L, ProjectType.SOCIAL_INVESTMENT_LAW)).thenReturn(2L);
+        when(projectRepository.countByNpoIdAndTypeAndDeletedAtIsNull(
+                        10L, ProjectType.TAX_INCENTIVE_LAW))
+                .thenReturn(1L);
+        when(projectRepository.countByNpoIdAndTypeAndDeletedAtIsNull(
+                        10L, ProjectType.SOCIAL_INVESTMENT_LAW))
+                .thenReturn(2L);
 
         var result = projectService.getNpoProjectSummary(auth0Id);
 
@@ -1129,13 +1310,13 @@ class ProjectServiceTest {
         assertEquals(2L, result.socialInvestmentLaw());
     }
 
-    // ------------------------------------------------------------------ getEsgImpactDashboard blank auth0Id
+    // ------------------------------------------------------------------ getEsgImpactDashboard
+    // blank auth0Id
 
     @Test
     @DisplayName("getEsgImpactDashboard com auth0Id em branco lança BadRequest")
     void shouldThrowBadRequestWhenEsgDashboardAuth0IdIsBlank() {
-        assertThrows(BadRequestException.class,
-                () -> projectService.getEsgImpactDashboard("  "));
+        assertThrows(BadRequestException.class, () -> projectService.getEsgImpactDashboard("  "));
     }
 
     private static EsgPillarAggregationProjection pillarRow(

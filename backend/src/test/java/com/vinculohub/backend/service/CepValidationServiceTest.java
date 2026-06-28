@@ -35,8 +35,15 @@ class CepValidationServiceTest {
     @Test
     @DisplayName("validate retorna CepResponseDTO quando CEP é válido")
     void shouldReturnDtoWhenCepIsValid() {
-        CepRawResponseDTO raw = new CepRawResponseDTO(
-                "01310-100", "Avenida Paulista", null, "São Paulo", "SP", "São Paulo", null);
+        CepRawResponseDTO raw =
+                new CepRawResponseDTO(
+                        "01310-100",
+                        "Avenida Paulista",
+                        null,
+                        "São Paulo",
+                        "SP",
+                        "São Paulo",
+                        null);
         when(restClient.get().uri(anyString()).retrieve().body(CepRawResponseDTO.class))
                 .thenReturn(raw);
 
@@ -59,7 +66,8 @@ class CepValidationServiceTest {
     @Test
     @DisplayName("validate lança CepNotFoundException quando hasError é true")
     void shouldThrowWhenHasErrorIsTrue() {
-        CepRawResponseDTO error = new CepRawResponseDTO(null, null, null, null, null, null, Boolean.TRUE);
+        CepRawResponseDTO error =
+                new CepRawResponseDTO(null, null, null, null, null, null, Boolean.TRUE);
         when(restClient.get().uri(anyString()).retrieve().body(CepRawResponseDTO.class))
                 .thenReturn(error);
 
