@@ -15,18 +15,21 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 30m         
           script: |
             cd ~/VinculoHubPortal
             git fetch
             git checkout development
             git pull origin development
-            
+
             export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u $DOCKERHUB_USERNAME --password-stdin
-            
-            export $(grep -v '^#' .env | xargs)
-            
+
+            set -a                        
+            source .env                   
+            set +a
+
             docker system prune -f
-            docker compose -f docker-compose.swarm.yml build --no-cache frontend-dev backend-dev
+            docker compose -f docker-compose.swarm.yml build frontend-dev backend-dev   
             docker compose -f docker-compose.swarm.yml push frontend-dev backend-dev
             docker stack deploy --with-registry-auth -c docker-compose.swarm.yml vinculohub
