@@ -344,4 +344,96 @@ class DocumentServiceTest {
 
         verify(s3Uploader, never()).generatePresignedDownloadUrl(anyString(), any());
     }
+
+    @Test
+    void shouldThrowBadRequestWhenDocReqIsNull() {
+        MultipartFile file = mock(MultipartFile.class);
+        assertThrows(BadRequestException.class, () -> documentService.upload(file, null));
+    }
+
+    @Test
+    void shouldFindAllByNpoIdAndProjectId() {
+        Npo npo = new Npo();
+        npo.setId(1);
+        Document doc = new Document();
+        doc.setId(5);
+        doc.setNpo(npo);
+        when(documentRepository.findByNpo_IdAndProject_Id(1, 2)).thenReturn(List.of(doc));
+
+        List<DocumentResponseDTO> result = documentService.findAll(1, 2);
+
+        assertEquals(1, result.size());
+        assertEquals(5, result.get(0).getId());
+        verify(documentRepository).findByNpo_IdAndProject_Id(1, 2);
+    }
+
+    @Test
+    void shouldFindAllByProjectIdOnly() {
+        Document doc = new Document();
+        doc.setId(7);
+        when(documentRepository.findByProject_Id(3)).thenReturn(List.of(doc));
+
+        List<DocumentResponseDTO> result = documentService.findAll(null, 3);
+
+        assertEquals(1, result.size());
+        verify(documentRepository).findByProject_Id(3);
+    }
+
+    @Test
+    void shouldFindAllWithNoFilter() {
+        when(documentRepository.findAll()).thenReturn(List.of());
+
+        List<DocumentResponseDTO> result = documentService.findAll(null, null);
+
+        assertTrue(result.isEmpty());
+        verify(documentRepository).findAll();
+    }
+
+    @Test
+    void shouldThrowBadRequestWhenGenerateUrlAuth0IdIsNull() {
+        assertThrows(
+                BadRequestException.class,
+                () -> documentService.generateDownloadUrlForAuthenticatedNpo(null, 1));
+    }
+
+    @Test
+    void shouldThrowBadRequestWhenGenerateUrlDocumentIdIsNull() {
+        assertThrows(
+                BadRequestException.class,
+                () -> documentService.generateDownloadUrlForAuthenticatedNpo("auth0|x", null));
+    }
+
+    @Test
+    void shouldThrowBadRequestWhenFindAllByNpoAuth0IdIsNull() {
+        assertThrows(
+                BadRequestException.class,
+                () -> documentService.findAllByAuthenticatedNpo(null, PageRequest.of(0, 10)));
+    }
+
+    @Test
+    void shouldMapToResponseWithNullNpoAndNullProject() throws Exception {
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.getSize()).thenReturn(1024L);
+        when(file.getContentType()).thenReturn("application/pdf");
+        when(file.getOriginalFilename()).thenReturn("x.pdf");
+
+        DocumentRequestDTO dto = new DocumentRequestDTO();
+        dto.setNpoId(1);
+
+        Npo npo = new Npo();
+        npo.setId(1);
+        when(npoRepository.findById(1)).thenReturn(Optional.of(npo));
+        when(s3Uploader.uploadFile(any(), any())).thenReturn("http://url");
+
+        Document saved = new Document();
+        saved.setId(99);
+        saved.setNpo(null);
+        saved.setProject(null);
+        when(documentRepository.save(any())).thenReturn(saved);
+
+        DocumentResponseDTO result = documentService.upload(file, dto);
+
+        assertNull(result.getNpoId());
+        assertNull(result.getProjectId());
+    }
 }

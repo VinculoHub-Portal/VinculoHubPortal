@@ -656,6 +656,669 @@ class ProjectServiceTest {
         assertThrows(NotFoundException.class, () -> projectService.getEsgImpactDashboard(auth0Id));
     }
 
+    // ------------------------------------------------------------------ updateProject branches
+
+    @Test
+    @DisplayName("Deve atualizar investedAmount somando ao valor atual")
+    void shouldAddInvestedAmountToCurrentValue() {
+        String auth0Id = "auth0|npo";
+        Long projectId = 1L;
+        User user = User.builder().id(10).auth0Id(auth0Id).build();
+        Npo npo = Npo.builder().id(20).build();
+        Project existing =
+                Project.builder()
+                        .id(projectId)
+                        .npo(npo)
+                        .investedAmount(new BigDecimal("100.00"))
+                        .budgetNeeded(new BigDecimal("500.00"))
+                        .ods(new LinkedHashSet<>())
+                        .build();
+
+        ProjectUpdateRequest req =
+                new ProjectUpdateRequest(
+                        "T",
+                        "D".repeat(50),
+                        null,
+                        new BigDecimal("50.00"),
+                        null,
+                        null,
+                        List.of(1),
+                        ProjectType.SOCIAL_INVESTMENT_LAW,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        30);
+
+        when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
+        when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(existing));
+        when(odsService.resolveSelection(any())).thenReturn(new LinkedHashSet<>());
+        when(projectRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Project result = projectService.updateProject(auth0Id, projectId, req);
+
+        assertEquals(new BigDecimal("150.00"), result.getInvestedAmount());
+        assertEquals(30, result.getProgress());
+    }
+
+    @Test
+    @DisplayName("Deve usar ZERO como base quando investedAmount atual é nulo")
+    void shouldUseZeroAsBaseWhenCurrentInvestedAmountIsNull() {
+        String auth0Id = "auth0|npo";
+        Long projectId = 1L;
+        User user = User.builder().id(10).auth0Id(auth0Id).build();
+        Npo npo = Npo.builder().id(20).build();
+        Project existing =
+                Project.builder()
+                        .id(projectId)
+                        .npo(npo)
+                        .investedAmount(null)
+                        .budgetNeeded(new BigDecimal("500.00"))
+                        .ods(new LinkedHashSet<>())
+                        .build();
+
+        ProjectUpdateRequest req =
+                new ProjectUpdateRequest(
+                        "T",
+                        "D".repeat(50),
+                        null,
+                        new BigDecimal("75.00"),
+                        null,
+                        null,
+                        List.of(1),
+                        ProjectType.SOCIAL_INVESTMENT_LAW,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
+
+        when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
+        when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(existing));
+        when(odsService.resolveSelection(any())).thenReturn(new LinkedHashSet<>());
+        when(projectRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Project result = projectService.updateProject(auth0Id, projectId, req);
+
+        assertEquals(new BigDecimal("75.00"), result.getInvestedAmount());
+    }
+
+    @Test
+    @DisplayName("Deve resetar investedAmount para ZERO quando resultado é negativo")
+    void shouldClampInvestedAmountToZeroWhenNegative() {
+        String auth0Id = "auth0|npo";
+        Long projectId = 1L;
+        User user = User.builder().id(10).auth0Id(auth0Id).build();
+        Npo npo = Npo.builder().id(20).build();
+        Project existing =
+                Project.builder()
+                        .id(projectId)
+                        .npo(npo)
+                        .investedAmount(new BigDecimal("10.00"))
+                        .budgetNeeded(new BigDecimal("500.00"))
+                        .ods(new LinkedHashSet<>())
+                        .build();
+
+        ProjectUpdateRequest req =
+                new ProjectUpdateRequest(
+                        "T",
+                        "D".repeat(50),
+                        null,
+                        new BigDecimal("-50.00"),
+                        null,
+                        null,
+                        List.of(1),
+                        ProjectType.SOCIAL_INVESTMENT_LAW,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
+
+        when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
+        when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(existing));
+        when(odsService.resolveSelection(any())).thenReturn(new LinkedHashSet<>());
+        when(projectRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Project result = projectService.updateProject(auth0Id, projectId, req);
+
+        assertEquals(BigDecimal.ZERO, result.getInvestedAmount());
+    }
+
+    @Test
+    @DisplayName("Deve lançar BadRequest quando valor captado excede valor necessário")
+    void shouldThrowWhenInvestedAmountExceedsBudget() {
+        String auth0Id = "auth0|npo";
+        Long projectId = 1L;
+        User user = User.builder().id(10).auth0Id(auth0Id).build();
+        Npo npo = Npo.builder().id(20).build();
+        Project existing =
+                Project.builder()
+                        .id(projectId)
+                        .npo(npo)
+                        .investedAmount(new BigDecimal("400.00"))
+                        .budgetNeeded(new BigDecimal("500.00"))
+                        .ods(new LinkedHashSet<>())
+                        .build();
+
+        ProjectUpdateRequest req =
+                new ProjectUpdateRequest(
+                        "T",
+                        "D".repeat(50),
+                        new BigDecimal("500.00"),
+                        new BigDecimal("200.00"),
+                        null,
+                        null,
+                        List.of(1),
+                        ProjectType.SOCIAL_INVESTMENT_LAW,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
+
+        when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
+        when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(existing));
+        when(odsService.resolveSelection(any())).thenReturn(new LinkedHashSet<>());
+
+        assertThrows(
+                BadRequestException.class,
+                () -> projectService.updateProject(auth0Id, projectId, req));
+    }
+
+    // ------------------------------------------------------------------ createProject branches
+
+    @Test
+    @DisplayName("Deve criar projeto com odsIds nulos passando null ao resolveSelection")
+    void shouldCreateProjectWithNullOdsIds() {
+        String auth0Id = "auth0|npo";
+        User user = User.builder().id(10).build();
+        Npo npo = Npo.builder().id(20).build();
+
+        ProjectCreateRequest req =
+                new ProjectCreateRequest(
+                        "Titulo",
+                        "Descricao",
+                        null,
+                        null,
+                        null,
+                        null,
+                        ProjectType.SOCIAL_INVESTMENT_LAW,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
+
+        when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
+        when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
+        when(odsService.resolveSelection(null)).thenReturn(new LinkedHashSet<>());
+        Project saved =
+                Project.builder()
+                        .id(1L)
+                        .npo(npo)
+                        .title("Titulo")
+                        .status(ProjectStatus.ACTIVE)
+                        .type(ProjectType.SOCIAL_INVESTMENT_LAW)
+                        .investedAmount(BigDecimal.ZERO)
+                        .ods(new LinkedHashSet<>())
+                        .build();
+        when(projectRepository.save(any())).thenReturn(saved);
+
+        ProjectCreateResponse resp = projectService.createProject(auth0Id, req);
+
+        assertNotNull(resp);
+        verify(odsService).resolveSelection(null);
+    }
+
+    // ------------------------------------------------------------------ getNpoProjectSummary
+    // branches
+
+    @Test
+    @DisplayName("getNpoProjectSummary com auth0Id nulo lança BadRequest")
+    void shouldThrowWhenNpoProjectSummaryAuth0IdIsNull() {
+        assertThrows(BadRequestException.class, () -> projectService.getNpoProjectSummary(null));
+    }
+
+    @Test
+    @DisplayName("getNpoProjectSummary com auth0Id em branco lança BadRequest")
+    void shouldThrowWhenNpoProjectSummaryAuth0IdIsBlank() {
+        assertThrows(BadRequestException.class, () -> projectService.getNpoProjectSummary("  "));
+    }
+
+    // ------------------------------------------------------------------ getEsgImpactDashboard
+    // branches
+
+    @Test
+    @DisplayName("getEsgImpactDashboard com auth0Id nulo lança BadRequest")
+    void shouldThrowWhenEsgDashboardAuth0IdIsNull() {
+        assertThrows(BadRequestException.class, () -> projectService.getEsgImpactDashboard(null));
+    }
+
+    @Test
+    @DisplayName("getEsgImpactDashboard com totals nulos usa zeros")
+    void shouldHandleNullPortfolioTotals() {
+        String auth0Id = "auth0|company";
+        User user = User.builder().id(5).auth0Id(auth0Id).build();
+        Company company = new Company();
+        company.setId(10);
+
+        when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
+        when(companyRepository.findByUserId(5)).thenReturn(Optional.of(company));
+        when(projectRepository.sumPortfolioTotalsByCompanyId(10)).thenReturn(null);
+        when(projectRepository.sumByEsgPillarForCompany(10)).thenReturn(List.of());
+
+        CompanyEsgImpactDashboardResponse resp = projectService.getEsgImpactDashboard(auth0Id);
+
+        assertEquals(0L, resp.projectCount());
+        assertEquals(0, resp.totalInvested().compareTo(BigDecimal.ZERO));
+    }
+
+    @Test
+    @DisplayName("getEsgImpactDashboard com pillar.projectCount null usa zero")
+    void shouldHandleNullPillarProjectCount() {
+        String auth0Id = "auth0|company";
+        User user = User.builder().id(5).auth0Id(auth0Id).build();
+        Company company = new Company();
+        company.setId(10);
+        PortfolioTotalsProjection totals =
+                new PortfolioTotalsProjection() {
+                    @Override
+                    public Long getProjectCount() {
+                        return null;
+                    }
+
+                    @Override
+                    public BigDecimal getTotalInvested() {
+                        return null;
+                    }
+
+                    @Override
+                    public BigDecimal getTotalBudgetNeeded() {
+                        return null;
+                    }
+                };
+        EsgPillarAggregationProjection rowWithNullCount =
+                new EsgPillarAggregationProjection() {
+                    @Override
+                    public String getPillar() {
+                        return "ENVIRONMENTAL";
+                    }
+
+                    @Override
+                    public Long getProjectCount() {
+                        return null;
+                    }
+
+                    @Override
+                    public BigDecimal getTotalInvested() {
+                        return new BigDecimal("100");
+                    }
+
+                    @Override
+                    public BigDecimal getTotalBudgetNeeded() {
+                        return new BigDecimal("200");
+                    }
+                };
+
+        when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
+        when(companyRepository.findByUserId(5)).thenReturn(Optional.of(company));
+        when(projectRepository.sumPortfolioTotalsByCompanyId(10)).thenReturn(totals);
+        when(projectRepository.sumByEsgPillarForCompany(10)).thenReturn(List.of(rowWithNullCount));
+
+        CompanyEsgImpactDashboardResponse resp = projectService.getEsgImpactDashboard(auth0Id);
+
+        assertEquals(0L, resp.projectCount());
+        EsgPillarImpactDTO env = resp.pillars().get(0);
+        assertEquals(0L, env.projectCount());
+    }
+
+    // ------------------------------------------------------------------ deleteProject branches
+
+    @Test
+    @DisplayName("deleteProject lança NotFoundException quando projeto não existe")
+    void shouldThrowWhenDeleteProjectNotFound() {
+        when(projectRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> projectService.deleteProject("auth0|x", 99L));
+    }
+
+    @Test
+    @DisplayName("deleteProject lança ForbiddenException quando usuário não é dono")
+    void shouldThrowForbiddenWhenDeleteProjectNotOwner() {
+        Npo npo = Npo.builder().id(5).userId(99).build();
+        Project project = Project.builder().id(1L).npo(npo).build();
+        User user = User.builder().id(10).auth0Id("auth0|other").build();
+
+        when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
+        when(userRepository.findByAuth0Id("auth0|other")).thenReturn(Optional.of(user));
+
+        assertThrows(
+                ForbiddenException.class, () -> projectService.deleteProject("auth0|other", 1L));
+    }
+
+    @Test
+    @DisplayName("deleteProject marca projeto como deletado quando usuário é dono")
+    void shouldMarkProjectDeletedWhenOwner() {
+        Npo npo = Npo.builder().id(5).userId(10).build();
+        Project project = Project.builder().id(1L).npo(npo).build();
+        User user = User.builder().id(10).auth0Id("auth0|owner").build();
+
+        when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
+        when(userRepository.findByAuth0Id("auth0|owner")).thenReturn(Optional.of(user));
+        when(projectRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        projectService.deleteProject("auth0|owner", 1L);
+
+        assertNotNull(project.getDeletedAt());
+        verify(projectRepository).save(project);
+    }
+
+    // ------------------------------------------------------------------ save branches
+
+    @Test
+    @DisplayName("save com projeto nulo lança IllegalArgumentException")
+    void shouldThrowWhenSaveProjectIsNull() {
+        assertThrows(IllegalArgumentException.class, () -> projectService.save(null));
+    }
+
+    // ------------------------------------------------------------------ createFirstProject
+    // branches
+
+    @Test
+    @DisplayName("createFirstProject com npo nulo lança IllegalArgumentException")
+    void shouldThrowWhenCreateFirstProjectNpoIsNull() {
+        NpoFirstProjectSignupRequest req =
+                new NpoFirstProjectSignupRequest(
+                        "Titulo",
+                        "Descricao",
+                        null,
+                        List.of("1"),
+                        ProjectType.SOCIAL_INVESTMENT_LAW);
+        assertThrows(
+                IllegalArgumentException.class, () -> projectService.createFirstProject(null, req));
+    }
+
+    @Test
+    @DisplayName("createFirstProject com request nulo lança IllegalArgumentException")
+    void shouldThrowWhenCreateFirstProjectRequestIsNull() {
+        Npo npo = Npo.builder().id(1).build();
+        assertThrows(
+                IllegalArgumentException.class, () -> projectService.createFirstProject(npo, null));
+    }
+
+    @Test
+    @DisplayName("createFirstProject com nome nulo lança IllegalArgumentException via requireText")
+    void shouldThrowWhenCreateFirstProjectNameIsNull() {
+        Npo npo = Npo.builder().id(1).build();
+        NpoFirstProjectSignupRequest req =
+                new NpoFirstProjectSignupRequest(
+                        null, "Descricao", null, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW);
+        assertThrows(
+                IllegalArgumentException.class, () -> projectService.createFirstProject(npo, req));
+    }
+
+    @Test
+    @DisplayName(
+            "createFirstProject com nome em branco lança IllegalArgumentException via requireText")
+    void shouldThrowWhenCreateFirstProjectNameIsBlank() {
+        Npo npo = Npo.builder().id(1).build();
+        NpoFirstProjectSignupRequest req =
+                new NpoFirstProjectSignupRequest(
+                        "   ", "Descricao", null, List.of("1"), ProjectType.SOCIAL_INVESTMENT_LAW);
+        assertThrows(
+                IllegalArgumentException.class, () -> projectService.createFirstProject(npo, req));
+    }
+
+    // ------------------------------------------------------------------ updateProject additional
+    // branches
+
+    @Test
+    @DisplayName("updateProject com request nulo lança BadRequest")
+    void shouldThrowBadRequestWhenUpdateRequestIsNull() {
+        assertThrows(
+                BadRequestException.class,
+                () -> projectService.updateProject("auth0|npo", 1L, null));
+    }
+
+    @Test
+    @DisplayName("updateProject com auth0Id em branco lança BadRequest")
+    void shouldThrowBadRequestWhenUpdateAuth0IdIsBlank() {
+        ProjectUpdateRequest req =
+                new ProjectUpdateRequest(
+                        "T",
+                        "D".repeat(50),
+                        null,
+                        null,
+                        null,
+                        null,
+                        List.of(1),
+                        ProjectType.SOCIAL_INVESTMENT_LAW,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
+        assertThrows(BadRequestException.class, () -> projectService.updateProject("  ", 1L, req));
+    }
+
+    @Test
+    @DisplayName("updateProject com odsIds nulos passa null ao resolveSelection")
+    void shouldUpdateProjectWithNullOdsIds() {
+        String auth0Id = "auth0|npo";
+        Long projectId = 1L;
+        User user = User.builder().id(10).auth0Id(auth0Id).build();
+        Npo npo = Npo.builder().id(20).build();
+        Project existing =
+                Project.builder().id(projectId).npo(npo).ods(new LinkedHashSet<>()).build();
+
+        ProjectUpdateRequest req =
+                new ProjectUpdateRequest(
+                        "T",
+                        "D".repeat(50),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        ProjectType.SOCIAL_INVESTMENT_LAW,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
+
+        when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
+        when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(existing));
+        when(odsService.resolveSelection(null)).thenReturn(new LinkedHashSet<>());
+        when(projectRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        projectService.updateProject(auth0Id, projectId, req);
+
+        verify(odsService).resolveSelection(null);
+    }
+
+    @Test
+    @DisplayName("updateProject com investedAmount dentro do budget não lança exceção")
+    void shouldUpdateInvestedAmountWithinBudget() {
+        String auth0Id = "auth0|npo";
+        Long projectId = 1L;
+        User user = User.builder().id(10).auth0Id(auth0Id).build();
+        Npo npo = Npo.builder().id(20).build();
+        Project existing =
+                Project.builder()
+                        .id(projectId)
+                        .npo(npo)
+                        .investedAmount(new BigDecimal("100.00"))
+                        .ods(new LinkedHashSet<>())
+                        .build();
+
+        ProjectUpdateRequest req =
+                new ProjectUpdateRequest(
+                        "T",
+                        "D".repeat(50),
+                        new BigDecimal("1000.00"),
+                        new BigDecimal("50.00"),
+                        null,
+                        null,
+                        List.of(1),
+                        ProjectType.SOCIAL_INVESTMENT_LAW,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
+
+        when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
+        when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(existing));
+        when(odsService.resolveSelection(any())).thenReturn(new LinkedHashSet<>());
+        when(projectRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Project result = projectService.updateProject(auth0Id, projectId, req);
+
+        assertEquals(new BigDecimal("150.00"), result.getInvestedAmount());
+    }
+
+    // ------------------------------------------------------------------ createProject additional
+    // branches
+
+    @Test
+    @DisplayName("createProject com auth0Id nulo lança BadRequest")
+    void shouldThrowBadRequestWhenCreateAuth0IdIsNull() {
+        assertThrows(
+                BadRequestException.class,
+                () -> projectService.createProject(null, validCreateRequest()));
+    }
+
+    @Test
+    @DisplayName("createProject com progress não nulo usa o valor do request")
+    void shouldCreateProjectWithNonNullProgress() {
+        String auth0Id = "auth0|npo";
+        User user = User.builder().id(10).auth0Id(auth0Id).build();
+        Npo npo = Npo.builder().id(20).build();
+
+        ProjectCreateRequest req =
+                new ProjectCreateRequest(
+                        "Titulo",
+                        "Descricao",
+                        null,
+                        null,
+                        null,
+                        null,
+                        ProjectType.SOCIAL_INVESTMENT_LAW,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        42);
+
+        when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
+        when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
+        when(odsService.resolveSelection(null)).thenReturn(new LinkedHashSet<>());
+        Project saved =
+                Project.builder()
+                        .id(1L)
+                        .npo(npo)
+                        .status(ProjectStatus.ACTIVE)
+                        .ods(new LinkedHashSet<>())
+                        .progress(42)
+                        .build();
+        when(projectRepository.save(any())).thenReturn(saved);
+
+        ProjectCreateResponse resp = projectService.createProject(auth0Id, req);
+
+        assertNotNull(resp);
+        ArgumentCaptor<Project> captor = ArgumentCaptor.forClass(Project.class);
+        verify(projectRepository).save(captor.capture());
+        assertEquals(42, captor.getValue().getProgress());
+    }
+
+    @Test
+    @DisplayName("toCreateResponse com ods nulo retorna lista vazia")
+    void shouldReturnEmptyOdsListWhenSavedProjectHasNullOds() {
+        String auth0Id = "auth0|npo";
+        User user = User.builder().id(10).auth0Id(auth0Id).build();
+        Npo npo = Npo.builder().id(20).build();
+
+        ProjectCreateRequest req =
+                new ProjectCreateRequest(
+                        "Titulo",
+                        "Descricao",
+                        null,
+                        null,
+                        null,
+                        null,
+                        ProjectType.SOCIAL_INVESTMENT_LAW,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
+
+        when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
+        when(npoRepository.findByUserId(10)).thenReturn(Optional.of(npo));
+        when(odsService.resolveSelection(null)).thenReturn(new LinkedHashSet<>());
+        Project saved =
+                Project.builder().id(1L).npo(npo).status(ProjectStatus.ACTIVE).ods(null).build();
+        when(projectRepository.save(any())).thenReturn(saved);
+
+        ProjectCreateResponse resp = projectService.createProject(auth0Id, req);
+
+        assertEquals(0, resp.ods().size());
+    }
+
+    // ------------------------------------------------------------------ getNpoProjectSummary
+    // success
+
+    @Test
+    @DisplayName("getNpoProjectSummary retorna totais quando usuário e ONG encontrados")
+    void shouldReturnNpoProjectSummary() {
+        String auth0Id = "auth0|npo";
+        User user = User.builder().id(5).auth0Id(auth0Id).build();
+        Npo npo = Npo.builder().id(10).build();
+
+        when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
+        when(npoRepository.findByUserId(5)).thenReturn(Optional.of(npo));
+        when(projectRepository.countByNpoIdAndDeletedAtIsNull(10L)).thenReturn(3L);
+        when(projectRepository.countByNpoIdAndTypeAndDeletedAtIsNull(
+                        10L, ProjectType.TAX_INCENTIVE_LAW))
+                .thenReturn(1L);
+        when(projectRepository.countByNpoIdAndTypeAndDeletedAtIsNull(
+                        10L, ProjectType.SOCIAL_INVESTMENT_LAW))
+                .thenReturn(2L);
+
+        var result = projectService.getNpoProjectSummary(auth0Id);
+
+        assertEquals(3L, result.total());
+        assertEquals(1L, result.taxIncentiveLaw());
+        assertEquals(2L, result.socialInvestmentLaw());
+    }
+
+    // ------------------------------------------------------------------ getEsgImpactDashboard
+    // blank auth0Id
+
+    @Test
+    @DisplayName("getEsgImpactDashboard com auth0Id em branco lança BadRequest")
+    void shouldThrowBadRequestWhenEsgDashboardAuth0IdIsBlank() {
+        assertThrows(BadRequestException.class, () -> projectService.getEsgImpactDashboard("  "));
+    }
+
     private static EsgPillarAggregationProjection pillarRow(
             String pillar, long count, String invested, String budget) {
         return new EsgPillarAggregationProjection() {
