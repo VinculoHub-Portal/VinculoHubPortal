@@ -76,7 +76,7 @@ A base é sólida. Os itens abaixo são incrementais, exceto o P0 de segurança.
 | 35 | [Resolvido] Empresa: botão de interesse mostra "Interesse já enviado" mesmo com vínculo já **ativo** | Bug/UX | P2 | baixo | `ProjectDetailsPage` + `useExistingRelationship` |
 | 36 | [Resolvido] Mensagem genérica ao bloquear a proposta da ONG quando a empresa já demonstrou interesse | UX/Mensageria | P3 | baixo | `CompanyPublicProfilePage` |
 | 37 | [Resolvido] Botão "Propor Parceria" sem feedback de "proposta enviada" | UX | P3 | baixo | `CompanyPublicProfilePage` |
-| 38 | Input de data do edital em formato MM/DD/YY (locale en) em vez de DD/MM/YY | UX/i18n | P3 | trivial | `CreateAnnouncementModal` |
+| 38 | [Resolvido] Input de data do edital em formato MM/DD/YY (locale en) em vez de DD/MM/YY | UX/i18n | P3 | trivial | `CreateAnnouncementModal` |
 
 ---
 
@@ -299,6 +299,8 @@ No perfil público da empresa, ao clicar em **"Propor Parceria"** o botão não 
 
 ### 6.11 [#38] Input de data do edital em formato MM/DD/YY
 No cadastro de edital, o campo de **prazo de inscrição** apresenta a data no formato **MM/DD/YY** (locale en) em vez de **DD/MM/YY** (pt-BR). **Fix:** garantir o locale pt-BR na exibição/seleção da data (complementa o #5, que trata da validação de data no passado no mesmo campo).
+
+**Status:** resolvido em `CreateAnnouncementModal`; o prazo agora é exibido em `DD/MM/AAAA` e não permite selecionar datas de hoje ou anteriores.
 
 ---
 
