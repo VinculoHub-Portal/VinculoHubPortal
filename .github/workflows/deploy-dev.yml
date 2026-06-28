@@ -18,12 +18,19 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build e push das imagens
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DEV_VITE_API_URL: ${{ secrets.DEV_VITE_API_URL }}
+          VITE_AUTH0_DOMAIN: ${{ secrets.VITE_AUTH0_DOMAIN }}
+          VITE_AUTH0_CLIENT_ID: ${{ secrets.VITE_AUTH0_CLIENT_ID }}
+          VITE_AUTH0_AUDIENCE: ${{ secrets.VITE_AUTH0_AUDIENCE }}
+          DEV_VITE_AUTH0_REDIRECT_URI: ${{ secrets.DEV_VITE_AUTH0_REDIRECT_URI }}
         run: |
           docker compose -f docker-compose.swarm.yml build frontend-dev backend-dev
           docker compose -f docker-compose.swarm.yml push frontend-dev backend-dev
 
   deploy:
-    needs: build          
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Acessar EC2 e fazer deploy
