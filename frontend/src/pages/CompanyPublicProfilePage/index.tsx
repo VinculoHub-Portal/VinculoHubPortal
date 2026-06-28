@@ -58,6 +58,7 @@ export function CompanyPublicProfilePage() {
   const [existingRelationships, setExistingRelationships] = useState<
     RelationshipListItem[]
   >([])
+  const [sentProposal, setSentProposal] = useState(false)
 
   useEffect(() => {
     if (!isNpo) return
@@ -107,21 +108,27 @@ export function CompanyPublicProfilePage() {
   const hasRespondableCompanyInterest = relationshipsWithCompany.some(
     (r) => r.status === "pending" && r.canRespond,
   )
-  const hasPendingProposal = relationshipsWithCompany.some(
-    (r) => r.status === "pending" && !r.canRespond,
-  )
+  const hasPendingProposal =
+    sentProposal ||
+    relationshipsWithCompany.some((r) => r.status === "pending" && !r.canRespond)
   const hasRelationshipInProgress = relationshipsWithCompany.some(
     (r) => r.status === "active" || r.status === "negotiation",
   )
-  const proposeDisabled = proposableProjects.length === 0
+  const proposeDisabled = sentProposal || proposableProjects.length === 0
+  const proposeButtonLabel =
+    sentProposal || (proposableProjects.length === 0 && hasPendingProposal)
+      ? "Proposta enviada"
+      : proposeDisabled && hasRelationshipInProgress
+        ? "Parceria em andamento"
+        : "Propor Parceria"
   const proposeDisabledReason = !proposeDisabled
     ? ""
     : !hasActiveProjects
       ? "Você precisa de um projeto ativo para propor parceria"
-      : hasRespondableCompanyInterest
-        ? "Esta empresa já demonstrou interesse na sua ONG. Responda pela tela de vínculos."
-        : hasPendingProposal
-          ? "Todos os seus projetos ativos já possuem proposta enviada para esta empresa."
+      : sentProposal || hasPendingProposal
+        ? "Proposta enviada para esta empresa."
+        : hasRespondableCompanyInterest
+          ? "Esta empresa já demonstrou interesse na sua ONG. Responda pela tela de vínculos."
           : hasRelationshipInProgress
             ? "Todos os seus projetos ativos já possuem parceria em andamento com esta empresa."
             : "Todos os seus projetos ativos já possuem vínculo ou proposta com esta empresa."
@@ -132,6 +139,24 @@ export function CompanyPublicProfilePage() {
     try {
       const t = await getAccessTokenSilently()
       await createRelationship(projectId, t, validId)
+      const selectedProject = activeProjects.find((p) => p.id === projectId)
+      setExistingRelationships((prev) => [
+        ...prev.filter(
+          (r) => !(r.projectId === projectId && r.partnerInstitutionId === validId),
+        ),
+        {
+          projectId,
+          projectName: selectedProject?.title ?? `Projeto ${projectId}`,
+          partnerInstitutionId: validId,
+          partnerInstitutionName: query.data?.legalName ?? "",
+          status: "pending",
+          partnerContactEmail: null,
+          partnerContactPhone: null,
+          canRespond: false,
+          canConfirm: false,
+        },
+      ])
+      setSentProposal(true)
       setProposeModalOpen(false)
       showToast("Proposta enviada com sucesso!", "success")
     } catch {
@@ -196,6 +221,7 @@ export function CompanyPublicProfilePage() {
               company={query.data}
               showProposeButton={isNpo}
               proposeDisabled={proposeDisabled}
+              proposeButtonLabel={proposeButtonLabel}
               proposeDisabledReason={proposeDisabledReason}
               onPropose={() => setProposeModalOpen(true)}
             />
@@ -222,6 +248,7 @@ interface CompanyHeaderCardProps {
   company: CompanyPublicProfile
   showProposeButton: boolean
   proposeDisabled: boolean
+  proposeButtonLabel: string
   proposeDisabledReason: string
   onPropose: () => void
 }
@@ -230,6 +257,7 @@ function CompanyHeaderCard({
   company,
   showProposeButton,
   proposeDisabled,
+  proposeButtonLabel,
   proposeDisabledReason,
   onPropose,
 }: CompanyHeaderCardProps) {
@@ -273,7 +301,7 @@ function CompanyHeaderCard({
                   className="hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-fit!"
                 >
                   <HandshakeOutlinedIcon sx={{ fontSize: 18 }} aria-hidden />
-                  Propor Parceria
+                  {proposeButtonLabel}
                 </BaseButton>
               </span>
             </Tooltip>

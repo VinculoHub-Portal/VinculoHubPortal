@@ -308,6 +308,8 @@ describe("CompanyPublicProfilePage", () => {
         "Proposta enviada com sucesso!",
         "success",
       )
+      const sentButton = await screen.findByRole("button", { name: /proposta enviada/i })
+      expect(sentButton).toBeDisabled()
     })
 
     it("erro genérico ao propor mostra toast de erro", async () => {
