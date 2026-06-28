@@ -1,6 +1,10 @@
 import { useAuth0 } from "@auth0/auth0-react"
 import { useCallback, useEffect, useState } from "react"
-import { fetchRelationships } from "../api/relationships"
+import {
+  fetchRelationships,
+  type RelationshipListItem,
+  type RelationshipStatus,
+} from "../api/relationships"
 
 interface Args {
   projectId: number | null
@@ -9,6 +13,8 @@ interface Args {
 
 export interface ExistingRelationshipResult {
   exists: boolean
+  relationship: RelationshipListItem | null
+  status: RelationshipStatus | null
   loading: boolean
   refetch: () => Promise<void>
 }
@@ -19,26 +25,30 @@ export function useExistingRelationship({
 }: Args): ExistingRelationshipResult {
   const { isAuthenticated, getAccessTokenSilently } = useAuth0()
   const [exists, setExists] = useState(false)
+  const [relationship, setRelationship] = useState<RelationshipListItem | null>(null)
   const [loading, setLoading] = useState(false)
 
   const check = useCallback(async () => {
     if (!isAuthenticated || projectId == null) {
       setExists(false)
+      setRelationship(null)
       return
     }
     setLoading(true)
     try {
       const token = await getAccessTokenSilently()
       const items = await fetchRelationships({}, token)
-      const hit = items.some(
+      const hit = items.find(
         (it) =>
           it.status !== "inactive" &&
           it.projectId === projectId &&
           (companyId == null || it.partnerInstitutionId === companyId),
       )
-      setExists(hit)
+      setExists(Boolean(hit))
+      setRelationship(hit ?? null)
     } catch {
       setExists(false)
+      setRelationship(null)
     } finally {
       setLoading(false)
     }
@@ -48,5 +58,5 @@ export function useExistingRelationship({
     void check()
   }, [check])
 
-  return { exists, loading, refetch: check }
+  return { exists, relationship, status: relationship?.status ?? null, loading, refetch: check }
 }

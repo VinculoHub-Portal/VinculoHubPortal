@@ -80,7 +80,11 @@ export function ProjectDetailsPage() {
   const numericProjectId = project ? Number(project.id) : null;
   const validProjectId =
     numericProjectId != null && Number.isFinite(numericProjectId) ? numericProjectId : null;
-  const { exists: alreadyHasRelationship, loading: existingRelationshipLoading } =
+  const {
+    exists: alreadyHasRelationship,
+    loading: existingRelationshipLoading,
+    status: existingRelationshipStatus,
+  } =
     useExistingRelationship({
       projectId: validProjectId,
     });
@@ -96,9 +100,13 @@ export function ProjectDetailsPage() {
     existingRelationshipLoading ||
     submittingInterest;
   const interestButtonLabel =
-    alreadyHasRelationship || sentInThisSession
+    sentInThisSession || existingRelationshipStatus === "pending"
       ? "Interesse já enviado"
-      : "Demonstrar Interesse";
+      : existingRelationshipStatus === "negotiation"
+        ? "Em negociação"
+        : existingRelationshipStatus === "active"
+          ? "Projeto já ativo"
+          : "Demonstrar Interesse";
 
   async function handleConfirmInterest() {
     if (!validProjectId) return;

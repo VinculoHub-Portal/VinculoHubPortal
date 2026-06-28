@@ -14,6 +14,8 @@ const mocks = vi.hoisted(() => ({
   showToastMock: vi.fn(),
   useExistingRelationshipMock: vi.fn(() => ({
     exists: false,
+    relationship: null,
+    status: null,
     loading: false,
     refetch: vi.fn(),
   })),
@@ -93,6 +95,8 @@ describe("ProjectDetailsPage", () => {
     mocks.showToastMock.mockReset();
     mocks.useExistingRelationshipMock.mockReturnValue({
       exists: false,
+      relationship: null,
+      status: null,
       loading: false,
       refetch: vi.fn(),
     });
@@ -345,11 +349,26 @@ describe("ProjectDetailsPage", () => {
     it("vínculo já existente desabilita botão e altera label", async () => {
       mocks.useExistingRelationshipMock.mockReturnValue({
         exists: true,
+        relationship: null,
+        status: "pending",
         loading: false,
         refetch: vi.fn(),
       });
       renderPage();
       const button = await screen.findByRole("button", { name: /interesse já enviado/i });
+      expect(button).toBeDisabled();
+    });
+
+    it("vínculo ativo mostra label de projeto já ativo", async () => {
+      mocks.useExistingRelationshipMock.mockReturnValue({
+        exists: true,
+        relationship: null,
+        status: "active",
+        loading: false,
+        refetch: vi.fn(),
+      });
+      renderPage();
+      const button = await screen.findByRole("button", { name: /projeto já ativo/i });
       expect(button).toBeDisabled();
     });
   });

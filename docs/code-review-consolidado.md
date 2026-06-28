@@ -73,7 +73,7 @@ A base é sólida. Os itens abaixo são incrementais, exceto o P0 de segurança.
 | 32 | 503 em `GET /api/admin/vinculos/search` — admin não consegue ver vínculos (**em correção**) | Bug | P1 | — | backend admin relationships |
 | 33 | Telefone sem validação no cadastro (ONG e Empresa, passo 3) | Bug/Validação | P2 | baixo | `NpoRegistration`/`CompanyRegistration` passo 3 |
 | 34 | ONG não consegue alterar o status do projeto (ativo→concluído/cancelado) | Feature gap | P2 | médio | `EditProjectPage` + status no backend |
-| 35 | Empresa: botão de interesse mostra "Interesse já enviado" mesmo com vínculo já **ativo** | Bug/UX | P2 | baixo | página do projeto (empresa) |
+| 35 | [Resolvido] Empresa: botão de interesse mostra "Interesse já enviado" mesmo com vínculo já **ativo** | Bug/UX | P2 | baixo | `ProjectDetailsPage` + `useExistingRelationship` |
 | 36 | Mensagem genérica ao bloquear a proposta da ONG quando a empresa já demonstrou interesse | UX/Mensageria | P3 | baixo | perfil público da empresa (ator ONG) |
 | 37 | Botão "Propor Parceria" sem feedback de "proposta enviada" | UX | P3 | baixo | perfil público da empresa |
 | 38 | Input de data do edital em formato MM/DD/YY (locale en) em vez de DD/MM/YY | UX/i18n | P3 | trivial | `CreateAnnouncementModal` |
@@ -241,6 +241,8 @@ Uma vez criado, o projeto não pode ter o status trocado pela ONG (ex.: de **ati
 Na página do projeto (ator **Empresa**), quando a empresa já tem um vínculo **ativo** com aquele projeto, o botão de registrar interesse exibe **"Interesse já enviado"** em vez de refletir que o projeto **já está ativo** (ou ocultar/desabilitar o botão).
 - Provavelmente um sintoma do mapeamento de status espalhado (#17): o front trata "tem vínculo" como "interesse enviado" e não distingue o estado `active`.
 - **Fix:** diferenciar os estados do vínculo no botão (sem vínculo → "Demonstrar interesse"; `pending` → "Interesse já enviado"; `active` → "Projeto já ativo"/ocultar). Centralizar o mapeamento de status (ver #17).
+
+**Status:** resolvido em `useExistingRelationship` + `ProjectDetailsPage`; o hook agora preserva o status do vínculo encontrado e o botão diferencia `pending`, `negotiation` e `active`.
 
 ---
 
