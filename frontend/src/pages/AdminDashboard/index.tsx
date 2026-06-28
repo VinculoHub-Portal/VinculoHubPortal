@@ -4,7 +4,6 @@ import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
-import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
 import PendingActionsOutlinedIcon from "@mui/icons-material/PendingActionsOutlined";
 import { useEffect, useState } from "react";
@@ -253,19 +252,6 @@ export function AdminDashboard() {
               disabled={exporting}
             >
               {exporting ? "Exportando..." : "Exportar Dados"}
-            </FlexibleButton>
-
-            <FlexibleButton
-              icon={<AccessTimeOutlinedIcon fontSize="small" />}
-              variant="attention"
-              onClick={() => {
-                document.getElementById("denuncias")?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "start",
-                });
-              }}
-            >
-              Ver Denúncias
             </FlexibleButton>
 
             <FlexibleButton

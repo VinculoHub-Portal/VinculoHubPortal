@@ -62,7 +62,7 @@ A base é sólida. Os itens abaixo são incrementais, exceto o P0 de segurança.
 | 21 | ADM-05 sem botão dedicado de export | Sprint 4 | P3 | baixo | `AdminDashboard` |
 | 22 | Excluir projeto atrelado a vínculo "some" com o vínculo (sem safeguard/aviso) | Bug/Integridade | P1 | médio | exclusão de projeto + `MyRelationshipsPage` |
 | 23 | Notificação de vínculo: falha silenciosa + `companyEmail` sem fallback + sem teste no fluxo ONG→empresa | Robustez/Observabilidade | P2 | baixo | `RelationshipService.java:191,414`, `ResendNotificationService.java:79` |
-| 24 | Botão "Ver Denúncias" no dashboard admin é redundante (scroll sem efeito perceptível) | UX/Dead UI | P3 | trivial | `AdminDashboard/index.tsx:258-269` |
+| 24 | [Resolvido] Botão "Ver Denúncias" no dashboard admin é redundante (scroll sem efeito perceptível) | UX/Dead UI | P3 | trivial | `AdminDashboard/index.tsx` |
 | 25 | `ReportNpoModal` (denunciar ONG) destoa do padrão dos demais modais (MUI + hex hardcoded) | UX/Consistência | P3 | baixo | `ReportNpoModal.tsx` |
 | 26 | Pós-cadastro: ONG e Empresa são devolvidas ao formulário em vez do dashboard | Bug | P1 | médio | `RegisterPage/index.tsx:250`, `CompanyRegistration/registration/index.tsx`, `AuthRoleRedirect` |
 | 27 | Cadastro trava se o e-mail já existe no Auth0 mas não no banco local | Bug | P1 | médio | fluxo de signup (front + `AuthRoleRedirect`); ver decisão §7.2 |
@@ -253,6 +253,8 @@ Nenhum `window.scrollTo` no fluxo `CompanyRegistration`. Ao avançar etapa (incl
 
 ### 6.2 [#24] Botão "Ver Denúncias" no dashboard admin é redundante
 O botão "Ver Denúncias" (`AdminDashboard/index.tsx:258-269`) só faz `document.getElementById("denuncias")?.scrollIntoView(...)` para a seção de denúncias que **já está na mesma página** (alvo em `:348`). Quando a seção já está visível ou a página é curta, o scroll não tem efeito perceptível — passa a impressão de que o botão "não faz nada". É **redundante** com a seção presente no próprio dashboard. **Fix:** remover o botão (provável) ou, se mantido, transformá-lo em algo útil (ex.: filtrar/abrir só denúncias pendentes). Confirmar com produto antes de remover.
+
+**Status:** resolvido em `AdminDashboard/index.tsx`; a ação redundante foi removida do topo e o teste do dashboard foi atualizado.
 
 ### 6.3 [#25] Modal de denúncia da ONG (`ReportNpoModal`) destoa do padrão dos modais
 Instância concreta de #20 (dois sistemas de UI). O `ReportNpoModal.tsx` é **MUI puro** (`Dialog`/`DialogContent`/`Button`/`TextField`/`Typography`/`Box`) com **cores hex hardcoded**, enquanto todos os outros modais (`DemonstrarInteresseModal`, `ConfirmDeleteProjectModal`, `ProporParceriaModal`) seguem o mesmo padrão Tailwind. Divergências:
