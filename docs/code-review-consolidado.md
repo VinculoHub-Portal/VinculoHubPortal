@@ -67,7 +67,7 @@ A base é sólida. Os itens abaixo são incrementais, exceto o P0 de segurança.
 | 26 | Pós-cadastro: ONG e Empresa são devolvidas ao formulário em vez do dashboard | Bug | P1 | médio | `RegisterPage/index.tsx:250`, `CompanyRegistration/registration/index.tsx`, `AuthRoleRedirect` |
 | 27 | Cadastro trava se o e-mail já existe no Auth0 mas não no banco local | Bug | P1 | médio | fluxo de signup (front + `AuthRoleRedirect`); ver decisão §7.2 |
 | 28 | Impacto ESG: pilares/projetos aparecem como 100% do total (soma > 100%) | Bug/Cálculo | P2 | médio | `ProjectService.java:296-320`, `ProjectRepository.java:46-96` |
-| 29 | Ícones de modalidade do card "Projetos Apoiados" muito pequenos | UX | P3 | trivial | `CompanyDashboard` (card Projetos Apoiados) |
+| 29 | [Resolvido] Ícones de modalidade do card "Projetos Apoiados" muito pequenos | UX | P3 | trivial | `CompanyDashboard/SupportedProjectsCard.tsx` |
 | 30 | Renomear botão "Mediações" → "Notificações" no dashboard admin (decisão §7.3) | UX | P3 | trivial | `AdminDashboard/index.tsx:271-279` |
 | 31 | Detalhe do próprio projeto da ONG deve ir ao perfil privado, não ao público (decisão §7.4) | Bug/UX | P2 | baixo | navegação do card de projeto da ONG |
 | 32 | 503 em `GET /api/admin/vinculos/search` — admin não consegue ver vínculos (**em correção**) | Bug | P1 | — | backend admin relationships |
@@ -276,6 +276,8 @@ Export de vínculos embutido no botão único "Exportar Dados". Funcional; separ
 
 ### 6.6 [#29] Ícones de modalidade do card "Projetos Apoiados" muito pequenos
 No dashboard da empresa (E2E-EMP-02), os ícones de modalidade ("documento" para Lei de Incentivo e "dinheiro" para Investimento Social) ficam **pequenos demais** ao lado dos contadores, prejudicando a leitura. **Fix:** aumentar o tamanho/`fontSize` dos ícones no card de Projetos Apoiados (`CompanyDashboard`).
+
+**Status:** resolvido em `CompanyDashboard/SupportedProjectsCard.tsx`; o ícone do card ganhou área visual maior e `fontSize` ampliado.
 
 ### 6.7 [#30] Renomear botão "Mediações" → "Notificações" (admin)
 Decisão de produto §7.3: manter a página `/admin/notificacoes` e o card como estão; apenas renomear o botão de acesso no dashboard admin de "Mediações" para **"Notificações"** (`AdminDashboard/index.tsx:271-279`). Mudança cosmética; atualizar também os testes que buscam o texto do botão.
