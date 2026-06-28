@@ -74,7 +74,7 @@ A base é sólida. Os itens abaixo são incrementais, exceto o P0 de segurança.
 | 33 | Telefone sem validação no cadastro (ONG e Empresa, passo 3) | Bug/Validação | P2 | baixo | `NpoRegistration`/`CompanyRegistration` passo 3 |
 | 34 | ONG não consegue alterar o status do projeto (ativo→concluído/cancelado) | Feature gap | P2 | médio | `EditProjectPage` + status no backend |
 | 35 | [Resolvido] Empresa: botão de interesse mostra "Interesse já enviado" mesmo com vínculo já **ativo** | Bug/UX | P2 | baixo | `ProjectDetailsPage` + `useExistingRelationship` |
-| 36 | Mensagem genérica ao bloquear a proposta da ONG quando a empresa já demonstrou interesse | UX/Mensageria | P3 | baixo | perfil público da empresa (ator ONG) |
+| 36 | [Resolvido] Mensagem genérica ao bloquear a proposta da ONG quando a empresa já demonstrou interesse | UX/Mensageria | P3 | baixo | `CompanyPublicProfilePage` |
 | 37 | Botão "Propor Parceria" sem feedback de "proposta enviada" | UX | P3 | baixo | perfil público da empresa |
 | 38 | Input de data do edital em formato MM/DD/YY (locale en) em vez de DD/MM/YY | UX/i18n | P3 | trivial | `CreateAnnouncementModal` |
 
@@ -289,6 +289,8 @@ Decisão de produto §7.4: quando a ONG abre o detalhe de um projeto **seu**, o 
 
 ### 6.9 [#36] Mensagem genérica ao bloquear a proposta da ONG quando a empresa já demonstrou interesse
 Quando a **empresa registra interesse** numa ONG, a ONG **não consegue** propor parceria de volta com aquela empresa — isso é o comportamento esperado. O problema é a **mensagem**: o sistema diz que é "necessário possuir pelo menos um projeto ativo", que não tem nada a ver com a situação real. **Fix:** exibir mensagem específica do caso (ex.: "Esta empresa já demonstrou interesse na sua ONG — responda pela tela de vínculos") em vez da genérica de "sem projeto ativo".
+
+**Status:** resolvido em `CompanyPublicProfilePage`; o tooltip agora diferencia falta de projeto ativo, interesse recebido da empresa, vínculo/proposta existente e parceria em andamento.
 
 ### 6.10 [#37] Botão "Propor Parceria" sem feedback de "proposta enviada"
 No perfil público da empresa, ao clicar em **"Propor Parceria"** o botão não muda de estado para sinalizar à ONG que a solicitação foi enviada. **Fix:** dar ao botão um estado pós-clique ("Proposta enviada"/desabilitado), com atualização imediata em sessão. Mesma família de read-after-write de #7 e §10.3 (invalidar/refetch após criar o vínculo).

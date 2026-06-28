@@ -194,6 +194,44 @@ describe("CompanyPublicProfilePage", () => {
       expect(button).toBeDisabled()
     })
 
+    it("mostra mensagem específica quando a empresa já demonstrou interesse", async () => {
+      mocks.useOngProjectsMock.mockReturnValue({
+        projects: [{ id: 1, title: "Projeto A", status: "Ativo" }],
+        summary: { total: 1, taxIncentiveLaw: 0, socialInvestmentLaw: 0 },
+        loading: false,
+        error: null,
+        currentPage: 0,
+        totalPages: 1,
+        setCurrentPage: vi.fn(),
+        refetch: vi.fn(),
+      })
+      mocks.fetchRelationshipsMock.mockResolvedValue([
+        {
+          projectId: 1,
+          projectName: "Projeto A",
+          partnerInstitutionId: 7,
+          partnerInstitutionName: "ACME",
+          status: "pending",
+          partnerContactEmail: null,
+          partnerContactPhone: null,
+          canRespond: true,
+          canConfirm: false,
+        },
+      ])
+      const user = userEvent.setup()
+      renderAsNpoWithLoadedCompany()
+
+      const button = await screen.findByRole("button", { name: /propor parceria/i })
+      await waitFor(() => expect(button).toBeDisabled())
+      await user.hover(button.parentElement as HTMLElement)
+
+      expect(
+        await screen.findByText(
+          "Esta empresa já demonstrou interesse na sua ONG. Responda pela tela de vínculos.",
+        ),
+      ).toBeInTheDocument()
+    })
+
     it("não exibe botão 'Propor Parceria' para usuário Company", async () => {
       mocks.userMock = { "https://vinculohub/roles": ["COMPANY"] }
       mocks.fetchCompanyPublicProfileMock.mockResolvedValue(baseProfile)

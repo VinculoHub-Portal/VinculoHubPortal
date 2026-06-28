@@ -76,25 +76,55 @@ export function CompanyPublicProfilePage() {
     }
   }, [isNpo, getAccessTokenSilently])
 
-  const proposableProjects = useMemo(() => {
-    if (!isNpo || validId === null) return []
-    return projects
-      .filter((p) => p.status === "Ativo")
-      .filter(
-        (p) =>
-          !existingRelationships.some(
-            (r) =>
-              r.projectId === p.id &&
-              r.partnerInstitutionId === validId &&
-              r.status !== "inactive",
-          ),
-      )
-      .map((p) => ({ id: p.id, title: p.title }))
-  }, [isNpo, projects, existingRelationships, validId])
-
   const [proposeModalOpen, setProposeModalOpen] = useState(false)
   const [submittingPropose, setSubmittingPropose] = useState(false)
   const { showToast } = useToast()
+
+  const activeProjects = useMemo(() => {
+    if (!isNpo) return []
+    return projects.filter((p) => p.status === "Ativo")
+  }, [isNpo, projects])
+
+  const relationshipsWithCompany = useMemo(() => {
+    if (validId === null) return []
+    const activeProjectIds = new Set(activeProjects.map((p) => p.id))
+    return existingRelationships.filter(
+      (r) =>
+        activeProjectIds.has(r.projectId) &&
+        r.partnerInstitutionId === validId &&
+        r.status !== "inactive",
+    )
+  }, [activeProjects, existingRelationships, validId])
+
+  const proposableProjects = useMemo(() => {
+    if (!isNpo || validId === null) return []
+    return activeProjects
+      .filter((p) => !relationshipsWithCompany.some((r) => r.projectId === p.id))
+      .map((p) => ({ id: p.id, title: p.title }))
+  }, [isNpo, activeProjects, relationshipsWithCompany, validId])
+
+  const hasActiveProjects = activeProjects.length > 0
+  const hasRespondableCompanyInterest = relationshipsWithCompany.some(
+    (r) => r.status === "pending" && r.canRespond,
+  )
+  const hasPendingProposal = relationshipsWithCompany.some(
+    (r) => r.status === "pending" && !r.canRespond,
+  )
+  const hasRelationshipInProgress = relationshipsWithCompany.some(
+    (r) => r.status === "active" || r.status === "negotiation",
+  )
+  const proposeDisabled = proposableProjects.length === 0
+  const proposeDisabledReason = !proposeDisabled
+    ? ""
+    : !hasActiveProjects
+      ? "Você precisa de um projeto ativo para propor parceria"
+      : hasRespondableCompanyInterest
+        ? "Esta empresa já demonstrou interesse na sua ONG. Responda pela tela de vínculos."
+        : hasPendingProposal
+          ? "Todos os seus projetos ativos já possuem proposta enviada para esta empresa."
+          : hasRelationshipInProgress
+            ? "Todos os seus projetos ativos já possuem parceria em andamento com esta empresa."
+            : "Todos os seus projetos ativos já possuem vínculo ou proposta com esta empresa."
 
   async function handleConfirmPropose(projectId: number) {
     if (!validId) return
@@ -165,7 +195,8 @@ export function CompanyPublicProfilePage() {
             <CompanyHeaderCard
               company={query.data}
               showProposeButton={isNpo}
-              proposeDisabled={proposableProjects.length === 0}
+              proposeDisabled={proposeDisabled}
+              proposeDisabledReason={proposeDisabledReason}
               onPropose={() => setProposeModalOpen(true)}
             />
             <CompanyInfoCard company={query.data} />
@@ -191,6 +222,7 @@ interface CompanyHeaderCardProps {
   company: CompanyPublicProfile
   showProposeButton: boolean
   proposeDisabled: boolean
+  proposeDisabledReason: string
   onPropose: () => void
 }
 
@@ -198,6 +230,7 @@ function CompanyHeaderCard({
   company,
   showProposeButton,
   proposeDisabled,
+  proposeDisabledReason,
   onPropose,
 }: CompanyHeaderCardProps) {
   return (
@@ -228,11 +261,7 @@ function CompanyHeaderCard({
         {showProposeButton && (
           <div className="flex w-full sm:w-auto">
             <Tooltip
-              title={
-                proposeDisabled
-                  ? "Você precisa de um projeto ativo para propor parceria"
-                  : ""
-              }
+              title={proposeDisabled ? proposeDisabledReason : ""}
             >
               <span className="w-full sm:w-auto">
                 <BaseButton
