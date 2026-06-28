@@ -57,7 +57,7 @@ A base é sólida. Os itens abaixo são incrementais, exceto o P0 de segurança.
 | 16 | Duplicação de helpers de display | DRY | P2 | baixo | `RelationshipService`/`AdminRelationshipService` |
 | 17 | Mapeamento de status de vínculo espalhado | Consistência | P2 | baixo | `MyRelationshipsPage/vinculo.ts` |
 | 18 | ADM-03 tabela em vez de cards + logo | Sprint 4 | P2 | médio | `AdminOngsList` |
-| 19 | Sem reset de scroll entre etapas do cadastro | UX | P3 | trivial | `CompanyRegistration` |
+| 19 | [Resolvido] Sem reset de scroll entre etapas do cadastro | UX | P3 | trivial | `CompanyRegistration/registration/index.tsx` |
 | 20 | Mistura de sistemas de UI (MUI + Tailwind) | Consistência | P3 | alto | global |
 | 21 | ADM-05 sem botão dedicado de export | Sprint 4 | P3 | baixo | `AdminDashboard` |
 | 22 | Excluir projeto atrelado a vínculo "some" com o vínculo (sem safeguard/aviso) | Bug/Integridade | P1 | médio | exclusão de projeto + `MyRelationshipsPage` |
@@ -248,6 +248,8 @@ Na página do projeto (ator **Empresa**), quando a empresa já tem um vínculo *
 
 ### 6.1 [#19] Sem reset de scroll entre etapas do cadastro (AN-10)
 Nenhum `window.scrollTo` no fluxo `CompanyRegistration`. Ao avançar etapa (inclusive ODS), a rolagem não volta ao topo. **Fix:** `scrollTo({top:0})` na troca de `currentStep`. ⚠️ **Não reproduzido** em teste manual (E2E-REG-05) — confirmar se ainda ocorre antes de priorizar; pode já não acontecer dependendo da altura da etapa/viewport.
+
+**Status:** resolvido em `CompanyRegistration/registration/index.tsx`; a troca de `currentStep` agora chama `window.scrollTo({ top: 0, behavior: "smooth" })` após a primeira renderização.
 
 ### 6.2 [#24] Botão "Ver Denúncias" no dashboard admin é redundante
 O botão "Ver Denúncias" (`AdminDashboard/index.tsx:258-269`) só faz `document.getElementById("denuncias")?.scrollIntoView(...)` para a seção de denúncias que **já está na mesma página** (alvo em `:348`). Quando a seção já está visível ou a página é curta, o scroll não tem efeito perceptível — passa a impressão de que o botão "não faz nada". É **redundante** com a seção presente no próprio dashboard. **Fix:** remover o botão (provável) ou, se mantido, transformá-lo em algo útil (ex.: filtrar/abrir só denúncias pendentes). Confirmar com produto antes de remover.
