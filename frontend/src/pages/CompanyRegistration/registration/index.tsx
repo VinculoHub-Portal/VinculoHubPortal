@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useWizardPersistence } from "../../../hooks/useWizardPersistence";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useNavigate } from "react-router-dom";
@@ -107,6 +107,7 @@ export function CompanyRegistrationPage() {
 
   const { basicInfo, contactInfo, credentials } = wizardProgress;
   const currentStep = wizardProgress.currentStep;
+  const hasMountedStep = useRef(false);
 
   const setCurrentStep = useCallback(
     (step: number | ((prev: number) => number)) => {
@@ -118,6 +119,15 @@ export function CompanyRegistrationPage() {
     },
     [setWizardProgress],
   );
+
+  useEffect(() => {
+    if (!hasMountedStep.current) {
+      hasMountedStep.current = true;
+      return;
+    }
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [currentStep]);
 
   const setBasicInfo = useCallback(
     (

@@ -185,8 +185,8 @@ describe("AdminDashboard", () => {
       screen.getByRole("button", { name: "Exportar Dados" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Ver Denúncias" }),
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: "Ver Denúncias" }),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Notificações" }),
     ).toBeInTheDocument();

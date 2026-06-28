@@ -41,6 +41,8 @@ describe("useExistingRelationship", () => {
     const { result } = renderHook(() => useExistingRelationship({ projectId: 42 }))
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.exists).toBe(true)
+    expect(result.current.status).toBe("pending")
+    expect(result.current.relationship?.projectId).toBe(42)
   })
 
   it("retorna exists=true quando há vínculo para o (projeto, empresa)", async () => {
@@ -62,6 +64,7 @@ describe("useExistingRelationship", () => {
     )
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.exists).toBe(true)
+    expect(result.current.status).toBe("negotiation")
   })
 
   it("retorna exists=false quando vínculo é com outra empresa", async () => {
@@ -83,6 +86,7 @@ describe("useExistingRelationship", () => {
     )
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.exists).toBe(false)
+    expect(result.current.status).toBeNull()
   })
 
   it("ignora vínculos com status inactive", async () => {
@@ -102,12 +106,14 @@ describe("useExistingRelationship", () => {
     const { result } = renderHook(() => useExistingRelationship({ projectId: 42 }))
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.exists).toBe(false)
+    expect(result.current.status).toBeNull()
   })
 
   it("não faz fetch quando projectId é null", async () => {
     const { result } = renderHook(() => useExistingRelationship({ projectId: null }))
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.exists).toBe(false)
+    expect(result.current.status).toBeNull()
     expect(mocks.fetchRelationshipsMock).not.toHaveBeenCalled()
   })
 
@@ -116,5 +122,6 @@ describe("useExistingRelationship", () => {
     const { result } = renderHook(() => useExistingRelationship({ projectId: 42 }))
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.exists).toBe(false)
+    expect(result.current.status).toBeNull()
   })
 })

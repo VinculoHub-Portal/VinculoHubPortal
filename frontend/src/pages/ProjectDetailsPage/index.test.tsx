@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProjectDetailsPage } from ".";
+import type { ExistingRelationshipResult } from "../../hooks/useExistingRelationship";
 import type { ProjectDetails } from "./projectDetails.types";
 
 const mocks = vi.hoisted(() => ({
@@ -12,8 +13,10 @@ const mocks = vi.hoisted(() => ({
   userMock: { "https://vinculohub/roles": ["COMPANY"] } as Record<string, unknown>,
   createRelationshipMock: vi.fn(),
   showToastMock: vi.fn(),
-  useExistingRelationshipMock: vi.fn(() => ({
+  useExistingRelationshipMock: vi.fn<() => ExistingRelationshipResult>(() => ({
     exists: false,
+    relationship: null,
+    status: null,
     loading: false,
     refetch: vi.fn(),
   })),
@@ -93,6 +96,8 @@ describe("ProjectDetailsPage", () => {
     mocks.showToastMock.mockReset();
     mocks.useExistingRelationshipMock.mockReturnValue({
       exists: false,
+      relationship: null,
+      status: null,
       loading: false,
       refetch: vi.fn(),
     });
@@ -345,11 +350,26 @@ describe("ProjectDetailsPage", () => {
     it("vínculo já existente desabilita botão e altera label", async () => {
       mocks.useExistingRelationshipMock.mockReturnValue({
         exists: true,
+        relationship: null,
+        status: "pending",
         loading: false,
         refetch: vi.fn(),
       });
       renderPage();
       const button = await screen.findByRole("button", { name: /interesse já enviado/i });
+      expect(button).toBeDisabled();
+    });
+
+    it("vínculo ativo mostra label de projeto já ativo", async () => {
+      mocks.useExistingRelationshipMock.mockReturnValue({
+        exists: true,
+        relationship: null,
+        status: "active",
+        loading: false,
+        refetch: vi.fn(),
+      });
+      renderPage();
+      const button = await screen.findByRole("button", { name: /projeto já ativo/i });
       expect(button).toBeDisabled();
     });
   });

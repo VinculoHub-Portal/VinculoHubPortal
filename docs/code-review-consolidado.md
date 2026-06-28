@@ -57,26 +57,26 @@ A base é sólida. Os itens abaixo são incrementais, exceto o P0 de segurança.
 | 16 | Duplicação de helpers de display | DRY | P2 | baixo | `RelationshipService`/`AdminRelationshipService` |
 | 17 | Mapeamento de status de vínculo espalhado | Consistência | P2 | baixo | `MyRelationshipsPage/vinculo.ts` |
 | 18 | ADM-03 tabela em vez de cards + logo | Sprint 4 | P2 | médio | `AdminOngsList` |
-| 19 | Sem reset de scroll entre etapas do cadastro | UX | P3 | trivial | `CompanyRegistration` |
+| 19 | [Resolvido] Sem reset de scroll entre etapas do cadastro | UX | P3 | trivial | `CompanyRegistration/registration/index.tsx` |
 | 20 | Mistura de sistemas de UI (MUI + Tailwind) | Consistência | P3 | alto | global |
 | 21 | ADM-05 sem botão dedicado de export | Sprint 4 | P3 | baixo | `AdminDashboard` |
 | 22 | Excluir projeto atrelado a vínculo "some" com o vínculo (sem safeguard/aviso) | Bug/Integridade | P1 | médio | exclusão de projeto + `MyRelationshipsPage` |
 | 23 | Notificação de vínculo: falha silenciosa + `companyEmail` sem fallback + sem teste no fluxo ONG→empresa | Robustez/Observabilidade | P2 | baixo | `RelationshipService.java:191,414`, `ResendNotificationService.java:79` |
-| 24 | Botão "Ver Denúncias" no dashboard admin é redundante (scroll sem efeito perceptível) | UX/Dead UI | P3 | trivial | `AdminDashboard/index.tsx:258-269` |
-| 25 | `ReportNpoModal` (denunciar ONG) destoa do padrão dos demais modais (MUI + hex hardcoded) | UX/Consistência | P3 | baixo | `ReportNpoModal.tsx` |
+| 24 | [Resolvido] Botão "Ver Denúncias" no dashboard admin é redundante (scroll sem efeito perceptível) | UX/Dead UI | P3 | trivial | `AdminDashboard/index.tsx` |
+| 25 | [Resolvido] `ReportNpoModal` (denunciar ONG) destoa do padrão dos demais modais (MUI + hex hardcoded) | UX/Consistência | P3 | baixo | `ReportNpoModal.tsx` |
 | 26 | Pós-cadastro: ONG e Empresa são devolvidas ao formulário em vez do dashboard | Bug | P1 | médio | `RegisterPage/index.tsx:250`, `CompanyRegistration/registration/index.tsx`, `AuthRoleRedirect` |
 | 27 | Cadastro trava se o e-mail já existe no Auth0 mas não no banco local | Bug | P1 | médio | fluxo de signup (front + `AuthRoleRedirect`); ver decisão §7.2 |
 | 28 | Impacto ESG: pilares/projetos aparecem como 100% do total (soma > 100%) | Bug/Cálculo | P2 | médio | `ProjectService.java:296-320`, `ProjectRepository.java:46-96` |
-| 29 | Ícones de modalidade do card "Projetos Apoiados" muito pequenos | UX | P3 | trivial | `CompanyDashboard` (card Projetos Apoiados) |
+| 29 | [Resolvido] Ícones de modalidade do card "Projetos Apoiados" muito pequenos | UX | P3 | trivial | `CompanyDashboard/SupportedProjectsCard.tsx` |
 | 30 | Renomear botão "Mediações" → "Notificações" no dashboard admin (decisão §7.3) | UX | P3 | trivial | `AdminDashboard/index.tsx:271-279` |
 | 31 | Detalhe do próprio projeto da ONG deve ir ao perfil privado, não ao público (decisão §7.4) | Bug/UX | P2 | baixo | navegação do card de projeto da ONG |
 | 32 | 503 em `GET /api/admin/vinculos/search` — admin não consegue ver vínculos (**em correção**) | Bug | P1 | — | backend admin relationships |
 | 33 | Telefone sem validação no cadastro (ONG e Empresa, passo 3) | Bug/Validação | P2 | baixo | `NpoRegistration`/`CompanyRegistration` passo 3 |
 | 34 | ONG não consegue alterar o status do projeto (ativo→concluído/cancelado) | Feature gap | P2 | médio | `EditProjectPage` + status no backend |
-| 35 | Empresa: botão de interesse mostra "Interesse já enviado" mesmo com vínculo já **ativo** | Bug/UX | P2 | baixo | página do projeto (empresa) |
-| 36 | Mensagem genérica ao bloquear a proposta da ONG quando a empresa já demonstrou interesse | UX/Mensageria | P3 | baixo | perfil público da empresa (ator ONG) |
-| 37 | Botão "Propor Parceria" sem feedback de "proposta enviada" | UX | P3 | baixo | perfil público da empresa |
-| 38 | Input de data do edital em formato MM/DD/YY (locale en) em vez de DD/MM/YY | UX/i18n | P3 | trivial | `CreateAnnouncementModal` |
+| 35 | [Resolvido] Empresa: botão de interesse mostra "Interesse já enviado" mesmo com vínculo já **ativo** | Bug/UX | P2 | baixo | `ProjectDetailsPage` + `useExistingRelationship` |
+| 36 | [Resolvido] Mensagem genérica ao bloquear a proposta da ONG quando a empresa já demonstrou interesse | UX/Mensageria | P3 | baixo | `CompanyPublicProfilePage` |
+| 37 | [Resolvido] Botão "Propor Parceria" sem feedback de "proposta enviada" | UX | P3 | baixo | `CompanyPublicProfilePage` |
+| 38 | [Resolvido] Input de data do edital em formato MM/DD/YY (locale en) em vez de DD/MM/YY | UX/i18n | P3 | trivial | `CreateAnnouncementModal` |
 
 ---
 
@@ -242,6 +242,8 @@ Na página do projeto (ator **Empresa**), quando a empresa já tem um vínculo *
 - Provavelmente um sintoma do mapeamento de status espalhado (#17): o front trata "tem vínculo" como "interesse enviado" e não distingue o estado `active`.
 - **Fix:** diferenciar os estados do vínculo no botão (sem vínculo → "Demonstrar interesse"; `pending` → "Interesse já enviado"; `active` → "Projeto já ativo"/ocultar). Centralizar o mapeamento de status (ver #17).
 
+**Status:** resolvido em `useExistingRelationship` + `ProjectDetailsPage`; o hook agora preserva o status do vínculo encontrado e o botão diferencia `pending`, `negotiation` e `active`.
+
 ---
 
 ## 6. P3 — Refino e consistência
@@ -249,8 +251,12 @@ Na página do projeto (ator **Empresa**), quando a empresa já tem um vínculo *
 ### 6.1 [#19] Sem reset de scroll entre etapas do cadastro (AN-10)
 Nenhum `window.scrollTo` no fluxo `CompanyRegistration`. Ao avançar etapa (inclusive ODS), a rolagem não volta ao topo. **Fix:** `scrollTo({top:0})` na troca de `currentStep`. ⚠️ **Não reproduzido** em teste manual (E2E-REG-05) — confirmar se ainda ocorre antes de priorizar; pode já não acontecer dependendo da altura da etapa/viewport.
 
+**Status:** resolvido em `CompanyRegistration/registration/index.tsx`; a troca de `currentStep` agora chama `window.scrollTo({ top: 0, behavior: "smooth" })` após a primeira renderização.
+
 ### 6.2 [#24] Botão "Ver Denúncias" no dashboard admin é redundante
 O botão "Ver Denúncias" (`AdminDashboard/index.tsx:258-269`) só faz `document.getElementById("denuncias")?.scrollIntoView(...)` para a seção de denúncias que **já está na mesma página** (alvo em `:348`). Quando a seção já está visível ou a página é curta, o scroll não tem efeito perceptível — passa a impressão de que o botão "não faz nada". É **redundante** com a seção presente no próprio dashboard. **Fix:** remover o botão (provável) ou, se mantido, transformá-lo em algo útil (ex.: filtrar/abrir só denúncias pendentes). Confirmar com produto antes de remover.
+
+**Status:** resolvido em `AdminDashboard/index.tsx`; a ação redundante foi removida do topo e o teste do dashboard foi atualizado.
 
 ### 6.3 [#25] Modal de denúncia da ONG (`ReportNpoModal`) destoa do padrão dos modais
 Instância concreta de #20 (dois sistemas de UI). O `ReportNpoModal.tsx` é **MUI puro** (`Dialog`/`DialogContent`/`Button`/`TextField`/`Typography`/`Box`) com **cores hex hardcoded**, enquanto todos os outros modais (`DemonstrarInteresseModal`, `ConfirmDeleteProjectModal`, `ProporParceriaModal`) seguem o mesmo padrão Tailwind. Divergências:
@@ -264,6 +270,8 @@ Instância concreta de #20 (dois sistemas de UI). O `ReportNpoModal.tsx` é **MU
 
 **Efeito:** raio de borda, paleta, tipografia e botões diferentes dos demais diálogos — daí a sensação de "styling inconsistente". As cores hex inclusive **divergem dos tokens**: `#00467F` ≠ `vinculo-dark`, `#E7000B` ≠ `vinculo-red`. **Fix:** reescrever o modal no mesmo padrão Tailwind + `BaseButton` dos outros (ou, no mínimo, trocar os hex pelos tokens do tema). Bom candidato para padronizar junto de #20.
 
+**Status:** resolvido em `ReportNpoModal.tsx`; o modal foi reescrito no padrão Tailwind + `BaseButton`, preservando o fluxo de envio da denúncia.
+
 ### 6.4 [#20] Dois sistemas de UI
 Convivem MUI (`Button`/`Card`/`Chip`), Tailwind puro e componentes próprios (`FlexibleButton`, `MetricCard`). Definir sistema primário e encapsular o outro.
 
@@ -272,6 +280,8 @@ Export de vínculos embutido no botão único "Exportar Dados". Funcional; separ
 
 ### 6.6 [#29] Ícones de modalidade do card "Projetos Apoiados" muito pequenos
 No dashboard da empresa (E2E-EMP-02), os ícones de modalidade ("documento" para Lei de Incentivo e "dinheiro" para Investimento Social) ficam **pequenos demais** ao lado dos contadores, prejudicando a leitura. **Fix:** aumentar o tamanho/`fontSize` dos ícones no card de Projetos Apoiados (`CompanyDashboard`).
+
+**Status:** resolvido em `CompanyDashboard/SupportedProjectsCard.tsx`; o ícone do card ganhou área visual maior e `fontSize` ampliado.
 
 ### 6.7 [#30] Renomear botão "Mediações" → "Notificações" (admin)
 Decisão de produto §7.3: manter a página `/admin/notificacoes` e o card como estão; apenas renomear o botão de acesso no dashboard admin de "Mediações" para **"Notificações"** (`AdminDashboard/index.tsx:271-279`). Mudança cosmética; atualizar também os testes que buscam o texto do botão.
@@ -282,11 +292,17 @@ Decisão de produto §7.4: quando a ONG abre o detalhe de um projeto **seu**, o 
 ### 6.9 [#36] Mensagem genérica ao bloquear a proposta da ONG quando a empresa já demonstrou interesse
 Quando a **empresa registra interesse** numa ONG, a ONG **não consegue** propor parceria de volta com aquela empresa — isso é o comportamento esperado. O problema é a **mensagem**: o sistema diz que é "necessário possuir pelo menos um projeto ativo", que não tem nada a ver com a situação real. **Fix:** exibir mensagem específica do caso (ex.: "Esta empresa já demonstrou interesse na sua ONG — responda pela tela de vínculos") em vez da genérica de "sem projeto ativo".
 
+**Status:** resolvido em `CompanyPublicProfilePage`; o tooltip agora diferencia falta de projeto ativo, interesse recebido da empresa, vínculo/proposta existente e parceria em andamento.
+
 ### 6.10 [#37] Botão "Propor Parceria" sem feedback de "proposta enviada"
 No perfil público da empresa, ao clicar em **"Propor Parceria"** o botão não muda de estado para sinalizar à ONG que a solicitação foi enviada. **Fix:** dar ao botão um estado pós-clique ("Proposta enviada"/desabilitado), com atualização imediata em sessão. Mesma família de read-after-write de #7 e §10.3 (invalidar/refetch após criar o vínculo).
 
+**Status:** resolvido em `CompanyPublicProfilePage`; após criar o vínculo, a página adiciona o relacionamento pendente ao estado local e desabilita o botão como "Proposta enviada".
+
 ### 6.11 [#38] Input de data do edital em formato MM/DD/YY
 No cadastro de edital, o campo de **prazo de inscrição** apresenta a data no formato **MM/DD/YY** (locale en) em vez de **DD/MM/YY** (pt-BR). **Fix:** garantir o locale pt-BR na exibição/seleção da data (complementa o #5, que trata da validação de data no passado no mesmo campo).
+
+**Status:** resolvido em `CreateAnnouncementModal`; o prazo agora é exibido em `DD/MM/AAAA` e não permite selecionar datas de hoje ou anteriores.
 
 ---
 

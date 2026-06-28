@@ -19,7 +19,9 @@ export function SupportedProjectsCard({
     <div className="bg-vinculo-green rounded-2xl p-5 sm:p-8 flex flex-col justify-between gap-3 sm:gap-4">
       <div className="flex justify-between items-start">
         <p className="text-sm text-white/90">Projetos Apoiados</p>
-        <DescriptionIcon className="text-white/80" fontSize="small" />
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white">
+          <DescriptionIcon sx={{ fontSize: 28 }} aria-hidden />
+        </span>
       </div>
 
       {error && (
