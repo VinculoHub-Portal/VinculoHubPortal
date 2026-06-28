@@ -1,0 +1,32 @@
+name: Deploy Development
+
+on:
+  push:
+    branches:
+      - development
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Acessar EC2 e Atualizar DEV
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/VinculoHubPortal
+            git fetch
+            git checkout development
+            git pull origin development
+            
+            export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u $DOCKERHUB_USERNAME --password-stdin
+            
+            export $(grep -v '^#' .env | xargs)
+            
+            docker system prune -f
+            docker compose -f docker-compose.swarm.yml build --no-cache frontend-dev backend-dev
+            docker compose -f docker-compose.swarm.yml push frontend-dev backend-dev
+            docker stack deploy --with-registry-auth -c docker-compose.swarm.yml vinculohub
