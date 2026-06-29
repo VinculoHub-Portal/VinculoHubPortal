@@ -2,6 +2,10 @@
 package com.vinculohub.backend.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import com.vinculohub.backend.dto.DocumentDownloadResponseDTO;
@@ -10,6 +14,7 @@ import com.vinculohub.backend.dto.DocumentResponseDTO;
 import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.FileFormatValidationException;
 import com.vinculohub.backend.exception.FileSizeValidationException;
+import com.vinculohub.backend.exception.ForbiddenException;
 import com.vinculohub.backend.exception.NotFoundException;
 import com.vinculohub.backend.model.Document;
 import com.vinculohub.backend.model.Npo;
@@ -24,6 +29,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -37,6 +43,8 @@ import org.springframework.web.multipart.MultipartFile;
 @ExtendWith(MockitoExtension.class)
 class DocumentServiceTest {
 
+    private static final String AUTH0_ID = "auth0|test";
+
     @Mock private DocumentRepository documentRepository;
 
     @Mock private NpoRepository npoRepository;
@@ -45,9 +53,21 @@ class DocumentServiceTest {
 
     @Mock private UserRepository userRepository;
 
+    private User authenticatedUser;
+
     @Mock private S3Uploader s3Uploader;
 
     @InjectMocks private DocumentService documentService;
+
+    @BeforeEach
+    void setup() {
+        authenticatedUser = new User();
+        authenticatedUser.setId(1);
+
+        lenient()
+                .when(userRepository.findByAuth0Id(AUTH0_ID))
+                .thenReturn(Optional.of(authenticatedUser));
+    }
 
     @Test
     void shouldUploadDocumentSuccessfully() throws Exception {
@@ -58,18 +78,19 @@ class DocumentServiceTest {
         when(file.getOriginalFilename()).thenReturn("file.pdf");
 
         DocumentRequestDTO dto = new DocumentRequestDTO();
-        dto.setNpoId(1);
         dto.setProjectId(1);
         dto.setTitle("Doc Title");
         dto.setDescription("Desc");
 
         Npo npo = new Npo();
         npo.setId(1);
+        npo.setUserId(1);
 
         Project project = new Project();
         project.setId(1L);
+        project.setNpo(npo);
 
-        when(npoRepository.findById(1)).thenReturn(Optional.of(npo));
+        when(npoRepository.findByUserId(1)).thenReturn(Optional.of(npo));
         when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
 
         when(s3Uploader.uploadFile(any(), any())).thenReturn("http://url");
@@ -87,7 +108,7 @@ class DocumentServiceTest {
 
         when(documentRepository.save(any())).thenReturn(saved);
 
-        DocumentResponseDTO result = documentService.upload(file, dto);
+        DocumentResponseDTO result = documentService.upload(AUTH0_ID, file, dto);
 
         assertNotNull(result);
         assertEquals(10, result.getId());
@@ -107,14 +128,14 @@ class DocumentServiceTest {
         when(file.getOriginalFilename()).thenReturn("file.pdf");
 
         DocumentRequestDTO dto = new DocumentRequestDTO();
-        dto.setNpoId(1);
         dto.setTitle("Institutional Doc");
         dto.setDescription("Desc");
 
         Npo npo = new Npo();
         npo.setId(1);
+        npo.setUserId(1);
 
-        when(npoRepository.findById(1)).thenReturn(Optional.of(npo));
+        when(npoRepository.findByUserId(1)).thenReturn(Optional.of(npo));
         when(s3Uploader.uploadFile(any(), any())).thenReturn("http://url");
 
         Document saved = new Document();
@@ -130,7 +151,7 @@ class DocumentServiceTest {
 
         when(documentRepository.save(any())).thenReturn(saved);
 
-        DocumentResponseDTO result = documentService.upload(file, dto);
+        DocumentResponseDTO result = documentService.upload(AUTH0_ID, file, dto);
 
         assertNotNull(result);
         assertEquals(10, result.getId());
@@ -149,7 +170,9 @@ class DocumentServiceTest {
 
         DocumentRequestDTO dto = new DocumentRequestDTO();
 
-        assertThrows(FileSizeValidationException.class, () -> documentService.upload(file, dto));
+        assertThrows(
+                FileSizeValidationException.class,
+                () -> documentService.upload(AUTH0_ID, file, dto));
     }
 
     @Test
@@ -161,27 +184,28 @@ class DocumentServiceTest {
 
         DocumentRequestDTO dto = new DocumentRequestDTO();
 
-        assertThrows(FileFormatValidationException.class, () -> documentService.upload(file, dto));
+        assertThrows(
+                FileFormatValidationException.class,
+                () -> documentService.upload(AUTH0_ID, file, dto));
     }
 
     @Test
-    void shouldThrowExceptionWhenNpoNotFound() {
+    void shouldThrowExceptionWhenAuthenticatedNpoNotFoundOnUpload() {
         MultipartFile file = mock(MultipartFile.class);
 
         when(file.getSize()).thenReturn(1024L);
         when(file.getContentType()).thenReturn("application/pdf");
 
         DocumentRequestDTO dto = new DocumentRequestDTO();
-        dto.setNpoId(1);
         dto.setProjectId(1);
 
-        when(npoRepository.findById(1)).thenReturn(Optional.empty());
+        when(npoRepository.findByUserId(1)).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> documentService.upload(file, dto));
+        assertThrows(NotFoundException.class, () -> documentService.upload(AUTH0_ID, file, dto));
     }
 
     @Test
-    void shouldThrowBadRequestWhenNpoIdIsMissing() {
+    void shouldThrowBadRequestWhenAuthenticatedUserIsMissingOnUpload() {
         MultipartFile file = mock(MultipartFile.class);
 
         when(file.getSize()).thenReturn(1024L);
@@ -189,7 +213,7 @@ class DocumentServiceTest {
 
         DocumentRequestDTO dto = new DocumentRequestDTO();
 
-        assertThrows(BadRequestException.class, () -> documentService.upload(file, dto));
+        assertThrows(BadRequestException.class, () -> documentService.upload(" ", file, dto));
     }
 
     @Test
@@ -200,16 +224,89 @@ class DocumentServiceTest {
         when(file.getContentType()).thenReturn("application/pdf");
 
         DocumentRequestDTO dto = new DocumentRequestDTO();
-        dto.setNpoId(1);
         dto.setProjectId(1);
 
         Npo npo = new Npo();
         npo.setId(1);
+        npo.setUserId(1);
 
-        when(npoRepository.findById(1)).thenReturn(Optional.of(npo));
+        when(npoRepository.findByUserId(1)).thenReturn(Optional.of(npo));
         when(projectRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> documentService.upload(file, dto));
+        assertThrows(NotFoundException.class, () -> documentService.upload(AUTH0_ID, file, dto));
+    }
+
+    @Test
+    void shouldThrowForbiddenExceptionWhenProjectBelongsToAnotherNpo() throws Exception {
+        MultipartFile file = mock(MultipartFile.class);
+
+        lenient().when(file.getSize()).thenReturn(1024L);
+        lenient().when(file.getContentType()).thenReturn("application/pdf");
+        lenient().when(file.getOriginalFilename()).thenReturn("file.pdf");
+
+        DocumentRequestDTO dto = new DocumentRequestDTO();
+        dto.setProjectId(1);
+        dto.setTitle("Doc Title");
+        dto.setDescription("Desc");
+
+        Npo npo = new Npo();
+        npo.setId(1);
+        npo.setUserId(1);
+
+        Npo otherNpo = new Npo();
+        otherNpo.setId(999);
+
+        Project project = new Project();
+        project.setId(1L);
+        project.setNpo(otherNpo);
+
+        when(npoRepository.findByUserId(1)).thenReturn(Optional.of(npo));
+        when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
+
+        assertThrows(ForbiddenException.class, () -> documentService.upload(AUTH0_ID, file, dto));
+
+        verify(s3Uploader, never()).uploadFile(any(), any());
+        verify(documentRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldIgnorePayloadNpoIdAndUploadToAuthenticatedNpo() throws Exception {
+        MultipartFile file = mock(MultipartFile.class);
+
+        lenient().when(file.getSize()).thenReturn(1024L);
+        lenient().when(file.getContentType()).thenReturn("application/pdf");
+        lenient().when(file.getOriginalFilename()).thenReturn("file.pdf");
+
+        DocumentRequestDTO dto = new DocumentRequestDTO();
+        dto.setTitle("Institutional Doc");
+        dto.setDescription("Desc");
+
+        Npo npo = new Npo();
+        npo.setId(1);
+        npo.setUserId(1);
+
+        when(npoRepository.findByUserId(1)).thenReturn(Optional.of(npo));
+        when(s3Uploader.uploadFile(any(), any())).thenReturn("http://url");
+
+        Document saved = new Document();
+        saved.setId(10);
+        saved.setNpo(npo);
+        saved.setTitle(dto.getTitle());
+        saved.setDescription(dto.getDescription());
+        saved.setFileUrl("http://url");
+        saved.setFileName("file.pdf");
+        saved.setFileSize(1024);
+        saved.setMimeType("application/pdf");
+
+        when(documentRepository.save(any())).thenReturn(saved);
+
+        DocumentResponseDTO result = documentService.upload(AUTH0_ID, file, dto);
+
+        assertEquals(1, result.getNpoId());
+
+        verify(npoRepository).findByUserId(1);
+        verify(npoRepository, never()).findById(any());
+        verify(documentRepository).save(any());
     }
 
     @Test
@@ -220,21 +317,22 @@ class DocumentServiceTest {
         when(file.getContentType()).thenReturn("application/pdf");
 
         DocumentRequestDTO dto = new DocumentRequestDTO();
-        dto.setNpoId(1);
         dto.setProjectId(1);
 
         Npo npo = new Npo();
         npo.setId(1);
+        npo.setUserId(1);
 
         Project project = new Project();
         project.setId(1L);
+        project.setNpo(npo);
 
-        when(npoRepository.findById(1)).thenReturn(Optional.of(npo));
+        when(npoRepository.findByUserId(1)).thenReturn(Optional.of(npo));
         when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
 
         when(s3Uploader.uploadFile(any(), any())).thenThrow(IOException.class);
 
-        assertThrows(RuntimeException.class, () -> documentService.upload(file, dto));
+        assertThrows(RuntimeException.class, () -> documentService.upload(AUTH0_ID, file, dto));
     }
 
     @Test

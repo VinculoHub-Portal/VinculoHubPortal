@@ -5,6 +5,7 @@ import com.vinculohub.backend.dto.DocumentDownloadResponseDTO;
 import com.vinculohub.backend.dto.DocumentRequestDTO;
 import com.vinculohub.backend.dto.DocumentResponseDTO;
 import com.vinculohub.backend.service.DocumentService;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,9 +27,12 @@ public class DocumentController {
     private final DocumentService documentService;
 
     @PostMapping(consumes = "multipart/form-data")
+    @PreAuthorize("hasRole('NPO')")
     public ResponseEntity<?> uploadDocument(
-            @RequestPart("file") MultipartFile file, @RequestPart("data") DocumentRequestDTO dto) {
-        DocumentResponseDTO response = documentService.upload(file, dto);
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestPart("file") MultipartFile file,
+            @Valid @RequestPart("data") DocumentRequestDTO dto) {
+        DocumentResponseDTO response = documentService.upload(jwt.getSubject(), file, dto);
         return ResponseEntity.ok(response);
     }
 
@@ -54,10 +58,11 @@ public class DocumentController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('NPO')")
     public ResponseEntity<List<DocumentResponseDTO>> getDocuments(
-            @RequestParam(required = false) Integer npoId,
-            @RequestParam(required = false) Integer projectId) {
-        List<DocumentResponseDTO> documents = documentService.findAll(npoId, projectId);
+            @AuthenticationPrincipal Jwt jwt, @RequestParam(required = false) Integer projectId) {
+        List<DocumentResponseDTO> documents =
+                documentService.findAllByAuthenticatedNpo(jwt.getSubject(), projectId);
         return ResponseEntity.ok(documents);
     }
 }

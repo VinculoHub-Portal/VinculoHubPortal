@@ -18,7 +18,5 @@ public interface DocumentRepository extends JpaRepository<Document, Integer> {
 
     Optional<Document> findByIdAndNpo_Id(Integer id, Integer npoId);
 
-    List<Document> findByProject_Id(Integer projectId);
-
     List<Document> findByNpo_IdAndProject_Id(Integer npoId, Integer projectId);
 }

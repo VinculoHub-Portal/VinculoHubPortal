@@ -7,6 +7,7 @@ import com.vinculohub.backend.dto.DocumentResponseDTO;
 import com.vinculohub.backend.exception.BadRequestException;
 import com.vinculohub.backend.exception.FileFormatValidationException;
 import com.vinculohub.backend.exception.FileSizeValidationException;
+import com.vinculohub.backend.exception.ForbiddenException;
 import com.vinculohub.backend.exception.NotFoundException;
 import com.vinculohub.backend.exception.UserNotFoundException;
 import com.vinculohub.backend.model.Document;
@@ -23,7 +24,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -51,7 +51,8 @@ public class DocumentService {
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     "application/vnd.ms-excel");
 
-    public DocumentResponseDTO upload(MultipartFile file, DocumentRequestDTO docReq) {
+    public DocumentResponseDTO upload(
+            String auth0Id, MultipartFile file, DocumentRequestDTO docReq) {
         if (docReq == null) {
             throw new BadRequestException("Document metadata is required");
         }
@@ -64,14 +65,7 @@ public class DocumentService {
             throw new FileFormatValidationException("Unsupported file type");
         }
 
-        if (docReq.getNpoId() == null) {
-            throw new BadRequestException("Npo id is required");
-        }
-
-        Npo npo =
-                npoRepository
-                        .findById(docReq.getNpoId())
-                        .orElseThrow(() -> new NotFoundException("Npo not found"));
+        Npo npo = resolveAuthenticatedNpo(auth0Id);
 
         Project project = null;
         if (docReq.getProjectId() != null) {
@@ -79,6 +73,7 @@ public class DocumentService {
                     projectRepository
                             .findById(docReq.getProjectId().longValue())
                             .orElseThrow(() -> new NotFoundException("Project not found"));
+            validateProjectOwnership(npo, project);
         }
 
         String fileUrl;
@@ -106,32 +101,18 @@ public class DocumentService {
         return mapToResponse(saved);
     }
 
-    public List<DocumentResponseDTO> findAll(Integer npoId, Integer projectId) {
-        List<Document> documents;
+    public List<DocumentResponseDTO> findAllByAuthenticatedNpo(String auth0Id, Integer projectId) {
+        Npo npo = resolveAuthenticatedNpo(auth0Id);
+        List<Document> documents =
+                projectId == null
+                        ? documentRepository.findByNpo_Id(npo.getId())
+                        : documentRepository.findByNpo_IdAndProject_Id(npo.getId(), projectId);
 
-        if (npoId != null && projectId != null) {
-            documents = documentRepository.findByNpo_IdAndProject_Id(npoId, projectId);
-        } else if (npoId != null) {
-            documents = documentRepository.findByNpo_Id(npoId);
-        } else if (projectId != null) {
-            documents = documentRepository.findByProject_Id(projectId);
-        } else {
-            documents = documentRepository.findAll();
-        }
-
-        return documents.stream().map(this::mapToResponse).collect(Collectors.toList());
+        return documents.stream().map(this::mapToResponse).toList();
     }
 
     public Page<DocumentResponseDTO> findAllByAuthenticatedNpo(String auth0Id, Pageable pageable) {
-        if (auth0Id == null || auth0Id.isBlank()) {
-            throw new BadRequestException("Nao foi possivel identificar o usuario autenticado.");
-        }
-
-        User user = userRepository.findByAuth0Id(auth0Id).orElseThrow(UserNotFoundException::new);
-        Npo npo =
-                npoRepository
-                        .findByUserId(user.getId())
-                        .orElseThrow(() -> new NotFoundException("ONG nao encontrada"));
+        Npo npo = resolveAuthenticatedNpo(auth0Id);
 
         return documentRepository.findByNpo_Id(npo.getId(), pageable).map(this::mapToResponse);
     }
@@ -164,6 +145,28 @@ public class DocumentService {
                 document.getFileName(),
                 document.getMimeType(),
                 Instant.now().plus(DOWNLOAD_URL_TTL));
+    }
+
+    private Npo resolveAuthenticatedNpo(String auth0Id) {
+        if (auth0Id == null || auth0Id.isBlank()) {
+            throw new BadRequestException("Nao foi possivel identificar o usuario autenticado.");
+        }
+
+        User user = userRepository.findByAuth0Id(auth0Id).orElseThrow(UserNotFoundException::new);
+        return npoRepository
+                .findByUserId(user.getId())
+                .orElseThrow(() -> new NotFoundException("ONG nao encontrada"));
+    }
+
+    private void validateProjectOwnership(Npo npo, Project project) {
+        Integer projectNpoId =
+                project.getNpo() == null || project.getNpo().getId() == null
+                        ? null
+                        : project.getNpo().getId();
+        if (!npo.getId().equals(projectNpoId)) {
+            throw new ForbiddenException(
+                    "You are not authorized to upload documents for this project.");
+        }
     }
 
     private DocumentResponseDTO mapToResponse(Document document) {
