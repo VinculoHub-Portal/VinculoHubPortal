@@ -1,31 +1,59 @@
-# name: Deploy Production
-# 
-# on:
-#   push:
-#     branches:
-#       - main
-# 
-# jobs:
-#   deploy:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Acessar EC2 e Atualizar PROD
-#         uses: appleboy/ssh-action@v1.0.3
-#         with:
-#           host: ${{ secrets.EC2_HOST }}
-#           username: ${{ secrets.EC2_USERNAME }}
-#           key: ${{ secrets.EC2_SSH_KEY }}
-#           script: |
-#             cd ~/VinculoHubPortal
-#             git fetch
-#             git checkout main
-#             git pull origin main
-#             
-#             export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
-#             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u $DOCKERHUB_USERNAME --password-stdin
-#             
-#             export $(grep -v '^#' .env | xargs)
-#             docker system prune -f
-#             docker compose -f docker-compose.swarm.yml build --no-cache frontend-prod backend-prod
-#             docker compose -f docker-compose.swarm.yml push frontend-prod backend-prod
-#             docker stack deploy --with-registry-auth -c docker-compose.swarm.yml vinculohub
+name: Deploy Production
+ 
+on:
+  push:
+    branches:
+      - main
+ 
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+ 
+      - name: Login no DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+ 
+      - name: Build e push das imagens
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          PROD_VITE_API_URL: ${{ secrets.PROD_VITE_API_URL }}
+          VITE_AUTH0_DOMAIN: ${{ secrets.VITE_AUTH0_DOMAIN }}
+          VITE_AUTH0_CLIENT_ID: ${{ secrets.VITE_AUTH0_CLIENT_ID }}
+          VITE_AUTH0_AUDIENCE: ${{ secrets.VITE_AUTH0_AUDIENCE }}
+          PROD_VITE_AUTH0_REDIRECT_URI: ${{ secrets.PROD_VITE_AUTH0_REDIRECT_URI }}
+        run: |
+          docker compose -f docker-compose.swarm.yml build frontend-prod backend-prod
+          docker compose -f docker-compose.swarm.yml push frontend-prod backend-prod
+ 
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Acessar EC2 e fazer deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 10m
+          script: |
+            cd ~/VinculoHubPortal
+            git fetch
+            git checkout main
+            git pull origin main
+ 
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+ 
+            export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+ 
+            set -a
+            source .env
+            set +a
+ 
+            docker compose -f docker-compose.swarm.yml pull frontend-prod backend-prod
+            docker stack deploy --with-registry-auth -c docker-compose.swarm.yml vinculohub
+ 

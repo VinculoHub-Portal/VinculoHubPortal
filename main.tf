@@ -13,13 +13,21 @@ resource "aws_security_group" "backend_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] 
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Portas do Frontend (80 para DEV, 81 para PROD)
+  # HTTPS (Caddy / Let's Encrypt)
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Portas do Frontend (83 para DEV, 81 para PROD)
   ingress {
     from_port   = 80
-    to_port     = 81
+    to_port     = 83
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -70,7 +78,7 @@ resource "aws_s3_bucket_cors_configuration" "vinculohub_cors" {
     allowed_headers = ["*"]
     allowed_methods = ["GET", "PUT", "POST"]
     # Origens baseadas no seu .env de desenvolvimento e produção
-    allowed_origins = ["http://localhost:5173", "http://localhost"] 
+    allowed_origins = ["http://localhost:5173", "http://localhost"]
     max_age_seconds = 3000
   }
 }
