@@ -4,11 +4,13 @@ package com.vinculohub.backend.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.vinculohub.backend.dto.NpoExportDTO;
 import com.vinculohub.backend.model.Address;
 import com.vinculohub.backend.model.Npo;
 import com.vinculohub.backend.model.enums.NpoSize;
 import com.vinculohub.backend.repository.AddressRepository;
 import com.vinculohub.backend.repository.NpoRepository;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -75,5 +77,61 @@ class NpoServiceTest {
                         IllegalArgumentException.class,
                         () -> npoService.saveWithAddress(null, null));
         assertTrue(ex.getMessage().contains("ONG"));
+    }
+
+    @Test
+    @DisplayName("Deve exportar lista de ONGs com endereço")
+    void shouldExportAllNposWithAddress() {
+        Address address =
+                Address.builder()
+                        .city("Porto Alegre")
+                        .state("Rio Grande do Sul")
+                        .zipCode("90000-000")
+                        .build();
+        Npo npo =
+                Npo.builder()
+                        .id(1)
+                        .name("ONG Exemplo")
+                        .cnpj("12345678000199")
+                        .npoSize(NpoSize.small)
+                        .environmental(true)
+                        .social(false)
+                        .governance(true)
+                        .address(address)
+                        .build();
+
+        when(npoRepository.findAll()).thenReturn(List.of(npo));
+
+        List<NpoExportDTO> result = npoService.findAllForExport();
+
+        assertEquals(1, result.size());
+        NpoExportDTO dto = result.get(0);
+        assertEquals(1, dto.id());
+        assertEquals("ONG Exemplo", dto.name());
+        assertEquals("Porto Alegre", dto.city());
+        assertEquals("Rio Grande do Sul", dto.state());
+        assertTrue(dto.environmental());
+        assertFalse(dto.social());
+    }
+
+    @Test
+    @DisplayName("Deve exportar ONG sem endereço mapeando campos como null")
+    void shouldExportNpoWithNullAddress() {
+        Npo npo =
+                Npo.builder()
+                        .id(2)
+                        .name("ONG Sem End")
+                        .npoSize(NpoSize.medium)
+                        .address(null)
+                        .build();
+
+        when(npoRepository.findAll()).thenReturn(List.of(npo));
+
+        List<NpoExportDTO> result = npoService.findAllForExport();
+
+        NpoExportDTO dto = result.get(0);
+        assertNull(dto.city());
+        assertNull(dto.state());
+        assertNull(dto.zipCode());
     }
 }

@@ -3,6 +3,7 @@ package com.vinculohub.backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -376,5 +377,266 @@ class RelationshipServiceTest {
                 relationshipService.listOverdueRelationshipsForAdmin(PageRequest.of(0, 10));
 
         assertEquals("Corporation Ltda", result.getContent().get(0).companyName());
+    }
+
+    // ------------------------------------------------------------------ resolveActor branches
+
+    @Test
+    @DisplayName("resolveActor com auth0Id nulo lança BadRequest")
+    void resolveActorThrowsForNullAuth0Id() {
+        assertThrows(
+                BadRequestException.class,
+                () -> relationshipService.listMyRelationships(null, null));
+    }
+
+    @Test
+    @DisplayName("resolveActor com auth0Id em branco lança BadRequest")
+    void resolveActorThrowsForBlankAuth0Id() {
+        assertThrows(
+                BadRequestException.class,
+                () -> relationshipService.listMyRelationships("   ", null));
+    }
+
+    // ------------------------------------------------------------------ createRelationship
+    // branches
+
+    @Test
+    @DisplayName("VNC-02: request nulo lança BadRequest")
+    void createWithNullRequestThrows() {
+        assertThrows(
+                BadRequestException.class,
+                () -> relationshipService.createRelationship(COMPANY_AUTH, null));
+    }
+
+    @Test
+    @DisplayName("VNC-02: projeto inativo impede criação de vínculo")
+    void createRejectsInactiveProject() {
+        mockCompanyActor();
+        Project inactive =
+                Project.builder()
+                        .id(100L)
+                        .npo(npo)
+                        .title("Projeto Encerrado")
+                        .status(com.vinculohub.backend.model.enums.ProjectStatus.CANCELLED)
+                        .build();
+        when(projectRepository.findById(100L)).thenReturn(Optional.of(inactive));
+
+        assertThrows(
+                BadRequestException.class,
+                () ->
+                        relationshipService.createRelationship(
+                                COMPANY_AUTH, new CreateRelationshipRequest(100L, null)));
+    }
+
+    @Test
+    @DisplayName("VNC-02: ONG iniciando sem companyId lança BadRequest")
+    void createByNpoWithNullCompanyIdThrows() {
+        mockNpoActor();
+        when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
+
+        assertThrows(
+                BadRequestException.class,
+                () ->
+                        relationshipService.createRelationship(
+                                NPO_AUTH, new CreateRelationshipRequest(project.getId(), null)));
+    }
+
+    @Test
+    @DisplayName("VNC-02: reutiliza vínculo inativo existente ao recriar")
+    void createReusesExistingInactiveRelationship() {
+        mockCompanyActor();
+        when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
+        CompanyProject existing = relationship(RelationshipStatus.inactive, InitiatorType.company);
+        when(companyProjectRepository.findByIdWithGraph(company.getId(), project.getId()))
+                .thenReturn(Optional.of(existing));
+        when(userRepository.findById(npo.getUserId())).thenReturn(Optional.of(npoUser));
+
+        relationshipService.createRelationship(
+                COMPANY_AUTH, new CreateRelationshipRequest(project.getId(), null));
+
+        verify(companyProjectRepository).save(existing);
+        assertEquals(RelationshipStatus.pending, existing.getStatus());
+    }
+
+    @Test
+    @DisplayName("VNC-02: ONG cria vínculo e notifica empresa receptora")
+    void createByNpoNotifiesCompany() {
+        mockNpoActor();
+        when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
+        when(companyProjectRepository.findByIdWithGraph(company.getId(), project.getId()))
+                .thenReturn(Optional.empty());
+        when(companyRepository.findById(company.getId())).thenReturn(Optional.of(company));
+
+        relationshipService.createRelationship(
+                NPO_AUTH, new CreateRelationshipRequest(project.getId(), company.getId()));
+
+        verify(notificationService).interestReceived(eq("empresa@corp.com"), any(), any());
+    }
+
+    // ------------------------------------------------------------------ respond branches
+
+    @Test
+    @DisplayName("VNC-03: estado ativo não pode ser respondido (BadRequest)")
+    void respondThrowsWhenStatusIsActive() {
+        mockNpoActor();
+        CompanyProject rel = relationship(RelationshipStatus.active, InitiatorType.company);
+        when(companyProjectRepository.findByIdWithGraph(company.getId(), project.getId()))
+                .thenReturn(Optional.of(rel));
+
+        assertThrows(
+                BadRequestException.class,
+                () ->
+                        relationshipService.acceptRelationship(
+                                NPO_AUTH, company.getId(), project.getId()));
+    }
+
+    @Test
+    @DisplayName("VNC-03: empresa cancela negotiation e notifica ONG")
+    void cancelNegotiationByCompanyNotifiesNpo() {
+        mockCompanyActor();
+        when(userRepository.findById(npo.getUserId())).thenReturn(Optional.of(npoUser));
+        CompanyProject rel = relationship(RelationshipStatus.negotiation, InitiatorType.company);
+        when(companyProjectRepository.findByIdWithGraph(company.getId(), project.getId()))
+                .thenReturn(Optional.of(rel));
+
+        relationshipService.rejectRelationship(COMPANY_AUTH, company.getId(), project.getId());
+
+        assertEquals(RelationshipStatus.inactive, rel.getStatus());
+        verify(notificationService).negotiationCancelled(eq("contato@ong.org"), any(), any());
+    }
+
+    @Test
+    @DisplayName("VNC-03: empresa rejeita interesse iniciado por ONG e notifica ONG")
+    void rejectByCompanyWhenNpoInitiatedNotifiesNpo() {
+        mockCompanyActor();
+        when(userRepository.findById(npo.getUserId())).thenReturn(Optional.of(npoUser));
+        CompanyProject rel = relationship(RelationshipStatus.pending, InitiatorType.npo);
+        when(companyProjectRepository.findByIdWithGraph(company.getId(), project.getId()))
+                .thenReturn(Optional.of(rel));
+
+        relationshipService.rejectRelationship(COMPANY_AUTH, company.getId(), project.getId());
+
+        assertEquals(RelationshipStatus.inactive, rel.getStatus());
+        verify(notificationService).interestRejected(eq("contato@ong.org"), any(), any());
+    }
+
+    @Test
+    @DisplayName("VNC-04: ONG confirma primeiro e pede confirmação à empresa")
+    void confirmByNpoFirstRequestsCompanyConfirmation() {
+        mockNpoActor();
+        CompanyProject rel = relationship(RelationshipStatus.negotiation, InitiatorType.company);
+        when(companyProjectRepository.findByIdWithGraph(company.getId(), project.getId()))
+                .thenReturn(Optional.of(rel));
+
+        relationshipService.confirmRelationship(NPO_AUTH, company.getId(), project.getId());
+
+        assertEquals(RelationshipStatus.negotiation, rel.getStatus());
+        assertNotNull(rel.getNpoConfirmedAt());
+        assertNull(rel.getCompanyConfirmedAt());
+        verify(notificationService).confirmationRequested(eq("empresa@corp.com"), any(), any());
+    }
+
+    @Test
+    @DisplayName("VNC-04: confirmação não é redefinida se já estava preenchida")
+    void confirmDoesNotOverwriteExistingConfirmation() {
+        mockCompanyActor();
+        CompanyProject rel = relationship(RelationshipStatus.negotiation, InitiatorType.company);
+        LocalDateTime alreadySet = LocalDateTime.now().minusHours(1);
+        rel.setCompanyConfirmedAt(alreadySet);
+        when(companyProjectRepository.findByIdWithGraph(company.getId(), project.getId()))
+                .thenReturn(Optional.of(rel));
+        when(userRepository.findById(npo.getUserId())).thenReturn(Optional.of(npoUser));
+
+        relationshipService.confirmRelationship(COMPANY_AUTH, company.getId(), project.getId());
+
+        assertEquals(alreadySet, rel.getCompanyConfirmedAt());
+    }
+
+    // ------------------------------------------------------------------ npoEmail branch
+
+    @Test
+    @DisplayName("npoEmail retorna null quando userId é null")
+    void npoEmailReturnsNullForNullUserId() {
+        Npo npoNoUser = Npo.builder().id(30).name("ONG sem user").userId(null).build();
+        CompanyProject rel =
+                CompanyProject.builder()
+                        .id(new CompanyProjectId(company.getId(), project.getId()))
+                        .company(company)
+                        .project(Project.builder().id(200L).npo(npoNoUser).title("P").build())
+                        .status(RelationshipStatus.pending)
+                        .initiatorType(InitiatorType.company)
+                        .build();
+        when(companyProjectRepository.findOverduePendingRelationships(any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(rel)));
+
+        // should not throw; overdue alert just calls npoEmail
+        var result = relationshipService.listOverdueRelationshipsForAdmin(PageRequest.of(0, 10));
+        assertEquals(1, result.getTotalElements());
+    }
+
+    @Test
+    @DisplayName("VNC-01: contato visível via repositório quando npoUser não está no fetch graph")
+    void npoEmailFallsBackToRepoWhenNpoUserNotLoaded() {
+        mockCompanyActor();
+        npo.setNpoUser(null);
+        when(userRepository.findById(npo.getUserId())).thenReturn(Optional.of(npoUser));
+        CompanyProject rel = relationship(RelationshipStatus.negotiation, InitiatorType.company);
+        when(companyProjectRepository.findVisibleRelationshipsByCompanyId(company.getId()))
+                .thenReturn(List.of(rel));
+
+        List<RelationshipListItemResponse> result =
+                relationshipService.listMyRelationships(COMPANY_AUTH, null);
+
+        assertEquals("contato@ong.org", result.get(0).partnerContactEmail());
+    }
+
+    @Test
+    @DisplayName("VNC-01: lista de relacionamentos sem filtro (ONG como ator)")
+    void listNpoRelationshipsWithoutStatusFilter() {
+        mockNpoActor();
+        when(companyProjectRepository.findVisibleRelationshipsByNpoId(npo.getId()))
+                .thenReturn(
+                        List.of(
+                                relationship(
+                                        RelationshipStatus.negotiation, InitiatorType.company)));
+
+        List<RelationshipListItemResponse> result =
+                relationshipService.listMyRelationships(NPO_AUTH, null);
+
+        assertEquals(1, result.size());
+        assertEquals(RelationshipStatus.negotiation, result.get(0).status());
+        assertTrue(result.get(0).canConfirm(), "negotiation sem npoConfirmedAt → canConfirm");
+    }
+
+    @Test
+    @DisplayName("VNC-01: npoEmail usa npoUser carregado via JOIN quando disponível")
+    void npoEmailUsesLoadedNpoUserDirectly() {
+        mockCompanyActor();
+        npo.setNpoUser(npoUser);
+        CompanyProject rel = relationship(RelationshipStatus.negotiation, InitiatorType.company);
+        when(companyProjectRepository.findVisibleRelationshipsByCompanyId(company.getId()))
+                .thenReturn(List.of(rel));
+
+        List<RelationshipListItemResponse> result =
+                relationshipService.listMyRelationships(COMPANY_AUTH, null);
+
+        assertEquals("contato@ong.org", result.get(0).partnerContactEmail());
+        verify(userRepository, never()).findById(any());
+    }
+
+    @Test
+    @DisplayName("VNC-01: lista de relacionamentos por status filtrado (ONG como ator)")
+    void listNpoRelationshipsWithStatusFilter() {
+        mockNpoActor();
+        company.setSocialName(null);
+        when(companyProjectRepository.findRelationshipsByNpoIdAndStatusIn(eq(npo.getId()), any()))
+                .thenReturn(
+                        List.of(relationship(RelationshipStatus.pending, InitiatorType.company)));
+
+        List<RelationshipListItemResponse> result =
+                relationshipService.listMyRelationships(NPO_AUTH, RelationshipStatus.pending);
+
+        assertEquals(1, result.size());
+        assertEquals("Corporation Ltda", result.get(0).partnerInstitutionName());
     }
 }

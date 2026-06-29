@@ -1,10 +1,9 @@
 provider "aws" {
-  region = "us-east-1"
+  region = "us-east-2" # Ohio
 }
 
-
-# Segurança(Security Groups)
-# Security Group para o Backend e Docker Swarm
+# Segurança (Security Groups)
+# Security Group para o Backend, Frontend e Docker Swarm
 resource "aws_security_group" "backend_sg" {
   name        = "vinculohub-backend-sg"
   description = "Permitir SSH, API (8080) e comunicacao Docker"
@@ -17,12 +16,27 @@ resource "aws_security_group" "backend_sg" {
     cidr_blocks = ["0.0.0.0/0"] 
   }
 
-  # Porta do Backend (Spring Boot / NestJS)
+  # Portas do Frontend (80 para DEV, 81 para PROD)
   ingress {
-    from_port   = 8080
-    to_port     = 8080
+    from_port   = 80
+    to_port     = 81
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Portas do Backend (8080 para DEV, 8081 para PROD)
+  ingress {
+    from_port   = 8080
+    to_port     = 8081
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    self        = true
   }
 
   # Saída liberada para a internet
@@ -61,15 +75,18 @@ resource "aws_s3_bucket_cors_configuration" "vinculohub_cors" {
   }
 }
 
-
 # Computação: Instâncias EC2
-
 # Instância para o Backend e Docker Swarm Manager
 resource "aws_instance" "backend_server" {
-  ami                    = "ami-0c55b159cbfafe1f0" # Amazon Linux 2 (Verifique a região)
+  ami                    = "ami-09040d770ffe2224f" # Ubuntu Server 22.04 LTS (us-east-2)
   instance_type          = "t3.medium"
   key_name               = "vinculohub-key"
   vpc_security_group_ids = [aws_security_group.backend_sg.id]
+
+  root_block_device {
+    volume_size = 20
+    volume_type = "gp3"
+  }
 
   tags = {
     Name = "VinculoHub-Backend"
@@ -78,16 +95,20 @@ resource "aws_instance" "backend_server" {
 
 # Instância para o Frontend 
 resource "aws_instance" "frontend_server" {
-  ami                    = "ami-0c55b159cbfafe1f0"
+  ami                    = "ami-09040d770ffe2224f" # Ubuntu Server 22.04 LTS na região us-east-2 (Ohio)
   instance_type          = "t3.small"
   key_name               = "vinculohub-key"
   vpc_security_group_ids = [aws_security_group.backend_sg.id]
+
+  root_block_device {
+    volume_size = 20
+    volume_type = "gp3"
+  }
 
   tags = {
     Name = "VinculoHub-Frontend"
   }
 }
-
 
 # Persistência: Volume EBS para PostgreSQL
 resource "aws_ebs_volume" "postgres_data" {

@@ -216,6 +216,52 @@ class EditalServiceTest {
         assertEquals(expiredAt, result.expiredAt());
     }
 
+    @Test
+    void shouldCreateEditalWithOdsWhenOdsIdsProvided() throws Exception {
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.getSize()).thenReturn(1024L);
+        when(file.getContentType()).thenReturn("application/pdf");
+        when(file.getOriginalFilename()).thenReturn("edital.pdf");
+
+        EditalRequestDTO dto = new EditalRequestDTO("Edital com ODS", "Desc", List.of(1, 2), null);
+
+        when(s3Uploader.uploadFile(any(), any())).thenReturn("https://url");
+        when(odsService.resolveSelection(List.of("1", "2"))).thenReturn(java.util.Set.of());
+
+        Edital saved = buildEdital(5L, "Edital com ODS");
+        when(editalRepository.save(any())).thenReturn(saved);
+
+        EditalResponseDTO result = editalService.create(file, dto);
+
+        assertNotNull(result);
+        verify(odsService).resolveSelection(List.of("1", "2"));
+    }
+
+    @Test
+    void shouldReturnEmptyOdsListWhenEditalHasNullOds() {
+        Edital edital = buildEdital(1L, "E");
+        edital.setOds(null);
+
+        when(editalRepository.findAllByOrderByCreatedAtDesc(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(edital)));
+
+        Page<EditalResponseDTO> result = editalService.findAll(Pageable.unpaged());
+
+        assertEquals(0, result.getContent().get(0).ods().size());
+    }
+
+    @Test
+    void shouldReturnActiveEditais() {
+        Edital edital = buildEdital(1L, "Ativo");
+        when(editalRepository.findAllActiveOrderByCreatedAtDesc(any(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(edital)));
+
+        Page<EditalResponseDTO> result = editalService.findAllActive(Pageable.unpaged());
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals("Ativo", result.getContent().get(0).title());
+    }
+
     private Edital buildEdital(Long id, String title) {
         Edital edital = new Edital();
         edital.setId(id);

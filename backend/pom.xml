@@ -182,6 +182,13 @@
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>0.8.12</version>
+				<configuration>
+					<excludes>
+						<exclude>com/vinculohub/backend/config/dev/**</exclude>
+						<exclude>com/vinculohub/backend/controller/dev/**</exclude>
+						<exclude>com/vinculohub/backend/service/storage/**</exclude>
+					</excludes>
+				</configuration>
 				<executions>
 					<execution>
 						<goals>
